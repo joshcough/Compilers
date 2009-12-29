@@ -5,16 +5,16 @@ import org.scalatest.matchers.MustMatchers
 
 trait LazyInterpreterBaseTest extends InterpreterBaseTest {
   import interpreter.LazyInterpreter._
-  def doEval(expr:Expression): Value = strict(eval(expr))
+  def doEval(expr:Exp): Value = strict(eval(expr))
 }
 
 trait InterpreterBaseTest extends FunSuite with MustMatchers{
 
   import interpreter.LazyInterpreter._
 
-  def test(t: (Expression, Value)): Unit = test("", t)
+  def test(t: (Exp, Value)): Unit = test("", t)
 
-  def test(name: String, t: (Expression, Value)): Unit = {
+  def test(name: String, t: (Exp, Value)): Unit = {
     test((name + " " + t._1 + " mustBe " + t._2).trim){
       doEval(t._1) must be(t._2)
     }
@@ -26,5 +26,5 @@ trait InterpreterBaseTest extends FunSuite with MustMatchers{
     }
   }
 
-  def doEval(expr:Expression): Value
+  def doEval(expr:Exp): Value
 }
