@@ -10,7 +10,7 @@ object HW1 {
   object HW1Interpreter extends Interpreter[Exp, String] with Parser[Exp] {
     def eval(exp: Exp): String = {
       exp match {
-        case StringLit(s) => s.substring(0, s.length - 1).substring(1)
+        case StringLit(s) => s.drop(1).dropRight(1)
         case Concat(l, r) => eval(l) + eval(r)
         case RestAfter(l, r) => {
           val ls = eval(l)
@@ -24,8 +24,8 @@ object HW1 {
     def parse(expr: Any): Exp = {
       expr match {
         case s: String => StringLit(s)
-        case xs :: "&" :: ys => Concat(parse(xs), parse(ys.head))
-        case xs :: "@" :: ys => RestAfter(parse(xs), parse(ys.head))
+        case List(xs, "&", ys) => Concat(parse(xs), parse(ys))
+        case List(xs, "@", ys) => RestAfter(parse(xs), parse(ys))
         case _ => error("unexpected token: " + expr)
       }
     }

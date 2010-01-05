@@ -1,6 +1,6 @@
 package homework
 
-class HWBaseTest[E,V](val interpreter:Interpreter[E,V] with Parser[E]) extends org.scalatest.FunSuite {
+abstract class HWBaseTest[E,V](val interpreter:Interpreter[E,V] with Parser[E]) extends org.scalatest.FunSuite {
 
   def testCode(t: (String, V)): Unit = {
     test(t._1 + " mustBe " + t._2){

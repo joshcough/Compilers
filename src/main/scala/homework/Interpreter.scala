@@ -17,38 +17,34 @@ class Reader {
   def readWithRest(stream:Stream[Char]): (Any, Stream[Char]) = {
 
     def readList(stream: Stream[Char], acc: List[Any]): (List[Any], Stream[Char]) = {
-      if(stream.isEmpty) error("unterminated list")
-      else stream head match {
-        case ')' => (acc, stream.tail)
-        case _ => {
+      stream match {
+        case ')' #:: tail => (acc, tail)
+        case x   #:: tail =>
           val (next, rest) = readWithRest(stream)
           readList(rest, acc ::: List(next))
-        }
+	case Stream()     => error("unterminated list")
       }
     }
 
-    def readChars(stream:Stream[Char], acc: String): (String, Stream[Char]) = {
-      if(stream.isEmpty) (acc, stream)
-      else stream head match {
-        case '(' | ')' | ' ' => (acc, stream)
-        case c:Char => readChars(stream.tail, acc + c)
-      }
+    def readChars(stream:Stream[Char]): (String, Stream[Char]) = {
+      val (chars, rest) = stream.span( ! List('(', ')', ' ').contains(_) ) 
+      (chars.mkString, rest)
     }
 
     def readStringLit(stream: Stream[Char], acc: String): (String, Stream[Char]) = {
-      if(stream.isEmpty) error("unterminated string literal")
-      else stream head match {
-        case '"' => (acc + '"', stream.tail)
-        case c:Char => readStringLit(stream.tail, acc + c)
+      stream match {
+        case '"' #:: tail => (acc + '"', tail)
+        case c   #:: tail => readStringLit(tail, acc + c)
+	case Stream()     => error("unterminated string literal")
       }
     }
 
-    stream head match {
-      case '(' => readList(stream.tail, Nil)
-      case ' ' => readWithRest(stream.tail)
-      case '"' => readStringLit(stream.tail, "\"")
-      case ')' => error("unexpected token )")
-      case c:Char => readChars(stream.tail, c.toString)
+    stream match {
+      case '(' #:: tail => readList(tail, Nil)
+      case ' ' #:: tail => readWithRest(tail)
+      case '"' #:: tail => readStringLit(tail, "\"")
+      case ')' #:: _    => error("unexpected token )")
+      case _ => readChars(stream)
     }
   }
 }
