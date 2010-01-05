@@ -5,12 +5,14 @@ import org.scalatest.matchers.MustMatchers
 
 trait LazyInterpreterBaseTest extends InterpreterBaseTest {
   import interpreter.LazyInterpreter._
+  type Exp = LazyInterpreter.Exp
+  type Value = LazyInterpreter.Value
   def doEval(expr:Exp): Value = strict(eval(expr))
 }
 
-trait InterpreterBaseTest extends FunSuite with MustMatchers{
-
-  import interpreter.LazyInterpreter._
+trait InterpreterBaseTest extends FunSuite with MustMatchers{  
+  type Exp
+  type Value
 
   def test(t: (Exp, Value)): Unit = test("", t)
 
