@@ -17,5 +17,4 @@ class ReaderTest extends FunSuite with MustMatchers {
       new Reader().read(t._1.toStream) must be(t._2)
     }
   }
-
 }

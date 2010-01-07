@@ -1,6 +1,6 @@
 package homework
 
-trait Interpreter[E,V] extends Parser[E]{
+trait Interpreter[E,V] {
   def eval(exp: E): V
 }
 
