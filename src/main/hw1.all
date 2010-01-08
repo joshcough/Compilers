@@ -4,6 +4,26 @@
 
 // FILE: homework/HW1.scala
 
+/**
+ * the language interpreted here is exactly as listed in the homework.
+ * here are some example expressions and the values they reduce to (on the right of the ->):
+ *
+ * "hello"-> "hello"
+ * (("hello" & " ") & "world") -> "hello world"
+ * (("hello" @ "l") & ("a world" @ "a")) -> "lo world"
+ * ("filename.scm" @ ".") -> "scm")
+ *
+ * the implementation contains the following:
+ *   a reader to parse Strings into the Scala equivalent of s-expressions
+ *   the parser and interpreter themselves (in object HW1)
+ *   a few tests (though it could certainly use more)
+ *   some minor scaffolding to support the above
+ *
+ * one final thought on the tests: they are terribly ugly.
+ * the scheme tests come out infinitely nicer.
+ *
+ * however, the actual implementation of the parser and interpreter was trivial.
+ */
 package homework
 
 object HW1 {
@@ -144,6 +164,16 @@ class ReaderTest extends FunSuite with MustMatchers {
 ;;;;;;; SCHEME ;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;
+;; the language interpreted here is exactly as listed in the homework.
+;; here are some example expressions and the values they reduce to (on the right of the ->):
+;;
+;; "hello" -> "hello"
+;; (("hello" & " ") & "world") -> "hello world"
+;; (("hello" @ "l") & ("a world" @ "a")) -> "lo world"
+;; ("filename.scm" @ ".") -> "scm")
+;;
+
 ;; FILE homework/hw1.ss
 
 ;; The first three lines of this file were inserted by DrScheme. They record metadata
@@ -195,3 +225,97 @@ class ReaderTest extends FunSuite with MustMatchers {
 (testcode/exn '("" @ "x") "x not found in ")
 (testcode/exn '(("" & "") @ "x") "x not found in ")
 (testcode/exn '(((((((("a" & "b") & ("a" & "b")) & (("a" & "b") & ("a" & "b"))) @ "ab") @ "ab") @ "ab") @ "ab") @ "x") "x not found in ")
+
+-- -------------------
+-- haskell code below
+----------------------
+----------------------
+notes: (this is meant to be in a block comment...)
+this implementation is relatively incomplete
+its my first legit attempt at writing haskell code
+this code can benefit from a LOT of cleanup
+there might (most definitely) be things done in ways that real haskell programmers would laugh at me for
+it doesnt have tests, though ive pasted an interpreter section at the end
+
+the language interpreted here doesnt have proper support for string literals
+the "strings" here are really just sets of consecutive characters. here are some legal expressions
+in this language, and the corresponding values that they reduce to (on the right of the =).
+
+hello = hello
+(hello & world) = helloworld
+(google.com @ .) = com
+((goodbye & cruel) & world) = goodbyecruelworld
+
+the implementation contains the following:
+a reader to parse Strings into SExpr
+the parser and interpreter themselves 
+-- -------------------
+
+data SExpr = StringLit String | List [SExpr]
+
+instance Show SExpr where
+	show (StringLit s) = s
+	show (List e) = show e
+
+reader :: String -> SExpr
+reader s = let (sexpr, _) = readWithRest s in sexpr
+
+readL :: String -> SExpr -> (SExpr,String)
+readL (')' : tail) (List acc) = (List acc, tail)
+readL (x : xs) (List acc) = let (next, rest) = readWithRest(x : xs) in readL rest (List (acc ++ [next]))
+readL _ _ = error "unterminated list"
+
+readChars :: String -> String -> (SExpr, String)
+readChars (' ' : tail) acc = (StringLit acc, [' '] ++ tail)
+readChars (')' : tail) acc = (StringLit acc, [')'] ++tail)
+readChars ('(' : tail) acc = (StringLit acc, ['('] ++tail)
+readChars (c : tail) acc = readChars tail (acc ++ [c])
+readChars [] acc = (StringLit acc, [])
+
+readWithRest :: String -> (SExpr,String)
+readWithRest (' ' : tail) = readWithRest tail
+readWithRest ('(' : tail) = readL tail (List [])
+--readWithRest ('"' : tail) = readStringLit tail ['"']
+readWithRest (c : tail) = readChars (c : tail) []
+
+--readStringLit :: String -> String -> (SExpr, String)
+--readStringLit ('"' : tail) acc = (StringLit (acc ++ ['"']), tail)
+--readStringLit (c : tail) acc = readStringLit tail (acc ++ [c])
+
+data Exp = StringLit2 String | Concat Exp Exp | RestAfter Exp Exp
+
+instance Show Exp where
+	show (StringLit2 s) = s
+	show (Concat l r) = show l ++ " & " ++ show r
+	show (RestAfter l r) = show l ++ " @ " ++ show r
+
+parser :: SExpr -> Exp
+parser (StringLit s) = StringLit2 s
+parser (List (xs : (StringLit "&") : ys : [])) = Concat (parser xs) (parser ys)
+parser (List (xs : (StringLit "@") : ys : [])) = RestAfter (parser xs) (parser ys)
+parser _ = error "unexpected token"
+
+finder :: String -> String -> String
+finder findme instring =
+    if (length findme) > (length instring) then error (findme ++ " not found")
+    else if findme == (take (length findme) instring) then drop (length findme) instring
+    else finder findme (drop 1 instring)
+
+interpreter :: Exp -> String
+interpreter (StringLit2 s) = s
+interpreter (Concat l r) = (interpreter l) ++ (interpreter r)
+interpreter (RestAfter l r) = finder (interpreter r) (interpreter l)
+
+
+-----------------------------
+-- interpreter session below
+-----------------------------
+
+*Main> interpreter (parser (reader "hello"))
+"hello"
+*Main> interpreter (parser (reader "(hello & world)"))
+"helloworld"
+*Main> interpreter (parser (reader "((hello & world) @ wo)"))
+"rld"
+*Main> interpreter (parser (reader "(((hello & world) @ ll) @ w)"))
+"orld"
