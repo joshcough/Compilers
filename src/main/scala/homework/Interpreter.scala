@@ -22,20 +22,25 @@ class Reader {
         case x   #:: tail =>
           val (next, rest) = readWithRest(stream)
           readList(rest, acc ::: List(next))
-	case Stream()     => error("unterminated list")
+	      case Stream()     => error("unterminated list")
       }
     }
 
-    def readChars(stream:Stream[Char]): (String, Stream[Char]) = {
-      val (chars, rest) = stream.span( ! List('(', ')', ' ').contains(_) ) 
-      (chars.mkString, rest)
+    def readSymbol(stream:Stream[Char]): (Symbol, Stream[Char]) = {
+      val (chars, rest) = stream.span( ! List('(', ')', ' ').contains(_) )
+      (Symbol(chars.mkString), rest)
+    }
+
+    def readNum(stream:Stream[Char]): (Int, Stream[Char]) = {
+      val (chars, rest) = stream.span( Character.isDigit(_) )
+      (chars.mkString.toInt, rest)
     }
 
     def readStringLit(stream: Stream[Char], acc: String): (String, Stream[Char]) = {
       stream match {
         case '"' #:: tail => (acc + '"', tail)
         case c   #:: tail => readStringLit(tail, acc + c)
-	case Stream()     => error("unterminated string literal")
+	      case Stream()     => error("unterminated string literal")
       }
     }
 
@@ -44,7 +49,8 @@ class Reader {
       case ' ' #:: tail => readWithRest(tail)
       case '"' #:: tail => readStringLit(tail, "\"")
       case ')' #:: _    => error("unexpected token )")
-      case _ => readChars(stream)
+      case c #:: tail if(Character.isDigit(c)) => readNum(stream)
+      case _ => readSymbol(stream)
     }
   }
 }
