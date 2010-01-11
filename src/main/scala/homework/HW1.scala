@@ -24,8 +24,8 @@ object HW1 {
     def parse(expr: Any): Exp = {
       expr match {
         case s: String => StringLit(s)
-        case List(xs, "&", ys) => Concat(parse(xs), parse(ys))
-        case List(xs, "@", ys) => RestAfter(parse(xs), parse(ys))
+        case List(xs, Symbol("&"), ys) => Concat(parse(xs), parse(ys))
+        case List(xs, Symbol("@"), ys) => RestAfter(parse(xs), parse(ys))
         case _ => error("unexpected token: " + expr)
       }
     }

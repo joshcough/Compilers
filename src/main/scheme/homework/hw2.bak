@@ -16,9 +16,7 @@
      (case (first sexpr)
        [(add) (add (parse (second sexpr)) (parse (third sexpr)))]
        [(sub) (sub (parse (second sexpr)) (parse (third sexpr)))]
-       [(with) (with (first (second sexpr)) 
-                     (parse (second (second sexpr))) 
-                     (parse(third sexpr)) )]
+       [(with) (with (first (second sexpr)) (parse (second (second sexpr))) (parse(third sexpr)) )]
        )]
     [else (error "unexpected token")]
     ))
@@ -88,8 +86,7 @@
 (test (free-ids (parse '(add b a))) (list 'a 'b)) ;; change the order
 (test (free-ids (parse '(add z (add b a)))) (list 'a 'b 'z))
 
-;; simple sub tests are exactly the same as add 
-;;(its debatable that they are needed)
+;; simple sub tests are exactly the same as add (its debatable that they are needed)
 (test (free-ids (parse '(sub 7 8))) (list))
 (test (free-ids (parse '(sub a 7))) (list 'a))
 (test (free-ids (parse '(sub 7 b))) (list 'b))
@@ -100,25 +97,17 @@
 ;; simple with tests
 (test (free-ids (parse '(with (a 7) a))) (list))
 (test (free-ids (parse '(with (a 7) 8))) (list))
-;; b free in body expr
-(test (free-ids (parse '(with (a 7) b))) (list 'b)) 
-;; b free in named expr
-(test (free-ids (parse '(with (a b) a))) (list 'b)) 
-;; b free in named expr and body expr
-(test (free-ids (parse '(with (a b) b))) (list 'b)) 
-;; a free in named expr, same name as name being bound
-(test (free-ids (parse '(with (a a) 7))) (list 'a)) 
-;; a free in named expr same name as name being bound, bound body expr
-(test (free-ids (parse '(with (a a) a))) (list 'a)) 
+(test (free-ids (parse '(with (a 7) b))) (list 'b)) ;; b free in body expr
+(test (free-ids (parse '(with (a b) a))) (list 'b)) ;; b free in named expr
+(test (free-ids (parse '(with (a b) b))) (list 'b)) ;; b free in named expr and body expr
+(test (free-ids (parse '(with (a a) 7))) (list 'a)) ;; a free in named expr, same name as name being bound
+(test (free-ids (parse '(with (a a) a))) (list 'a)) ;; a free in named expr same name as name being bound, bound body expr
 
 ;; nested with tests
-;; nested with expr, no free ids
-(test (free-ids (parse '(with (a (with (b 7) 8)) a))) (list)) 
-;; a free in body of inner with expr
-(test (free-ids (parse '(with (a (with (b 7) a)) a))) (list 'a))
-;; c and d free in named expr of inner with expr
-(test (free-ids (parse '(with (a (with (b (add c d)) b)) a))) (list 'c 'd)) 
-;;;;;;;;;;add a few more tests here
+(test (free-ids (parse '(with (a (with (b 7) 8)) a))) (list)) ;; nested with expr, no free ids
+(test (free-ids (parse '(with (a (with (b 7) a)) a))) (list 'a)) ;; a free in body of inner with expr
+(test (free-ids (parse '(with (a (with (b (add c d)) b)) a))) (list 'c 'd)) ;; c and d free in named expr of inner with expr
+;;;;;;;;;;add a few more tests here ppppppppppppppppppppppppppppppppppppppppppp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; test cases for binding-ids
@@ -150,7 +139,7 @@
 ;; nested with tests
 (test (binding-ids (parse '(with (a (with (b 7) 8)) a))) (list 'a 'b))
 (test (binding-ids (parse '(with (a (with (b 7) a)) a))) (list 'a 'b)) 
-;;;;;;;;;;add a few more tests here
+;;;;;;;;;;add a few more tests here ppppppppppppppppppppppppppppppppppppppppppp
 
 ;; add tests with inner with expressions
 (test (binding-ids (parse '(add 7 (with (a 6) b)))) (list 'a))
@@ -175,32 +164,18 @@
 ;; simple with tests
 (test (bound-ids (parse '(with (a 7) a))) (list 'a))
 (test (bound-ids (parse '(with (a 7) 8))) (list 'a))
-;; b free in body expr
-(test (bound-ids (parse '(with (a 7) b))) (list 'a)) 
-;; b free in named expr
-(test (bound-ids (parse '(with (a b) a))) (list 'a)) 
-;; b free in named expr and body expr
-(test (bound-ids (parse '(with (a b) b))) (list 'a)) 
-;; a free in named expr, same name as name being bound
-(test (bound-ids (parse '(with (a a) 7))) (list 'a))
- ;; a free in named expr same name as name being bound, bound body expr
-(test (bound-ids (parse '(with (a a) a))) (list 'a))
+(test (bound-ids (parse '(with (a 7) b))) (list 'a)) ;; b free in body expr
+(test (bound-ids (parse '(with (a b) a))) (list 'a)) ;; b free in named expr
+(test (bound-ids (parse '(with (a b) b))) (list 'a)) ;; b free in named expr and body expr
+(test (bound-ids (parse '(with (a a) 7))) (list 'a)) ;; a free in named expr, same name as name being bound
+(test (bound-ids (parse '(with (a a) a))) (list 'a)) ;; a free in named expr same name as name being bound, bound body expr
 
 ;; nested with tests
-;; nested with expr, no free ids
-(test (bound-ids (parse '(with (a (with (b 7) 8)) a))) (list 'a 'b)) 
-;; a free in body of inner with expr
-(test (bound-ids (parse '(with (a (with (b 7) a)) a))) (list 'a 'b)) 
-;; c and d free in named expr of inner with expr
-(test (bound-ids (parse '(with (a (with (b (add c d)) b)) a))) (list 'a 'b)) 
-(test 
- (bound-ids (parse '(with (a (with (b (add c d)) b)) (with (z a) (add z z))))) 
- (list 'a 'b 'z))
-(test 
- (bound-ids (parse '(with (z (with (a (add c d)) b)) (with (b a) (add z z))))) 
- (list 'a 'b 'z))
-(test 
- (bound-ids (parse '(with (z (with (z (add c d)) b)) (with (z a) (add z z))))) 
- (list 'z))
-;;;;;;;;;;add a few more tests here
+(test (bound-ids (parse '(with (a (with (b 7) 8)) a))) (list 'a 'b)) ;; nested with expr, no free ids
+(test (bound-ids (parse '(with (a (with (b 7) a)) a))) (list 'a 'b)) ;; a free in body of inner with expr
+(test (bound-ids (parse '(with (a (with (b (add c d)) b)) a))) (list 'a 'b)) ;; c and d free in named expr of inner with expr
+(test (bound-ids (parse '(with (a (with (b (add c d)) b)) (with (z a) (add z z))))) (list 'a 'b 'z))
+(test (bound-ids (parse '(with (z (with (a (add c d)) b)) (with (b a) (add z z))))) (list 'a 'b 'z))
+(test (bound-ids (parse '(with (z (with (z (add c d)) b)) (with (z a) (add z z))))) (list 'z))
+;;;;;;;;;;add a few more tests here ppppppppppppppppppppppppppppppppppppppppppp
 

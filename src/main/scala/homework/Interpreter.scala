@@ -18,11 +18,12 @@ class Reader {
 
     def readList(stream: Stream[Char], acc: List[Any]): (List[Any], Stream[Char]) = {
       stream match {
+        case ' ' #:: tail => readList(tail, acc)
         case ')' #:: tail => (acc, tail)
         case x   #:: tail =>
           val (next, rest) = readWithRest(stream)
           readList(rest, acc ::: List(next))
-	      case Stream()     => error("unterminated list")
+	      case Stream()     => error("unclosed list")
       }
     }
 
@@ -40,7 +41,14 @@ class Reader {
       stream match {
         case '"' #:: tail => (acc + '"', tail)
         case c   #:: tail => readStringLit(tail, acc + c)
-	      case Stream()     => error("unterminated string literal")
+	      case Stream()     => error("unclosed string literal")
+      }
+    }
+
+    def readCharLit(stream: Stream[Char]): (Char, Stream[Char]) = {
+      stream match {
+        case c #:: '\'' #:: tail => (c, tail)
+	      case _  => error("unclosed character literal")
       }
     }
 
@@ -48,7 +56,8 @@ class Reader {
       case '(' #:: tail => readList(tail, Nil)
       case ' ' #:: tail => readWithRest(tail)
       case '"' #:: tail => readStringLit(tail, "\"")
-      case ')' #:: _    => error("unexpected token )")
+      case '\'' #:: tail => readCharLit(tail)
+      case ')' #:: _    => error("unexpected list terminator")
       case c #:: tail if(Character.isDigit(c)) => readNum(stream)
       case _ => readSymbol(stream)
     }
