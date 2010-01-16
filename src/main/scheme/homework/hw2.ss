@@ -1,6 +1,4 @@
-;; The first three lines of this file were inserted by DrScheme. They record metadata
-;; about the language level of this file in a form that our tools can easily process.
-#reader(planet plai/plai:1:6/lang/reader)
+#lang planet plai/plai:1
 (define-type WAE
   [num (n number?)]
   [add (lhs WAE?)(rhs WAE?)]
@@ -67,8 +65,7 @@
              [sub (l r) (list (bound-ids-with-binders l binders)
                               (bound-ids-with-binders r binders))]
              [with (name named-expr body) 
-                   (list name
-                         (bound-ids-with-binders named-expr binders) 
+                   (list (bound-ids-with-binders named-expr binders) 
                          (bound-ids-with-binders body (cons name binders)))]
              )]) (sort (remove-duplicates (flatten l) symbol=?) symbol<?)))
 
@@ -174,23 +171,23 @@
 
 ;; simple with tests
 (test (bound-ids (parse '(with (a 7) a))) (list 'a))
-(test (bound-ids (parse '(with (a 7) 8))) (list 'a))
+(test (bound-ids (parse '(with (a 7) 8))) (list))
 ;; b free in body expr
-(test (bound-ids (parse '(with (a 7) b))) (list 'a)) 
+(test (bound-ids (parse '(with (a 7) b))) (list)) 
 ;; b free in named expr
 (test (bound-ids (parse '(with (a b) a))) (list 'a)) 
 ;; b free in named expr and body expr
-(test (bound-ids (parse '(with (a b) b))) (list 'a)) 
+(test (bound-ids (parse '(with (a b) b))) (list)) 
 ;; a free in named expr, same name as name being bound
-(test (bound-ids (parse '(with (a a) 7))) (list 'a))
+(test (bound-ids (parse '(with (a a) 7))) (list))
  ;; a free in named expr same name as name being bound, bound body expr
 (test (bound-ids (parse '(with (a a) a))) (list 'a))
 
 ;; nested with tests
 ;; nested with expr, no free ids
-(test (bound-ids (parse '(with (a (with (b 7) 8)) a))) (list 'a 'b)) 
+(test (bound-ids (parse '(with (a (with (b 7) 8)) a))) (list 'a)) 
 ;; a free in body of inner with expr
-(test (bound-ids (parse '(with (a (with (b 7) a)) a))) (list 'a 'b)) 
+(test (bound-ids (parse '(with (a (with (b 7) a)) a))) (list 'a)) 
 ;; c and d free in named expr of inner with expr
 (test (bound-ids (parse '(with (a (with (b (add c d)) b)) a))) (list 'a 'b)) 
 (test 
@@ -198,9 +195,9 @@
  (list 'a 'b 'z))
 (test 
  (bound-ids (parse '(with (z (with (a (add c d)) b)) (with (b a) (add z z))))) 
- (list 'a 'b 'z))
+ (list 'z))
 (test 
  (bound-ids (parse '(with (z (with (z (add c d)) b)) (with (z a) (add z z))))) 
  (list 'z))
 ;;;;;;;;;;add a few more tests here
-
+(test (bound-ids (parse '(with (x 1) 1))) (list))
