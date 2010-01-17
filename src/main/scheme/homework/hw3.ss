@@ -9,8 +9,7 @@
 ;          | <id>
 ;          | {<id> <F1WAE>*}
 ;          | {rec {<id> <F1WAE>}*}
-;          | {get <F1WAE> <id>}
-
+;          | {get <F1WAE> <id>
 (define-type F1WAE
   [num (n number?)]
   [add (lhs F1WAE?)(rhs F1WAE?)]
@@ -21,25 +20,21 @@
   [rec (fields SymExprPairList?)]
   [get (r F1WAE?)(id symbol?)])
 
-(define-type F1WAE-Val
-  [num-val (n number?)]
-  [rec-val (r rec?)])
-
-(define (f1wae-val->f1wae v)
-  (type-case F1WAE-Val v
-    [num-val (n) (num n)]
-    [rec-val (r) r]))
-
-(define-type SymExprPair
-  [symExprPair (name symbol?)(expr F1WAE?)])
-
-(define (SymExprPairList? l) (andmap SymExprPair? l))
-
 (define-type FunDef
   [fundef (name symbol?)
           (arg-names list?)
           (body F1WAE?)])
 
+(define-type F1WAE-Val
+  [num-val (n number?)]
+  [rec-val (r rec?)])
+
+;; ive chosen to represent records as an F1WAE containing 
+;; a list of SymExprPair. 
+(define-type SymExprPair [symExprPair (name symbol?)(expr F1WAE?)])
+(define (SymExprPairList? l) (andmap SymExprPair? l))
+
+;; parse : sexpr -> F1WAE
 (define (parse sexpr)
   (cond
     [(number? sexpr) (num sexpr)]
@@ -61,7 +56,8 @@
     [else (error "unexpected token")]
     ))
 
-; '{deffun {f x y} {+ x y}}
+;; parse : sexpr -> FunDef
+;; example: '{deffun {f x y} {+ x y}}
 (define (parse-defn sexpr)
   (define (same-size l r) (= (length l)(length r)))
   (define (parse-arg-names l)
@@ -105,10 +101,7 @@
                         defs)])
                (error "wrong arity")))
          ]
-    [rec (fields) 
-      (rec-val (rec (map (lambda (x) 
-                  (symExprPair (symExprPair-name x)(symExprPair-expr x))) 
-                fields)))]
+    [rec (fields) (rec-val expr)]
     [get (rec id) 
          (interp (find-in-record (rec-val-r (interp rec defs)) id) defs)]
     ))
@@ -119,7 +112,9 @@
         [else (if (symbol=? fname (fundef-name (first l)))
               (first l) (lookup-fundef fname (rest l)))]))
 
-;; substN: F1WAE list-of-sym list-of-num -> F1WAE
+;; substN: F1WAE list-of-sym list-of-F1WAE-Val -> F1WAE
+;; for each id in sub-ids, substitute in expr the corresponding val from vals
+;; TODO - maybe this can be changed to use foldl
 (define (subst-N expr sub-ids vals)
   (cond [(empty? sub-ids) expr]
         [else (subst-N (subst expr (first sub-ids)(first vals)) 
@@ -137,6 +132,9 @@
         (if (symbol=? bound-id sub-id)
             body-expr
             (subst body-expr sub-id val)))]
+    ;; i dont really feel comfortable turning an already evaluated
+    ;; expression back into an F1WAE that needs to be re-evaluated.
+    ;; TODO - maybe i can find a way to avoid this.
     [id (name) (if (symbol=? name sub-id) (f1wae-val->f1wae val) expr)]
     [app (fname arg-exprs)
          (app fname (map (lambda (x) (subst x sub-id val)) arg-exprs))]
@@ -148,8 +146,16 @@
     [get (rec id) (get (subst rec sub-id val) id)]
     ))
 
+;; f1wae-val->f1wae : f1wae-val -> f1wae
+;; turns an f1wae-val back into an f1wae
+(define (f1wae-val->f1wae v)
+  (type-case F1WAE-Val v
+    [num-val (n) (num n)]
+    [rec-val (r) r]))
+  
 (define (add-vals left right) (math-with-vals left right +))
 (define (sub-vals left right) (math-with-vals left right -))
+;; TODO - this can probably be cleaned up.
 (define (math-with-vals left right op)
   (type-case F1WAE-Val left
     [num-val (n) 
@@ -161,19 +167,25 @@
 ;; find-in-record : rec sym -> F1WAE
 (define (find-in-record rec id)
   (type-case Option 
-    (find (lambda (x) (symbol=? (symExprPair-name x) id)) (rec-fields rec)) 
+    (findo (lambda (x) (symbol=? (symExprPair-name x) id)) (rec-fields rec)) 
     [some (v) (symExprPair-expr v)]
     [none () (error (string-append "field not found: " (symbol->string id)))]))
 
+;; Scala's Option, Maybe in Haskell.
 (define-type Option
   [none]
   [some (v (lambda (x) #t))])
 
+;; Like findf, but returns the (some element) or (none) 
+;; instead of the element or #f.
+;; i did this because i don't feel comfortable with findf returning false
+;; what if the very thing that you are looking for is #f ?
+;; how would you know if #f was in the list or not?
 ;; find [T]: (T => Boolean) List[T] -> Option[T]
-(define (find p l)
+(define (findo p l)
   (cond [(empty? l) (none)]
         [(p (first l)) (some (first l))]
-        [else (find p (cdr l))]))
+        [else (findo p (cdr l))]))
 
 ;; parser tests
 (test (parse 7) (num 7))
@@ -249,7 +261,9 @@
 (test (interp-expr (parse '{get {rec {r {rec {z 0}}}} r}) empty)'record)
 (test (interp-expr (parse '{get {get {rec {r {rec {z 0}}}} r} z})empty) 0)
 
-;;;;;;;; random unused stuff ;;;;;;;;;;;;;;
+;;;;;;;; random utility stuff ;;;;;;;;;;;;;;
+(test (findo (lambda (x) (= x 5)) (list 1 2 3 4)) (none))
+(test (findo (lambda (x) (= x 5)) (list 1 2 3 4 5)) (some 5))
 (test (foldl + 0 '(1 2 3 4 5)) 15)
 ;(define (zip ll lr)
 ;  (cond [(empty? ll) '()]
