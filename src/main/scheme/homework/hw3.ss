@@ -1,13 +1,39 @@
 ;; The first three lines of this file were inserted by DrScheme. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
 #reader(planet plai/plai:1:7/lang/reader)
+;  <FunDef> = {deffun {<id> <id>*} <F1WAE>}
+;  <F1WAE> = <number>
+;          | {+ <F1WAE> <F1WAE>}
+;          | {- <F1WAE> <F1WAE>}
+;          | {with {<id> <F1WAE>} <F1WAE>}
+;          | <id>
+;          | {<id> <F1WAE>*}
+;          | {rec {<id> <F1WAE>}*}
+;          | {get <F1WAE> <id>}
+
 (define-type F1WAE
   [num (n number?)]
   [add (lhs F1WAE?)(rhs F1WAE?)]
   [sub (lhs F1WAE?)(rhs F1WAE?)]
   [with (name symbol?)(named-expr F1WAE?)(body F1WAE?)]
   [id (name symbol?)]
-  [app (fun-name symbol?)(args list?)])
+  [app (fun-name symbol?)(args list?)]
+  [rec (fields SymExprPairList?)]
+  [get (r F1WAE?)(id symbol?)])
+
+(define-type F1WAE-Val
+  [num-val (n number?)]
+  [rec-val (r rec?)])
+
+(define (f1wae-val->f1wae v)
+  (type-case F1WAE-Val v
+    [num-val (n) (num n)]
+    [rec-val (r) r]))
+
+(define-type SymExprPair
+  [symExprPair (name symbol?)(expr F1WAE?)])
+
+(define (SymExprPairList? l) (andmap SymExprPair? l))
 
 (define-type FunDef
   [fundef (name symbol?)
@@ -26,6 +52,10 @@
                      (parse (second (second sexpr))) 
                      (parse (third sexpr)) )]
        [(deffun) (parse-defn sexpr)]
+       [(rec) (rec (map (lambda (x) 
+                          (symExprPair (first x)(parse (second x)))) 
+                        (cdr sexpr)))]
+       [(get) (get (parse (second sexpr)) (third sexpr))]
        [else (app (first sexpr) (map parse (cdr sexpr)))]
        )]
     [else (error "unexpected token")]
@@ -43,17 +73,18 @@
     [else (error "unexpected token")]
     ))
 
-;(define (zip ll lr)
-;  (cond [(empty? ll) '()]
-;        [(empty? lr) '()]
-;        [else (cons (list (first ll) (first lr)) (zip (cdr ll) (cdr lr)))]))
+;; interp-expr : F1WAE list-of-FunDef -> num or 'record
+(define (interp-expr expr defs)
+  (type-case F1WAE-Val (interp expr defs)
+    [num-val (n) n]
+    [rec-val (r) 'record]))
 
-;; interp : F1WAE list-of-FunDef -> num
+;; interp : F1WAE list-of-FunDef -> F1WAE-Val
 (define (interp expr defs)
   (type-case F1WAE expr
-    [num (n) n]
-    [add (l r) (+ (interp l defs) (interp r defs))]
-    [sub (l r) (- (interp l defs) (interp r defs))]
+    [num (n) (num-val n)]
+    [add (l r) (add-vals (interp l defs) (interp r defs))]
+    [sub (l r) (sub-vals (interp l defs) (interp r defs))]
     [with (bound-id named-expr body-expr)
       (interp (subst body-expr bound-id (interp named-expr defs)) defs)]
     [id (name) (error 'interp "free variable")]
@@ -68,7 +99,14 @@
                                  (map (lambda (x) (interp x defs)) arg-exprs))
                         defs)])
                (error "wrong arity")))
-         ]))
+         ]
+    [rec (fields) 
+      (rec-val (rec (map (lambda (x) 
+                  (symExprPair (symExprPair-name x)(symExprPair-expr x))) 
+                fields)))]
+    [get (rec id) 
+         (interp (find-in-record (rec-val-r (interp rec defs)) id) defs)]
+    ))
 
 ;; lookup-fundef : sym list-of-FunDef -> FunDef
 (define (lookup-fundef fname l)
@@ -82,29 +120,55 @@
         [else (subst-N (subst expr (first sub-ids)(first vals)) 
                       (cdr sub-ids) (cdr vals))]))
 
-;; subst : F1WAE sym num -> F1WAE
+;; subst : F1WAE sym F1WAE-Val -> F1WAE
 (define (subst expr sub-id val)
   (type-case F1WAE expr
     [num (n) expr]
-    [add (l r) (add (subst l sub-id val)
-                    (subst r sub-id val))]
-    [sub (l r) (sub (subst l sub-id val)
-                    (subst r sub-id val))]
+    [add (l r) (add (subst l sub-id val)(subst r sub-id val))]
+    [sub (l r) (sub (subst l sub-id val)(subst r sub-id val))]
     [with (bound-id named-expr body-expr)
       (with bound-id 
         (subst named-expr sub-id val)
         (if (symbol=? bound-id sub-id)
             body-expr
             (subst body-expr sub-id val)))]
-    [id (name) (if (symbol=? name sub-id)
-                   (num val)
-                   expr)]
+    [id (name) (if (symbol=? name sub-id) (f1wae-val->f1wae val) expr)]
     [app (fname arg-exprs)
-         (app fname (map (lambda (x) (subst x sub-id val)) arg-exprs))]))
+         (app fname (map (lambda (x) (subst x sub-id val)) arg-exprs))]
+    [rec (fields) 
+      (rec (map (lambda (x) 
+                  (symExprPair (symExprPair-name x)
+                               (subst (symExprPair-expr x) sub-id val))) 
+                fields))]
+    [get (rec id) (get (subst rec sub-id val) id)]
+    ))
 
+(define (add-vals left right) (math-with-vals left right +))
+(define (sub-vals left right) (math-with-vals left right -))
+(define (math-with-vals left right op)
+  (type-case F1WAE-Val left
+    [num-val (n) 
+             (type-case F1WAE-Val right
+               [num-val (m) (num-val (op n m))]
+               [rec-val (r) (error "cant do math on records")])]
+    [rec-val (r) (error "cant do math on records")]))
 
-(test (foldl + 0 '(1 2 3 4 5)) 15)
-;(test (zip '(1 2 3) '(a b c)) (list (list 1 'a) (list 2 'b) (list 3 'c)))
+;; find-in-record : rec sym -> F1WAE
+(define (find-in-record rec id)
+  (type-case Option 
+    (find (lambda (x) (symbol=? (symExprPair-name x) id)) (rec-fields rec)) 
+    [some (v) (symExprPair-expr v)]
+    [none () (error (string-append "field not found: " (symbol->string id)))]))
+
+(define-type Option
+  [none]
+  [some (v (lambda (x) #t))])
+
+;; find [T]: (T => Boolean) List[T] -> Option[T]
+(define (find p l)
+  (cond [(empty? l) (none)]
+        [(p (first l)) (some (first l))]
+        [else (find p (cdr l))]))
 
 ;; parser tests
 (test (parse 7) (num 7))
@@ -113,20 +177,76 @@
 (test (parse-defn '{deffun {f x y} {+ x y}}) 
       (fundef 'f '(x y) (add (id 'x) (id 'y))))
 (test (parse '(f x y)) (app 'f (list (id 'x) (id 'y))))
+(test (parse '(rec (x 6))) (rec (list (symExprPair 'x (num 6)))))
+(test (parse '(rec (x (+ 6 7)))) 
+      (rec (list (symExprPair 'x (add (num 6)(num 7))))))
+
+; funny case... parser allows (+ rec rec), must fail in interpreter
+(test (parse '(+ (rec (x 6)(y 7)) (rec (x 6)(y 7)))) 
+      (add (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))
+           (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))))
 
 ;; substitution tests!
-(test (subst (app 'f (list (id 'x) (id 'y))) 'x 7) 
-      (app 'f (list (num 7) (id 'y))))
+(test (subst (app 'f (list (id 'x) (id 'y))) 'x (num-val 7)) (app 'f (list (num 7) (id 'y))))
+(test (subst (add (num 1) (id 'x)) 'x (num-val 10)) (add (num 1) (num 10)))
+(test (subst (id 'x) 'x (num-val 10)) (num 10))
+(test (subst (id 'y) 'x (num-val 10)) (id 'y))
+(test (subst (sub (id 'x) (num 1)) 'y (num-val 10))(sub (id 'x) (num 1)))
+(test (subst (app 'x (list (num 10))) 'y (num-val 12))(app 'x (list (num 10))))
+(test (subst (app 'x (list (id 'y))) 'y (num-val 12))(app 'x (list (num 12))))
+(test (subst (app 'y (list (num 10))) 'y (num-val 12)) (app 'y (list (num 10))))
+(test (subst (with 'y (num 17) (id 'x)) 'x (num-val 10))(with 'y (num 17) (num 10)))
+(test (subst (with 'y (id 'x) (id 'y)) 'x (num-val 10))(with 'y (num 10) (id 'y)))
+(test (subst (with 'x (id 'y) (id 'x)) 'x (num-val 10))(with 'x (id 'y) (id 'x)))
+(test (subst (parse '(rec (x y))) 'y (num-val 6))(rec (list (symExprPair 'x (num 6)))))
 
 ;; interpreter tests!
+(test (interp-expr (num 5) empty) 5)
 (test 
- (interp (parse '{f 1 2}) (list (parse-defn '{deffun {f x y} {+ x y}})))
+ (interp-expr (parse '{f 1 2}) (list (parse-defn '{deffun {f x y} {+ x y}})))
  3)
-
 (test 
- (interp (parse '{+ {f} {f}})(list (parse-defn '{deffun {f} 5}))) 
+ (interp-expr (parse '{+ {f} {f}})(list (parse-defn '{deffun {f} 5}))) 
  10)
-
 (test/exn 
- (interp (parse '{f 1})(list (parse-defn '{deffun {f x y} {+ x y}})))
+ (interp-expr (parse '{f 1})(list (parse-defn '{deffun {f x y} {+ x y}})))
  "wrong arity")
+(test (interp-expr (parse '(+ 1 2)) empty) 3)
+(test (interp-expr (parse '(- 1 2)) empty) -1)
+(test (interp-expr (parse '(with (x (+ 1 17)) (+ x 12))) empty) 30)
+(test/exn (interp-expr (id 'x) empty) "free variable")
+(test/exn (interp-expr (parse '(f 10)) empty) "no such function")
+(test (interp-expr (parse '(f 10))
+              (list (parse-defn '{deffun {f y} {+ y 1}}))) 11)
+(test (interp-expr (parse '(f 10))
+              (list (parse-defn '{deffun {f y} {with {y 7} y}}))) 7)
+
+;; find in record tests
+(test (find-in-record (rec (list (symExprPair 'x (num 6)))) 'x) (num 6))
+(test (find-in-record 
+       (rec (list (symExprPair 'x (num 54))(symExprPair 'y (num 42)))) 'x) 
+      (num 54))
+(test (find-in-record 
+       (rec (list (symExprPair 'x (num 54))(symExprPair 'y (num 42)))) 'y) 
+      (num 42))
+(test/exn  
+ (find-in-record (rec (list (symExprPair 'x (num 6)))) 'z) 
+ "field not found: z")
+
+;; tests from hw page
+(test (interp-expr (parse '{rec {a 10} {b {+ 1 2}}}) empty) 'record)
+(test (interp-expr (parse '{get {rec {a 10} {b {+ 1 2}}} b}) empty) 3)
+(test/exn (interp-expr (parse '{get {rec {a 10}} b}) empty) "field not found: b")
+(test (interp-expr (parse '{g {rec {a 0} {c 12} {b 7}}})
+                   (list (parse-defn '{deffun {g r} {get r c}}))) 12)
+(test (interp-expr (parse '{get {rec {r {rec {z 0}}}} r}) empty)'record)
+(test (interp-expr (parse '{get {get {rec {r {rec {z 0}}}} r} z})empty) 0)
+
+;;;;;;;; random unused stuff ;;;;;;;;;;;;;;
+(test (foldl + 0 '(1 2 3 4 5)) 15)
+;(define (zip ll lr)
+;  (cond [(empty? ll) '()]
+;        [(empty? lr) '()]
+;        [else (cons (list (first ll) (first lr)) (zip (cdr ll) (cdr lr)))]))
+;(test (zip '(1 2 3) '(a b c)) (list (list 1 'a) (list 2 'b) (list 3 'c)))
+
