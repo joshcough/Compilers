@@ -63,11 +63,16 @@
 
 ; '{deffun {f x y} {+ x y}}
 (define (parse-defn sexpr)
+  (define (same-size l r) (= (length l)(length r)))
+  (define (parse-arg-names l)
+    (if (same-size l (remove-duplicates l symbol=?)) 
+        l 
+        (error "bad syntax")))
   (cond
     [(list? sexpr)
      (case (first sexpr)
        [(deffun) (fundef (first (second sexpr)) 
-                         (cdr (second sexpr))
+                         (parse-arg-names (cdr (second sexpr)))
                          (parse (third sexpr)))]
        )]
     [else (error "unexpected token")]
@@ -176,6 +181,8 @@
 (test (parse-defn '{deffun {f x} x}) (fundef 'f (list 'x) (id 'x)))
 (test (parse-defn '{deffun {f x y} {+ x y}}) 
       (fundef 'f '(x y) (add (id 'x) (id 'y))))
+(test/exn (parse-defn '(deffun (f y y) (+ y 1))) "bad syntax")
+(test/exn (parse-defn '(deffun (f y x y) (+ y 1))) "bad syntax")
 (test (parse '(f x y)) (app 'f (list (id 'x) (id 'y))))
 (test (parse '(rec (x 6))) (rec (list (symExprPair 'x (num 6)))))
 (test (parse '(rec (x (+ 6 7)))) 
