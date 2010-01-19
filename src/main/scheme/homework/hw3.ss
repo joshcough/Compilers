@@ -20,8 +20,6 @@
   [rec (fields (list-of? SymExprPair?))]
   [get (r F1WAE?)(id symbol?)])
 
-(define (list-of? t) (lambda (l) (andmap t l)))
-
 (define-type FunDef
   [fundef (name symbol?)
           (arg-names list?)
@@ -34,6 +32,9 @@
 ;; ive chosen to represent records as an F1WAE containing 
 ;; a list of SymExprPair. 
 (define-type SymExprPair [symExprPair (name symbol?)(expr F1WAE?)])
+
+;; utility
+(define (list-of? t) (lambda (l) (andmap t l)))
 
 ;; parse : sexpr -> F1WAE
 (define (parse sexpr)
@@ -52,6 +53,7 @@
                           (symExprPair (first x)(parse (second x)))) 
                         (cdr sexpr)))]
        [(get) (get (parse (second sexpr)) (third sexpr))]
+       ;; assume any other symbols are function names, therefore application.
        [else (app (first sexpr) (map parse (cdr sexpr)))]
        )]
     [else (error "unexpected token")]
@@ -74,12 +76,11 @@
     [else (error "unexpected token")]
     ))
 
-;; lookup-fundef : sym list-of-FunDef -> FunDef
-(define (lookup-fundef fname l)
-  (cond [(empty? l) (error "no such function")]
-        [else (if (symbol=? fname (fundef-name (first l)))
-              (first l) (lookup-fundef fname (rest l)))]))
-
+;; fundef-lookup : sym list-of-FunDef -> FunDef
+(define (fundef-lookup fname l)
+  (find-or-die
+   (lambda (f) (symbol=? (fundef-name f) fname)) l "no such function"))
+  
 ;; subst : F1WAE sym F1WAE-Val -> F1WAE
 (define (subst expr sub-id val)
   (type-case F1WAE expr
@@ -121,23 +122,21 @@
     [num-val (n) (num n)]
     [rec-val (r) r]))
   
+;; math functions
 (define (add-vals left right) (math-with-vals left right +))
 (define (sub-vals left right) (math-with-vals left right -))
-;; TODO - this can probably be cleaned up.
 (define (math-with-vals left right op)
-  (type-case F1WAE-Val left
-    [num-val (n) 
-             (type-case F1WAE-Val right
-               [num-val (m) (num-val (op n m))]
-               [rec-val (r) (error "cant do math on records")])]
-    [rec-val (r) (error "cant do math on records")]))
+  (if (and (num-val? left)(num-val? right))
+      (num-val (op (num-val-n left) (num-val-n right)))
+      (error "cant do math on records")))
 
 ;; find-in-record : rec sym -> F1WAE
 (define (find-in-record rec id)
-  (type-case Option 
-    (findo (lambda (x) (symbol=? (symExprPair-name x) id)) (rec-fields rec)) 
-    [some (v) (symExprPair-expr v)]
-    [none () (error (string-append "field not found: " (symbol->string id)))]))
+  (symExprPair-expr 
+   (find-or-die 
+    (lambda (f) (symbol=? (symExprPair-name f) id)) 
+    (rec-fields rec) 
+    (string-append "field not found: " (symbol->string id)))))
 
 ;; Scala's Option, Maybe in Haskell.
 (define-type Option [none] [some (v (lambda (x) #t))])
@@ -152,6 +151,11 @@
   (cond [(empty? l) (none)]
         [(p (first l)) (some (first l))]
         [else (findo p (cdr l))]))
+
+;; utility function 
+;; find-or-die predicate list[T] string -> T
+(define (find-or-die p l error-string)
+  (type-case Option (findo p l) [some (v) v] [none () (error error-string)]))
 
 ;; interp-expr : F1WAE list-of-FunDef -> num or 'record
 (define (interp-expr expr defs)
@@ -169,7 +173,7 @@
       (interp (subst body-expr bound-id (interp named-expr defs)) defs)]
     [id (name) (error 'interp "free variable")]
     [app (fname arg-exprs)
-         (local [(define f (lookup-fundef fname defs))]
+         (local [(define f (fundef-lookup fname defs))]
            (if (= (length (fundef-arg-names f))(length arg-exprs))
                (case (length arg-exprs)
                  [(0) (interp (fundef-body f) defs)]
@@ -276,11 +280,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lookup-fundef tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(test/exn (lookup-fundef 'z '()) "no such function")
-(test (lookup-fundef 'f (list (fundef 'f (list 'x) (id 'x)))) 
+(test/exn (fundef-lookup 'z '()) "no such function")
+(test (fundef-lookup 'f (list (fundef 'f (list 'x) (id 'x)))) 
       (fundef 'f (list 'x) (id 'x)))
-(test (lookup-fundef 'f (list (fundef 'f '() (id 'x))))(fundef 'f '() (id 'x)))
-(test/exn (lookup-fundef 'z (list (fundef 'f (list 'x) (id 'x)))) 
+(test (fundef-lookup 'f (list (fundef 'f '() (id 'x))))(fundef 'f '() (id 'x)))
+(test/exn (fundef-lookup 'z (list (fundef 'f (list 'x) (id 'x)))) 
           "no such function")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -300,40 +304,82 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interpreter tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; base cases
 (test (interp-expr (num 5) empty) 5)
-(test 
- (interp-expr (parse '{f 1 2}) (list (parse-defn '{deffun {f x y} {+ x y}})))
- 3)
-(test 
- (interp-expr (parse '{+ {f} {f}})(list (parse-defn '{deffun {f} 5}))) 
- 10)
-(test/exn 
- (interp-expr (parse '{f 1})(list (parse-defn '{deffun {f x y} {+ x y}})))
- "wrong arity")
 (test (interp-expr (parse '(+ 1 2)) empty) 3)
 (test (interp-expr (parse '(- 1 2)) empty) -1)
 (test (interp-expr (parse '(with (x (+ 1 17)) (+ x 12))) empty) 30)
-(test/exn (interp-expr (id 'x) empty) "free variable")
-(test/exn (interp-expr (parse '(f 10)) empty) "no such function")
+
+; application of no arg function
+(test 
+ (interp-expr (parse '{+ {f} {f}})(list (parse-defn '{deffun {f} 5}))) 
+ 10)
+; simple function application
 (test (interp-expr (parse '(f 10))
               (list (parse-defn '{deffun {f y} {+ y 1}}))) 11)
 (test (interp-expr (parse '(f 10))
               (list (parse-defn '{deffun {f y} {with {y 7} y}}))) 7)
+(test 
+ (interp-expr (parse '{f 1}) (list (parse-defn '{deffun {f x} {+ x 8}})))
+ 9)
+(test 
+ (interp-expr (parse '{f 1 2}) (list (parse-defn '{deffun {f x y} {+ x y}})))
+ 3)
+
+; record
+(test (interp-expr (parse '{rec {a 10} {b {+ 1 2}}}) empty) 'record)
+
+; get
+(test (interp-expr (parse '{get {rec {r {rec {z 0}}}} r}) empty)'record)
+(test (interp-expr (parse '{get {rec {a 10} {b {+ 1 2}}} b}) empty) 3)
+(test (interp-expr 
+       (parse '{+ 10 {get {get {rec {r {rec {z 10}}}} r} z}}) empty) 20)
+; nested get
+(test (interp-expr (parse '{get {get {rec {r {rec {z 0}}}} r} z})empty) 0)
+
+; error cases
+(test/exn (interp-expr (id 'x) empty) "free variable")
+(test/exn (interp-expr (parse '(f 10)) empty) "no such function")
+(test/exn 
+ (interp-expr (parse '{f 1})(list (parse-defn '{deffun {f} {+ 6 7}})))
+ "wrong arity")
+(test/exn 
+ (interp-expr (parse '{f 1})(list (parse-defn '{deffun {f x y} {+ x y}})))
+ "wrong arity")
+
+; error cases for attempting math on record values
+(test/exn (interp (parse '(+ 7 (rec (x 10)))) empty) "cant do math on records")
+(test/exn (interp (parse '(- 7 (rec (x 10)))) empty) "cant do math on records")
+(test/exn (interp (parse '(- (rec (x 10)) (rec (x 10)))) empty) 
+          "cant do math on records")
+
+; error case for get
+(test/exn (interp-expr (parse '{get {rec {a 10}} b}) empty) "field not found: b")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; tests from hw page
+;; climax examples
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(test (interp-expr (parse '{rec {a 10} {b {+ 1 2}}}) empty) 'record)
-(test (interp-expr (parse '{get {rec {a 10} {b {+ 1 2}}} b}) empty) 3)
-(test/exn (interp-expr (parse '{get {rec {a 10}} b}) empty) "field not found: b")
 (test (interp-expr (parse '{g {rec {a 0} {c 12} {b 7}}})
                    (list (parse-defn '{deffun {g r} {get r c}}))) 12)
-(test (interp-expr (parse '{get {rec {r {rec {z 0}}}} r}) empty)'record)
-(test (interp-expr (parse '{get {get {rec {r {rec {z 0}}}} r} z})empty) 0)
+
+(test (interp-expr 
+       (parse '{with {x 7}{g {rec {a 0} {c 12}} {rec {d x}}}})
+       (list (parse-defn '{deffun {g r1 r2} {+ {get r1 c}{get r2 d}}}))) 19)
+
+(test (interp-expr 
+       (parse '{with {x 7} {with {x 8}{g {rec {a 0} {c 12}} {rec {d x}}}}})
+       (list (parse-defn '{deffun {g r1 r2} {+ {get r1 c}{get r2 d}}}))) 20)
+
+(test (interp-expr 
+       (parse '{with {x 7} {with {x 9}{g {rec {a 0} {x 12}} {rec {x x}}}}})
+       (list (parse-defn '{deffun {g r1 r2} {+ {get r1 x}{get r2 x}}}))) 21)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; random utility stuff 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(test ((list-of? symbol?) '(a b c)) #t)
+(test ((list-of? symbol?) '(a b "ewrewr")) #f)
 (test (findo (lambda (x) (= x 5)) (list 1 2 3 4)) (none))
 (test (findo (lambda (x) (= x 5)) (list 1 2 3 4 5)) (some 5))
 (test (foldl + 0 '(1 2 3 4 5)) 15)
