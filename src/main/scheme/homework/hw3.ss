@@ -1,6 +1,4 @@
-;; The first three lines of this file were inserted by DrScheme. They record metadata
-;; about the language level of this file in a form that our tools can easily process.
-#reader(planet plai/plai:1:7/lang/reader)
+#lang planet plai/plai:1
 ;  <FunDef> = {deffun {<id> <id>*} <F1WAE>}
 ;  <F1WAE> = <number>
 ;          | {+ <F1WAE> <F1WAE>}
@@ -45,13 +43,9 @@
      (case (first sexpr)
        [(+) (add (parse (second sexpr)) (parse (third sexpr)))]
        [(-) (sub (parse (second sexpr)) (parse (third sexpr)))]
-       [(with) (with (first (second sexpr)) 
-                     (parse (second (second sexpr))) 
-                     (parse (third sexpr)) )]
+       [(with) (parse-with sexpr)]
        [(deffun) (parse-defn sexpr)]
-       [(rec) (rec (map (lambda (x) 
-                          (symExprPair (first x)(parse (second x)))) 
-                        (cdr sexpr)))]
+       [(rec) (parse-rec sexpr)]
        [(get) (get (parse (second sexpr)) (third sexpr))]
        ;; assume any other symbols are function names, therefore application.
        [else (app (first sexpr) (map parse (cdr sexpr)))]
@@ -59,27 +53,42 @@
     [else (error "unexpected token")]
     ))
 
+;; parse-with : sexpr -> rec
+(define (parse-with sexpr)
+  (with (first (second sexpr)) 
+        (parse (second (second sexpr))) 
+        (parse (third sexpr))))
+
+;; parse-rec : sexpr -> rec
+(define (parse-rec sexpr)
+  (let ([dummy 
+         (check-for-dups 
+          (map (lambda (x) (first x)) (cdr sexpr)) "duplicate fields")])
+    (rec (map (lambda (x) 
+                (symExprPair (first x)(parse (second x)))) 
+              (cdr sexpr)))))
+
 ;; parse-defn : sexpr -> FunDef
 (define (parse-defn sexpr)
-  (define (same-size l r) (= (length l)(length r)))
-  (define (parse-arg-names l)
-    (if (same-size l (remove-duplicates l symbol=?)) 
-        l 
-        (error "bad syntax")))
   (cond
     [(list? sexpr)
      (case (first sexpr)
        [(deffun) (fundef (first (second sexpr)) 
-                         (parse-arg-names (cdr (second sexpr)))
+                         (check-for-dups (cdr (second sexpr)) "bad syntax")
                          (parse (third sexpr)))]
        )]
-    [else (error "unexpected token")]
-    ))
+    [else (error "unexpected token")]))
+
+(define (check-for-dups l error-message)
+  (if (same-size l (remove-duplicates l symbol=?))
+      l
+      (error error-message)))
 
 ;; fundef-lookup : sym list-of-FunDef -> FunDef
 (define (fundef-lookup fname l)
   (find-or-die
-   (lambda (f) (symbol=? (fundef-name f) fname)) l "no such function"))
+   (lambda (f) (symbol=? (fundef-name f) fname)) l 
+   (string-append "undefined function: " (symbol->string fname))))
   
 ;; subst : F1WAE sym F1WAE-Val -> F1WAE
 (define (subst expr sub-id val)
@@ -136,11 +145,12 @@
    (find-or-die 
     (lambda (f) (symbol=? (symExprPair-name f) id)) 
     (rec-fields rec) 
-    (string-append "field not found: " (symbol->string id)))))
+    "no such field")))
 
+;; utility types and functions
 ;; Scala's Option, Maybe in Haskell.
 (define-type Option [none] [some (v (lambda (x) #t))])
-
+  
 ;; Like findf, but returns the (some element) or (none) 
 ;; instead of the element or #f.
 ;; i did this because i don't feel comfortable with findf returning false
@@ -151,19 +161,23 @@
   (cond [(empty? l) (none)]
         [(p (first l)) (some (first l))]
         [else (findo p (cdr l))]))
-
-;; utility function 
-;; find-or-die predicate list[T] string -> T
+;; find-or-die: predicate list[T] string -> T
 (define (find-or-die p l error-string)
   (type-case Option (findo p l) [some (v) v] [none () (error error-string)]))
+;; same-size: list list -> boolean
+(define (same-size l r) (= (length l)(length r)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interp-expr : F1WAE list-of-FunDef -> num or 'record
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (interp-expr expr defs)
   (type-case F1WAE-Val (interp expr defs)
     [num-val (n) n]
     [rec-val (r) 'record]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interp : F1WAE list-of-FunDef -> F1WAE-Val
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (interp expr defs)
   (type-case F1WAE expr
     [num (n) (num-val n)]
@@ -171,7 +185,7 @@
     [sub (l r) (sub-vals (interp l defs) (interp r defs))]
     [with (bound-id named-expr body-expr)
       (interp (subst body-expr bound-id (interp named-expr defs)) defs)]
-    [id (name) (error 'interp "free variable")]
+    [id (name) (error 'interp "free identifier")]
     [app (fname arg-exprs)
          (local [(define f (fundef-lookup fname defs))]
            (if (= (length (fundef-arg-names f))(length arg-exprs))
@@ -206,10 +220,13 @@
       (get (rec (list (symExprPair 'x (num 7)))) 'x))
 (test (parse '(get z x)) (get (id 'z) 'x))
 (test (parse '(f x y)) (app 'f (list (id 'x) (id 'y))))
-; funny case... parser allows (+ rec rec), must fail in interpreter
+; parser allows (+ rec rec), must fail in interpreter
 (test (parse '(+ (rec (x 6)(y 7)) (rec (x 6)(y 7)))) 
       (add (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))
            (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))))
+
+; parser error case
+(test/exn (parse-rec '{rec {a 0} {a 12}}) "duplicate fields")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse-defn tests
@@ -280,12 +297,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lookup-fundef tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(test/exn (fundef-lookup 'z '()) "no such function")
+(test/exn (fundef-lookup 'z '()) "undefined function: z")
 (test (fundef-lookup 'f (list (fundef 'f (list 'x) (id 'x)))) 
       (fundef 'f (list 'x) (id 'x)))
 (test (fundef-lookup 'f (list (fundef 'f '() (id 'x))))(fundef 'f '() (id 'x)))
 (test/exn (fundef-lookup 'z (list (fundef 'f (list 'x) (id 'x)))) 
-          "no such function")
+          "undefined function: z")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; find in record tests
@@ -299,7 +316,7 @@
       (num 42))
 (test/exn  
  (find-in-record (rec (list (symExprPair 'x (num 6)))) 'z) 
- "field not found: z")
+ "no such field")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interpreter tests
@@ -339,8 +356,8 @@
 (test (interp-expr (parse '{get {get {rec {r {rec {z 0}}}} r} z})empty) 0)
 
 ; error cases
-(test/exn (interp-expr (id 'x) empty) "free variable")
-(test/exn (interp-expr (parse '(f 10)) empty) "no such function")
+(test/exn (interp-expr (id 'x) empty) "free identifier")
+(test/exn (interp-expr (parse '(f 10)) empty) "undefined function: f")
 (test/exn 
  (interp-expr (parse '{f 1})(list (parse-defn '{deffun {f} {+ 6 7}})))
  "wrong arity")
@@ -355,7 +372,7 @@
           "cant do math on records")
 
 ; error case for get
-(test/exn (interp-expr (parse '{get {rec {a 10}} b}) empty) "field not found: b")
+(test/exn (interp-expr (parse '{get {rec {a 10}} b}) empty) "no such field")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; climax examples
