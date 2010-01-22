@@ -1,7 +1,5 @@
 #lang planet plai/plai:1:8
 
-
-
 ;  <FunDef> = {deffun {<id> <id>*} FnWAE}
 ;  <FnWAE> = <number>
 ;          | {+ FnWAE FnWAE}
@@ -138,30 +136,34 @@
                  )
                (error "wrong arity")))]))
 
-
+(define (interp-expr expr defs) (interp expr defs '()))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; the library!
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define mult-and-neg-deffuns
-  (list '(deffun (neg? x) (if0 x 1 (split-neg? x x)))
-        '(deffun (split-neg? p n) 
-           (if0 p 1 
-                (if0 n 1 
-                     (if0 (- p 1) 1 
-                          (if0 (+ n 1) 0 (split-neg? (- p 1) (+ n 1)))))))
-        '(deffun (abs x) (if0 (neg? x) (- 0 x) x))
-        '(deffun (opposite-signs x y) (if0 (neg? x) (if0 (neg? y) 1 0) (neg? y)))
-        '(deffun (mult-pos x y) (if0 (- x 1) y (+ y (mult-pos (- x 1) y))))
-        '(deffun (mult x y) 
-           (if0 x 0 
-                (if0 y 0 
-                     (if0 (opposite-signs x y) 
-                          (- 0 (mult-pos (abs x)(abs y))) 
-                          (mult-pos (abs x)(abs y))))))
-        ))
+  (list 
+   '(deffun (or  x y) (if0 x 0 (if0 y 0 1)))
+   '(deffun (and x y) (if0 x (if0 y 0 1) 1))
+   '(deffun (zero? x) (if0 x 0 1))
+   '(deffun (not   x) (if0 x 1 0))
+   '(deffun (neg?  x) (if0 x 1 (split-neg? x x)))
+   '(deffun (pos?  x) (and (not (zero? x)) (not (neg? x)))) 
+   '(deffun (split-neg? p n) 
+      (if0 (+ n 1) 0
+           (if0 (or (or (zero? p) (zero? n)) (zero? (- p 1))) 1 
+           (split-neg? (- p 1) (+ n 1)))))
+   '(deffun (abs x) (if0 (neg? x) (- 0 x) x))
+   '(deffun (add-n-times n x) (if0 n 0 (+ x (add-n-times (- n 1) x))))
+   '(deffun (mult x y) (with (n (add-n-times (abs x) y)) (if0 (pos? x) n (- 0 n))))
+   ))
+
 (define library (map parse-defn mult-and-neg-deffuns))
 
 (define (fnwae-interp expr)(interp expr library empty))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; library tests!
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (test (fnwae-interp (num 5)) 5)
 (test (fnwae-interp (parse '(neg? 5))) 1)
@@ -170,13 +172,8 @@
 (test (fnwae-interp (parse '(neg? -1))) 0)
 (test (fnwae-interp (parse '(neg? -5))) 0)
 
-(test (fnwae-interp (parse '(mult-pos 3 3))) 9)
-(test (fnwae-interp (parse '(mult-pos 3 7))) 21)
-
-(test (fnwae-interp (parse '(opposite-signs 3 3))) 1)
-(test (fnwae-interp (parse '(opposite-signs -3 -3))) 1)
-(test (fnwae-interp (parse '(opposite-signs -3 3))) 0)
-(test (fnwae-interp (parse '(opposite-signs 3 -3))) 0)
+(test (fnwae-interp (parse '(add-n-times 3 3))) 9)
+(test (fnwae-interp (parse '(add-n-times 3 7))) 21)
 
 (test (fnwae-interp (parse '(mult 3 3))) 9)
 (test (fnwae-interp (parse '(mult -3 -3))) 9)
@@ -187,7 +184,18 @@
 (test (fnwae-interp (parse '(mult 0 9))) 0)
 (test (fnwae-interp (parse '(mult -9 0))) 0)
 (test (fnwae-interp (parse '(mult 0 -9))) 0)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (fnwae-interp (parse '(pos? 0))) 1)
+(test (fnwae-interp (parse '(pos? 1))) 0)
+(test (fnwae-interp (parse '(pos? -1))) 1)
+(test (fnwae-interp (parse '(pos? 2))) 0)
+(test (fnwae-interp (parse '(pos? -2))) 1)
+
+(test (fnwae-interp (parse '(and 1 1))) 1)
+(test (fnwae-interp (parse '(and 0 1))) 1)
+(test (fnwae-interp (parse '(and 1 0))) 1)
+(test (fnwae-interp (parse '(and 0 0))) 0)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parser tests
@@ -237,7 +245,6 @@
 (test (interp (parse '(if0 0 5 6)) empty empty) 5)
 (test (interp (parse '(if0 1 5 6)) empty empty) 6)
 
-
 ; application of no arg function
 (test 
  (interp (parse '{+ {f} {f}})(list (parse-defn '{deffun {f} 5})) empty) 
@@ -264,7 +271,6 @@
  (interp (parse '{f 1})(list (parse-defn '{deffun {f x y} {+ x y}})) empty)
  "wrong arity")
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; random utility stuff 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -273,4 +279,3 @@
 (test (findo (lambda (x) (= x 5)) (list 1 2 3 4)) (none))
 (test (findo (lambda (x) (= x 5)) (list 1 2 3 4 5)) (some 5))
 (test (foldl + 0 '(1 2 3 4 5)) 15)
-
