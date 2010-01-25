@@ -1,4 +1,5 @@
 #lang planet plai/plai:1:8
+(print-only-errors #t)
 
 ;  <FunDef> = {deffun {<id> <id>*} FnWAE}
 ;  <FnWAE> = <number>
@@ -38,7 +39,9 @@
        [(-) (sub (parse (second sexpr)) (parse (third sexpr)))]
        [(with) (parse-with sexpr)]
        [(deffun) (parse-defn sexpr)]
-       [(if0) (if0 (parse (second sexpr)) (parse (third sexpr)) (parse (fourth sexpr)))]
+       [(if0) (if0 (parse (second sexpr)) 
+                   (parse (third sexpr)) 
+                   (parse (fourth sexpr)))]
        ;; assume any other symbols are function names, therefore application.
        [else (app (first sexpr) (map parse (cdr sexpr)))]
        )]
@@ -103,10 +106,11 @@
 (define (zip-with const ll lr)
   (cond [(empty? ll) '()]
         [(empty? lr) '()]
-        [else (cons (const (first ll) (first lr)) (zip-with const (cdr ll) (cdr lr)))]))
+        [else (cons (const (first ll) (first lr)) 
+                    (zip-with const (cdr ll) (cdr lr)))]))
 
 (define (zip ll lr) (zip-with list ll lr))
-(test (zip '(1 2 3) '(a b c)) (list (list 1 'a) (list 2 'b) (list 3 'c)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interp : FnWAE list-of-FunDef -> FnWAE-Val
@@ -118,6 +122,7 @@
     [sub (l r) (- (interp l defs ds) (interp r defs ds))]
     [with (bound-id named-expr body-expr)
       (interp body-expr defs 
+              ;; add to the front of the deferred subs repo.
               (cons (symNumPair bound-id (interp named-expr defs ds)) ds))]
     [id (name) (lookup name ds)]
     [if0 (x y z) (if (= 0 (interp x defs ds))
@@ -127,10 +132,24 @@
          (local [(define f (fundef-lookup fname defs))]
            (if (= (length (fundef-arg-names f))(length arg-exprs))
                (case (length arg-exprs)
-                 [(0) (interp (fundef-body f) defs ds)]
+                 [(0) (interp (fundef-body f) defs '())]
                  [else (interp 
                         (fundef-body f)
                         defs
+                        ;; i wanted to make this an inner function, giving it a
+                        ;; name, and therefore some abstraction, but i couldn't
+                        ;; put it here, right above the where id call it.
+                        ;; define: not allowed in an expression context
+                        ;; i could have defined it at the top of the function
+                        ;; but not only do i think thats too far away, but
+                        ;; having that inner def be the first thng you see when
+                        ;; looking at interp was confusing.
+                        ;; i also could have just put it below this function,
+                        ;; but it would have had to take defs and ds as args
+                        ;; as well...alas i just left this code here. 
+                        ;; it simply creates a list of symNumPairs
+                        ;; syms - the names of the function's formal args
+                        ;; nums - the interpreted arguments to the function
                         (zip-with symNumPair (fundef-arg-names f) 
                              (map (lambda (x) (interp x defs ds)) arg-exprs)))]
                  )
@@ -141,6 +160,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; the library!
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; primitive as it may be, building a library for a language you've
+; built, in the language that you've built, is very exciting.
 (define mult-and-neg-deffuns
   (list 
    '(deffun (or  x y) (if0 x 0 (if0 y 0 1)))
@@ -155,7 +176,8 @@
            (split-neg? (- p 1) (+ n 1)))))
    '(deffun (abs x) (if0 (neg? x) (- 0 x) x))
    '(deffun (add-n-times n x) (if0 n 0 (+ x (add-n-times (- n 1) x))))
-   '(deffun (mult x y) (with (n (add-n-times (abs x) y)) (if0 (pos? x) n (- 0 n))))
+   '(deffun (mult x y) 
+      (with (n (add-n-times (abs x) y)) (if0 (pos? x) n (- 0 n))))
    ))
 
 (define library (map parse-defn mult-and-neg-deffuns))
@@ -165,6 +187,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; library tests!
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; for the record...
+; i officially cant stand that we are using 0 as true
+; in this language, and 1 as false. 
+
 (test (fnwae-interp (num 5)) 5)
 (test (fnwae-interp (parse '(neg? 5))) 1)
 (test (fnwae-interp (parse '(neg? 1))) 1)
@@ -174,6 +200,7 @@
 
 (test (fnwae-interp (parse '(add-n-times 3 3))) 9)
 (test (fnwae-interp (parse '(add-n-times 3 7))) 21)
+(test (fnwae-interp (parse '(add-n-times 50 10))) 500)
 
 (test (fnwae-interp (parse '(mult 3 3))) 9)
 (test (fnwae-interp (parse '(mult -3 -3))) 9)
@@ -184,6 +211,7 @@
 (test (fnwae-interp (parse '(mult 0 9))) 0)
 (test (fnwae-interp (parse '(mult -9 0))) 0)
 (test (fnwae-interp (parse '(mult 0 -9))) 0)
+(test (fnwae-interp (parse '(mult 100 100))) 10000)
 
 (test (fnwae-interp (parse '(pos? 0))) 1)
 (test (fnwae-interp (parse '(pos? 1))) 0)
@@ -196,6 +224,23 @@
 (test (fnwae-interp (parse '(and 1 0))) 1)
 (test (fnwae-interp (parse '(and 0 0))) 0)
 
+(test (fnwae-interp (parse '(or 1 1))) 1)
+(test (fnwae-interp (parse '(or 0 1))) 0)
+(test (fnwae-interp (parse '(or 1 0))) 0)
+(test (fnwae-interp (parse '(or 0 0))) 0)
+
+(test (fnwae-interp (parse '(zero? 1))) 1)
+(test (fnwae-interp (parse '(zero? 0))) 0)
+(test (fnwae-interp (parse '(zero? -1))) 1)
+
+(test (fnwae-interp (parse '(not 1))) 0)
+(test (fnwae-interp (parse '(not 0))) 1)
+
+(test (fnwae-interp (parse '(abs -1))) 1)
+(test (fnwae-interp (parse '(abs 1))) 1)
+(test (fnwae-interp (parse '(abs 0))) 0)
+(test (fnwae-interp (parse '(abs -5))) 5)
+(test (fnwae-interp (parse '(abs 5))) 5)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parser tests
@@ -271,6 +316,23 @@
  (interp (parse '{f 1})(list (parse-defn '{deffun {f x y} {+ x y}})) empty)
  "wrong arity")
 
+; make sure we use an empty ds repo when calling no arg function
+ (test/exn 
+  (interp (parse '{with {x 9} {with {y 10} {f}}}) 
+          (list (parse-defn '{deffun {f} {+ x y}})) empty)
+ "free identifier")
+ 
+ ; make sure 'with' bindings dont pollute functions 
+ (test
+  (interp (parse '{with {x 9} {with {y 10} {f 5 2}}}) 
+          (list (parse-defn '{deffun {f x y} {+ x y}})) empty) 
+  7)
+ 
+ (test
+  (interp (parse '{with {a 9} {with {b 10} {with {c 100} {f a b c}}}}) 
+          (list (parse-defn '{deffun {f x y z } {+ {+ x y} z }})) empty) 
+  119)
+ 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; random utility stuff 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -279,3 +341,4 @@
 (test (findo (lambda (x) (= x 5)) (list 1 2 3 4)) (none))
 (test (findo (lambda (x) (= x 5)) (list 1 2 3 4 5)) (some 5))
 (test (foldl + 0 '(1 2 3 4 5)) 15)
+(test (zip '(1 2 3) '(a b c)) (list (list 1 'a) (list 2 'b) (list 3 'c)))
