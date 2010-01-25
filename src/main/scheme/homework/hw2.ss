@@ -1,4 +1,6 @@
-#lang planet plai/plai:1
+#lang planet plai/plai:1:8
+(print-only-errors #t)
+
 (define-type WAE
   [num (n number?)]
   [add (lhs WAE?)(rhs WAE?)]
