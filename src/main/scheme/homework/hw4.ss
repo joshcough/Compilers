@@ -16,7 +16,7 @@
   [with (name symbol?)(named-expr FnWAE?)(body FnWAE?)]
   [id (name symbol?)]
   [if0 (x FnWAE?)(y FnWAE?)(z FnWAE?)]
-  [app (fun-name symbol?)(args (list-of? FnWAE?))])
+  [app (fun-name symbol?)(args (listof FnWAE?))])
 
 (define-type FunDef
   [fundef (name symbol?)
@@ -24,9 +24,6 @@
           (body FnWAE?)])
 
 (define-type SymNumPair [symNumPair (name symbol?)(num number?)])
-
-;; utility
-(define (list-of? t) (lambda (l) (andmap t l)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse : sexpr -> FnWAE
@@ -342,8 +339,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; random utility stuff 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(test ((list-of? symbol?) '(a b c)) #t)
-(test ((list-of? symbol?) '(a b "ewrewr")) #f)
 (test (findo (lambda (x) (= x 5)) (list 1 2 3 4)) (none))
 (test (findo (lambda (x) (= x 5)) (list 1 2 3 4 5)) (some 5))
 (test (foldl + 0 '(1 2 3 4 5)) 15)
