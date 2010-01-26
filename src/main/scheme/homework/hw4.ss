@@ -28,7 +28,9 @@
 ;; utility
 (define (list-of? t) (lambda (l) (andmap t l)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse : sexpr -> FnWAE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (parse sexpr)
   (cond
     [(number? sexpr) (num sexpr)]
@@ -79,12 +81,6 @@
 ;; Scala's Option, Maybe in Haskell.
 (define-type Option [none] [some (v (lambda (x) #t))])
   
-;; Like findf, but returns the (some element) or (none) 
-;; instead of the element or #f.
-;; i did this because i don't feel comfortable with findf returning false
-;; what if the very thing that you are looking for is #f ?
-;; how would you know if #f was in the list or not?
-;; find [T]: (T => Boolean) List[T] -> Option[T]
 (define (findo p l)
   (cond [(empty? l) (none)]
         [(p (first l)) (some (first l))]
@@ -95,10 +91,7 @@
 ;; same-size: list list -> boolean
 (define (same-size l r) (= (length l)(length r)))
 
-
-;;;;
-;; lookup
-;;;;
+;; lookup: sym deferred-subs -> num
 (define (lookup name ds) 
   (symNumPair-num (find-or-die 
     (lambda (f) (symbol=? (symNumPair-name f) name)) ds "free identifier")))
@@ -111,9 +104,8 @@
 
 (define (zip ll lr) (zip-with list ll lr))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; interp : FnWAE list-of-FunDef -> FnWAE-Val
+;; interp : FnWAE list-of-FunDef deferred-subs -> num
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (interp expr defs ds)
   (type-case FnWAE expr
@@ -125,34 +117,18 @@
               ;; add to the front of the deferred subs repo.
               (cons (symNumPair bound-id (interp named-expr defs ds)) ds))]
     [id (name) (lookup name ds)]
-    [if0 (x y z) (if (= 0 (interp x defs ds))
-                     (interp y defs ds)
-                     (interp z defs ds))]
+    [if0 (x y z) 
+         (if (= 0 (interp x defs ds)) (interp y defs ds) (interp z defs ds))]
     [app (fname arg-exprs)
          (local [(define f (fundef-lookup fname defs))]
            (if (= (length (fundef-arg-names f))(length arg-exprs))
-               (case (length arg-exprs)
-                 [(0) (interp (fundef-body f) defs '())]
-                 [else (interp 
-                        (fundef-body f)
-                        defs
-                        ;; i wanted to make this an inner function, giving it a
-                        ;; name, and therefore some abstraction, but i couldn't
-                        ;; put it here, right above the where id call it.
-                        ;; define: not allowed in an expression context
-                        ;; i could have defined it at the top of the function
-                        ;; but not only do i think thats too far away, but
-                        ;; having that inner def be the first thng you see when
-                        ;; looking at interp was confusing.
-                        ;; i also could have just put it below this function,
-                        ;; but it would have had to take defs and ds as args
-                        ;; as well...alas i just left this code here. 
-                        ;; it simply creates a list of symNumPairs
-                        ;; syms - the names of the function's formal args
-                        ;; nums - the interpreted arguments to the function
-                        (zip-with symNumPair (fundef-arg-names f) 
-                             (map (lambda (x) (interp x defs ds)) arg-exprs)))]
-                 )
+               (interp  
+                (fundef-body f) defs
+                ;; create a list of symNumPairs
+                ;; syms - the names of the function's formal args
+                ;; nums - the interpreted arguments to the function
+                (zip-with symNumPair (fundef-arg-names f) 
+                          (map (lambda (x) (interp x defs ds)) arg-exprs)))
                (error "wrong arity")))]))
 
 (define (interp-expr expr defs) (interp expr defs '()))
@@ -183,6 +159,8 @@
 (define library (map parse-defn mult-and-neg-deffuns))
 
 (define (fnwae-interp expr)(interp expr library empty))
+(define (fnwae-interp-plus expr defs)
+  (interp expr (flatten (cons defs library)) empty))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; library tests!
@@ -291,6 +269,7 @@
 (test (interp (parse '(if0 1 5 6)) empty empty) 6)
 
 ; application of no arg function
+(test (interp (parse '{f})(list (parse-defn '{deffun {f} 5})) empty) 5)
 (test 
  (interp (parse '{+ {f} {f}})(list (parse-defn '{deffun {f} 5})) empty) 
  10)
@@ -315,6 +294,9 @@
 (test/exn 
  (interp (parse '{f 1})(list (parse-defn '{deffun {f x y} {+ x y}})) empty)
  "wrong arity")
+ (test/exn 
+  (interp (parse '{f}) (list (parse-defn '{deffun {f} {+ x 1}})) empty)
+ "free identifier")
 
 ; make sure we use an empty ds repo when calling no arg function
  (test/exn 
@@ -330,8 +312,33 @@
  
  (test
   (interp (parse '{with {a 9} {with {b 10} {with {c 100} {f a b c}}}}) 
-          (list (parse-defn '{deffun {f x y z } {+ {+ x y} z }})) empty) 
+          (list (parse-defn '{deffun {f x y z} {+ {+ x y} z }})) empty) 
   119)
+ 
+ ; overwrite id name in consecutive withs
+ (test
+  (interp (parse '{with {a 1} {with {a 10} {with {a 100} {f a a a}}}}) 
+          (list (parse-defn '{deffun {f x y z} {+ {+ x y} z}})) empty) 
+  300)
+ (test
+  (interp (parse '{with {a 1} {with {a 10} {with {b 100} {f a a a}}}}) 
+          (list (parse-defn '{deffun {f x y z} {+ {+ x y} z}})) empty) 
+  30)
+
+; function that shadows its own formal arg
+(test
+  (interp (parse '{f 10}) 
+          (list (parse-defn '{deffun {f x} {with {x 12} x}})) empty) 
+  12)
+
+; function that shadows, and calls itself with the shadower
+(test
+  (fnwae-interp-plus (parse '{+ {f 25} {f 10}}) 
+          (list (parse-defn 
+                 '{deffun {f x} {if0 {neg? {- x 20}}
+                                     {with {x {+ x 1}} {f x}} 
+                                     x}})))
+  45)
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; random utility stuff 
