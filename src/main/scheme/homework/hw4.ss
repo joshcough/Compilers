@@ -40,7 +40,6 @@
        [(+) (add (parse (second sexpr)) (parse (third sexpr)))]
        [(-) (sub (parse (second sexpr)) (parse (third sexpr)))]
        [(with) (parse-with sexpr)]
-       [(deffun) (parse-defn sexpr)]
        [(if0) (if0 (parse (second sexpr)) 
                    (parse (third sexpr)) 
                    (parse (fourth sexpr)))]
