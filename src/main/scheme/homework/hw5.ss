@@ -139,6 +139,17 @@
  
 (define (zip ll lr) (zip-with list ll lr))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; pair
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define pair `{fun {l r} {fun {b} {b l r}}})
+(define fst  `{fun {p} {with {true {fun {x y} x}}{p true}}})
+(define snd  `{fun {p} {with {false {fun {x y} y}}{p false}}})
+;(define sum `{fun {l} ...})
+
+
   
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse tests
