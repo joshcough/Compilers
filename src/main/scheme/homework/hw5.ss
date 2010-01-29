@@ -59,7 +59,6 @@
       [(1) (parse (first sexpr))]
       [else (app (helper (drop-right sexpr 1)) (parse (last sexpr)))]
       )
-    ; not working -- (foldl (lambda (l r) (app (parse l) r)) (parse (last sexpr)) (drop-right sexpr 1))
     )
   ;; if the list is one long...F
   (if (= 1 (length sexpr)) 
@@ -88,17 +87,21 @@
     [add (l r) (addV (interp l ds) (interp r ds))]
     [sub (l r) (subV (interp l ds) (interp r ds))]
     [id (name) (lookup name ds)]
-    [if0 (x y z) (if (= 0 (interp x ds)) (interp y ds) (interp z ds))]
+    [if0 (x y z) 
+         (if (= 0 (ifop (interp x ds))) (interp y ds) (interp z ds))]
     [fun (id body) (closureV id body ds)]
     [app (fun-expr arg-expr) 
-         (local ([define fun-val (interp fun-expr ds)])
-           (interp (closureV-body fun-val) 
-                   (cons 
-                    (symValPair (closureV-param fun-val) (interp arg-expr ds))
-                    (closureV-ds fun-val)))
-           )]))
+         (type-case FAE-Val (interp fun-expr ds)
+           [numV (n) (error "application expected procedure")]
+           [closureV (id body cl-ds)
+                     (interp body (cons (symValPair id (interp arg-expr ds)) cl-ds))])
+                     ]))
  
-(define (interp-expr expr) (interp expr empty))
+;Provide a definition of interp-expr : FAE -> number or 'procedure, as above.
+(define (interp-expr expr) 
+  (type-case FAE-Val (interp expr empty)
+    [numV (n) n]
+    [closureV (s b ds) 'procedure]))
 
 (define (addV l r) (mathV + l r))
 (define (subV l r) (mathV - l r))
@@ -107,13 +110,15 @@
    (and (numV? l) (numV? r)) 
    (numV (op (numV-n l)(numV-n r)))
    (error "numeric operation expected number")))
+(define (ifop n) (if (numV? n) (numV-n n) 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; lookup: sym deferred-subs -> FAE-Val
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (lookup name ds)
   (symValPair-val (find-or-die
-    (lambda (f) (symbol=? (symValPair-name f) name)) ds "free identifier")))
+    (lambda (f) (symbol=? (symValPair-name f) name)) ds 
+    (string-append "free identifier: " (symbol->string name)))))
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; utility functions
@@ -139,7 +144,6 @@
  
 (define (zip ll lr) (zip-with list ll lr))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; pair
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -147,10 +151,37 @@
 (define pair `{fun {l r} {fun {b} {b l r}}})
 (define fst  `{fun {p} {with {true {fun {x y} x}}{p true}}})
 (define snd  `{fun {p} {with {false {fun {x y} y}}{p false}}})
-;(define sum `{fun {l} ...})
+(define sum `{Y (fun {sum} 
+                     {fun {l} {if0 l 0 {+ {fst l}{sum {snd l}}}}})})
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define Y
+  '(fun (X)
+    ((fun (p) (X (fun (arg) ((p p) arg))))
+     (fun (p) (X (fun (arg) ((p p) arg)))))))
+
+(define (create-lib-func sym body ds)
+    (cons (symValPair sym (interp (parse body) ds)) ds))
+
+(define lib (foldl 
+             (lambda (pair acc-ds) 
+               (create-lib-func (first pair) (second pair) acc-ds))
+             empty
+             (list (list 'Y Y)
+                   (list 'pair pair)
+                   (list 'fst  fst)
+                   (list 'snd  snd)
+                   (list 'sum  sum))))
+
+(define (fae-interp expr)
+  (type-case FAE-Val (interp expr lib)
+    [numV (n) n]
+    [closureV (s b ds) 'procedure]))
 
 
-  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -182,11 +213,38 @@
 ;; interp tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
-(test (interp-expr (parse 7)) (numV 7))
-(test (interp-expr (parse (- 10 3))) (numV 7))
-(test (interp-expr (parse (+ 3 4))) (numV 7))
-(test (interp-expr (parse '(fun (x) (+ x 2)))) (closureV 'x (add (id 'x) (num 2)) '()))
-(test (interp-expr (parse '((fun (x) (+ x 2)) 5))) (numV 7))
-(test (interp-expr (parse '((fun (x) (fun (y) (+ x y))) 5 2))) (numV 7))
-(test (interp-expr (parse '((fun (x) (fun (y) (+ x y))) 5))) 
+(test (interp (parse 7) '()) (numV 7))
+(test (interp (parse (- 10 3)) '()) (numV 7))
+(test (interp (parse (+ 3 4)) '()) (numV 7))
+(test (interp (parse '(fun (x) (+ x 2))) '()) 
+      (closureV 'x (add (id 'x) (num 2)) '()))
+(test (interp (parse '((fun (x) (+ x 2)) 5)) '()) (numV 7))
+(test (interp (parse '((fun (x) (fun (y) (+ x y))) 5 2)) '()) (numV 7))
+(test (interp (parse '((fun (x) (fun (y) (+ x y))) 5)) '()) 
       (closureV 'y (add (id 'x) (id 'y)) (list (symValPair 'x (numV 5)))))
+
+(test (interp (parse '(if0 0 1 2)) '()) (numV 1))
+
+(test (interp-expr (parse 0)) 0)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; pair tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (fae-interp (parse '(fst (pair 2 3)))) 2)
+(test (fae-interp (parse '(snd (pair 2 0)))) 0)
+(test (fae-interp (parse '{snd {pair 1 2}})) 2)
+(test (fae-interp (parse '{snd {fst {pair {pair 1 2} {pair 3 4}}}}))2)
+(test (fae-interp (parse '{with {p {pair 1 2}}{+ {fst p} {snd p}}}))3)
+(test 
+ (fae-interp (parse '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}))
+ 3)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; sum tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (fae-interp (parse '(sum 0))) 0)
+(test (fae-interp (parse '(sum (pair 1 0)))) 1)
+(test (fae-interp (parse '(sum (pair 2 (pair 1 0))))) 3)
+ 
