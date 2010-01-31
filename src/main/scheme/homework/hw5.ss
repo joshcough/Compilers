@@ -117,7 +117,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define (lookup name ds)
   (symValPair-val (find-or-die
-    (lambda (f) (symbol=? (symValPair-name f) name)) ds 
+    (λ (f) (symbol=? (symValPair-name f) name)) ds 
     (string-append "free identifier: " (symbol->string name)))))
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -126,7 +126,7 @@
 
 ;; utility types and functions
 ;; Scala's Option, Maybe in Haskell.
-(define-type Option [none] [some (v (lambda (x) #t))])
+(define-type Option [none] [some (v (λ (x) #t))])
   
 (define (findo p l)
   (cond [(empty? l) (none)]
@@ -148,39 +148,45 @@
 ;; pair
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; primitive functions
 (define pair `{fun {l r} {fun {b} {b l r}}})
 (define fst  `{fun {p} {with {true {fun {x y} x}}{p true}}})
 (define snd  `{fun {p} {with {false {fun {x y} y}}{p false}}})
-(define sum `{Y (fun {sum} 
-                     {fun {l} {if0 l 0 {+ {fst l}{sum {snd l}}}}})})
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; library
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+; Y combinator
 (define Y
-  '(fun (X)
+  `(fun (X)
     ((fun (p) (X (fun (arg) ((p p) arg))))
      (fun (p) (X (fun (arg) ((p p) arg)))))))
 
-(define (create-lib-func sym body ds)
-    (cons (symValPair sym (interp (parse body) ds)) ds))
+;; guy steele's defs from: 
+;; http://groups.csail.mit.edu/mac/users/gjs/6.945/readings/MITApril2009Steele.pdf
+;(define (mapreduce f g id xs)
+;  (cond ((null? xs) id)
+;        (else (g (f (car xs)) (mapreduce f g id (cdr xs))))))
+;(define (map f xs) (mapreduce (λ (x) (list (f x))) append '() xs))
+;(define (reduce g id xs) (mapreduce (λ (x) x) g id xs))
 
-(define lib (foldl 
-             (lambda (pair acc-ds) 
-               (create-lib-func (first pair) (second pair) acc-ds))
-             empty
-             (list (list 'Y Y)
-                   (list 'pair pair)
-                   (list 'fst  fst)
-                   (list 'snd  snd)
-                   (list 'sum  sum))))
+(define mapreduce 
+  `{with {Y ,Y} 
+         {Y {fun {mr} 
+                 {fun {f g id xs} 
+                      {if0 xs id 
+                           {g {f {fst xs}} {mr f g id {snd xs}}}}}}}})
 
-(define (fae-interp expr)
-  (type-case FAE-Val (interp expr lib)
-    [numV (n) n]
-    [closureV (s b ds) 'procedure]))
+(define reduce `{with {mapreduce ,mapreduce} 
+                      {fun {g id xs} {mapreduce {fun {x} x} g id xs}}})  
 
+(define mymap `{with {mapreduce ,mapreduce} 
+                      {fun {f xs} {mapreduce f {fun {x y} {pair x y}} 0 xs}}}) 
+
+(define add2 `{fun {x y} {+ x y}})
+
+;; sum definition for the homework
+(define sum `{with {reduce ,reduce} {fun {l} {reduce ,add2 0 l}}})
+
+(define (wrap-with-hw-lib expr)
+  `{with {pair ,pair} {with {fst ,fst} {with {snd ,snd} {with {sum ,sum} ,expr}}}})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse tests
@@ -213,6 +219,7 @@
 ;; interp tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
+;; tests not requiring the library functions, just the interpreter
 (test (interp (parse 7) '()) (numV 7))
 (test (interp (parse (- 10 3)) '()) (numV 7))
 (test (interp (parse (+ 3 4)) '()) (numV 7))
@@ -228,23 +235,183 @@
 (test (interp-expr (parse 0)) 0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; function tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (interp-expr (parse '((fun (x) (fun (x) x)) 5 6))) 6)
+
+; test for functions with the same id in arg list more than once
+(test (interp-expr (parse '((fun (x x) x) 5 6))) 6)
+(test (interp-expr (parse '((fun (x x x) x) 5 6 7))) 7)
+(test (interp-expr (parse '((fun (x y x) x) 5 6 7))) 7)
+(test (interp-expr (parse '((fun (x x y) x) 5 6 7))) 6)
+(test (interp-expr (parse '((fun (x x y y) y) 5 6 7 8))) 8)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; pair tests (require hw lib)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (interp-expr (parse (wrap-with-hw-lib '(fst (pair 2 3))))) 2)
+(test (interp-expr (parse (wrap-with-hw-lib '(snd (pair 2 0))))) 0)
+(test (interp-expr (parse (wrap-with-hw-lib '{snd {pair 1 2}}))) 2)
+(test (interp-expr 
+       (parse (wrap-with-hw-lib '{snd {fst {pair {pair 1 2} {pair 3 4}}}}))) 2)
+(test (interp-expr 
+       (parse (wrap-with-hw-lib '{with {p {pair 1 2}}{+ {fst p} {snd p}}}))) 3)
+(test (interp-expr 
+       (parse (wrap-with-hw-lib 
+               '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}))) 3)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; sum tests (require hw lib)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (interp-expr (parse (wrap-with-hw-lib '(sum 0)))) 0)
+(test (interp-expr (parse (wrap-with-hw-lib '(sum (pair 1 0))))) 1)
+(test (interp-expr (parse (wrap-with-hw-lib '(sum (pair 2 (pair 1 0)))))) 3)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; BEYOND HOMEWORK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; some important comments about this...
+;;
+;; this line was taken from the homework:
+;; {with {pair ...} {with {fst ...} {with {snd ...} {with {sum ...} {sum 0}}}}}
+;;
+;; always wrapping an expression in the above definitions means that those
+;; definitions are 'the library' since the homework does this automatically, 
+;; its not easy to add more functions to the library. 
+;;
+;; to satisfy the requirements for the homework, sum explicitely includes 
+;; add2, and reduce (which in turn includes mapreduce, which includes Y).
+;; i would like to have not done that, but instead, would have liked to
+;; add those functions to the library directly.
+;;
+;; by adding them to the library, sum could call reduce and add2
+;; without explicitely including it in a with statement, like so:
+;; (define sum  `{fun {l} {reduce add2 0 l}})
+;; 
+;; sum is allowed to call pair, fst, snd implicitely because the HW includes 
+;; them in the library
+;;
+;; there is another way i can add functions to the library.
+;; and that is by adding closureV's to the ds repository in interp-expr.
+;; this is something i'll try. 
+;;
+
+;; redefine library functions without explicit with clauses
+(define mapreduce-implicit
+  `{Y {fun {mr} 
+           {fun {f g id xs} 
+                {if0 xs id {g {f {fst xs}} {mr f g id {snd xs}}}}}}})
+(define reduce-implicit `{fun {g id xs} {mapreduce {fun {x} x} g id xs}})
+(define map-implicit `{fun {f xs} {mapreduce f {fun {x y} {pair x y}} 0 xs}}) 
+(define sum-implicit `{fun {l} {reduce add2 0 l}})
+
+(define (wrap-with-fae-lib expr)
+  `{with {Y ,Y} 
+     {with {pair ,pair} 
+       {with {fst ,fst} 
+         {with {snd ,snd} 
+           {with {mapreduce ,mapreduce-implicit}
+             {with {reduce ,reduce-implicit}
+               {with {map ,map-implicit}
+                 {with {add2 ,add2}
+                   {with {sum ,sum-implicit}
+                     ,expr}}}}}}}}})
+
+;; this is my second attempt at creating the library
+;; these functions get put into the ds repo in fae-ds
+;; each closure has a reference to the previous ds repo, 
+;; so that each function has a reference to the functions
+;; created before it. this is exactly the same as how the
+;; 'with' clauses behave in 'wrap-with-lib'
+(define (create-lib-func sym body ds)
+  (cons (symValPair sym (interp (parse body) ds)) ds))
+
+(define lib 
+  (foldl
+   (lambda (pair acc-ds)
+     (create-lib-func (first pair) (second pair) acc-ds))
+   empty
+   (list (list 'Y Y)
+         (list 'pair pair)
+         (list 'fst fst)
+         (list 'snd snd)
+         (list 'mapreduce mapreduce-implicit)
+         (list 'reduce reduce-implicit)
+         (list 'map map-implicit)
+         (list 'add2 add2)
+         (list 'sum sum-implicit))))
+
+;; this function takes some code, gives that code access to the library
+;; parses it, and interprets it. 
+;; this allows users of the language to call functions in the library
+;; naturally, or implicitely. 
+(define (fae-wrapped  sexpr) (fae (wrap-with-fae-lib sexpr) '()))
+
+(define (fae-deferred sexpr) (fae sexpr lib))
+
+(define (fae sexpr ds)
+  (type-case FAE-Val (interp (parse sexpr) ds)
+             [numV (n) n]
+             [closureV (s b ds) 'procedure]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; the following test proves that the deferred sub repos
+; for both the wrapped version of the fae library (fae-wrapped)
+; and the deferred repo version of the library (fae-deferred)
+; are identical. 
+; parse returns a closure with containing the ds repo
+; and this tests checks that those closures are the same. 
+;
+; this (im quite certain) means that fae-wrapped and fae-deferred
+; are identical, and that the duplicate tests below aren't needed
+; however, ive decided to keep them there anyway.
+(test 
+ (interp (parse (wrap-with-fae-lib '{fun {x} x})) '()) 
+ (interp (parse '{fun {x} x}) lib)
+ )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; simple tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (fae-deferred '(+ 5 6)) 11)
+(test (fae-wrapped '(+ 5 6)) 11)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; pair tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(test (fae-interp (parse '(fst (pair 2 3)))) 2)
-(test (fae-interp (parse '(snd (pair 2 0)))) 0)
-(test (fae-interp (parse '{snd {pair 1 2}})) 2)
-(test (fae-interp (parse '{snd {fst {pair {pair 1 2} {pair 3 4}}}}))2)
-(test (fae-interp (parse '{with {p {pair 1 2}}{+ {fst p} {snd p}}}))3)
-(test 
- (fae-interp (parse '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}))
- 3)
+(test (fae-wrapped '(fst (pair 2 3))) 2)
+(test (fae-deferred '(fst (pair 2 3))) 2)
+(test (fae-wrapped '(snd (pair 2 0))) 0)
+(test (fae-deferred '(snd (pair 2 0))) 0)
+(test (fae-wrapped '{snd {pair 1 2}}) 2)
+(test (fae-deferred '{snd {pair 1 2}}) 2)
+(test (fae-wrapped '{snd {fst {pair {pair 1 2} {pair 3 4}}}}) 2)
+(test (fae-deferred '{snd {fst {pair {pair 1 2} {pair 3 4}}}}) 2)
+(test (fae-wrapped '{with {p {pair 1 2}}{+ {fst p} {snd p}}}) 3)
+(test (fae-deferred '{with {p {pair 1 2}}{+ {fst p} {snd p}}}) 3)
+(test (fae-wrapped '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}) 3)
+(test (fae-deferred '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}) 3)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; sum tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(test (fae-interp (parse '(sum 0))) 0)
-(test (fae-interp (parse '(sum (pair 1 0)))) 1)
-(test (fae-interp (parse '(sum (pair 2 (pair 1 0))))) 3)
- 
+(test (fae-wrapped '(sum 0)) 0)
+(test (fae-deferred '(sum 0)) 0)
+(test (fae-wrapped '(sum (pair 1 0))) 1)
+(test (fae-deferred '(sum (pair 1 0))) 1)
+(test (fae-wrapped '(sum (pair 2 (pair 1 0)))) 3)
+(test (fae-deferred '(sum (pair 2 (pair 1 0)))) 3)
