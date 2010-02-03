@@ -91,12 +91,13 @@
          (if (= 0 (ifop (interp x ds))) (interp y ds) (interp z ds))]
     [fun (id body) (closureV id body ds)]
     [app (fun-expr arg-expr) 
-         (type-case FAE-Val (interp fun-expr ds)
-           [numV (n) (error "application expected procedure")]
-           [closureV (id body cl-ds)
-                     (interp body (cons (symValPair id (interp arg-expr ds)) cl-ds))])
-                     ]))
- 
+         (let* ([f (interp fun-expr ds)][a (interp arg-expr ds)])
+           (type-case FAE-Val f
+             [numV (n) (error "application expected procedure")]
+             [closureV (id body cl-ds)
+                       (interp body (cons (symValPair id a) cl-ds))]))
+         ]))
+
 ;Provide a definition of interp-expr : FAE -> number or 'procedure, as above.
 (define (interp-expr expr) 
   (type-case FAE-Val (interp expr empty)
@@ -207,6 +208,8 @@
 (test (parse-app '(x y)) (app (id 'x)(id 'y)))
 (test (parse-app '(x y z)) (app (app (id 'x)(id 'y)) (id 'z)))
 (test (parse-app '(w x y z)) (app (app (app (id 'w)(id 'x)) (id 'y)) (id 'z)))
+(test (parse-app '(0 Q (+ 3 6))) (app (app (num 0) (id 'Q)) (add (num 3) (num 6))))
+
 
 ;; parse fun tests
 (test/exn (parse-fun '(fun () x)) "bad syntax")
@@ -250,6 +253,9 @@
 
 ;; bad application test
 (test/exn (interp-expr (parse '{1 2})) "application expected procedure")
+(test/exn (interp-expr (parse '(0 f A 2 Y 0 w A))) "free identifier") 
+(test/exn (interp-expr (parse '(0 Q (+ 3 6)))) "free identifier")
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; function tests
