@@ -23,27 +23,24 @@
   [id (name symbol?)]
   [if0 (test RCFAE?) (then RCFAE?) (else RCFAE?)]
   [fun (param symbol?) (body RCFAE?)]
-  [app (fun RCFAE?) (arg RCFAE?)]
-  [rec (fields (listof SymExprPair?))]
-  [get (r RCFAE?)(id symbol?)]
-  [set (r RCFAE?)(id symbol?)(val RCFAE?)]
-  [seqn (a RCFAE?)(b RCFAE?)])
+  [app (fun RCFAE?) (arg RCFAE?)])
+;  [rec (fields (listof SymExprPair?))]
+;  [get (r RCFAE?)(id symbol?)]
+;  [set (r RCFAE?)(id symbol?)(val RCFAE?)]
+;  [seqn (a RCFAE?)(b RCFAE?)])
 
 (define-type RCFAE-Val
   [numV (n number?)]
   [closureV (param symbol?)
             (body RCFAE?)
-            (ds DefrdSub?)]
-  [recV (fields (listof SymValPair?))])
+            (env Env?)])
+;  [recV (fields (listof SymValPair?))])
 
-(define-type SymExprPair [symExprPair (name symbol?)(expr RCFAE?)])
-(define-type SymValPair [symValPair (name symbol?)(val RCFAE-Val?)])
-
-(define (SymExprPair->SymValPair sep-ds)
-  (symValPair (symExprPair-name (first sep-ds)) 
-              (interp (symExprPair-expr (first sep-ds)) (second sep-ds))))
-
-(define DefrdSub? (listof SymValPair?))
+(define-type Id->Addr [id->addr (id symbol?)(addr number?)])
+(define-type MemLocation [memLoc (addr number?)(val RCFAE-Val?)])
+(define Env? (listof Id->Addr?))
+(define Mem? (listof MemLocation?))
+(define-type Val-X-Mem [vxm (v RCFAE-Val?)(m Mem?)])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; parse : sexpr -> RCFAE
@@ -61,10 +58,10 @@
                    (parse (third sexpr))
                    (parse (fourth sexpr)))]
        [(fun) (parse-fun sexpr)]
-       [(rec) (parse-rec sexpr)]
-       [(get) (get (parse (second sexpr)) (third sexpr))]
-       [(set) (set (parse (second sexpr))(third sexpr)(parse (fourth sexpr)))]
-       [(seqn)(seqn (parse (second sexpr))(parse (third sexpr)))]
+;       [(rec) (parse-rec sexpr)]
+;       [(get) (get (parse (second sexpr)) (third sexpr))]
+;       [(set) (set (parse (second sexpr))(third sexpr)(parse (fourth sexpr)))]
+;       [(seqn)(seqn (parse (second sexpr))(parse (third sexpr)))]
        ;; assume any other symbols are function names, therefore application.
        [else (parse-app sexpr)]
        )]
@@ -104,11 +101,11 @@
     )
   (helper (second sexpr) (third sexpr)))
 
-;; parse-rec : sexpr -> rec
-(define (parse-rec sexpr)
-  (begin 
-    (check-for-dups (map (λ (x) (first x))(cdr sexpr)) "duplicate fields")
-    (rec (map (λ (x) (symExprPair (first x)(parse (second x)))) (cdr sexpr)))))
+;;; parse-rec : sexpr -> rec
+;(define (parse-rec sexpr)
+;  (begin 
+;    (check-for-dups (map (λ (x) (first x))(cdr sexpr)) "duplicate fields")
+;    (rec (map (λ (x) (symExprPair (first x)(parse (second x)))) (cdr sexpr)))))
   
 (define (check-for-dups l error-message)
   (if (same-size l (remove-duplicates l symbol=?))
@@ -119,39 +116,60 @@
 (define (same-size l r) (= (length l)(length r)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; interp : RCFAE deferred-subs -> RCFAE-Val
+;; interp : RCFAE evn mem -> RCFAE-Val-X-Mem
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(define (interp expr ds)
-  (begin (print "interp")
+(define (interp expr env mem)
   (type-case RCFAE expr
-    [num (n) (numV n)]
-    ;; TODO: change + and - to check for functions!
-    [add (l r) (addV (interp l ds) (interp r ds))]
-    [sub (l r) (subV (interp l ds) (interp r ds))]
-    [id (name) (lookup name ds)]
-    [if0 (x y z) 
-         (if (= 0 (ifop (interp x ds))) (interp y ds) (interp z ds))]
-    [fun (id body) (closureV id body ds)]
-    [app (fun-expr arg-expr) 
-         (let* ([f (interp fun-expr ds)][a (interp arg-expr ds)])
-           (type-case RCFAE-Val f
-             [closureV (id body cl-ds)
-                       (interp body (cons (symValPair id a) cl-ds))]
-             [else (error "application expected procedure")]))
-         ]
-    [rec (fields) 
-      (recV (map (lambda (sep) (SymExprPair->SymValPair (list sep ds))) fields))]
-    [get (rec id) (find-in-record rec id)] ;; revisit 
-    [set (rec id val) (error "implement me")]
-    [seqn (a b) (error "implement me")]
-    )))
+    [num (n) (vxm (numV n) mem)]
+    [add (l r) 
+      (type-case Val-X-Mem (interp l env mem)
+        [vxm (lv lm)
+          (type-case Val-X-Mem (interp r env lm)
+            [vxm (rv rm) (vxm (addV lv rv) rm)])])]
+    [sub (l r) 
+      (type-case Val-X-Mem (interp l env mem)
+        [vxm (lv lm)
+          (type-case Val-X-Mem (interp r env lm)
+            [vxm (rv rm) (vxm (subV lv rv) rm)])])]
+    [id (name) (vxm (lookup name env mem) mem)]
+    [if0 (x y z)
+      (type-case Val-X-Mem (interp x env mem)
+        [vxm (testv testm)
+          (if (= 0 (ifop testv))(interp y env testm)(interp z env testm))])]
+    [fun (id body) (vxm (closureV id body env) mem)]
+    [app (fun-expr arg-expr)
+      (type-case Val-X-Mem (interp fun-expr env mem)
+        [vxm (fv fm)
+          (type-case Val-X-Mem (interp arg-expr env fm)
+            [vxm (av am)
+              (type-case RCFAE-Val fv
+                [closureV (id body cl-env)
+                  (let ([next-loc (next-location am)])
+                    (interp 
+                      body 
+                      (cons (id->addr id next-loc) cl-env)
+                      (cons (memLoc next-loc av) am)))]
+               [else (error "application expected procedure")])])])]
+;    [rec (fields) 
+;      (recV (map (lambda (sep) (SymExprPair->SymValPair (list sep ds))) fields))]
+;    [get (rec id) (find-in-record rec id)] ;; revisit 
+;    [set (rec id val) (error "implement me")]
+;    [seqn (a b) (error "implement me")]
+    ))
+
+(define (next-location mem)
+  (if (= 0 (length mem)) 
+      0
+      (+ 1 (last (sort (map (λ (x) (memLoc-addr x)) mem) <)))))
 
 ;Provide a definition of interp-expr : RCFAE -> number or 'procedure, as above.
 (define (interp-expr expr) 
-  (type-case RCFAE-Val (interp expr empty)
-    [numV (n) n]
-    [closureV (s b ds) 'procedure]
-    [recV (l) 'rec]))
+  (type-case Val-X-Mem (interp expr empty empty)
+    [vxm (v a)
+      (type-case RCFAE-Val v
+        [numV (n) n]
+        [closureV (s b ds) 'procedure])]))
+;    [recV (l) 'rec]))
 
 (define (addV l r) (mathV + l r))
 (define (subV l r) (mathV - l r))
@@ -163,12 +181,22 @@
 (define (ifop n) (if (numV? n) (numV-n n) 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; lookup: sym deferred-subs -> RCFAE-Val
+;; lookup: sym Env Mem -> RCFAE-Val
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(define (lookup name ds)
-  (symValPair-val (find-or-die
-    (λ (f) (symbol=? (symValPair-name f) name)) ds 
+(define (lookup name env mem)
+  (mem-lookup (env-lookup name env) mem))
+
+; env-lookup: name env -> num
+(define (env-lookup name env)
+  (id->addr-addr (find-or-die 
+    (λ (f) (symbol=? (id->addr-id f) name)) env 
     (string-append "free identifier: " (symbol->string name)))))
+
+; mem-lookup: num mem -> RCFAE-Val
+(define (mem-lookup addr memory)
+  (memLoc-val (find-or-die 
+    (λ (f) (eq? (memLoc-addr f) addr)) memory
+    (string-append "bad address " (number->string addr)))))
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; utility functions
@@ -194,13 +222,13 @@
  
 (define (zip ll lr) (zip-with list ll lr))
 
-;; find-in-record : rec sym -> RCFAE
-(define (find-in-record rec id)
-  (symExprPair-expr 
-   (find-or-die 
-    (lambda (f) (symbol=? (symExprPair-name f) id)) 
-    (rec-fields rec) 
-    "no such field")))
+;;; find-in-record : rec sym -> RCFAE
+;(define (find-in-record rec id)
+;  (symExprPair-expr 
+;   (find-or-die 
+;    (lambda (f) (symbol=? (symExprPair-name f) id)) 
+;    (rec-fields rec) 
+;    "no such field")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; pair
@@ -262,20 +290,20 @@
      (+ 1 (size (car s)) (size (cdr s)))]
     [else 1]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; parser tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;;; parse basics
-;(test (parse 7) (num 7))
-;(test (parse 'a) (id 'a))
-;(test (parse '(+ 6 7)) (add (num 6) (num 7)))
-;(test (parse '(- 6 7)) (sub (num 6) (num 7)))
-;(test (parse '(+ 6 (+ 6 7))) (add (num 6) (add (num 6) (num 7))))
-;(test (parse '(- 6 (- 6 7))) (sub (num 6) (sub (num 6) (num 7))))
-;(test (parse '(with (x 7) x)) (app (fun 'x (id 'x)) (num 7)))
-;(test (parse '(if0 0 1 2)) (if0 (num 0) (num 1) (num 2)))
-;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; parser tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; parse basics
+(test (parse 7) (num 7))
+(test (parse 'a) (id 'a))
+(test (parse '(+ 6 7)) (add (num 6) (num 7)))
+(test (parse '(- 6 7)) (sub (num 6) (num 7)))
+(test (parse '(+ 6 (+ 6 7))) (add (num 6) (add (num 6) (num 7))))
+(test (parse '(- 6 (- 6 7))) (sub (num 6) (sub (num 6) (num 7))))
+(test (parse '(with (x 7) x)) (app (fun 'x (id 'x)) (num 7)))
+(test (parse '(if0 0 1 2)) (if0 (num 0) (num 1) (num 2)))
+
 ;; recs
 ;(test (parse '(rec (x 6))) (rec (list (symExprPair 'x (num 6)))))
 ;(test (parse '(rec (x (+ 6 7)))) 
@@ -292,43 +320,44 @@
 ;; parser error case
 ;(test/exn (parse-rec '{rec {a 0} {a 12}}) "duplicate fields")
 ;
-;;; parse application tests
-;(test/exn (parse-app '(x)) "appliction without arguments")
-;(test (parse-app '(x y)) (app (id 'x)(id 'y)))
-;
-;;; parse fun tests
-;(test/exn (parse-fun '(fun () x)) "bad syntax")
-;(test (parse-fun '(fun (x) x)) (fun 'x (id 'x)))
-;
+;; parse application tests
+(test/exn (parse-app '(x)) "appliction without arguments")
+(test (parse-app '(x y)) (app (id 'x)(id 'y)))
+
+;; parse fun tests
+(test/exn (parse-fun '(fun () x)) "bad syntax")
+(test (parse-fun '(fun (x) x)) (fun 'x (id 'x)))
+(test (parse '((fun (x) (+ x 2)) 5)) 
+      (app (fun 'x (add (id 'x) (num 2))) (num 5)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; interp-expr tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;;; tests not requiring the library functions, just the interpreter
-;(test (interp-expr (parse 0)) 0)
-;(test (interp-expr (parse (- 10 3))) 7)
-;(test (interp-expr (parse (+ 3 4))) 7)
-;(test (interp-expr (parse '((fun (x) (+ x 2)) 5))) 7)
-;(test (interp-expr (parse '(((fun (x) (fun (y) (+ x y))) 5 )2))) 7)
-;(test (interp-expr (parse '((fun (x) (fun (y) (+ x y))) 5))) 'procedure)
-;(test (interp-expr (parse '(fun (x) (+ x 2)))) 'procedure)
-;(test (interp-expr (parse '(if0 0 1 2))) 1)
-;(test (interp-expr (parse '(if0 1 1 2))) 2)
-;
-;;; bad math test
-;(test/exn (interp-expr (parse '{+ {fun {x} x} 1})) 
-;          "numeric operation expected number")
-;
-;;; bad application test
-;(test/exn (interp-expr (parse '{1 2})) "application expected procedure")
-;(test/exn (interp-expr (parse '((0 Q) (+ 3 6)))) "free identifier")
-;
-;
+
+;; tests not requiring the library functions, just the interpreter
+(test (interp-expr (parse 0)) 0)
+(test (interp-expr (parse (- 10 3))) 7)
+(test (interp-expr (parse (+ 3 4))) 7)
+(test (interp-expr (parse '((fun (x) (+ x 2)) 5))) 7)
+(test (interp-expr (parse '(((fun (x) (fun (y) (+ x y))) 5 )2))) 7)
+(test (interp-expr (parse '((fun (x) (fun (y) (+ x y))) 5))) 'procedure)
+(test (interp-expr (parse '(fun (x) (+ x 2)))) 'procedure)
+(test (interp-expr (parse '(if0 0 1 2))) 1)
+(test (interp-expr (parse '(if0 1 1 2))) 2)
+
+;; bad math test
+(test/exn (interp-expr (parse '{+ {fun {x} x} 1})) 
+          "numeric operation expected number")
+
+;; bad application test
+(test/exn (interp-expr (parse '{1 2})) "application expected procedure")
+(test/exn (interp-expr (parse '((0 Q) (+ 3 6)))) "free identifier")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; function tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;(test (interp-expr (parse '(((fun (x) (fun (x) x)) 5) 6))) 6)
+(test (interp-expr (parse '(((fun (x) (fun (x) x)) 5) 6))) 6)
 
 ; test for functions with the same id in arg list more than once
 ;(test (interp-expr (parse '((fun (x x) x) 5 6))) 6)
@@ -342,7 +371,7 @@
 ;(test (interp-expr (parse '{rec {a 10} {b {+ 1 2}}})) 'rec)
 
 ; get
-(test (interp-expr (parse '{get {rec {r 1}} r}))'rec)
+;(test (interp-expr (parse '{get {rec {r 1}} r}))'rec)
 ;(test (interp-expr (parse '{get {rec {r {rec {z 0}}}} r}))'rec)
 ;(test (interp-expr (parse '{get {rec {a 10} {b {+ 1 2}}} b})) 3)
 ;(test (interp-expr 
