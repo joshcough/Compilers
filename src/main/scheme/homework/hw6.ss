@@ -23,8 +23,8 @@
   [id (name symbol?)]
   [if0 (test RCFAE?) (then RCFAE?) (else RCFAE?)]
   [fun (param symbol?) (body RCFAE?)]
-  [app (fun RCFAE?) (arg RCFAE?)])
-;  [rec (fields (listof SymExprPair?))]
+  [app (fun RCFAE?) (arg RCFAE?)]
+  [rec (fields (listof SymExprPair?))])
 ;  [get (r RCFAE?)(id symbol?)]
 ;  [set (r RCFAE?)(id symbol?)(val RCFAE?)]
 ;  [seqn (a RCFAE?)(b RCFAE?)])
@@ -33,9 +33,10 @@
   [numV (n number?)]
   [closureV (param symbol?)
             (body RCFAE?)
-            (env Env?)])
-;  [recV (fields (listof SymValPair?))])
+            (env Env?)]
+  [recV (fields (listof Id->Addr?))])
 
+(define-type SymExprPair [symExprPair (id symbol?)(expr RCFAE?)])
 (define-type Id->Addr [id->addr (id symbol?)(addr number?)])
 (define-type MemLocation [memLoc (addr number?)(val RCFAE-Val?)])
 (define Env? (listof Id->Addr?))
@@ -58,7 +59,7 @@
                    (parse (third sexpr))
                    (parse (fourth sexpr)))]
        [(fun) (parse-fun sexpr)]
-;       [(rec) (parse-rec sexpr)]
+       [(rec) (parse-rec sexpr)]
 ;       [(get) (get (parse (second sexpr)) (third sexpr))]
 ;       [(set) (set (parse (second sexpr))(third sexpr)(parse (fourth sexpr)))]
 ;       [(seqn)(seqn (parse (second sexpr))(parse (third sexpr)))]
@@ -101,11 +102,11 @@
     )
   (helper (second sexpr) (third sexpr)))
 
-;;; parse-rec : sexpr -> rec
-;(define (parse-rec sexpr)
-;  (begin 
-;    (check-for-dups (map (λ (x) (first x))(cdr sexpr)) "duplicate fields")
-;    (rec (map (λ (x) (symExprPair (first x)(parse (second x)))) (cdr sexpr)))))
+;; parse-rec : sexpr -> rec
+(define (parse-rec sexpr)
+  (begin 
+    (check-for-dups (map (λ (x) (first x))(cdr sexpr)) "duplicate fields")
+    (rec (map (λ (x) (symExprPair (first x)(parse (second x)))) (cdr sexpr)))))
   
 (define (check-for-dups l error-message)
   (if (same-size l (remove-duplicates l symbol=?))
@@ -150,17 +151,33 @@
                       (cons (id->addr id next-loc) cl-env)
                       (cons (memLoc next-loc av) am)))]
                [else (error "application expected procedure")])])])]
-;    [rec (fields) 
-;      (recV (map (lambda (sep) (SymExprPair->SymValPair (list sep ds))) fields))]
+    [rec (fields) (interp-rec expr env mem) ]
 ;    [get (rec id) (find-in-record rec id)] ;; revisit 
 ;    [set (rec id val) (error "implement me")]
 ;    [seqn (a b) (error "implement me")]
     ))
 
 (define (next-location mem)
-  (if (= 0 (length mem)) 
-      0
+  (if (= 0 (length mem)) 0 
       (+ 1 (last (sort (map (λ (x) (memLoc-addr x)) mem) <)))))
+
+; interp-rec: rec env mem -> vxm
+(define (interp-rec rec env mem)
+  (let ([interpd-fields-and-final-mem 
+    (foldl 
+      (lambda (rec-field acc-fields-and-acc-mem)
+        (let* ([current-id (symExprPair-id rec-field)]
+               [current-expr (symExprPair-expr rec-field)]
+               [acc-fields (first acc-fields-and-acc-mem)] 
+               [acc-mem (second acc-fields-and-acc-mem)])
+          (type-case Val-X-Mem (interp current-expr env acc-mem)
+            [vxm (v m)   
+              (let ([next-loc (next-location m)])
+                (list (append acc-fields (list (id->addr current-id next-loc)))
+                      (append m (list (memLoc next-loc v)))))]
+                 ))) (list empty mem) (rec-fields rec))])
+    (vxm (recV (first interpd-fields-and-final-mem))
+         (second interpd-fields-and-final-mem))))
 
 ;Provide a definition of interp-expr : RCFAE -> number or 'procedure, as above.
 (define (interp-expr expr) 
@@ -168,7 +185,8 @@
     [vxm (v a)
       (type-case RCFAE-Val v
         [numV (n) n]
-        [closureV (s b ds) 'procedure])]))
+        [closureV (s b ds) 'procedure]
+        [recV (fields) 'rec])]))
 ;    [recV (l) 'rec]))
 
 (define (addV l r) (mathV + l r))
@@ -305,9 +323,9 @@
 (test (parse '(if0 0 1 2)) (if0 (num 0) (num 1) (num 2)))
 
 ;; recs
-;(test (parse '(rec (x 6))) (rec (list (symExprPair 'x (num 6)))))
-;(test (parse '(rec (x (+ 6 7)))) 
-;      (rec (list (symExprPair 'x (add (num 6)(num 7))))))
+(test (parse '(rec (x 6))) (rec (list (symExprPair 'x (num 6)))))
+(test (parse '(rec (x (+ 6 7)))) 
+      (rec (list (symExprPair 'x (add (num 6)(num 7))))))
 ;(test (parse '(get (rec (x 7)) x)) 
 ;      (get (rec (list (symExprPair 'x (num 7)))) 'x))
 ;(test (parse '(get z x)) (get (id 'z) 'x))
@@ -316,10 +334,10 @@
 ;(test (parse '(+ (rec (x 6)(y 7)) (rec (x 6)(y 7)))) 
 ;      (add (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))
 ;           (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))))
-;
-;; parser error case
-;(test/exn (parse-rec '{rec {a 0} {a 12}}) "duplicate fields")
-;
+
+; parser error case
+(test/exn (parse-rec '{rec {a 0} {a 12}}) "duplicate fields")
+
 ;; parse application tests
 (test/exn (parse-app '(x)) "appliction without arguments")
 (test (parse-app '(x y)) (app (id 'x)(id 'y)))
@@ -359,16 +377,28 @@
 
 (test (interp-expr (parse '(((fun (x) (fun (x) x)) 5) 6))) 6)
 
-; test for functions with the same id in arg list more than once
-;(test (interp-expr (parse '((fun (x x) x) 5 6))) 6)
-;(test (interp-expr (parse '((fun (x x x) x) 5 6 7))) 7)
-;(test (interp-expr (parse '((fun (x y x) x) 5 6 7))) 7)
-;(test (interp-expr (parse '((fun (x x y) x) 5 6 7))) 6)
-;(test (interp-expr (parse '((fun (x x y y) y) 5 6 7 8))) 8)
-
-
 ; record
-;(test (interp-expr (parse '{rec {a 10} {b {+ 1 2}}})) 'rec)
+; interpret a simple record in an empty environment and mem
+(test (interp (parse '{rec {a 10}}) '() '()) 
+      (vxm (recV (list (id->addr 'a 0))) (list (memLoc 0 (numV 10)))))
+
+; interpret a simple record in an non empty environment and mem
+(test (interp 
+       (parse '{rec {a {- x y}}}) 
+        ; the env
+       (list (id->addr 'x 0) (id->addr 'y 1))
+        ; the mem
+       (list (memLoc 0 (numV 77))(memLoc 1 (numV 44))))
+      (vxm 
+       ; the record
+       (recV (list (id->addr 'a 2))) 
+       ; the update memory
+       (list (memLoc 0 (numV 77))(memLoc 1 (numV 44))(memLoc 2 (numV 33)))))
+
+; simple record with more than one field
+(test (interp (parse '{rec {a 10}{b 25}}) '() '()) 
+      (vxm (recV (list (id->addr 'a 0)(id->addr 'b 1))) 
+           (list (memLoc 0 (numV 10))(memLoc 1 (numV 25)))))
 
 ; get
 ;(test (interp-expr (parse '{get {rec {r 1}} r}))'rec)
