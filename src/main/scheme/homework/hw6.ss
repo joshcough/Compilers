@@ -24,8 +24,8 @@
   [if0 (test RCFAE?) (then RCFAE?) (else RCFAE?)]
   [fun (param symbol?) (body RCFAE?)]
   [app (fun RCFAE?) (arg RCFAE?)]
-  [rec (fields (listof SymExprPair?))])
-;  [get (r RCFAE?)(id symbol?)]
+  [rec (fields (listof SymExprPair?))]
+  [get (r RCFAE?)(id symbol?)])
 ;  [set (r RCFAE?)(id symbol?)(val RCFAE?)]
 ;  [seqn (a RCFAE?)(b RCFAE?)])
 
@@ -60,7 +60,7 @@
                    (parse (fourth sexpr)))]
        [(fun) (parse-fun sexpr)]
        [(rec) (parse-rec sexpr)]
-;       [(get) (get (parse (second sexpr)) (third sexpr))]
+       [(get) (get (parse (second sexpr)) (third sexpr))]
 ;       [(set) (set (parse (second sexpr))(third sexpr)(parse (fourth sexpr)))]
 ;       [(seqn)(seqn (parse (second sexpr))(parse (third sexpr)))]
        ;; assume any other symbols are function names, therefore application.
@@ -152,7 +152,10 @@
                       (cons (memLoc next-loc av) am)))]
                [else (error "application expected procedure")])])])]
     [rec (fields) (interp-rec expr env mem) ]
-;    [get (rec id) (find-in-record rec id)] ;; revisit 
+    [get (rec id) 
+         (type-case Val-X-Mem (interp rec env mem)
+           [vxm (v m)
+             (vxm (find-in-record v id m) m)])]
 ;    [set (rec id val) (error "implement me")]
 ;    [seqn (a b) (error "implement me")]
     ))
@@ -240,58 +243,8 @@
  
 (define (zip ll lr) (zip-with list ll lr))
 
-;;; find-in-record : rec sym -> RCFAE
-;(define (find-in-record rec id)
-;  (symExprPair-expr 
-;   (find-or-die 
-;    (lambda (f) (symbol=? (symExprPair-name f) id)) 
-;    (rec-fields rec) 
-;    "no such field")))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; pair
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-; primitive functions
-(define pair `{fun {l r} {fun {b} {b l r}}})
-(define fst  `{fun {p} {with {true {fun {x y} x}}{p true}}})
-(define snd  `{fun {p} {with {false {fun {x y} y}}{p false}}})
-
-; Y combinator
-(define Y
-  `(fun (X)
-    ((fun (p) (X (fun (arg) ((p p) arg))))
-     (fun (p) (X (fun (arg) ((p p) arg)))))))
-
-;; guy steele's defs from: 
-;; http://groups.csail.mit.edu/mac/users/gjs/6.945/readings/MITApril2009Steele.pdf
-;(define (mapreduce f g id xs)
-;  (cond ((null? xs) id)
-;        (else (g (f (car xs)) (mapreduce f g id (cdr xs))))))
-;(define (map f xs) (mapreduce (λ (x) (list (f x))) append '() xs))
-;(define (reduce g id xs) (mapreduce (λ (x) x) g id xs))
-
-(define mapreduce 
-  `{with {Y ,Y} 
-         {Y {fun {mr} 
-                 {fun {f g id xs} 
-                      {if0 xs id 
-                           {g {f {fst xs}} {mr f g id {snd xs}}}}}}}})
-
-(define reduce `{with {mapreduce ,mapreduce} 
-                      {fun {g id xs} {mapreduce {fun {x} x} g id xs}}})  
-
-(define addf `{fun {x y} {+ x y}})
-
-;; sum definition for the homework
-(define sum `{with {reduce ,reduce} {fun {l} {reduce ,addf 0 l}}})
-
-(define (wrap-with-hw-lib expr)
-  `{with {pair ,pair} 
-         {with {fst ,fst} 
-               {with {snd ,snd} 
-                     {with {sum ,sum} ,expr}}}})
-
+;; find-in-record : recV sym -> RCFAE
+(define (find-in-record rec id mem)(lookup id (recV-fields rec) mem))
 
 ;; size : any -> number
 ;; computes a (very rough!) approximate to
@@ -326,14 +279,14 @@
 (test (parse '(rec (x 6))) (rec (list (symExprPair 'x (num 6)))))
 (test (parse '(rec (x (+ 6 7)))) 
       (rec (list (symExprPair 'x (add (num 6)(num 7))))))
-;(test (parse '(get (rec (x 7)) x)) 
-;      (get (rec (list (symExprPair 'x (num 7)))) 'x))
-;(test (parse '(get z x)) (get (id 'z) 'x))
-;
+(test (parse '(get (rec (x 7)) x)) 
+      (get (rec (list (symExprPair 'x (num 7)))) 'x))
+(test (parse '(get z x)) (get (id 'z) 'x))
+
 ;; parser allows (+ rec rec), must fail in interpreter
-;(test (parse '(+ (rec (x 6)(y 7)) (rec (x 6)(y 7)))) 
-;      (add (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))
-;           (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))))
+(test (parse '(+ (rec (x 6)(y 7)) (rec (x 6)(y 7)))) 
+      (add (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))
+           (rec (list (symExprPair 'x (num 6))(symExprPair 'y (num 7))))))
 
 ; parser error case
 (test/exn (parse-rec '{rec {a 0} {a 12}}) "duplicate fields")
@@ -348,9 +301,9 @@
 (test (parse '((fun (x) (+ x 2)) 5)) 
       (app (fun 'x (add (id 'x) (num 2))) (num 5)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; interp-expr tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; interp-expr tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; tests not requiring the library functions, just the interpreter
 (test (interp-expr (parse 0)) 0)
@@ -371,13 +324,16 @@
 (test/exn (interp-expr (parse '{1 2})) "application expected procedure")
 (test/exn (interp-expr (parse '((0 Q) (+ 3 6)))) "free identifier")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; function tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test (interp-expr (parse '(((fun (x) (fun (x) x)) 5) 6))) 6)
 
-; record
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; record tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ; interpret a simple record in an empty environment and mem
 (test (interp (parse '{rec {a 10}}) '() '()) 
       (vxm (recV (list (id->addr 'a 0))) (list (memLoc 0 (numV 10)))))
@@ -401,6 +357,7 @@
            (list (memLoc 0 (numV 10))(memLoc 1 (numV 25)))))
 
 ; get
+(test (interp-expr (parse '{get {rec {r 1}} r})) 1)
 ;(test (interp-expr (parse '{get {rec {r 1}} r}))'rec)
 ;(test (interp-expr (parse '{get {rec {r {rec {z 0}}}} r}))'rec)
 ;(test (interp-expr (parse '{get {rec {a 10} {b {+ 1 2}}} b})) 3)
