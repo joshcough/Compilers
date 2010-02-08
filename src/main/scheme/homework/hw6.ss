@@ -15,7 +15,6 @@
 ;          | {get <RCFAE> <id>}
 ;          | {set <RCFAE> <id> <RCFAE>}
 ;          | {seqn <RCFAE> <RCFAE>}
-
 (define-type RCFAE
   [num (n number?)]
   [add (lhs RCFAE?) (rhs RCFAE?)]
@@ -25,9 +24,9 @@
   [fun (param symbol?) (body RCFAE?)]
   [app (fun RCFAE?) (arg RCFAE?)]
   [rec (fields (listof SymExprPair?))]
-  [get (r RCFAE?)(id symbol?)])
-;  [set (r RCFAE?)(id symbol?)(val RCFAE?)]
-;  [seqn (a RCFAE?)(b RCFAE?)])
+  [get (r RCFAE?)(id symbol?)]
+  [seqn (a RCFAE?)(b RCFAE?)]
+  [set (r RCFAE?)(id symbol?)(val RCFAE?)])
 
 (define-type RCFAE-Val
   [numV (n number?)]
@@ -61,14 +60,12 @@
        [(fun) (parse-fun sexpr)]
        [(rec) (parse-rec sexpr)]
        [(get) (get (parse (second sexpr)) (third sexpr))]
-;       [(set) (set (parse (second sexpr))(third sexpr)(parse (fourth sexpr)))]
-;       [(seqn)(seqn (parse (second sexpr))(parse (third sexpr)))]
+       [(set) (set (parse (second sexpr))(third sexpr)(parse (fourth sexpr)))]
+       [(seqn)(seqn (parse (second sexpr))(parse (third sexpr)))]
        ;; assume any other symbols are function names, therefore application.
-       [else (parse-app sexpr)]
-       )]
+       [else (parse-app sexpr)])]
     [else (error "unexpected token")]))
  
-
 ;; parse-with : sexpr -> fun
 ;;{with {x RCFAE1} RCFAE2} => {{fun {x} RCFAE2} RCFAE1}
 (define (parse-with sexpr)
@@ -90,7 +87,7 @@
       (error "appliction without arguments")
       (helper sexpr)))
   
-;{fun {a b} {+ a b}} => {fun {a} {fun {b} {+ a b}}}
+;; {fun {a b} {+ a b}} => {fun {a} {fun {b} {+ a b}}}
 ;; parse-fun : sexpr -> fun
 (define (parse-fun sexpr)
  (define (helper args body) 
@@ -132,7 +129,7 @@
         [vxm (lv lm)
           (type-case Val-X-Mem (interp r env lm)
             [vxm (rv rm) (vxm (subV lv rv) rm)])])]
-    [id (name) (vxm (lookup name env mem) mem)]
+    [id (name) (vxm (mem-lookup (env-lookup name env) mem) mem)]
     [if0 (x y z)
       (type-case Val-X-Mem (interp x env mem)
         [vxm (testv testm)
@@ -151,18 +148,34 @@
                       (cons (id->addr id next-loc) cl-env)
                       (cons (memLoc next-loc av) am)))]
                [else (error "application expected procedure")])])])]
-    [rec (fields) (interp-rec expr env mem) ]
+    [rec (fields) (interp-rec expr env mem)]
     [get (rec id) 
-         (type-case Val-X-Mem (interp rec env mem)
-           [vxm (v m)
-             (vxm (find-in-record v id m) m)])]
-;    [set (rec id val) (error "implement me")]
-;    [seqn (a b) (error "implement me")]
-    ))
+      (type-case Val-X-Mem (interp rec env mem)
+        [vxm (v m)
+          (vxm (mem-lookup (rec-lookup id v) m) m)])]
+    [set (rec id new-val)
+      (type-case Val-X-Mem (interp rec env mem)
+        [vxm (v1 m1)
+          (type-case Val-X-Mem (interp new-val env m1)
+            [vxm (v2 m2)
+              (let* ([pointer (rec-lookup id v1)]
+                     [old-val (mem-lookup pointer m2)])
+                (vxm old-val (mem-overwrite m2 pointer v2)))])])]
+    [seqn (a b) 
+     (type-case Val-X-Mem (interp a env mem)
+        [vxm (v1 m1)
+          (type-case Val-X-Mem (interp b env m1)
+            [vxm (v2 m2)
+              (vxm v2 m2)])])]))
 
 (define (next-location mem)
   (if (= 0 (length mem)) 0 
       (+ 1 (last (sort (map (λ (x) (memLoc-addr x)) mem) <)))))
+  
+(define (mem-overwrite mem pointer val)
+  (map (λ (ml) (if (eq? (memLoc-addr ml) pointer) 
+                   (memLoc pointer val)
+                   ml)) mem))
 
 ; interp-rec: rec env mem -> vxm
 (define (interp-rec rec env mem)
@@ -202,49 +215,41 @@
 (define (ifop n) (if (numV? n) (numV-n n) 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; lookup: sym Env Mem -> RCFAE-Val
+;; lookup
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(define (lookup name env mem)
-  (mem-lookup (env-lookup name env) mem))
-
 ; env-lookup: name env -> num
 (define (env-lookup name env)
+  (env-lookup-with-message name env
+    (string-append "free identifier: " (symbol->string name))))
+
+(define (env-lookup-with-message name env message)
   (id->addr-addr (find-or-die 
-    (λ (f) (symbol=? (id->addr-id f) name)) env 
-    (string-append "free identifier: " (symbol->string name)))))
+    (λ (f) (symbol=? (id->addr-id f) name)) env message)))
 
 ; mem-lookup: num mem -> RCFAE-Val
 (define (mem-lookup addr memory)
   (memLoc-val (find-or-die 
     (λ (f) (eq? (memLoc-addr f) addr)) memory
     (string-append "bad address " (number->string addr)))))
+
+;; rec-lookup : recV sym -> num
+(define (rec-lookup id rec)
+  (env-lookup-with-message id (recV-fields rec)
+    (string-append "unknown field " (symbol->string id))))
  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; utility functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; utility types and functions
-;; Scala's Option, Maybe in Haskell.
 (define-type Option [none] [some (v (λ (x) #t))])
   
 (define (findo p l)
   (cond [(empty? l) (none)]
         [(p (first l)) (some (first l))]
         [else (findo p (cdr l))]))
+
 ;; find-or-die: predicate list[T] string -> T
 (define (find-or-die p l error-string)
   (type-case Option (findo p l) [some (v) v] [none () (error error-string)]))
-
-(define (zip-with const ll lr)
-  (cond [(empty? ll) '()]
-        [(empty? lr) '()]
-        [else (cons (const (first ll) (first lr))
-                    (zip-with const (cdr ll) (cdr lr)))]))
- 
-(define (zip ll lr) (zip-with list ll lr))
-
-;; find-in-record : recV sym -> RCFAE
-(define (find-in-record rec id mem)(lookup id (recV-fields rec) mem))
 
 ;; size : any -> number
 ;; computes a (very rough!) approximate to
@@ -300,6 +305,13 @@
 (test (parse-fun '(fun (x) x)) (fun 'x (id 'x)))
 (test (parse '((fun (x) (+ x 2)) 5)) 
       (app (fun 'x (add (id 'x) (num 2))) (num 5)))
+
+;; parse seqn
+(test (parse '(seqn 5 6)) (seqn (num 5)(num 6)))
+
+;; parse seqn
+(test (parse '(set (rec (x 6)) x 7)) 
+      (set (rec (list (symExprPair 'x (num 6)))) 'x (num 7)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; interp-expr tests
@@ -358,10 +370,44 @@
 
 ; get
 (test (interp-expr (parse '{get {rec {r 1}} r})) 1)
-;(test (interp-expr (parse '{get {rec {r 1}} r}))'rec)
-;(test (interp-expr (parse '{get {rec {r {rec {z 0}}}} r}))'rec)
-;(test (interp-expr (parse '{get {rec {a 10} {b {+ 1 2}}} b})) 3)
-;(test (interp-expr 
-;       (parse '{+ 10 {get {get {rec {r {rec {z 10}}}} r} z}})) 20)
+(test (interp-expr (parse '{get {rec {r {rec {z 0}}}} r})) 'rec)
+(test (interp-expr (parse '{get {rec {a 10} {b {+ 1 2}}} b})) 3)
+(test (interp-expr 
+       (parse '{+ 10 {get {get {rec {r {rec {z 10}}}} r} z}})) 20)
 ; nested get
-;(test (interp-expr (parse '{get {get {rec {r {rec {z 0}}}} r} z})) 0)
+(test (interp-expr (parse '{get {get {rec {r {rec {z 0}}}} r} z})) 0)
+
+; seqn
+(test (interp-expr (parse '{seqn 7 8})) 8)
+
+; set 
+(test (interp-expr (parse '{{fun {r}{get r x}}{rec {x 1}}})) 1)
+
+(test (interp-expr (parse 
+  '{{fun {r} {seqn {set r x 5} {get r x}}} {rec {x 1}}})) 5)
+
+(test (interp-expr (parse `{set {rec {x 42}} x 2})) 42)
+
+(test (interp-expr (parse '{{{{{fun {g}
+                                    {fun {s}
+                                         {fun {r1}
+                                              {fun {r2}
+                                                   {+ {get r1 b}
+                                                      {seqn
+                                                       {{s r1} {g r2}}
+                                                       {+ {seqn
+                                                           {{s r2} {g r1}}
+                                                           {get r1 b}}
+                                                          {get r2 b}}}}}}}}
+                               {fun {r} {get r a}}}            ; g
+                              {fun {r} {fun {v} {set r b v}}}} ; s
+                             {rec {a 0} {b 2}}}                ; r1
+                            {rec {a 3} {b 4}}}))               ; r2
+      5)
+
+
+; to produce "interp: set: unknown field p; got #(struct:recV #hash())", but got "free identifier: p".
+(test/exn (interp-expr (parse '(set (rec) p (fun (p) y)))) "unknown field p")
+
+;"interp: set: unknown field q; got #(struct:recV #hash((p . 1) (k . 2)))"
+(test/exn (interp-expr (parse '(set (rec (p 4) (k 4)) q (with (q 1) 6)))) "unknown field q")
