@@ -190,7 +190,8 @@
       ; rec is an expression that must be interpreted. this could change mem.
       (type-case Val-X-Mem (interp rec env mem)
         [vxm (v1 m1)
-          ; new-val is an expression that must be interpreted. this could change mem.
+          ; new-val is an expression that must be interpreted. 
+          ; this could change mem.
           ; interp it with the newly update memory
           (type-case Val-X-Mem (interp new-val env m1)
             [vxm (v2 m2)
@@ -581,10 +582,14 @@
 
 ; tests that failed (some of them were just error message differences, tho...)
 (test/exn (interp-expr (parse '(set (rec) p (fun (p) y)))) "unknown field p")
-(test/exn (interp-expr (parse '(set (rec (p 4) (k 4)) q (with (q 1) 6)))) "unknown field q")
+(test/exn 
+ (interp-expr (parse '(set (rec (p 4) (k 4)) q (with (q 1) 6)))) 
+ "unknown field q")
 ; these two i actually forgot, but that was an easy fix.
 (test/exn (interp-expr (parse `(get 1 x))) "record operation expected record") 
-(test/exn (interp-expr (parse `(set 1 x (rec (x 2))))) "record operation expected record") 
+(test/exn 
+ (interp-expr (parse `(set 1 x (rec (x 2))))) 
+ "record operation expected record") 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; part two
