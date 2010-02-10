@@ -628,7 +628,13 @@
 ; i figure that the language from this homework is a superset
 ; of the language from last homework, so the tests better all work. they do.
 
+; some random thoughts though...
 ; i could probably add some more interesting libraries, but dont have time.
+; however, i do wish we were asked to build some things with this language
+; as part of the assignment. i guess all/most of us are used to using languages
+; with mutation, so maybe its not that important, but might have been fun.
+; but also, i can imagine that this homework was pretty challenging for some,
+; and so adding more to it might have been overwhelming. 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; library
