@@ -85,7 +85,11 @@
    (fun (first (second sexpr)) (parse (third sexpr))) 
    (parse (second (second sexpr)))))
 
+; ive chosen to use the app and fun from hw5. 
+; they support everything required for hw6, but
+; they are more powerful and i felt no need to abandon them.
 ;; parse-app : sexpr -> add
+;; {FAE1 FAE2 FAE3 FAE4} => {app {app {app 1 2} 3} 4}
 (define (parse-app sexpr)
   (define (helper sexpr) 
     (case (length sexpr)
@@ -98,16 +102,18 @@
       (error "appliction without arguments")
       (helper sexpr)))
   
+;{fun {a b} {+ a b}} => {fun {a} {fun {b} {+ a b}}}
 ;; parse-fun : sexpr -> fun
 (define (parse-fun sexpr)
  (define (helper args body) 
     (case (length args)
+      [(0) (error "bad syntax")]
       [(1) (fun (first args) (parse body))]
-      [else (error "bad syntax")]
+      [else (fun (first args) (helper (cdr args) body))]
       )
     )
   (helper (second sexpr) (third sexpr)))
-
+  
 ;; parse-rec : sexpr -> rec
 (define (parse-rec sexpr)
   (begin 
@@ -401,12 +407,19 @@
 ;; parse application tests
 (test/exn (parse-app '(x)) "appliction without arguments")
 (test (parse-app '(x y)) (app (id 'x)(id 'y)))
+(test (parse-app '(x y z)) (app (app (id 'x)(id 'y)) (id 'z)))
+(test (parse-app '(w x y z)) (app (app (app (id 'w)(id 'x)) (id 'y)) (id 'z)))
+(test (parse-app '(0 Q (+ 3 6))) (app (app (num 0) (id 'Q)) (add (num 3) (num 6))))
+
 
 ;; parse fun tests
 (test/exn (parse-fun '(fun () x)) "bad syntax")
 (test (parse-fun '(fun (x) x)) (fun 'x (id 'x)))
-(test (parse '((fun (x) (+ x 2)) 5)) 
-      (app (fun 'x (add (id 'x) (num 2))) (num 5)))
+(test (parse-fun '(fun (x y) x)) (fun 'x (fun 'y (id 'x))))
+(test (parse-fun '(fun (x x) x)) (fun 'x (fun 'x (id 'x))))
+(test (parse-fun '(fun (x y z) (+ (+ x y) z))) 
+      (fun 'x (fun 'y (fun 'z (add (add (id 'x) (id 'y))(id 'z))))))
+
 
 ;; parse seqn
 (test (parse '(seqn 5 6)) (seqn (num 5)(num 6)))
@@ -515,6 +528,11 @@
            ; b, boring last value
            (memLoc 3 (numV 25)))))
 
+
+(test (interp-expr (parse 
+  '{with {r {with {x 3}{rec {y x}}}} {with {x 4} {get r y}}})) 
+  3)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; get tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -527,6 +545,8 @@
 (test (interp-expr (parse '{get {get {rec {r {rec {z 0}}}} r} z})) 0)
 
 (test (interp-expr (parse '{{fun {r}{get r x}}{rec {x 1}}})) 1)
+
+(test/exn (interp-expr (parse `(get 1 x))) "record operation expected record") 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; seqn tests
@@ -579,25 +599,233 @@
     {rec {a 3} {b 4}}}))               ; r2
       5)
 
-
-; tests that failed (some of them were just error message differences, tho...)
 (test/exn (interp-expr (parse '(set (rec) p (fun (p) y)))) "unknown field p")
 (test/exn 
  (interp-expr (parse '(set (rec (p 4) (k 4)) q (with (q 1) 6)))) 
  "unknown field q")
-; these two i actually forgot, but that was an easy fix.
-(test/exn (interp-expr (parse `(get 1 x))) "record operation expected record") 
+
 (test/exn 
- (interp-expr (parse `(set 1 x (rec (x 2))))) 
- "record operation expected record") 
+ (interp-expr (parse `(set 1 x (rec (x 2))))) "record operation expected record")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; part two
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; this works. commented out because it will run forever.
 ;(test (interp-expr (parse 
 ;  '{with {b {rec {x 1}}} 
 ;         {with {f 
 ;                {fun {f} {seqn {set b x 2} {f f}}}
 ;                } {f f}}
 ;         })) (error "unreachable"))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; BEYOND HOMEWORK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; everything below this point is robbed from my last homework.
+; i figure that the language from this homework is a superset
+; of the language from last homework, so the tests better all work. they do.
+
+; some random thoughts though...
+; i could probably add some more interesting libraries, but dont have time.
+; however, i do wish we were asked to build some things with this language
+; as part of the assignment. i guess all/most of us are used to using languages
+; with mutation, so maybe its not that important, but might have been fun.
+; but also, i can imagine that this homework was pretty challenging for some,
+; and so adding more to it might have been overwhelming. 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; primitive functions
+(define pair `{fun {l r} {fun {b} {b l r}}})
+(define fst  `{fun {p} {with {t {fun {x y} x}}{p t}}})
+(define snd  `{fun {p} {with {f {fun {x y} y}}{p f}}})
+
+; Y combinator
+(define Y
+  `(fun (X)
+    ((fun (p) (X (fun (arg) ((p p) arg))))
+     (fun (p) (X (fun (arg) ((p p) arg)))))))
+
+(define addf `{fun {x y} {+ x y}})
+
+(define (create-lib depends-on-libs pairs)
+  (define (create-lib-func sym body env)
+    (cons (symValPair sym (vxm-v (interp (parse body) env '()))) env))
+  (foldl
+   (lambda (pair acc-env)
+     (create-lib-func (first pair) (second pair) acc-env))
+   (foldl append '() depends-on-libs)
+   pairs))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; base library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define base-lib 
+  (create-lib '()
+   (list (list 'Y Y)
+         (list 'pair pair)
+         (list 'fst fst)
+         (list 'snd snd))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; boolean library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define boolean-lib
+  (create-lib '()
+   (list
+    (list 'or '(fun (x y) (if0 x 0 (if0 y 0 1))))
+    (list 'and '(fun (x y) (if0 x (if0 y 0 1) 1)))
+    (list 'zero? '(fun (x) (if0 x 0 1)))
+    (list 'not '(fun (x) (if0 x 1 0)))
+    )))
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; math library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define math-lib
+  (create-lib (list boolean-lib base-lib) 
+   (list
+    (list 'addf addf)
+    (list 'split-neg? '(Y (fun (SN)(fun (p n) (if0 (or (zero? p)(zero? n)) 1
+      (if0 (+ n 1) 0 (if0 (zero? (- p 1)) 1 (SN (- p 1) (+ n 1)))))))))
+    (list 'neg? '(fun (x) (split-neg? x x)))
+    (list 'pos? '(fun (x) (and (not (zero? x)) (not (neg? x)))))
+    (list 'abs '(fun (x) (if0 (neg? x) (- 0 x) x)))
+    (list 'add-n-times 
+          '(Y (fun (NX) (fun (n x) (if0 n 0 (+ x (NX (- n 1) x)))))))
+    (list 'mult '(fun (x y)
+      (with (n (add-n-times (abs x) y)) (if0 (pos? x) n (- 0 n)))))
+    )))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; list library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define list-lib
+  (create-lib (list math-lib base-lib)
+   (list 
+    (list 'mapreduce  
+          `{Y {fun {MR} 
+                   {fun {f g id xs} 
+                        {if0 xs id {g {f {fst xs}} {MR f g id {snd xs}}}}}}})
+    (list 'reduce `{fun {g id xs} {mapreduce {fun {x} x} g id xs}})
+    (list 'map `{fun {f xs} {mapreduce f {fun {x y} {pair x y}} 0 xs}})
+    (list 'sum `{fun {l} {reduce addf 0 l}}))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; finally, the entire fae library.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define fae-lib (create-lib (list list-lib math-lib boolean-lib base-lib) '()))
+;(define fae-lib (create-lib (list math-lib boolean-lib base-lib) '()))
+
+;; parse the expression, and then interpret (with access to the main library)
+(define (fae sexpr)
+  (type-case RCFAE-Val (vxm-v (interp (parse sexpr) fae-lib '()))
+             [numV (n) n]
+             [closureV (s b ds) 'procedure]
+             [recV (fields) 'rec]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; smoke test
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (fae '(+ 5 6)) 11)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; pair tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (fae '(fst (pair 2 3))) 2)
+(test (fae '(snd (pair 2 0))) 0)
+(test (fae '{snd {pair 1 2}}) 2)
+(test (fae '{snd {fst {pair {pair 1 2} {pair 3 4}}}}) 2)
+(test (fae '{with {p {pair 1 2}}{+ {fst p} {snd p}}}) 3)
+(test (fae '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}) 3)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; list library tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; sum
+(test (fae '(sum 0)) 0)
+(test (fae '(sum (pair 1 0))) 1)
+(test (fae '(sum (pair 2 (pair 1 0)))) 3)
+(test (fae '(sum (pair 9 (pair 2 (pair 1 0))))) 12)
+(test (fae '(sum (pair 0 (pair 9 (pair 2 (pair 1 0)))))) 12)
+(test (fae '(sum (pair 0 (pair 0 (pair 0 (pair 0 0)))))) 0)
+
+; reduce
+
+(test (fae `(reduce addf 0 (pair 0 (pair 0 (pair 0 (pair 0 0)))))) 0)
+(test (fae 
+       `(reduce addf 5 (pair 10 (pair 20 (pair 30 (pair 40 0)))))) 105)
+
+; map
+
+; since lists are functions, i cant easily test the results of map for equality
+; so instead, i map, then sum, then check the answer. 
+
+(test (fae 
+       `(sum
+         (map (fun (x) (+ x 10)) (pair 0 (pair 0 (pair 0 (pair 0 0)))))))
+      40)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; math lib tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (fae '(neg? 5)) 1)
+(test (fae '(neg? 1)) 1)
+(test (fae '(neg? 0)) 1)
+(test (fae '(neg? -1)) 0)
+(test (fae '(neg? -5)) 0)
+ 
+(test (fae '(add-n-times 3 3)) 9)
+(test (fae '(add-n-times 3 7)) 21)
+(test (fae '(add-n-times 50 10)) 500)
+ 
+(test (fae '(mult 3 3)) 9)
+(test (fae '(mult -3 -3)) 9)
+(test (fae '(mult -3 3)) -9)
+(test (fae '(mult 3 -3)) -9)
+(test (fae '(mult 0 0)) 0)
+(test (fae '(mult 9 0)) 0)
+(test (fae '(mult 0 9)) 0)
+(test (fae '(mult -9 0)) 0)
+(test (fae '(mult 0 -9)) 0)
+(test (fae '(mult 100 100)) 10000)
+ 
+(test (fae '(pos? 0)) 1)
+(test (fae '(pos? 1)) 0)
+(test (fae '(pos? -1)) 1)
+(test (fae '(pos? 2)) 0)
+(test (fae '(pos? -2)) 1)
+ 
+(test (fae '(and 1 1)) 1)
+(test (fae '(and 0 1)) 1)
+(test (fae '(and 1 0)) 1)
+(test (fae '(and 0 0)) 0)
+
+(test (fae '(or 1 1)) 1)
+(test (fae '(or 0 1)) 0)
+(test (fae '(or 1 0)) 0)
+(test (fae '(or 0 0)) 0)
+ 
+(test (fae '(zero? 1)) 1)
+(test (fae '(zero? 0)) 0)
+(test (fae '(zero? -1)) 1)
+ 
+(test (fae '(not 1)) 0)
+(test (fae '(not 0)) 1)
+ 
+(test (fae '(abs -1)) 1)
+(test (fae '(abs 1)) 1)
+(test (fae '(abs 0)) 0)
+(test (fae '(abs -5)) 5)
+(test (fae '(abs 5)) 5)
