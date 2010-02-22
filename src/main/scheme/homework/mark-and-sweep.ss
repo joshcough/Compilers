@@ -56,7 +56,7 @@
 ;; gc:deref : loc -> heap-value
 ;; must signal an error if fl-loc doesn't point to a flat value
 (define (gc:deref fl-loc) 
-  (printf "loc: ~s\n" fl-loc) 
+  (printf "deref : ~s\n" fl-loc) 
   (unless (gc:flat? fl-loc)
     (error 'gc:deref "not flat"))
   (heap-ref (+ 1 fl-loc)))
@@ -150,6 +150,7 @@
   (begin
     (printf "collecting garbage: ~s ~s\n" (get-root-set) extra-roots) 
     (switch-semispace)
+    ; change these lambdas to a top level proc
     (for-each (λ (root) (move-obj (read-root root))) (get-root-set))
     (for-each (λ (root) (move-obj root)) extra-roots)
     (cleanup-semispace (get-other-semispace))))
@@ -167,19 +168,6 @@
                  (printf "heap-ref loc: ~s\n" (heap-ref loc)) 
                  (error "how did we get here?"))]))
 
-; TODO: if what I'm moving is a procedure, i need to call move-proc
-; move proc must move all the things the proc points to. 
-; it would be something like this:
-
-; but how the heck do i make the procedure point to new roots?
-
-;  (cond
-;    [(gc:flat? loc) 
-;     (let ([v (heap-ref loc)])
-;       (if (procedure? v)
-;           (map read-root (procedure-roots v))
-;           '()))]
-
 (define (move-flat loc)
   (printf "moving flat: ~s ~s\n" loc (heap-ref (+ 1 loc))) 
   (let ([v (heap-ref (+ 1 loc))])
@@ -189,10 +177,15 @@
           (heap-set! loc 'flat-forward)
           (heap-set! (+ 1 loc) new-loc) new-loc))))
 
-(define (move-proc loc v) (print "move-proc!"))
+; move proc must move all the things the proc points to. 
+; but how the heck do i make the procedure point to new roots?
+; answer: use set-root!
+(define (move-proc loc v) 7)
+;  (print "move-proc!")
 ;  (let ([new-loc (gc:alloc-flat (gc:deref loc))])
 ;    (heap-set! loc 'flat-forward)
-;  (for-each (λ (root) (move-obj root)) (procedure-roots v)))
+;    ; make the lambda top level.
+;    (for-each (λ (root) (move-obj root)) (procedure-roots v)))
 
 (define (move-cons loc)
   (printf "move cons: ~s\n" loc) 
