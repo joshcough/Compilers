@@ -56,7 +56,7 @@
 ;; gc:deref : loc -> heap-value
 ;; must signal an error if fl-loc doesn't point to a flat value
 (define (gc:deref fl-loc) 
-  (printf "deref : ~s\n" fl-loc) 
+  ;(printf "deref : ~s\n" fl-loc) 
   (unless (gc:flat? fl-loc)
     (error 'gc:deref "not flat"))
   (heap-ref (+ 1 fl-loc)))
@@ -78,6 +78,7 @@
             (error "out of memory")))))
 
 (define (really-alloc-flat fv)
+  ;(printf "really-alloc-flat: ~s allocation pointer ~s:\n" fv (get-allocation-pointer))
   (let ([n (get-allocation-pointer)])
         (heap-set! n 'flat)
         (heap-set! (+ 1 n) fv)
@@ -91,9 +92,12 @@
     (if (space-available? 3)
         (really-alloc-cons hd tl)
         (begin
-        (collect-garbage '(hd tl))
+        (collect-garbage (list hd tl))
         (if (space-available? 3)
-            (really-alloc-cons hd tl)
+            ;hd and tl will now be at the front of the new semispace
+            (really-alloc-cons 
+             (get-current-semispace) 
+             (+ (get-current-semispace) (if (gc:flat? (get-current-semispace)) 2 3)))
             (error "out of memory")))))
 
 (define (really-alloc-cons hd tl)
@@ -148,17 +152,40 @@
 
 (define (collect-garbage extra-roots) 
   (begin
-    (printf "collecting garbage: ~s ~s\n" (get-root-set) extra-roots) 
+    ;(printf "collecting garbage: ~s ~s\n" (map read-root (get-root-set)) extra-roots) 
+    ;(printf "current semispace: ~s\n" (get-current-semispace))
     (switch-semispace)
+    ;(printf "current semispace after switch: ~s\n" (get-current-semispace))
     ; change these lambdas to a top level proc
-    (for-each (λ (root) (move-obj (read-root root))) (get-root-set))
-    (for-each (λ (root) (move-obj root)) extra-roots)
+    (for-each move-root extra-roots)
+    (for-each move-root (get-root-set))
     (cleanup-semispace (get-other-semispace))))
 
 (define (cleanup-semispace loc)
-  (for ([i (in-range loc (+ loc (semi-space-size)))])(heap-set! i 'free)))
+  (for ([i (in-range loc (+ loc (semi-space-size)))])(heap-set! i 'freed)))
+
+; if here just so i can do testing using things
+; that arent really plai roots
+(define (move-root root)
+  ;(printf "move root: ~s\n" (if (root? root)(read-root root) root)) 
+  (if (root? root)
+      (let ([new-loc (move-obj (read-root root))]) 
+        ;(printf "moving root to: ~s\n" new-loc)
+        (set-root! root new-loc)
+        new-loc)
+      (move-obj root)))
+
+(define (move-proc-root root)
+  (unless (in-current-semispace (read-root root))
+    (move-root root)))
+ 
+(define (in-current-semispace loc)
+  (if (eq? (get-current-semispace) (start-of-first-semispace)) 
+      (< loc (start-of-second-semispace))
+      (>= loc (start-of-second-semispace))))
 
 (define (move-obj loc)
+  ;(printf "move obj: ~s\n" loc) 
   (cond
     [(gc:flat? loc) (move-flat loc)]
     [(gc:cons? loc) (move-cons loc)]
@@ -169,28 +196,31 @@
                  (error "how did we get here?"))]))
 
 (define (move-flat loc)
-  (printf "moving flat: ~s ~s\n" loc (heap-ref (+ 1 loc))) 
+  ;(printf "moving flat: ~s ~s\n" loc (heap-ref (+ 1 loc))) 
   (let ([v (heap-ref (+ 1 loc))])
     (if (procedure? v) 
         (move-proc loc v)
-        (let ([new-loc (gc:alloc-flat (gc:deref loc))])
+        (let ([new-loc (really-alloc-flat (gc:deref loc))])
+          ;(printf "new-loc: ~s\n" new-loc) 
           (heap-set! loc 'flat-forward)
-          (heap-set! (+ 1 loc) new-loc) new-loc))))
+          (heap-set! (+ 1 loc) new-loc) 
+          new-loc))))
 
 ; move proc must move all the things the proc points to. 
 ; but how the heck do i make the procedure point to new roots?
 ; answer: use set-root!
-(define (move-proc loc v) 7)
-;  (print "move-proc!")
-;  (let ([new-loc (gc:alloc-flat (gc:deref loc))])
-;    (heap-set! loc 'flat-forward)
-;    ; make the lambda top level.
-;    (for-each (λ (root) (move-obj root)) (procedure-roots v)))
+(define (move-proc loc v) 
+  ;(printf "move-proc! ~s\n" (map read-root (procedure-roots v)))
+  (let ([new-loc (really-alloc-flat (gc:deref loc))])
+    (heap-set! loc 'flat-forward)
+    (heap-set! (+ 1 loc) new-loc)
+    (for-each move-proc-root (procedure-roots v))
+  new-loc))
 
 (define (move-cons loc)
-  (printf "move cons: ~s\n" loc) 
+  ;(printf "move cons: ~s\n" loc) 
   (heap-set! loc 'cons-forward)
-  (let ([new-loc (gc:cons (heap-ref (+ 1 loc))(heap-ref (+ 2 loc)))])
+  (let ([new-loc (really-alloc-cons (heap-ref (+ 1 loc))(heap-ref (+ 2 loc)))])
     (heap-set! loc 'cons-forward)
     (heap-set! (+ 1 loc) new-loc)
     (heap-set! (+ 2 loc) 'freed-by-gc)
@@ -317,7 +347,7 @@
         h)
       (vector 11 13 'reserved 'reserved
               ; space 1
-              'free 'free 'free 'free 'free 'free 'free
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
               ; space 2
               'flat 42 'free 'free 'free 'free 'free))
 
@@ -335,7 +365,7 @@
         h)
       (vector 11 16 'reserved 'reserved
               ; space 1
-              'free 'free 'free 'free 'free 'free 'free
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
               ; space 2
               'pair 14 14 'flat 42 'free 'free))
 
@@ -352,7 +382,7 @@
         h)
       (vector 11 14 'reserved 'reserved
               ; space 1
-              'free 'free 'free 'free 'free 'free 'free
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
               ; space 2
               'pair 11 11 'free 'free 'free 'free))
 
@@ -393,7 +423,7 @@
         h))
       (vector 11 15 'reserved 'reserved
               ; space 1
-              'free 'free 'free 'free 'free 'free 'free
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
               ; space 2
               'flat 42 'flat 99 'free 'free 'free))
 
