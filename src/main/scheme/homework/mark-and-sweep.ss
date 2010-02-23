@@ -135,6 +135,7 @@
     (if (space-available? 3)
         (really-alloc-cons hd tl)
         (begin
+        ; AHHH! using LIST!
         (collect-garbage (list hd tl))
         (if (space-available? 3)
             ;hd and tl will now be at the front of the new semispace
@@ -203,10 +204,7 @@
 
 (define (collect-garbage extra-roots) 
   (begin
-    ;(printf "collecting garbage: ~s ~s\n" (map read-root (get-root-set)) extra-roots) 
-    ;(printf "current semispace: ~s\n" (get-current-semispace))
     (switch-semispace)
-    ;(printf "current semispace after switch: ~s\n" (get-current-semispace))
     (for-each copy-root extra-roots)
     (for-each copy-root (get-root-set))
     (traverse-to-space)
@@ -215,13 +213,11 @@
 ; if here just so i can do testing using things
 ; that arent really plai roots
 (define (copy-root root)
-  ;(printf "move root: ~s\n" (if (root? root)(read-root root) root)) 
   (if (root? root)
-      (let ([new-loc (move-obj (read-root root))]) 
-        ;(printf "moving root to: ~s\n" new-loc)
+      (let ([new-loc (copy-obj (read-root root))]) 
         (set-root! root new-loc)
         new-loc)
-      (move-obj root)))
+      (copy-obj root)))
 
 (define (cleanup-from-space)
   (let ([loc (get-other-semispace)])
@@ -232,78 +228,53 @@
   (do () 
     ; until the slider reaches the alloction pointer
     ((eq? (heap-ref 2) (heap-ref 1))) 
-    (move-children (heap-ref 2))))
+    (copy-children (heap-ref 2))))
 
-(define (move-children loc)
+(define (copy-children loc)
+  (cond
+    [(gc:flat? loc) 
+     (let ([v (heap-ref (+ 1 loc))])
+       (unless (not (procedure? v)) (copy-proc-children v)))
+     (heap-set! 2 (+ 2 (heap-ref 2)))]
+    [(gc:cons? loc) 
+     (heap-set! (+ 1 loc) (copy-obj (heap-ref (+ 1 loc))))
+     (heap-set! (+ 2 loc) (copy-obj (heap-ref (+ 2 loc))))
+     (heap-set! 2 (+ 3 (heap-ref 2)))]
+    [else (begin (printf "loc: ~s heap-ref:~s\n" loc (heap-ref loc))
+                 (error "how did we get here?"))]))
+
+(define (copy-obj loc)
     (cond
     [(imm-loc? loc) loc]
-    [(gc:flat? loc) (move-flat loc)]
-    [(gc:cons? loc) (move-cons loc)]
+    [(gc:flat? loc) 
+     (let ([new-loc (really-alloc-flat (gc:deref loc))])
+       (heap-set! loc 'flat-forward)
+       (heap-set! (+ 1 loc) new-loc) 
+       new-loc)]
+    [(gc:cons? loc) 
+     (heap-set! loc 'cons-forward)
+     (let ([new-loc (really-alloc-cons (heap-ref (+ 1 loc))(heap-ref (+ 2 loc)))])
+       (heap-set! loc 'cons-forward)
+       (heap-set! (+ 1 loc) new-loc)
+       (heap-set! (+ 2 loc) 'freed-by-gc)
+       new-loc )]
     [(eq? 'flat-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
     [(eq? 'cons-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
     [else (begin (printf "loc: ~s heap-ref:~s\n" loc (heap-ref loc))
                  (error "how did we get here?"))]))
 
+(define (copy-proc-children v) 
+  (for-each copy-proc-root (procedure-roots v)))
 
-
-
-
-
-
-
-(define (move-proc-root root)
+(define (copy-proc-root root)
   ; check to see if we've already moved this root.
-  (unless (in-current-semispace (read-root root))
-    (move-root root)))
- 
+  (unless (in-current-semispace (read-root root)) (copy-root root)))
+
 (define (in-current-semispace loc)
   (if (eq? (get-current-semispace) (start-of-first-semispace)) 
       (< loc (start-of-second-semispace))
       (>= loc (start-of-second-semispace))))
 
-(define (move-obj loc)
-  ;(printf "move obj: ~s\n" loc) 
-  (cond
-    [(imm-loc? loc) loc]
-    [(gc:flat? loc) (move-flat loc)]
-    [(gc:cons? loc) (move-cons loc)]
-    [(eq? 'flat-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
-    [(eq? 'cons-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
-    [else (begin (printf "loc: ~s heap-ref:~s\n" loc (heap-ref loc))
-                 (error "how did we get here?"))]))
-
-(define (move-flat loc)
-  ;(printf "moving flat: ~s ~s\n" loc (heap-ref (+ 1 loc))) 
-  (let ([v (heap-ref (+ 1 loc))])
-    (if (procedure? v) 
-        (move-proc loc v)
-        (let ([new-loc (really-alloc-flat (gc:deref loc))])
-          ;(printf "new-loc: ~s\n" new-loc) 
-          (heap-set! loc 'flat-forward)
-          (heap-set! (+ 1 loc) new-loc) 
-          new-loc))))
-
-(define (move-proc loc v) 
-  ;(printf "move-proc! ~s\n" (map read-root (procedure-roots v)))
-  (let ([new-loc (really-alloc-flat (gc:deref loc))])
-    (heap-set! loc 'flat-forward)
-    (heap-set! (+ 1 loc) new-loc)
-    (for-each move-proc-root (procedure-roots v))
-  new-loc))
-
-(define (move-cons loc)
-  ;(printf "move cons: ~s\n" loc) 
-  (heap-set! loc 'cons-forward)
-  (let ([new-loc (really-alloc-cons (heap-ref (+ 1 loc))(heap-ref (+ 2 loc)))])
-    (heap-set! loc 'cons-forward)
-    (heap-set! (+ 1 loc) new-loc)
-    (heap-set! (+ 2 loc) 'freed-by-gc)
-    (let ([x (move-obj (heap-ref (+ 1 new-loc)))])
-      (heap-set! (+ 1 new-loc) x))
-    (let ([x (move-obj (heap-ref (+ 2 new-loc)))])
-      (heap-set! (+ 2 new-loc) x))
-    new-loc ))
-  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; stack based gc                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -546,7 +517,7 @@
                    (gc:cons 12 14)
                    (collect-garbage '(12)))
         h)
-      (vector 19 21 'reserved 'reserved '() #f #t 0 1 2 3 4 
+      (vector 19 21 21 'reserved '() #f #t 0 1 2 3 4 
               ; space 1
               'freed 'freed 'freed 'freed 'freed 'freed 'freed
               ; space 2
@@ -564,7 +535,7 @@
                    (gc:cons 12 12)
                    (collect-garbage '(14)))
         h)
-      (vector 19 24 'reserved 'reserved '() #f #t 0 1 2 3 4 
+      (vector 19 24 24 'reserved '() #f #t 0 1 2 3 4 
               ; space 1
               'freed 'freed 'freed 'freed 'freed 'freed 'freed
               ; space 2
@@ -581,7 +552,7 @@
                    (gc:cons 12 12)
                    (collect-garbage '(12)))
         h)
-      (vector 19 22 'reserved 'reserved '() #f #t 0 1 2 3 4
+      (vector 19 22 22 'reserved '() #f #t 0 1 2 3 4
               ; space 1
               'freed 'freed 'freed 'freed 'freed 'freed 'freed
               ; space 2
@@ -622,12 +593,11 @@
                    (collect-garbage '(12))
                    (gc:alloc-flat 99)
         h))
-      (vector 19 23 'reserved 'reserved '() #f #t 0 1 2 3 4
+      (vector 19 23 21 'reserved '() #f #t 0 1 2 3 4
               ; space 1
               'freed 'freed 'freed 'freed 'freed 'freed 'freed
               ; space 2
               'flat 42 'flat 99 'free 'free 'free))
-
 
 ;(test (with-heap (make-vector 10 #f)
 ;                 (init-allocator)
