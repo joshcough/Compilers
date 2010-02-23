@@ -198,7 +198,7 @@
   (heap-set! (+ 2 pr-loc) new))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; gc                                                                        ;
+;; cheney gc                                                            ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (collect-garbage extra-roots) 
@@ -207,17 +207,14 @@
     ;(printf "current semispace: ~s\n" (get-current-semispace))
     (switch-semispace)
     ;(printf "current semispace after switch: ~s\n" (get-current-semispace))
-    ; change these lambdas to a top level proc
-    (for-each move-root extra-roots)
-    (for-each move-root (get-root-set))
-    (cleanup-semispace (get-other-semispace))))
-
-(define (cleanup-semispace loc)
-  (for ([i (in-range loc (+ loc (semi-space-size)))])(heap-set! i 'freed)))
+    (for-each copy-root extra-roots)
+    (for-each copy-root (get-root-set))
+    (traverse-to-space)
+    (cleanup-from-space)))
 
 ; if here just so i can do testing using things
 ; that arent really plai roots
-(define (move-root root)
+(define (copy-root root)
   ;(printf "move root: ~s\n" (if (root? root)(read-root root) root)) 
   (if (root? root)
       (let ([new-loc (move-obj (read-root root))]) 
@@ -226,7 +223,36 @@
         new-loc)
       (move-obj root)))
 
+(define (cleanup-from-space)
+  (let ([loc (get-other-semispace)])
+    (for ([i (in-range loc (+ loc (semi-space-size)))])(heap-set! i 'freed))))
+
+(define (traverse-to-space)
+  (heap-set! 2 (get-current-semispace))
+  (do () 
+    ; until the slider reaches the alloction pointer
+    ((eq? (heap-ref 2) (heap-ref 1))) 
+    (move-children (heap-ref 2))))
+
+(define (move-children loc)
+    (cond
+    [(imm-loc? loc) loc]
+    [(gc:flat? loc) (move-flat loc)]
+    [(gc:cons? loc) (move-cons loc)]
+    [(eq? 'flat-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
+    [(eq? 'cons-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
+    [else (begin (printf "loc: ~s heap-ref:~s\n" loc (heap-ref loc))
+                 (error "how did we get here?"))]))
+
+
+
+
+
+
+
+
 (define (move-proc-root root)
+  ; check to see if we've already moved this root.
   (unless (in-current-semispace (read-root root))
     (move-root root)))
  
@@ -243,8 +269,7 @@
     [(gc:cons? loc) (move-cons loc)]
     [(eq? 'flat-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
     [(eq? 'cons-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
-    [else (begin (printf "loc: ~s\n" loc)
-                 (printf "heap-ref loc: ~s\n" (heap-ref loc)) 
+    [else (begin (printf "loc: ~s heap-ref:~s\n" loc (heap-ref loc))
                  (error "how did we get here?"))]))
 
 (define (move-flat loc)
@@ -279,6 +304,87 @@
       (heap-set! (+ 2 new-loc) x))
     new-loc ))
   
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; stack based gc                                                            ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;(define (collect-garbage extra-roots) 
+;  (begin
+;    ;(printf "collecting garbage: ~s ~s\n" (map read-root (get-root-set)) extra-roots) 
+;    ;(printf "current semispace: ~s\n" (get-current-semispace))
+;    (switch-semispace)
+;    ;(printf "current semispace after switch: ~s\n" (get-current-semispace))
+;    (for-each move-root extra-roots)
+;    (for-each move-root (get-root-set))
+;    (cleanup-semispace (get-other-semispace))))
+;
+;(define (cleanup-semispace loc)
+;  (for ([i (in-range loc (+ loc (semi-space-size)))])(heap-set! i 'freed)))
+;
+;; if here just so i can do testing using things
+;; that arent really plai roots
+;(define (move-root root)
+;  ;(printf "move root: ~s\n" (if (root? root)(read-root root) root)) 
+;  (if (root? root)
+;      (let ([new-loc (move-obj (read-root root))]) 
+;        ;(printf "moving root to: ~s\n" new-loc)
+;        (set-root! root new-loc)
+;        new-loc)
+;      (move-obj root)))
+;
+;(define (move-proc-root root)
+;  ; check to see if we've already moved this root.
+;  (unless (in-current-semispace (read-root root))
+;    (move-root root)))
+; 
+;(define (in-current-semispace loc)
+;  (if (eq? (get-current-semispace) (start-of-first-semispace)) 
+;      (< loc (start-of-second-semispace))
+;      (>= loc (start-of-second-semispace))))
+;
+;(define (move-obj loc)
+;  ;(printf "move obj: ~s\n" loc) 
+;  (cond
+;    [(imm-loc? loc) loc]
+;    [(gc:flat? loc) (move-flat loc)]
+;    [(gc:cons? loc) (move-cons loc)]
+;    [(eq? 'flat-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
+;    [(eq? 'cons-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
+;    [else (begin (printf "loc: ~s heap-ref:~s\n" loc (heap-ref loc))
+;                 (error "how did we get here?"))]))
+;
+;(define (move-flat loc)
+;  ;(printf "moving flat: ~s ~s\n" loc (heap-ref (+ 1 loc))) 
+;  (let ([v (heap-ref (+ 1 loc))])
+;    (if (procedure? v) 
+;        (move-proc loc v)
+;        (let ([new-loc (really-alloc-flat (gc:deref loc))])
+;          ;(printf "new-loc: ~s\n" new-loc) 
+;          (heap-set! loc 'flat-forward)
+;          (heap-set! (+ 1 loc) new-loc) 
+;          new-loc))))
+;
+;(define (move-proc loc v) 
+;  ;(printf "move-proc! ~s\n" (map read-root (procedure-roots v)))
+;  (let ([new-loc (really-alloc-flat (gc:deref loc))])
+;    (heap-set! loc 'flat-forward)
+;    (heap-set! (+ 1 loc) new-loc)
+;    (for-each move-proc-root (procedure-roots v))
+;  new-loc))
+;
+;(define (move-cons loc)
+;  ;(printf "move cons: ~s\n" loc) 
+;  (heap-set! loc 'cons-forward)
+;  (let ([new-loc (really-alloc-cons (heap-ref (+ 1 loc))(heap-ref (+ 2 loc)))])
+;    (heap-set! loc 'cons-forward)
+;    (heap-set! (+ 1 loc) new-loc)
+;    (heap-set! (+ 2 loc) 'freed-by-gc)
+;    (let ([x (move-obj (heap-ref (+ 1 new-loc)))])
+;      (heap-set! (+ 1 new-loc) x))
+;    (let ([x (move-obj (heap-ref (+ 2 new-loc)))])
+;      (heap-set! (+ 2 new-loc) x))
+;    new-loc ))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; tests                                                                     ;
