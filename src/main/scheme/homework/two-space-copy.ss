@@ -1,4 +1,4 @@
-#lang planet plai/plai:1:19/collector
+#lang planet plai/plai:1:20/collector
 (print-only-errors #t)
 
 ;; heap
@@ -199,12 +199,29 @@
         (collect-garbage-with-cons-roots hd tl)
         (if (space-available? 3)
             ;hd and tl will now be at the front of the new semispace
-            (really-alloc-cons 
-             ; pointer to head
-             (get-current-semispace)
-             ; pointer to tail
-             (+ (get-current-semispace) (if (gc:flat? (get-current-semispace)) 2 3)))
+            ;but only if they are not immediate values
+            ;so some care has to be taken to get the right addresses
+            (really-alloc-cons
+             (get-after-gc-cons-hd-pointer hd)
+             (get-after-gc-cons-tl-pointer hd tl))
             (error "out of memory")))))
+
+; will return either the location of an immediate
+; or the address of the to-space 
+;(thats where the obj will be if its not an immediate)
+(define (get-after-gc-cons-hd-pointer hd)
+  (if (imm-loc? hd) hd (get-current-semispace)))
+
+(define (get-after-gc-cons-tl-pointer hd tl)
+  (if (imm-loc? tl) tl
+      (let ([loc (get-current-semispace)])
+        (cond
+          ; if head is an immediate, then tl will be at start of to-space
+          [(imm-loc? hd) loc]
+          ; if head was a flat or cons, tl will be right after it
+          [(gc:flat? loc) (+ 2 loc)]
+          [(gc:cons? loc) (+ 3 loc)]
+          [else (error "how did we get here")]))))
 
 ;; allocate a cons without checking if space is available
 ;; its assumed that the checking has already happened. 
@@ -294,16 +311,29 @@
   ; update pointers, etc. 
   (traverse-to-space)
   ; cleanup the from space, setting everything to 'freed
+  ; might not need to do this IRL, but it makes testing easier. :)
   (cleanup-from-space))
 
-; if statement here just so i can do testing using things
-; that arent really plai roots
+; copies a root to the to-space
+; and calls set-root! on it, with its new location
 (define (copy-root root)
+  ; if statement here just so i can do testing using things
+  ; that arent really plai roots but are just pointers to cons and flats.
   (if (root? root)
-      (let ([new-loc (copy-obj (read-root root))]) 
-        (set-root! root new-loc)
-        new-loc)
+      ; check to see if we've already moved this root.
+      ; if it is, do nothing. if its not, copy it.
+      (unless (in-current-semispace (read-root root))
+        (let ([new-loc (copy-obj (read-root root))]) 
+          (set-root! root new-loc)
+          new-loc))
+      ; this is the testing path. the root is just a cons or a flat.
       (copy-obj root)))
+
+; in-current-semispace: loc -> boolean
+(define (in-current-semispace loc)
+  (if (eq? (get-current-semispace) (start-of-first-semispace)) 
+      (< loc (start-of-second-semispace))
+      (>= loc (start-of-second-semispace))))
 
 ; set everything in the now inactive semispace to 'freed
 (define (cleanup-from-space)
@@ -360,7 +390,7 @@
     [(gc:flat? loc) 
      (let ([v (heap-ref (+ 1 loc))])
        (if (procedure? v) 
-           (for-each copy-proc-root (procedure-roots v))
+           (for-each copy-root (procedure-roots v))
            (void)))
      ; bump the magic pointer by two (the size of a flat)
      (heap-set! 2 (+ 2 (heap-ref 2)))]
@@ -372,93 +402,6 @@
      (heap-set! 2 (+ 3 (heap-ref 2)))]
     [else (begin (printf "loc: ~s heap-ref:~s\n" loc (heap-ref loc))
                  (error "how did we get here?"))]))
-
-(define (copy-proc-root root)
-  ; check to see if we've already moved this root.
-  ; if it is, do nothing. if its not, copy it.
-  (unless (in-current-semispace (read-root root)) (copy-root root)))
-
-(define (in-current-semispace loc)
-  (if (eq? (get-current-semispace) (start-of-first-semispace)) 
-      (< loc (start-of-second-semispace))
-      (>= loc (start-of-second-semispace))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; stack based gc                                                            ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; old stack based gc implementation that doesn't use Cheney.
-; kept this around for comparison's sake. feel free to ignore it.
-;
-;(define (collect-garbage extra-roots) 
-;  (begin
-;    (switch-semispace)
-;    ;(printf "current semispace after switch: ~s\n" (get-current-semispace))
-;    (for-each move-root extra-roots)
-;    (for-each move-root (get-root-set))
-;    (cleanup-semispace (get-other-semispace))))
-;
-;(define (cleanup-semispace loc)
-;  (for ([i (in-range loc (+ loc (semi-space-size)))])(heap-set! i 'freed)))
-;
-;; if here just so i can do testing using things
-;; that arent really plai roots
-;(define (move-root root)
-;  (if (root? root)
-;      (let ([new-loc (move-obj (read-root root))]) 
-;        ;(printf "moving root to: ~s\n" new-loc)
-;        (set-root! root new-loc)
-;        new-loc)
-;      (move-obj root)))
-;
-;(define (move-proc-root root)
-;  ; check to see if we've already moved this root.
-;  (unless (in-current-semispace (read-root root))
-;    (move-root root)))
-; 
-;(define (in-current-semispace loc)
-;  (if (eq? (get-current-semispace) (start-of-first-semispace)) 
-;      (< loc (start-of-second-semispace))
-;      (>= loc (start-of-second-semispace))))
-;
-;(define (move-obj loc)
-;  (cond
-;    [(imm-loc? loc) loc]
-;    [(gc:flat? loc) (move-flat loc)]
-;    [(gc:cons? loc) (move-cons loc)]
-;    [(eq? 'flat-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
-;    [(eq? 'cons-forward (heap-ref loc)) (heap-ref (+ 1 loc))]
-;    [else (begin (printf "loc: ~s heap-ref:~s\n" loc (heap-ref loc))
-;                 (error "how did we get here?"))]))
-;
-;(define (move-flat loc)
-;  (let ([v (heap-ref (+ 1 loc))])
-;    (if (procedure? v) 
-;        (move-proc loc v)
-;        (let ([new-loc (really-alloc-flat (gc:deref loc))])
-;          ;(printf "new-loc: ~s\n" new-loc) 
-;          (heap-set! loc 'flat-forward)
-;          (heap-set! (+ 1 loc) new-loc) 
-;          new-loc))))
-;
-;(define (move-proc loc v) 
-;  (let ([new-loc (really-alloc-flat (gc:deref loc))])
-;    (heap-set! loc 'flat-forward)
-;    (heap-set! (+ 1 loc) new-loc)
-;    (for-each move-proc-root (procedure-roots v))
-;  new-loc))
-;
-;(define (move-cons loc)
-;  (heap-set! loc 'cons-forward)
-;  (let ([new-loc (really-alloc-cons (heap-ref (+ 1 loc))(heap-ref (+ 2 loc)))])
-;    (heap-set! loc 'cons-forward)
-;    (heap-set! (+ 1 loc) new-loc)
-;    (heap-set! (+ 2 loc) 'freed-by-gc)
-;    (let ([x (move-obj (heap-ref (+ 1 new-loc)))])
-;      (heap-set! (+ 1 new-loc) x))
-;    (let ([x (move-obj (heap-ref (+ 2 new-loc)))])
-;      (heap-set! (+ 2 new-loc) x))
-;    new-loc ))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; tests                                                                     ;
@@ -865,6 +808,71 @@
               'pair 29 29 'pair 26 26 
               'free 'free 'free 'free 'free 'free 'free 'free))
 
+; fill up the first space, then alloc a flat.
+; the flat should be the only thing in the to-space
+(test (let ([h (make-vector 40 #f)])
+        (with-heap h
+                   (init-allocator)
+                   (gc:alloc-flat 42) ; 12 -> DEAD
+                   (gc:alloc-flat 54) ; 14 -> DEAD
+                   (gc:alloc-flat 66) ; 16 -> DEAD
+                   (gc:cons 16 12)    ; 18 -> DEAD
+                   (gc:alloc-flat 78) ; 21 -> DEAD
+                   (gc:cons 14 21)    ; 23 -> DEAD
+                   (gc:alloc-flat 99) ; The guy that triggers the gc)
+        h))
+      (vector 26 28 26 '() #f #t 0 1 2 3 4 5
+              ; space 1
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              ; space 2
+              'flat 99 'free 'free 'free 'free 'free
+              'free 'free 'free 'free 'free 'free 'free))
+
+; fill up the first space, then alloc a cons.
+; the hd and tl should be the first things in the to-space
+; followed by the cons itself.
+(test (let ([h (make-vector 40 #f)])
+        (with-heap h
+                   (init-allocator)
+                   (gc:alloc-flat 42) ; 12 -> DEAD
+                   (gc:alloc-flat 54) ; 14 -> 28
+                   (gc:alloc-flat 66) ; 16 -> 26
+                   (gc:cons 16 12)    ; 18 -> DEAD
+                   (gc:alloc-flat 78) ; 21 -> DEAD
+                   (gc:cons 14 21)    ; 23 -> DEAD
+                   (gc:cons 16 14)    ; The guy that triggers the gc)
+        h))
+      (vector 26 33 30 '() #f #t 0 1 2 3 4 5
+              ; space 1
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              ; space 2
+              'flat 66 'flat 54 'pair 26 28
+              'free 'free 'free 'free 'free 'free 'free))
+
+; do the same thing as the last test, but have the new cons
+; reference immediate values instead of flats in the semispace.
+; the cons should be the only thing in the heap afterwards
+(test (let ([h (make-vector 40 #f)])
+        (with-heap h
+                   (init-allocator)
+                   (gc:alloc-flat 42) ; 12 -> DEAD
+                   (gc:alloc-flat 54) ; 14 -> DEAD
+                   (gc:alloc-flat 66) ; 16 -> DEAD
+                   (gc:cons 16 12)    ; 18 -> DEAD
+                   (gc:alloc-flat 78) ; 21 -> DEAD
+                   (gc:cons 14 21)    ; 23 -> DEAD
+                   (gc:cons 6 7)    ; The guy that triggers the gc)
+        h))
+      (vector 26 29 26 '() #f #t 0 1 2 3 4 5
+              ; space 1
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              ; space 2
+              'pair 6 7 'free 'free 'free 'free
+              'free 'free 'free 'free 'free 'free 'free))
+
 ; just for sanity sake, GC, then GC again.
 (test (let ([h (make-vector 40 #f)])
         (with-heap h
@@ -878,6 +886,32 @@
               ; space 1
               'pair 15 15 'pair 12 12 
               'freed 'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              ; space 2
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed))
+
+; allocate enough stuff to force two garbage collections.
+(test (let ([h (make-vector 40 #f)])
+        (with-heap h
+                   (init-allocator)
+                   (gc:alloc-flat 42) ; 12 -> DEAD
+                   (gc:alloc-flat 54) ; 14 -> 28
+                   (gc:alloc-flat 66) ; 16 -> 26
+                   (gc:cons 16 12)    ; 18 -> DEAD
+                   (gc:alloc-flat 78) ; 21 -> DEAD
+                   (gc:cons 14 21)    ; 23 -> DEAD
+                   (gc:cons 16 14)    ; The guy that triggers the first gc. 30 -> 12
+                   (gc:alloc-flat 78) ; 33 -> DEAD 
+                   (gc:alloc-flat 78) ; 35 -> DEAD
+                   (gc:alloc-flat 78) ; 37 -> DEAD
+                   ; this guy triggers the second gc.
+                   ; he references the cons that triggered the first gc
+                   ; and an immediate.
+                   (gc:cons 30 6) ; ? 
+        h))
+      (vector 12 22 19 '() #f #t 0 1 2 3 4 5
+              ; space 1
+              'pair 15 17 'flat 66 'flat 54 'pair 12 6 'freed 'freed 'freed 'freed
               ; space 2
               'freed 'freed 'freed 'freed 'freed 'freed 'freed
               'freed 'freed 'freed 'freed 'freed 'freed 'freed))
