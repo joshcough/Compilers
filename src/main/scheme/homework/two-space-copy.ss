@@ -1,8 +1,6 @@
 #lang planet plai/plai:1:19/collector
 (print-only-errors #t)
 
-(require (planet plai/plai:1:18/random-mutator))
-
 ;; heap
 ;; 0 : pointer to start of active semispace
 ;; 1 : allocation pointer to next free space in the active semispace
@@ -25,7 +23,7 @@
 ;; init-allocator : -> void
 (define (init-allocator)
   ; 16 at least allows us to alloc two flats.
-  (when (< (heap-size) 16) (error 'too-small))
+  (when (< (heap-size) 16) (error "heap too small"))
   ; the pointer to the currently active semi-space is at position 0
   ; this will toggle between 12 (start of first semi-space) and
   ; the start of the second semispace
@@ -221,15 +219,13 @@
 ;; gc:first : loc -> loc
 ;; must signal an error of pr-loc does not point to a pair
 (define (gc:first pr-loc) 
-  (unless (gc:cons? pr-loc)
-    (error 'gc:first "not a pair"))
+  (unless (gc:cons? pr-loc)(error 'gc:first "not a pair"))
   (heap-ref (+ 1 pr-loc)))
 
 ;; gc:rest : loc -> loc
 ;; must signal an error of pr-loc does not point to a pair
 (define (gc:rest pr-loc)
-  (unless (gc:cons? pr-loc)
-    (error 'gc:first "not a pair"))
+  (unless (gc:cons? pr-loc)(error 'gc:first "not a pair"))
   (heap-ref (+ 2 pr-loc)))
 
 ;; gc:flat? : loc -> boolean
@@ -464,10 +460,8 @@
 ;      (heap-set! (+ 2 new-loc) x))
 ;    new-loc ))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; tests                                                                     ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test (with-heap (make-vector 16 #f) (end-of-first-semispace)) 13)
@@ -487,6 +481,7 @@
 (test (with-heap (make-vector 100 #f) (start-of-second-semispace)) 56)
 (test (with-heap (make-vector 100 #f) (end-of-second-semispace)) 99)
 
+;; immediate loc tests
 (test (imm-loc? 2) #f)
 (test (imm-loc? 3) #t)
 (test (imm-loc? 11) #t)
@@ -523,6 +518,97 @@
 (test (imm-loc->value (imm-value->loc #f)) #f)
 (test (imm-loc->value (imm-value->loc '())) '())
 
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 3)) '())
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 4)) #f)
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 5)) #t)
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 6)) 0)
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 7)) 1)
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 8)) 2)
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 9)) 3)
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 10)) 4)
+(test (with-heap (make-vector 16 #f) (init-allocator)(gc:deref 11)) 5)
+
+; gc:deref, flat?, cons?, first, rest, set-first!, set-rest! tests
+(test (with-heap 
+       (make-vector 16 #f) 
+       (init-allocator)
+       (gc:alloc-flat 111)
+       (gc:deref 12)) 111)
+
+(test (with-heap 
+       (make-vector 16 #f) 
+       (init-allocator)
+       (gc:alloc-flat 111)
+       (gc:flat? 12)) #t)
+
+(test (with-heap 
+       (make-vector 16 #f) 
+       (init-allocator)
+       (gc:alloc-flat 111)
+       (gc:cons? 12)) #f)
+
+(test (with-heap 
+       (make-vector 18 #f) 
+       (init-allocator)
+       (gc:cons 4 5)
+       (gc:flat? 12)) #f)
+
+(test (with-heap 
+       (make-vector 18 #f) 
+       (init-allocator)
+       (gc:cons 4 5)
+       (gc:cons? 12)) #t)
+
+(test/exn (with-heap 
+       (make-vector 18 #f) 
+       (init-allocator)
+       (gc:cons 4 5)
+       (gc:deref 12)) "not flat")
+
+(test/exn (with-heap 
+       (make-vector 16 #f) 
+       (init-allocator)
+       (gc:alloc-flat 111)
+       (gc:first 12)) "not a pair")
+
+(test/exn (with-heap 
+       (make-vector 16 #f) 
+       (init-allocator)
+       (gc:alloc-flat 111)
+       (gc:rest 12)) "not a pair")
+
+(test (with-heap 
+       (make-vector 18 #f) 
+       (init-allocator)
+       (gc:cons 4 5)
+       (gc:first 12)) 4)
+
+(test (with-heap 
+       (make-vector 18 #f) 
+       (init-allocator)
+       (gc:cons 4 5)
+       (gc:rest 12)) 5)
+
+(test (with-heap 
+       (make-vector 18 #f) 
+       (init-allocator)
+       (gc:cons 4 5)
+       (gc:set-first! 12 5)
+       (gc:set-rest! 12 4)
+       (list (gc:first 12)(gc:rest 12))) '(5 4))
+
+(test/exn (with-heap 
+       (make-vector 16 #f) 
+       (init-allocator)
+       (gc:alloc-flat 111)
+       (gc:set-first! 12 7)) "not a pair")
+
+(test/exn (with-heap 
+       (make-vector 16 #f) 
+       (init-allocator)
+       (gc:alloc-flat 111)
+       (gc:set-rest! 12 7)) "not a pair")
+
 ; with heap size 16, we have a semispace size of 2. 
 ; make sure space-available 2 is true, and 3 is false.
 (test (let ([h (make-vector 16 #f)]) 
@@ -543,7 +629,7 @@
        ; the second semispace
        'free 'free))
 
-
+; gc:alloc-flat test
 (test (let ([h (make-vector 16 #f)])
         (list (with-heap h
                          (init-allocator)
@@ -720,8 +806,90 @@
               ; space 2
               'flat 42 'flat 99 'free 'free 'free))
 
-;(test (with-heap (make-vector 10 #f)
-;                 (init-allocator)
-;                 (gc:alloc-flat 111)
-;                 (gc:deref 4))
-;      111)
+; the GCer reorders things, roots first. test it.
+(test (let ([h (make-vector 40 #f)])
+        (with-heap h
+                   (init-allocator)
+                   (gc:alloc-flat 42) ; 12 -> 34
+                   (gc:alloc-flat 54) ; 14 -> 36
+                   (gc:alloc-flat 66) ; 16 -> 32
+                   (gc:cons 16 12)    ; 18 -> 26
+                   (gc:alloc-flat 78) ; 21 -> 38
+                   (gc:cons 14 21)    ; 23 -> 29
+                   ; keep the two cons as roots.
+                   (collect-garbage-for-testing '(18 23))
+        h))
+      (vector 26 40 40 '() #f #t 0 1 2 3 4 5
+              ; space 1
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              ; space 2
+              'pair 32 34 'pair 36 38 'flat 66 'flat 42 'flat 54 'flat 78))
+
+
+; test the same as above, accept have the second cons 
+; reference one of the flats referenced by the first cons
+; this tests forwarding addresses being put in the from-space.
+(test (let ([h (make-vector 40 #f)])
+        (with-heap h
+                   (init-allocator)
+                   (gc:alloc-flat 42) ; 12 -> 34
+                   (gc:alloc-flat 54) ; 14 -> 36
+                   (gc:alloc-flat 66) ; 16 -> 32
+                   (gc:cons 16 12)    ; 18 -> 26
+                   (gc:alloc-flat 78) ; 21 -> DEAD
+                   (gc:cons 14 12)    ; 23 -> 29
+                   ; keep the two cons as roots.
+                   (collect-garbage-for-testing '(18 23))
+        h))
+      (vector 26 38 38 '() #f #t 0 1 2 3 4 5
+              ; space 1
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              ; space 2
+              'pair 32 34 'pair 36 34 'flat 66 'flat 42 'flat 54 'free 'free))
+
+; forwarding should still work if cons reference each other
+(test (let ([h (make-vector 40 #f)])
+        (with-heap h
+                   (init-allocator)
+                   (gc:cons 15 15)    
+                   (gc:cons 12 12)    
+                   (collect-garbage-for-testing '(15 12))
+        h))
+      (vector 26 32 32 '() #f #t 0 1 2 3 4 5
+              ; space 1
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              ; space 2
+              'pair 29 29 'pair 26 26 
+              'free 'free 'free 'free 'free 'free 'free 'free))
+
+; just for sanity sake, GC, then GC again.
+(test (let ([h (make-vector 40 #f)])
+        (with-heap h
+                   (init-allocator)
+                   (gc:cons 15 15)    
+                   (gc:cons 12 12)    
+                   (collect-garbage-for-testing '(15 12))
+                   (collect-garbage-for-testing '(26 29))
+        h))
+      (vector 12 18 18 '() #f #t 0 1 2 3 4 5
+              ; space 1
+              'pair 15 15 'pair 12 12 
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              ; space 2
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed
+              'freed 'freed 'freed 'freed 'freed 'freed 'freed))
+
+; out of memory test
+(test/exn (with-heap 
+       (make-vector 16 #f) 
+       (init-allocator)
+       (gc:cons 4 5)) "out of memory")
+
+; too small!
+(test/exn (with-heap 
+       (make-vector 10 #f) 
+       (init-allocator)
+       (gc:cons 4 5)) "heap too small")
