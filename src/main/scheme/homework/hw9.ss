@@ -57,26 +57,29 @@
     [ifthenelse (tst t f)
       (type-case Type (real-type-check-expr tst tenv)
         [boolT () 
-          (if (equal? (real-type-check-expr t tenv) (real-type-check-expr f tenv))
-              (type-check-expr t tenv)
-              (error 'if "expected same types in 2nd and 3rd positions"))]
+          (if 
+           (equal? (real-type-check-expr t tenv) (real-type-check-expr f tenv))
+           (real-type-check-expr t tenv)
+           (error 'if "expected same types in 2nd and 3rd positions"))]
         [else (error 'if "expected boolean in 1st position")])]
     [fun (args typs body)
          ; extend the environment with the types of all the args
          ; type check the body with that new environment
          (arrowT typs (real-type-check-expr body (extend-env tenv args typs)))]
     [app (rator rands)
-         (type-case Type (type-check-expr tst)
-           [arrowT (arg-types result-type) ...]
-           [else (error 'app "app needs function")])])
-;    [fun (id body) (closureV id body ds)]
-;    [app (fun-expr arg-expr) 
-;         (let* ([f (interp fun-expr ds)][a (interp arg-expr ds)])
-;           (type-case FAE-Val f
-;             [numV (n) (error "application expected procedure")]
-;             [closureV (id body cl-ds)
-;                       (interp body (cons (symValPair id a) cl-ds))]))
-;         ]))
+         (type-case Type (real-type-check-expr rator tenv)
+           [arrowT (arg-types result-type)
+             ; type check the rands
+             ; make sure they are the same type as arg-types
+             ; if so, return result-type
+             (local
+               [(define rand-types 
+                  (map (lambda (rand) (real-type-check-expr rand tenv)) rands))]
+               (if (equal? arg-types rand-types) 
+                   result-type
+                   ; TODO: check one at a time and give a much better error.
+                   (error 'app "bad argument types")))]
+           [else (error 'app "app needs function")])])))
 
 (define (math-type-check [l : TFAE]
                          [r : TFAE]
@@ -89,9 +92,15 @@
                [else (error err "expected number")])]
     [else (error err "expected number")]))
 
+; test prims
 (test (type-check-expr (num 7)) (numT))
 (test (type-check-expr (bool #t)) (boolT))
 (test (type-check-expr (bool #f)) (boolT))
+
+; test id
+(test (real-type-check-expr (id 'x) (list (idtype 'x (numT)))) (numT))
+
+; test math
 (test (type-check-expr (add (num 7) (num 7))) (numT))
 (test (type-check-expr (sub (num 7) (num 7))) (numT))
 (test (type-check-expr (eql (num 7) (num 7))) (boolT))
@@ -99,13 +108,18 @@
 (test/exn (type-check-expr (sub (num 7) (bool #t))) "expected number")
 (test/exn (type-check-expr (eql (num 7) (bool #t))) "expected number")
 
-;[fun (args : (listof symbol)) (ts : (listof Type)) (body : TFAE)]
+; test functions
 (test (type-check-expr 
        (fun (list 'x) (list (numT)) (add (num 5)(num 5)))) 
       (arrowT (list (numT)) (numT)))
 
-(test (real-type-check-expr (id 'x) (list (idtype 'x (numT)))) (numT))
-
 (test (type-check-expr 
        (fun (list 'x) (list (numT)) (add (id 'x)(num 5)))) 
       (arrowT (list (numT)) (numT)))
+
+; test application
+(test (type-check-expr 
+       (app (fun (list 'x) (list (numT)) (add (id 'x)(num 5))) (list (num 7)))) 
+      (numT))
+
+(test (equal? (list (numT)) (list (numT))) #t)
