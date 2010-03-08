@@ -26,7 +26,7 @@
   (if (empty? xs) ys (append (rest xs) (cons (first xs) ys))))
 
 (define (lookup-type [x : symbol][tenv : (listof Id->Type)])
-  (if (empty? tenv) (error 'lookup "unknown id")
+  (if (empty? tenv) (error 'lookup "type-error unknown id")
       (type-case Id->Type (first tenv)
         [idtype (id t) 
           (if (equal? id x) 
@@ -36,7 +36,7 @@
 (test (lookup-type 'x (list (idtype 'x (numT)))) (numT))
 (test (lookup-type 'x (list (idtype 'x (numT))(idtype 'y (boolT)))) (numT))
 (test (lookup-type 'y (list (idtype 'x (numT))(idtype 'y (boolT)))) (boolT))
-(test/exn (lookup-type 'y (list (idtype 'x (numT)))) "unknown id")
+(test/exn (lookup-type 'y (list (idtype 'x (numT)))) "type-error unknown id")
 
 (define (extend-env [tenv : (listof Id->Type)]
                     [args : (listof symbol)] 
@@ -60,8 +60,8 @@
           (if 
            (equal? (real-type-check-expr t tenv) (real-type-check-expr f tenv))
            (real-type-check-expr t tenv)
-           (error 'if "expected same types in 2nd and 3rd positions"))]
-        [else (error 'if "expected boolean in 1st position")])]
+           (error 'if "type-error expected same types in 2nd and 3rd positions"))]
+        [else (error 'if "type-error expected boolean in 1st position")])]
     [fun (args typs body)
          ; extend the environment with the types of all the args
          ; type check the body with that new environment
@@ -78,8 +78,8 @@
                (if (equal? arg-types rand-types) 
                    result-type
                    ; TODO: check one at a time and give a much better error.
-                   (error 'app "bad argument types")))]
-           [else (error 'app "app needs function")])])))
+                   (error 'app "type-error bad argument types")))]
+           [else (error 'app "type-error app needs function")])])))
 
 (define (math-type-check [l : TFAE]
                          [r : TFAE]
@@ -89,8 +89,8 @@
   (type-case Type (real-type-check-expr l tenv)
     [numT () (type-case Type (real-type-check-expr r tenv)
                [numT () result]
-               [else (error err "expected number")])]
-    [else (error err "expected number")]))
+               [else (error err "type-error expected number")])]
+    [else (error err "type-error expected number")]))
 
 ; test prims
 (test (type-check-expr (num 7)) (numT))
@@ -104,9 +104,9 @@
 (test (type-check-expr (add (num 7) (num 7))) (numT))
 (test (type-check-expr (sub (num 7) (num 7))) (numT))
 (test (type-check-expr (eql (num 7) (num 7))) (boolT))
-(test/exn (type-check-expr (add (num 7) (bool #t))) "expected number")
-(test/exn (type-check-expr (sub (num 7) (bool #t))) "expected number")
-(test/exn (type-check-expr (eql (num 7) (bool #t))) "expected number")
+(test/exn (type-check-expr (add (num 7) (bool #t))) "type-error expected number")
+(test/exn (type-check-expr (sub (num 7) (bool #t))) "type-error expected number")
+(test/exn (type-check-expr (eql (num 7) (bool #t))) "type-error expected number")
 
 ; test functions
 (test (type-check-expr 
