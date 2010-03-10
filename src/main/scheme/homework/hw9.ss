@@ -1,5 +1,6 @@
 #lang plai-typed
 
+; expressions
 (define-type TFAE
   [num (n : number)]
   [bool (b : boolean)]
@@ -11,20 +12,21 @@
   [fun (args : (listof symbol)) (ts : (listof Type)) (body : TFAE)]
   [app (rator : TFAE) (rands : (listof TFAE))])
 
+; types
 (define-type Type 
   [numT]
   [boolT]
   [arrowT (dom : (listof Type)) (codom : Type)])
 
+; the type environment
 (define-type Id->Type
   [idtype (id : symbol)(typ : Type)])
 
-(define (type-check-expr [expr : TFAE]) : Type
-  (real-type-check-expr expr empty))
-  
+; concatenate two lists.
 (define (append [xs : (listof 'a)][ys : (listof 'a)])
   (if (empty? xs) ys (append (rest xs) (cons (first xs) ys))))
 
+; lookup a type in the type environment
 (define (lookup-type [x : symbol][tenv : (listof Id->Type)])
   (if (empty? tenv) (error 'lookup "type-error unknown id")
       (type-case Id->Type (first tenv)
@@ -39,6 +41,11 @@
                     [ts : (listof Type)]) : (listof Id->Type)
   (append (map2 idtype args ts) tenv)) 
 
+; public function
+(define (type-check-expr [expr : TFAE]) : Type
+  (real-type-check-expr expr empty))
+
+; function doing the real work
 (define (real-type-check-expr [expr : TFAE] [tenv : (listof Id->Type)]) : Type 
   (begin ;(display tenv)
   (type-case TFAE expr
