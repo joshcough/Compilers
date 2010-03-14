@@ -296,159 +296,160 @@
 (define base-lib 
   (create-lib '() (list (list 'Y Y))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; boolean library
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(define boolean-lib
-;  (create-lib (list base-lib)
-;   (list
-;    (list 'or '(fun (x y) (if0 x 0 (if0 y 0 1))))
-;    (list 'and '(fun (x y) (if0 x (if0 y 0 1) 1)))
-;    (list 'zero? '(fun (x) (if0 x 0 1)))
-;    (list 'not '(fun (x) (if0 x 1 0)))
-;    )))
-;  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; math library
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(define math-lib
-;  (create-lib (list boolean-lib base-lib) 
-;   (list
-;    (list 'addf addf)
-;    (list 'split-neg? '(Y (fun (SN)(fun (p n) (if0 (or (zero? p)(zero? n)) 1
-;      (if0 (+ n 1) 0 (if0 (zero? (- p 1)) 1 (SN (- p 1) (+ n 1)))))))))
-;    (list 'neg? '(fun (x) (split-neg? x x)))
-;    (list 'pos? '(fun (x) (and (not (zero? x)) (not (neg? x)))))
-;    (list 'abs '(fun (x) (if0 (neg? x) (- 0 x) x)))
-;    (list 'add-n-times 
-;          '(Y (fun (NX) (fun (n x) (if0 n 0 (+ x (NX (- n 1) x)))))))
-;    (list 'mult '(fun (x y)
-;      (with (n (add-n-times (abs x) y)) (if0 (pos? x) n (- 0 n)))))
-;    )))
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; list library
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;(define list-lib
-;  (create-lib (list math-lib base-lib)
-;   (list 
-;    (list 'mapreduce  
-;          `{Y {fun {MR} 
-;                   {fun {f g id xs} 
-;                        {if0 xs id {g {f {fst xs}} {MR f g id {snd xs}}}}}}})
-;    (list 'reduce `{fun {g id xs} {mapreduce {fun {x} x} g id xs}})
-;    (list 'map `{fun {f xs} {mapreduce f {fun {x y} {pair x y}} 0 xs}})
-;    (list 'sum `{fun {l} {reduce addf 0 l}}))))
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; finally, the entire myself library.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;(define myself-lib (create-lib (list list-lib math-lib boolean-lib base-lib) '()))
-;
-;;; parse the expression, and then interpret (with access to the main library)
-;(define (myself sexpr)
-;  (type-case Myself-Val (interp (parse sexpr) myself-lib)
-;             [numV (n) n]
-;             [pairV (l) l]
-;             [closureV (s b ds) 'procedure]))
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; simple tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;(test (myself '(+ 5 6)) 11)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; pair tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;(test (myself '(fst (pair 2 3))) 2)
-;(test (myself '(snd (pair 2 0))) 0)
-;(test (myself '{snd {pair 1 2}}) 2)
-;(test (myself '{snd {fst {pair {pair 1 2} {pair 3 4}}}}) 2)
-;(test (myself '{with {p {pair 1 2}}{+ {fst p} {snd p}}}) 3)
-;(test (myself '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}) 3)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; list library tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;; sum
-;(test (myself '(sum 0)) 0)
-;(test (myself '(sum (pair 1 0))) 1)
-;(test (myself '(sum (pair 2 (pair 1 0)))) 3)
-;(test (myself '(sum (pair 9 (pair 2 (pair 1 0))))) 12)
-;(test (myself '(sum (pair 0 (pair 9 (pair 2 (pair 1 0)))))) 12)
-;(test (myself '(sum (pair 0 (pair 0 (pair 0 (pair 0 0)))))) 0)
-;
-;; reduce
-;
-;(test (myself `(reduce addf 0 (pair 0 (pair 0 (pair 0 (pair 0 0)))))) 0)
-;(test (myself 
-;       `(reduce addf 5 (pair 10 (pair 20 (pair 30 (pair 40 0)))))) 105)
-;
-;; map
-;
-;; since lists are functions, i cant easily test the results of map for equality
-;; so instead, i map, then sum, then check the answer. 
-;
-;(test (myself 
-;       `(sum
-;         (map (fun (x) (+ x 10)) (pair 0 (pair 0 (pair 0 (pair 0 0)))))))
-;      40)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; math lib tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;(test (myself '(neg? 5)) 1)
-;(test (myself '(neg? 1)) 1)
-;(test (myself '(neg? 0)) 1)
-;(test (myself '(neg? -1)) 0)
-;(test (myself '(neg? -5)) 0)
-; 
-;(test (myself '(add-n-times 3 3)) 9)
-;(test (myself '(add-n-times 3 7)) 21)
-;(test (myself '(add-n-times 50 10)) 500)
-; 
-;(test (myself '(mult 3 3)) 9)
-;(test (myself '(mult -3 -3)) 9)
-;(test (myself '(mult -3 3)) -9)
-;(test (myself '(mult 3 -3)) -9)
-;(test (myself '(mult 0 0)) 0)
-;(test (myself '(mult 9 0)) 0)
-;(test (myself '(mult 0 9)) 0)
-;(test (myself '(mult -9 0)) 0)
-;(test (myself '(mult 0 -9)) 0)
-;(test (myself '(mult 100 100)) 10000)
-; 
-;(test (myself '(pos? 0)) 1)
-;(test (myself '(pos? 1)) 0)
-;(test (myself '(pos? -1)) 1)
-;(test (myself '(pos? 2)) 0)
-;(test (myself '(pos? -2)) 1)
-; 
-;(test (myself '(and 1 1)) 1)
-;(test (myself '(and 0 1)) 1)
-;(test (myself '(and 1 0)) 1)
-;(test (myself '(and 0 0)) 0)
-; 
-;(test (myself '(or 1 1)) 1)
-;(test (myself '(or 0 1)) 0)
-;(test (myself '(or 1 0)) 0)
-;(test (myself '(or 0 0)) 0)
-; 
-;(test (myself '(zero? 1)) 1)
-;(test (myself '(zero? 0)) 0)
-;(test (myself '(zero? -1)) 1)
-; 
-;(test (myself '(not 1)) 0)
-;(test (myself '(not 0)) 1)
-; 
-;(test (myself '(abs -1)) 1)
-;(test (myself '(abs 1)) 1)
-;(test (myself '(abs 0)) 0)
-;(test (myself '(abs -5)) 5)
-;(test (myself '(abs 5)) 5)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; boolean library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define boolean-lib
+  (create-lib (list base-lib)
+   (list
+    (list 'or '(fun (x y) (if0 x 0 (if0 y 0 1))))
+    (list 'and '(fun (x y) (if0 x (if0 y 0 1) 1)))
+    (list 'zero? '(fun (x) (if0 x 0 1)))
+    (list 'not '(fun (x) (if0 x 1 0)))
+    )))
+  
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; math library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define math-lib
+  (create-lib (list boolean-lib base-lib) 
+   (list
+    (list 'addf addf)
+    (list 'split-neg? '(Y (fun (SN)(fun (p n) (if0 (or (zero? p)(zero? n)) 1
+      (if0 (+ n 1) 0 (if0 (zero? (- p 1)) 1 (SN (- p 1) (+ n 1)))))))))
+    (list 'neg? '(fun (x) (split-neg? x x)))
+    (list 'pos? '(fun (x) (and (not (zero? x)) (not (neg? x)))))
+    (list 'abs '(fun (x) (if0 (neg? x) (- 0 x) x)))
+    (list 'add-n-times 
+          '(Y (fun (NX) (fun (n x) (if0 n 0 (+ x (NX (- n 1) x)))))))
+    (list 'mult '(fun (x y)
+      (with (n (add-n-times (abs x) y)) (if0 (pos? x) n (- 0 n)))))
+    )))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; list library
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define list-lib
+  (create-lib (list math-lib base-lib)
+   (list 
+    (list 'mapreduce  
+          `{Y {fun {MR} 
+                   {fun {f g id xs} 
+                        {if0 xs id {g {f {fst xs}} {MR f g id {snd xs}}}}}}})
+    (list 'reduce `{fun {g id xs} {mapreduce {fun {x} x} g id xs}})
+    (list 'map `{fun {f xs} {mapreduce f {fun {x y} {pair x y}} 0 xs}})
+    (list 'sum `{fun {l} {reduce addf 0 l}}))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; finally, the entire myself library.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define myself-lib (create-lib (list list-lib math-lib boolean-lib base-lib) '()))
+;(define myself-lib (create-lib (list math-lib boolean-lib base-lib) '()))
+
+;; parse the expression, and then interpret (with access to the main library)
+(define (myself sexpr)
+  (type-case Myself-Val (interp (parse sexpr) myself-lib)
+             [numV (n) n]
+             [pairV (l) l]
+             [closureV (s b ds) 'procedure]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; simple tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (myself '(+ 5 6)) 11)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; pair tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (myself '(fst (pair 2 3))) 2)
+(test (myself '(snd (pair 2 0))) 0)
+(test (myself '{snd {pair 1 2}}) 2)
+(test (myself '{snd {fst {pair {pair 1 2} {pair 3 4}}}}) 2)
+(test (myself '{with {p {pair 1 2}}{+ {fst p} {snd p}}}) 3)
+(test (myself '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}) 3)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; list library tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; sum
+(test (myself '(sum 0)) 0)
+(test (myself '(sum (pair 1 0))) 1)
+(test (myself '(sum (pair 2 (pair 1 0)))) 3)
+(test (myself '(sum (pair 9 (pair 2 (pair 1 0))))) 12)
+(test (myself '(sum (pair 0 (pair 9 (pair 2 (pair 1 0)))))) 12)
+(test (myself '(sum (pair 0 (pair 0 (pair 0 (pair 0 0)))))) 0)
+
+; reduce
+
+(test (myself `(reduce addf 0 (pair 0 (pair 0 (pair 0 (pair 0 0)))))) 0)
+(test (myself 
+       `(reduce addf 5 (pair 10 (pair 20 (pair 30 (pair 40 0)))))) 105)
+
+; map
+
+; since lists are functions, i cant easily test the results of map for equality
+; so instead, i map, then sum, then check the answer. 
+
+(test (myself 
+       `(sum
+         (map (fun (x) (+ x 10)) (pair 0 (pair 0 (pair 0 (pair 0 0)))))))
+      40)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; math lib tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (myself '(neg? 5)) 1)
+(test (myself '(neg? 1)) 1)
+(test (myself '(neg? 0)) 1)
+(test (myself '(neg? -1)) 0)
+(test (myself '(neg? -5)) 0)
+ 
+(test (myself '(add-n-times 3 3)) 9)
+(test (myself '(add-n-times 3 7)) 21)
+(test (myself '(add-n-times 50 10)) 500)
+ 
+(test (myself '(mult 3 3)) 9)
+(test (myself '(mult -3 -3)) 9)
+(test (myself '(mult -3 3)) -9)
+(test (myself '(mult 3 -3)) -9)
+(test (myself '(mult 0 0)) 0)
+(test (myself '(mult 9 0)) 0)
+(test (myself '(mult 0 9)) 0)
+(test (myself '(mult -9 0)) 0)
+(test (myself '(mult 0 -9)) 0)
+(test (myself '(mult 100 100)) 10000)
+ 
+(test (myself '(pos? 0)) 1)
+(test (myself '(pos? 1)) 0)
+(test (myself '(pos? -1)) 1)
+(test (myself '(pos? 2)) 0)
+(test (myself '(pos? -2)) 1)
+ 
+(test (myself '(and 1 1)) 1)
+(test (myself '(and 0 1)) 1)
+(test (myself '(and 1 0)) 1)
+(test (myself '(and 0 0)) 0)
+ 
+(test (myself '(or 1 1)) 1)
+(test (myself '(or 0 1)) 0)
+(test (myself '(or 1 0)) 0)
+(test (myself '(or 0 0)) 0)
+ 
+(test (myself '(zero? 1)) 1)
+(test (myself '(zero? 0)) 0)
+(test (myself '(zero? -1)) 1)
+ 
+(test (myself '(not 1)) 0)
+(test (myself '(not 0)) 1)
+ 
+(test (myself '(abs -1)) 1)
+(test (myself '(abs 1)) 1)
+(test (myself '(abs 0)) 0)
+(test (myself '(abs -5)) 5)
+(test (myself '(abs 5)) 5)
