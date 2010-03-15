@@ -1,11 +1,26 @@
 #lang planet plai/plai:1:14
 (print-only-errors #t)
 
+; scheme features used in original fae interpreter
+; 
+; lists
+;; deconstructors - first, second ect
+; numbers (and +, -)
+; functions
+; predicates number? symbol? list?
+; symbol=?
+; if
+; let
+; define type and its pattern matching and deconstructors
+; errors, strings, built in find function, booleans
+; just about everything!
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; types
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define-type Myself
   [num (n number?)]
+  [sym (s symbol?)]
   [add (lhs Myself?) (rhs Myself?)]
   [sub (lhs Myself?) (rhs Myself?)]
   [id (name symbol?)]
@@ -23,6 +38,7 @@
 (define-type Myself-Val
   [numV (n number?)]
   [pairV (p cons?)]
+  [symV (s symbol?)]
   [closureV (param symbol?)
             (body Myself?)
             (env Env?)])
@@ -48,7 +64,8 @@
        [(pair) (pair (parse (second sexpr))(parse (third sexpr)))]
        [(fst) (fst (parse (second sexpr)))]
        [(snd) (snd (parse (second sexpr)))]
-       [(numb?) (numb? (parse (second sexpr)))]
+       [(sym) (sym (second sexpr))]
+       [(numb?) (num? (parse (second sexpr)))]
        [(pair?) (pair? (parse (second sexpr)))]
        [(proc?) (proc? (parse (second sexpr)))]
        [(fun) (parse-fun sexpr)]
@@ -96,6 +113,7 @@
 (define (interp expr env)
   (type-case Myself expr
     [num (n) (numV n)]
+    [sym (s) (symV s)]
     [add (l r) (addV (interp l env) (interp r env))]
     [sub (l r) (subV (interp l env) (interp r env))]
     [id (name) (lookup name env)]
@@ -134,6 +152,7 @@
 (define (interp-expr expr) 
   (type-case Myself-Val (interp expr empty)
     [numV (n) n]
+    [symV (s) s]
     [pairV (l) l]
     [closureV (a b env) 'procedure]))
 
@@ -225,7 +244,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
 ;; simple tests just to make sure interp returns myself-vals
-; simple number case here
+; simple numer case here
 (test (interp (parse 7) '()) (numV 7))
 ; at least make sure we return simple closures
 ; this would the place to put tests for more complicated
@@ -346,12 +365,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define myself-lib (create-lib (list list-lib math-lib boolean-lib base-lib) '()))
-;(define myself-lib (create-lib (list math-lib boolean-lib base-lib) '()))
 
 ;; parse the expression, and then interpret (with access to the main library)
-(define (myself sexpr)
-  (type-case Myself-Val (interp (parse sexpr) myself-lib)
+(define (myself sexpr) (interp (parse sexpr) myself-lib))
+
+(define (to-plt myself-value)
+  (type-case Myself-Val myself-value
              [numV (n) n]
+             [symV (s) s]
              [pairV (l) l]
              [closureV (s b ds) 'procedure]))
 
@@ -359,97 +380,165 @@
 ;; simple tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(test (myself '(+ 5 6)) 11)
+(test (to-plt (myself '(+ 5 6))) 11)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; pair tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(test (myself '(fst (pair 2 3))) 2)
-(test (myself '(snd (pair 2 0))) 0)
-(test (myself '{snd {pair 1 2}}) 2)
-(test (myself '{snd {fst {pair {pair 1 2} {pair 3 4}}}}) 2)
-(test (myself '{with {p {pair 1 2}}{+ {fst p} {snd p}}}) 3)
-(test (myself '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}}) 3)
+(test (to-plt (myself '(fst (pair 2 3)))) 2)
+(test (to-plt (myself '(snd (pair 2 0)))) 0)
+(test (to-plt (myself '{snd {pair 1 2}})) 2)
+(test (to-plt (myself '{snd {fst {pair {pair 1 2} {pair 3 4}}}})) 2)
+(test (to-plt (myself '{with {p {pair 1 2}}{+ {fst p} {snd p}}})) 3)
+(test (to-plt (myself '{with {p {pair {fun {x} {+ x 1}} 2}}{{fst p} {snd p}}})) 3)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; list library tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; sum
-(test (myself '(sum 0)) 0)
-(test (myself '(sum (pair 1 0))) 1)
-(test (myself '(sum (pair 2 (pair 1 0)))) 3)
-(test (myself '(sum (pair 9 (pair 2 (pair 1 0))))) 12)
-(test (myself '(sum (pair 0 (pair 9 (pair 2 (pair 1 0)))))) 12)
-(test (myself '(sum (pair 0 (pair 0 (pair 0 (pair 0 0)))))) 0)
+(test (to-plt (myself '(sum 0))) 0)
+(test (to-plt (myself '(sum (pair 1 0)))) 1)
+(test (to-plt (myself '(sum (pair 2 (pair 1 0))))) 3)
+(test (to-plt (myself '(sum (pair 9 (pair 2 (pair 1 0)))))) 12)
+(test (to-plt (myself '(sum (pair 0 (pair 9 (pair 2 (pair 1 0))))))) 12)
+
+(test (to-plt (myself '(sum (pair 0 (pair 0 (pair 0 (pair 0 0))))))) 0)
 
 ; reduce
 
-(test (myself `(reduce addf 0 (pair 0 (pair 0 (pair 0 (pair 0 0)))))) 0)
-(test (myself 
-       `(reduce addf 5 (pair 10 (pair 20 (pair 30 (pair 40 0)))))) 105)
+(test (to-plt (myself `(reduce addf 0 (pair 0 (pair 0 (pair 0 (pair 0 0))))))) 0)
+(test (to-plt (myself 
+       `(reduce addf 5 (pair 10 (pair 20 (pair 30 (pair 40 0))))))) 105)
 
 ; map
 
 ; since lists are functions, i cant easily test the results of map for equality
 ; so instead, i map, then sum, then check the answer. 
 
-(test (myself 
+(test (to-plt (myself 
        `(sum
-         (map (fun (x) (+ x 10)) (pair 0 (pair 0 (pair 0 (pair 0 0)))))))
+         (map (fun (x) (+ x 10)) (pair 0 (pair 0 (pair 0 (pair 0 0))))))))
       40)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; math lib tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(test (myself '(neg? 5)) 1)
-(test (myself '(neg? 1)) 1)
-(test (myself '(neg? 0)) 1)
-(test (myself '(neg? -1)) 0)
-(test (myself '(neg? -5)) 0)
+(test (to-plt (myself '(neg? 5))) 1)
+(test (to-plt (myself '(neg? 1))) 1)
+(test (to-plt (myself '(neg? 0))) 1)
+(test (to-plt (myself '(neg? -1))) 0)
+(test (to-plt (myself '(neg? -5))) 0)
  
-(test (myself '(add-n-times 3 3)) 9)
-(test (myself '(add-n-times 3 7)) 21)
-(test (myself '(add-n-times 50 10)) 500)
+(test (to-plt (myself '(add-n-times 3 3))) 9)
+(test (to-plt (myself '(add-n-times 3 7))) 21)
+(test (to-plt (myself '(add-n-times 50 10))) 500)
  
-(test (myself '(mult 3 3)) 9)
-(test (myself '(mult -3 -3)) 9)
-(test (myself '(mult -3 3)) -9)
-(test (myself '(mult 3 -3)) -9)
-(test (myself '(mult 0 0)) 0)
-(test (myself '(mult 9 0)) 0)
-(test (myself '(mult 0 9)) 0)
-(test (myself '(mult -9 0)) 0)
-(test (myself '(mult 0 -9)) 0)
-(test (myself '(mult 100 100)) 10000)
+(test (to-plt (myself '(mult 3 3))) 9)
+(test (to-plt (myself '(mult -3 -3))) 9)
+(test (to-plt (myself '(mult -3 3))) -9)
+(test (to-plt (myself '(mult 3 -3))) -9)
+(test (to-plt (myself '(mult 0 0))) 0)
+(test (to-plt (myself '(mult 9 0))) 0)
+(test (to-plt (myself '(mult 0 9))) 0)
+(test (to-plt (myself '(mult -9 0))) 0)
+(test (to-plt (myself '(mult 0 -9))) 0)
+(test (to-plt (myself '(mult 100 100))) 10000)
  
-(test (myself '(pos? 0)) 1)
-(test (myself '(pos? 1)) 0)
-(test (myself '(pos? -1)) 1)
-(test (myself '(pos? 2)) 0)
-(test (myself '(pos? -2)) 1)
+(test (to-plt (myself '(pos? 0))) 1)
+(test (to-plt (myself '(pos? 1))) 0)
+(test (to-plt (myself '(pos? -1))) 1)
+(test (to-plt (myself '(pos? 2))) 0)
+(test (to-plt (myself '(pos? -2))) 1)
  
-(test (myself '(and 1 1)) 1)
-(test (myself '(and 0 1)) 1)
-(test (myself '(and 1 0)) 1)
-(test (myself '(and 0 0)) 0)
+(test (to-plt (myself '(and 1 1))) 1)
+(test (to-plt (myself '(and 0 1))) 1)
+(test (to-plt (myself '(and 1 0))) 1)
+(test (to-plt (myself '(and 0 0))) 0)
  
-(test (myself '(or 1 1)) 1)
-(test (myself '(or 0 1)) 0)
-(test (myself '(or 1 0)) 0)
-(test (myself '(or 0 0)) 0)
+(test (to-plt (myself '(or 1 1))) 1)
+(test (to-plt (myself '(or 0 1))) 0)
+(test (to-plt (myself '(or 1 0))) 0)
+(test (to-plt (myself '(or 0 0))) 0)
  
-(test (myself '(zero? 1)) 1)
-(test (myself '(zero? 0)) 0)
-(test (myself '(zero? -1)) 1)
+(test (to-plt (myself '(zero? 1))) 1)
+(test (to-plt (myself '(zero? 0))) 0)
+(test (to-plt (myself '(zero? -1))) 1)
  
-(test (myself '(not 1)) 0)
-(test (myself '(not 0)) 1)
+(test (to-plt (myself '(not 1))) 0)
+(test (to-plt (myself '(not 0))) 1)
  
-(test (myself '(abs -1)) 1)
-(test (myself '(abs 1)) 1)
-(test (myself '(abs 0)) 0)
-(test (myself '(abs -5)) 5)
-(test (myself '(abs 5)) 5)
+(test (to-plt (myself '(abs -1))) 1)
+(test (to-plt (myself '(abs 1))) 1)
+(test (to-plt (myself '(abs 0))) 0)
+(test (to-plt (myself '(abs -5))) 5)
+(test (to-plt (myself '(abs 5))) 5)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; PART 2 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; the first important question is: 
+; what representation am i going to parse?
+
+; answer unknown!
+
+; next important question is:
+; what is the AST going to look like?
+; one thing is for certain, it must be a legal Myself-Val
+; because it will be the output of the parser.
+; my best first guess:
+
+; (pairV ((symV 'num) . (numV 7)))
+
+; the first item in the pair will indicate the datatype of the second
+; for simplicity, i omit the outer pair for the actual ast listings below
+
+; ((symV 'num) . (numV 7))
+; ((symV 'sym) . (symV 'something)) 
+; ((symV 'add) . (lhs . rhs))
+; ((symV 'sub) . (lhs . rhs))
+; ((symV 'id) . (symV 'something))
+; ((symV 'if) . (test . (then . else)))
+; ((symV 'fun) . (id . body))
+; ((symV 'app) . (f . a))
+; ((symV 'pair) . (lhs . rhs))
+; ((symV 'fst) . lst)
+; ((symV 'snd) . lst)
+; ((symV 'num?) . x)
+; ((symV 'pear?) . x)
+; ((symV 'proc?) . x)
+
+
+; next big deal, how do i run the parser?
+(define eval-lib
+  (create-lib (list list-lib math-lib boolean-lib base-lib)
+   (list 
+    (list 'parse `{fun {sexpr} sexpr})
+    (list 'eval `{fun {expr env} expr})
+    )))
+
+(define myself-meta-lib (create-lib (list eval-lib list-lib math-lib boolean-lib base-lib) '()))
+(define (myself-k2 sexpr) (interp (parse sexpr) myself-meta-lib))
+
+(test (myself-k2 '(parse 5)) (numV 5))
+(test (myself-k2 '(parse (pair (sym num) 5))) (pairV (cons (symV 'num) (numV 5))))
+
+
+
+; can i try to explain to myself how this works....?
+; myself-k2 first parses the sexpr (parse 5) (using the original parser written in plt scheme)
+; this results in: (app the-parse-function (num 5)) 
+; this is then passed to interp (the original myself interpreter written in plt scheme)
+; this takes a few steps to finish. first, it evaluates the function and arg arguments.
+;   (app (clojureV of the-parse-function) (numV 5))
+; then it goes ahead and applies the function by interpreting the body with an extended environment.
+;   (interp body-of-the-parse-function ('sexpr (numV 5)))
+
+
+
+
+; interpret an expr in ast form.
+;(test (myself-k2 '(app (eval ((symV 'num) (numV 7)))) (numV 7))
