@@ -9,7 +9,7 @@
 ; functions
 ; predicates number? symbol? list?
 ; symbol=?
-; if
+; if (only if zero, but that means number comparison)
 ; let
 ; define type and its pattern matching and deconstructors
 ; errors, strings, built in find function, booleans
@@ -20,19 +20,32 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define-type Myself
   [num (n number?)]
+  
+  ; are both of these really needed?
   [sym (s symbol?)]
+  [id (name symbol?)]
+  
   [add (lhs Myself?) (rhs Myself?)]
   [sub (lhs Myself?) (rhs Myself?)]
-  [id (name symbol?)]
   [if0 (test Myself?) (then Myself?) (else Myself?)]
+  
   [fun (param symbol?) (body Myself?)]
   [app (fun Myself?) (arg Myself?)]
+  
   [pair (lhs Myself?) (rhs Myself?)]
   [fst (lst Myself?)] ; first
   [snd (lst Myself?)] ; rest
+  
+  ; for every primitive in the language, you need a predicate for it
+  ; or is it every possible result value? is there a difference?
   [numb? (x Myself?)]
+  [symb? (x Myself?)]
   [pear? (x Myself?)]
   [proc? (x Myself?)]
+  
+  ; magic equality test that hopefully returns 0 (true) if
+  ; two numbers are the same, or two symbols are the same.....
+  [same? (lhs Myself?) (rhs Myself?)]
   )
 
 (define-type Myself-Val
@@ -65,8 +78,10 @@
        [(fst) (fst (parse (second sexpr)))]
        [(snd) (snd (parse (second sexpr)))]
        [(sym) (sym (second sexpr))]
-       [(numb?) (num? (parse (second sexpr)))]
-       [(pair?) (pair? (parse (second sexpr)))]
+       [(same?) (same? (parse (second sexpr)) (parse (third sexpr)))]
+       [(numb?) (numb? (parse (second sexpr)))]
+       [(symb?) (symb? (parse (second sexpr)))]
+       [(pear?) (pear? (parse (second sexpr)))]
        [(proc?) (proc? (parse (second sexpr)))]
        [(fun) (parse-fun sexpr)]
        ;; assume any other symbols are function names, therefore application.
@@ -116,6 +131,7 @@
     [sym (s) (symV s)]
     [add (l r) (addV (interp l env) (interp r env))]
     [sub (l r) (subV (interp l env) (interp r env))]
+    [same? (l r) (sameV (interp l env) (interp r env))]
     [id (name) (lookup name env)]
     [if0 (x y z) 
          (if (= 0 (ifop (interp x env))) (interp y env) (interp z env))]
@@ -139,6 +155,10 @@
          (type-case Myself-Val (interp x env)
            [numV (n) (numV 0)] ; returning 0 for true. ick.
            [else (numV 1)])] ; returning 1 for false, double ick!  
+    [symb? (x) 
+         (type-case Myself-Val (interp x env)
+           [symV (s) (numV 0)]
+           [else (numV 1)])]
     [pear? (x) 
          (type-case Myself-Val (interp x env)
            [pairV (l) (numV 0)]
@@ -158,6 +178,15 @@
 
 (define (addV l r) (mathV + l r))
 (define (subV l r) (mathV - l r))
+(define (sameV l r) 
+  (if (and (numV? l) (numV? r)) 
+      (mathV eq? l r)
+      (if (and (symV? l) (symV? r))
+          (if (eq? (symV-s l)(symV-s r)) 
+              (numV 0)
+              (numV 1))
+          (error "same? expected two nums or two syms"))))
+
 (define (mathV op l r)
   (if 
    (and (numV? l) (numV? r)) 
@@ -516,16 +545,34 @@
 (define eval-lib
   (create-lib (list list-lib math-lib boolean-lib base-lib)
    (list 
-    (list 'parse `{fun {sexpr} sexpr})
+    (list 'parse `{Y {fun {PARSE}
+          {fun {sexpr} 
+            {if0 {numb? sexpr} {pair {sym num} sexpr}
+            {if0 {symb? sexpr} {pair {sym sym} sexpr}
+            {if0 {pear? sexpr}
+                 {if0 {same? {sym add} {fst sexpr}}
+                      {pair {sym add} {pair {PARSE {fst {snd sexpr}}} {PARSE {snd {snd sexpr}}}}}
+                      sexpr} sexpr}}}
+           }}})
     (list 'eval `{fun {expr env} expr})
     )))
 
 (define myself-meta-lib (create-lib (list eval-lib list-lib math-lib boolean-lib base-lib) '()))
 (define (myself-k2 sexpr) (interp (parse sexpr) myself-meta-lib))
 
-(test (myself-k2 '(parse 5)) (numV 5))
-(test (myself-k2 '(parse (pair (sym num) 5))) (pairV (cons (symV 'num) (numV 5))))
+(test (myself-k2 '(parse 5)) (pairV (cons (symV 'num) (numV 5))))
+(test (myself-k2 '(parse (sym f))) (pairV (cons (symV 'sym) (symV 'f))))
 
+; so instead of (+ 5 6), i have: (pair (sym add) (pair 5 6))
+; my quest was concerned with not changing the representation too dramatically
+; parsing has a big say here...
+; does this qualify as dramatic? im not sure...really, they are kind of the same.
+; just that the original implementation can rely on schemes reader, and myself cant.
+(test (myself-k2 '(parse (pair (sym add) (pair 5 6)))) 
+      (pairV (cons (symV 'add) 
+                   (pairV (cons 
+                           (pairV (cons (symV 'num) (numV 5))) 
+                           (pairV (cons (symV 'num) (numV 6))))))))
 
 
 ; can i try to explain to myself how this works....?
@@ -535,10 +582,18 @@
 ; this takes a few steps to finish. first, it evaluates the function and arg arguments.
 ;   (app (clojureV of the-parse-function) (numV 5))
 ; then it goes ahead and applies the function by interpreting the body with an extended environment.
-;   (interp body-of-the-parse-function ('sexpr (numV 5)))
+;   (interp body-of-the-parse-function ('sexpr (numV 5))) ; that last part is the env
 
 
 
 
 ; interpret an expr in ast form.
 ;(test (myself-k2 '(app (eval ((symV 'num) (numV 7)))) (numV 7))
+
+
+
+; more notes:
+; i should probably have my own test library written in Myself
+; it might be very useful to have print and error functions
+
+; even something as simple as add is changing the representation a lot!
