@@ -128,9 +128,11 @@
 (define (interp expr env)
   (type-case Myself expr
     [num (n) (numV n)]
+    ; TODO - write tests
     [sym (s) (symV s)]
     [add (l r) (addV (interp l env) (interp r env))]
     [sub (l r) (subV (interp l env) (interp r env))]
+    ; TODO - write tests
     [same? (l r) (sameV (interp l env) (interp r env))]
     [id (name) (lookup name env)]
     [if0 (x y z) 
@@ -151,18 +153,22 @@
            [pairV (l) (cdr l)]
            [else (error "snd expected list")])]
     [pair (l r) (pairV (cons (interp l env) (interp r env)))]
+    ; TODO - write tests
     [numb? (x) 
          (type-case Myself-Val (interp x env)
            [numV (n) (numV 0)] ; returning 0 for true. ick.
            [else (numV 1)])] ; returning 1 for false, double ick!  
+    ; TODO - write tests
     [symb? (x) 
          (type-case Myself-Val (interp x env)
            [symV (s) (numV 0)]
            [else (numV 1)])]
+    ; TODO - write tests
     [pear? (x) 
          (type-case Myself-Val (interp x env)
            [pairV (l) (numV 0)]
            [else (numV 1)])]
+    ; TODO - write tests
     [proc? (x) 
          (type-case Myself-Val (interp x env)
            [closureV (a b env) (numV 0)]
@@ -512,7 +518,8 @@
 ; the first important question is: 
 ; what representation am i going to parse?
 
-; answer unknown!
+; answer: it can only be things that the language can understand
+; so, syms, nums, lists, functions. but, we probably wont pass the parser functions.
 
 ; next important question is:
 ; what is the AST going to look like?
@@ -540,8 +547,6 @@
 ; ((symV 'pear?) . x)
 ; ((symV 'proc?) . x)
 
-
-; next big deal, how do i run the parser?
 (define eval-lib
   (create-lib (list list-lib math-lib boolean-lib base-lib)
    (list 
@@ -568,7 +573,7 @@
 (test (myself-k2 '(parse 5)) (pairV (cons (symV 'num) (numV 5))))
 (test (myself-k2 '(parse (sym f))) (pairV (cons (symV 'sym) (symV 'f))))
 
-; ugh, how do i represent the empty list? just using (pair 0 0) for now
+; ugh, how do i represent the empty list? just using (pair 0 0) for now. will i need to add empty? to myself?
 (test (myself-k2 '(eval (parse 5) (pair 0 0))) (numV 5))
 ; some very concerning news: if i call eval without the second arg, the program hangs forever!
 ;(test (myself-k2 '(eval (parse 5))) (numV 5))
@@ -585,7 +590,7 @@
                            (pairV (cons (symV 'num) (numV 6))))))))
 
 
-; can i try to explain to myself how this works....?
+; can i try to explain to myself how parsing works....?
 ; myself-k2 first parses the sexpr (parse 5) (using the original parser written in plt scheme)
 ; this results in: (app the-parse-function (num 5)) 
 ; this is then passed to interp (the original myself interpreter written in plt scheme)
