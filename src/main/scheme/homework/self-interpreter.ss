@@ -545,16 +545,21 @@
 (define eval-lib
   (create-lib (list list-lib math-lib boolean-lib base-lib)
    (list 
-    (list 'parse `{Y {fun {PARSE}
-          {fun {sexpr} 
+    (list 'parse `{Y {fun {PARSE} {fun {sexpr} 
             {if0 {numb? sexpr} {pair {sym num} sexpr}
             {if0 {symb? sexpr} {pair {sym sym} sexpr}
             {if0 {pear? sexpr}
                  {if0 {same? {sym add} {fst sexpr}}
                       {pair {sym add} {pair {PARSE {fst {snd sexpr}}} {PARSE {snd {snd sexpr}}}}}
-                      sexpr} sexpr}}}
+                      {sym parse-error}} {sym parse-error}}}}
            }}})
-    (list 'eval `{fun {expr env} expr})
+    (list 'eval `{Y {fun {EVAL} {fun {expr env}
+            {with {type {fst expr}} {with {body {snd expr}}
+              ; look for numbers: (pairV (cons (symV 'num) (numV 5)))
+              ; important question, can i return the same values?
+              ; for example, can i take (numV 5) and return (numV 5)
+              {if0 {same? type {sym num}} body
+              (sym eval-error)}}}}}})
     )))
 
 (define myself-meta-lib (create-lib (list eval-lib list-lib math-lib boolean-lib base-lib) '()))
@@ -562,6 +567,11 @@
 
 (test (myself-k2 '(parse 5)) (pairV (cons (symV 'num) (numV 5))))
 (test (myself-k2 '(parse (sym f))) (pairV (cons (symV 'sym) (symV 'f))))
+
+; ugh, how do i represent the empty list? just using (pair 0 0) for now
+(test (myself-k2 '(eval (parse 5) (pair 0 0))) (numV 5))
+; some very concerning news: if i call eval without the second arg, the program hangs forever!
+;(test (myself-k2 '(eval (parse 5))) (numV 5))
 
 ; so instead of (+ 5 6), i have: (pair (sym add) (pair 5 6))
 ; my quest was concerned with not changing the representation too dramatically
