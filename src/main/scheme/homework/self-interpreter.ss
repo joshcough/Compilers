@@ -538,8 +538,8 @@
 
 ; ((symV 'num) . (numV 7))               ; parsed,evaled
 ; ((symV 'sym) . (symV 'something))      ; parsed,evaled
-; ((symV 'add) . (lhs . rhs))            ; parsed
-; ((symV 'sub) . (lhs . rhs))            ; parsed
+; ((symV 'add) . (lhs . rhs))            ; parsed,evaled
+; ((symV 'sub) . (lhs . rhs))            ; parsed,evaled
 ; ((symV 'id) . (symV 'something))
 ; ((symV 'if) . (test . (then . else)))
 ; ((symV 'fun) . (id . body))
@@ -586,7 +586,7 @@
     )))
 
 (define myself-meta-lib (create-lib (list eval-lib list-lib math-lib boolean-lib base-lib) '()))
-(define (myself-k2 sexpr) (interp (parse sexpr) myself-meta-lib))
+(define (myself-k2 sexpr) (interp (parse sexpr) myself-metaho-lib))
 
 ; parse a num
 (test (myself-k2 '(parse 5))       (pairV (cons (symV 'num) (numV 5))))
