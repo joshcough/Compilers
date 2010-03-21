@@ -541,15 +541,16 @@
 ; ((symV 'add) . (lhs . rhs))            ; parsed,evaled
 ; ((symV 'sub) . (lhs . rhs))            ; parsed,evaled
 ; ((symV 'id) . (symV 'something))
-; ((symV 'if) . (test . (then . else)))
+; ((symV 'if) . (test . (then . else)))  ; parsed,evaled
 ; ((symV 'fun) . (id . body))
 ; ((symV 'app) . (f . a))
-; ((symV 'pair) . (lhs . rhs))
-; ((symV 'fst) . lst)
-; ((symV 'snd) . lst)
-; ((symV 'num?) . x)
-; ((symV 'pear?) . x)
-; ((symV 'proc?) . x)
+; ((symV 'pair) . (lhs . rhs))           ; parsed,evaled
+; ((symV 'fst) . lst)                    ; parsed,evaled
+; ((symV 'snd) . lst)                    ; parsed,evaled
+; ((symV 'numb?) . x)                    ; parsed,evaled
+; ((symV 'symb?) . x)                    ; parsed,evaled
+; ((symV 'pear?) . x)                    ; parsed,evaled
+; ((symV 'proc?) . x)                    ; parsed,evaled
 
 (define eval-lib
   (create-lib (list list-lib math-lib boolean-lib base-lib)
@@ -558,47 +559,111 @@
             {if0 {numb? sexpr} {pair {sym num} sexpr}
             {if0 {symb? sexpr} {pair {sym sym} sexpr}
             {if0 {pear? sexpr}
+                 ; add 
+                 ; (pair (sym add) (pair lhs rhs)) -> ((symV 'add) . (lhs . rhs))
                  {if0 {same? {sym add} {fst sexpr}}
-                      {pair {sym add} {pair {PARSE {fst {snd sexpr}}} {PARSE {snd {snd sexpr}}}}}
+                      {with {lhs {PARSE {fst {snd sexpr}}}} 
+                            {with {rhs {PARSE {snd {snd sexpr}}}}
+                      {pair {sym add} {pair lhs rhs}}}}
+                 ; sub 
+                 ; (pair (sym sub) (pair lhs rhs)) -> ((symV 'sub) . (lhs . rhs))
                  {if0 {same? {sym sub} {fst sexpr}}
-                      {pair {sym sub} {pair {PARSE {fst {snd sexpr}}} {PARSE {snd {snd sexpr}}}}}
-                 {sym parse-error}}} 
-                 {sym parse-error}}}}
-           }}})
+                      {with {lhs {PARSE {fst {snd sexpr}}}} 
+                            {with {rhs {PARSE {snd {snd sexpr}}}}
+                      {pair {sym sub} {pair lhs rhs}}}}
+                 ; pair
+                 ; (pair (sym pair) (pair lhs rhs)) -> ((symV 'pair) . (lhs . rhs))
+                 {if0 {same? {sym pair} {fst sexpr}}
+                      {with {lhs {PARSE {fst {snd sexpr}}}} 
+                            {with {rhs {PARSE {snd {snd sexpr}}}}
+                      {pair {sym pair} {pair lhs rhs}}}}
+                 ; numb? (pair (sym numb?) x) -> ((symV 'numb?) . x) 
+                 {if0 {same? {sym numb?} {fst sexpr}}
+                      {pair {sym numb?} {PARSE {snd expr}}}
+                 ; symb? (pair (sym symb?) x) -> ((symV 'symb?) . x) 
+                 {if0 {same? {sym symb?} {fst sexpr}}
+                      {pair {sym symb?} {PARSE {snd expr}}}
+                 ; pear? (pair (sym pair?) x) -> ((symV 'pair?) . x) 
+                 {if0 {same? {sym pear?} {fst sexpr}}
+                      {pair {sym pear?} {PARSE {snd expr}}}
+                 ; proc? (pair (sym proc?) x) -> ((symV 'proc?) . x) 
+                 {if0 {same? {sym proc?} {fst sexpr}}
+                      {pair {sym proc?} {PARSE {snd expr}}}
+                 ; fst (pair (sym fst) x) -> ((symV 'fst) . x) 
+                 {if0 {same? {sym fst} {fst sexpr}}
+                      {pair {sym fst} {PARSE {snd expr}}}
+                 ; snd (pair (sym snd) x) -> ((symV 'snd) . x) 
+                 {if0 {same? {sym snd} {fst sexpr}}
+                      {pair {sym snd} {PARSE {snd expr}}}
+                 ; if0
+                 ; (pair (sym if0) (pair (test (pair texpr fexpr)))) 
+                 ; ->  
+                 ; ((symV 'if0) . (test . (then . else)))
+                 {if0 {same? {sym if0} {fst sexpr}}
+                      {with {b {PARSE {fst {snd sexpr}}}}
+                            {with {t {PARSE {fst {snd {snd sexpr}}}}}
+                                  {with {f {PARSE {snd {snd {snd sexpr}}}}}
+                                        {pair {sym if0} {pair b {pair t f}}}}}}
+                 {sym parse-error}}}}}}}}}}}
+                 {sym parse-error}}
+                 {sym parse-error}}}}}})
     
     (list 'domath `{fun {l r op}
-          {if0 {and {numb? l} {numb? r}} {op l r} {sym error-math-expected-numbers}}})
+          {if0 {and {numb? l} {numb? r}} {op l r} {sym eval-error-math-expected-numbers}}})
     
     ; important eval question, can i return the same values?
     ; for example, can i take (numV 5) and return (numV 5)
     (list 'eval `{Y {fun {EVAL} {fun {expr env}
             {with {type {fst expr}} {with {body {snd expr}}
-              {if0 {same? type {sym num}} body ; numbers - (pairV (cons (symV 'num) (numV 5)))
-              {if0 {same? type {sym sym}} body ; symbols - (pairV (cons (symV 'sym) (symV 'x)))
-              ; add ((symV 'add) . (lhs . rhs)) -> number
+              ; numbers (pairV (cons (symV 'num) (numV 5))) -> NumV
+              {if0 {same? type {sym num}} body
+              ; symbols (pairV (cons (symV 'sym) (symV 'x))) -> SymV
+              {if0 {same? type {sym sym}} body
+              ; add ((symV 'add) . (lhs . rhs)) -> numV
               {if0 {same? type {sym add}}
                    {with {l {{EVAL {fst body}} env}} {with {r {{EVAL {snd body}} env}}
                      {domath l r {fun {x y} {+ x y}}}}}
+              ; sub ((symV 'sub) . (lhs . rhs)) -> numV
               {if0 {same? type {sym sub}}
                    {with {l {EVAL {fst body} env}} {with {r {EVAL {snd body} env}}
                      {domath l r {fun {x y} {- x y}}}}}
-              (sym eval-error)}}}}}}}}})
+              ; if0 ((symV 'if0) . (test . (then . else))) -> Myself-Val
+              {if0 {same? type {sym if0}}
+                   {if0 {EVAL {fst body} env} 
+                        {EVAL {fst {snd body}} env} 
+                        {EVAL {snd {snd body}} env}}
+              ; pair ((symV 'pair) . (lhs . rhs)) -> pairV
+              {if0 {same? type {sym pair}} 
+                   {pair {EVAL {fst body} env} {EVAL {snd body} env}}
+              ; fst ((symV 'fst) . x) -> Myself-Val
+              {if0 {same? type {sym fst}} 
+                   {with {x {EVAL {fst body} env}}
+                         {if0 {pair? x} {fst x} {sym eval-error-fst-expected-pair}}}
+              ; snd ((symV 'snd) . x) -> Myself-Val
+              {if0 {same? type {sym snd}} 
+                   {with {x {EVAL {fst body} env}}
+                         {if0 {pair? x} {snd x} {sym eval-error-snd-expected-pair}}}
+              ; numb? ((symV 'numb?) . x) -> numV (0 or 1)
+              {if0 {same? type {sym numb?}} {if0 {numb? {EVAL {fst body} env}} 0 1}
+              ; symb? ((symV 'symb?) . x) -> numV (0 or 1)
+              {if0 {same? type {sym symb?}} {if0 {symb? {EVAL {fst body} env}} 0 1}
+              ; pear? ((symV 'pear?) . x) -> numV (0 or 1)
+              {if0 {same? type {sym pear?}} {if0 {pear? {EVAL {fst body} env}} 0 1}
+              ; proc? ((symV 'proc?) . x) -> numV (0 or 1)
+              {if0 {same? type {sym proc?}} {if0 {proc? {EVAL {fst body} env}} 0 1}     
+              {sym eval-error}}}}}}}}}}}}}}}}}})
     )))
 
 (define myself-meta-lib (create-lib (list eval-lib list-lib math-lib boolean-lib base-lib) '()))
-(define (myself-k2 sexpr) (interp (parse sexpr) myself-metaho-lib))
+(define (myself-k2 sexpr) (interp (parse sexpr) myself-meta-lib))
 
 ; parse a num
 (test (myself-k2 '(parse 5))       (pairV (cons (symV 'num) (numV 5))))
-; parse a sym
-(test (myself-k2 '(parse (sym f))) (pairV (cons (symV 'sym) (symV 'f))))
-
-; ugh, how do i represent the empty list? just using (pair 0 0) for now. will i need to add empty? to myself?
 ; eval a num
 (test (myself-k2 '(eval (parse 5) (pair 0 0))) (numV 5))
-; some very concerning news: if i call eval without the second arg, the program hangs forever!
-;(test (myself-k2 '(eval (parse 5))) (numV 5))
 
+; parse a sym
+(test (myself-k2 '(parse (sym f))) (pairV (cons (symV 'sym) (symV 'f))))
 ; eval a symbol
 (test (myself-k2 '(eval (parse (sym x)) (pair 0 0))) (symV 'x))
 
@@ -614,19 +679,34 @@
                            (pairV (cons (symV 'num) (numV 5))) 
                            (pairV (cons (symV 'num) (numV 6))))))))
 
+; eval an add expression
+(test (myself-k2 '(eval (parse (pair (sym add) (pair 5 6))) (pair 0 0))) (numV 11))
+
 ; parse an sub expression
 (test (myself-k2 '(parse (pair (sym sub) (pair 6 5)))) 
       (pairV (cons (symV 'sub) 
                    (pairV (cons 
                            (pairV (cons (symV 'num) (numV 6))) 
                            (pairV (cons (symV 'num) (numV 5))))))))
-
-; eval an add expression
-(test (myself-k2 '(eval (parse (pair (sym add) (pair 5 6))) (pair 0 0))) (numV 11))
       
-; parse an sub expression
+; eval a sub expression
 (test (myself-k2 '(eval (parse (pair (sym sub) (pair 6 5))) (pair 0 0))) (numV 1))
       
+; parse an if expression
+(test (myself-k2 '(parse (pair (sym if0) (pair 0 (pair 5 6))))) 
+      (pairV (cons (symV 'if0)
+                   (pairV (cons (pairV (cons (symV 'num) (numV 0))) 
+                                (pairV (cons
+                                        (pairV (cons (symV 'num) (numV 5))) 
+                                        (pairV (cons (symV 'num) (numV 6))))))))))
+      
+; eval an if expression
+(test (myself-k2 '(eval (parse (pair (sym if0) (pair 0 (pair 42 6)))) (pair 0 0))) (numV 42))
+(test (myself-k2 '(eval (parse (pair (sym if0) (pair 1 (pair 42 54)))) (pair 0 0))) (numV 54))
+
+; TODO: add tests here for pair, fst, snd, numb?, symb?, pear?, proc? 
+; all of which are now implemented in parse and eval
+
 
 ; can i try to explain to myself how parsing works....?
 ; myself-k2 first parses the sexpr (parse 5) (using the original parser written in plt scheme)
@@ -637,16 +717,16 @@
 ; then it goes ahead and applies the function by interpreting the body with an extended environment.
 ;   (interp body-of-the-parse-function ('sexpr (numV 5))) ; that last part is the env
 
-
-
-
 ; interpret an expr in ast form.
 ;(test (myself-k2 '(app (eval ((symV 'num) (numV 7)))) (numV 7))
-
-
 
 ; more notes:
 ; i should probably have my own test library written in Myself
 ; it might be very useful to have print and error functions
 
 ; even something as simple as add is changing the representation a lot!
+
+; some very concerning news: if i call eval without the second arg, the program hangs forever!
+;(test (myself-k2 '(eval (parse 5))) (numV 5))
+
+; ugh, how do i represent the empty list? just using (pair 0 0) for now. will i need to add empty? to myself?
