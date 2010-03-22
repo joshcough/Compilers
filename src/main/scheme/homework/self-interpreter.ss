@@ -579,22 +579,22 @@
                       {pair {sym pair} {pair lhs rhs}}}}
                  ; numb? (pair (sym numb?) x) -> ((symV 'numb?) . x) 
                  {if0 {same? {sym numb?} {fst sexpr}}
-                      {pair {sym numb?} {PARSE {snd expr}}}
+                      {pair {sym numb?} {PARSE {snd sexpr}}}
                  ; symb? (pair (sym symb?) x) -> ((symV 'symb?) . x) 
                  {if0 {same? {sym symb?} {fst sexpr}}
-                      {pair {sym symb?} {PARSE {snd expr}}}
+                      {pair {sym symb?} {PARSE {snd sexpr}}}
                  ; pear? (pair (sym pair?) x) -> ((symV 'pair?) . x) 
                  {if0 {same? {sym pear?} {fst sexpr}}
-                      {pair {sym pear?} {PARSE {snd expr}}}
+                      {pair {sym pear?} {PARSE {snd sexpr}}}
                  ; proc? (pair (sym proc?) x) -> ((symV 'proc?) . x) 
                  {if0 {same? {sym proc?} {fst sexpr}}
-                      {pair {sym proc?} {PARSE {snd expr}}}
+                      {pair {sym proc?} {PARSE {snd sexpr}}}
                  ; fst (pair (sym fst) x) -> ((symV 'fst) . x) 
                  {if0 {same? {sym fst} {fst sexpr}}
-                      {pair {sym fst} {PARSE {snd expr}}}
+                      {pair {sym fst} {PARSE {snd sexpr}}}
                  ; snd (pair (sym snd) x) -> ((symV 'snd) . x) 
                  {if0 {same? {sym snd} {fst sexpr}}
-                      {pair {sym snd} {PARSE {snd expr}}}
+                      {pair {sym snd} {PARSE {snd sexpr}}}
                  ; if0
                  ; (pair (sym if0) (pair (test (pair texpr fexpr)))) 
                  ; ->  
@@ -637,20 +637,20 @@
                    {pair {EVAL {fst body} env} {EVAL {snd body} env}}
               ; fst ((symV 'fst) . x) -> Myself-Val
               {if0 {same? type {sym fst}} 
-                   {with {x {EVAL {fst body} env}}
-                         {if0 {pair? x} {fst x} {sym eval-error-fst-expected-pair}}}
+                   {with {x {EVAL body env}}
+                         {if0 {pear? x} {fst x} {sym eval-error-fst-expected-pair}}}
               ; snd ((symV 'snd) . x) -> Myself-Val
               {if0 {same? type {sym snd}} 
-                   {with {x {EVAL {fst body} env}}
-                         {if0 {pair? x} {snd x} {sym eval-error-snd-expected-pair}}}
+                   {with {x {EVAL body env}}
+                         {if0 {pear? x} {snd x} {sym eval-error-snd-expected-pair}}}
               ; numb? ((symV 'numb?) . x) -> numV (0 or 1)
-              {if0 {same? type {sym numb?}} {if0 {numb? {EVAL {fst body} env}} 0 1}
+              {if0 {same? type {sym numb?}} {if0 {numb? {EVAL body env}} 0 1}
               ; symb? ((symV 'symb?) . x) -> numV (0 or 1)
-              {if0 {same? type {sym symb?}} {if0 {symb? {EVAL {fst body} env}} 0 1}
+              {if0 {same? type {sym symb?}} {if0 {symb? {EVAL body env}} 0 1}
               ; pear? ((symV 'pear?) . x) -> numV (0 or 1)
-              {if0 {same? type {sym pear?}} {if0 {pear? {EVAL {fst body} env}} 0 1}
+              {if0 {same? type {sym pear?}} {if0 {pear? {EVAL body env}} 0 1}
               ; proc? ((symV 'proc?) . x) -> numV (0 or 1)
-              {if0 {same? type {sym proc?}} {if0 {proc? {EVAL {fst body} env}} 0 1}     
+              {if0 {same? type {sym proc?}} {if0 {proc? {EVAL body env}} 0 1}     
               {sym eval-error}}}}}}}}}}}}}}}}}})
     )))
 
@@ -704,8 +704,69 @@
 (test (myself-k2 '(eval (parse (pair (sym if0) (pair 0 (pair 42 6)))) (pair 0 0))) (numV 42))
 (test (myself-k2 '(eval (parse (pair (sym if0) (pair 1 (pair 42 54)))) (pair 0 0))) (numV 54))
 
-; TODO: add tests here for pair, fst, snd, numb?, symb?, pear?, proc? 
-; all of which are now implemented in parse and eval
+; parse a pair expression
+(test (myself-k2 '(parse (pair (sym pair) (pair 6 5)))) 
+      (pairV (cons (symV 'pair) 
+                   (pairV (cons 
+                           (pairV (cons (symV 'num) (numV 6))) 
+                           (pairV (cons (symV 'num) (numV 5))))))))
+      
+; eval a pair expression
+(test (myself-k2 '(eval (parse (pair (sym pair) (pair 6 5))) (pair 0 0))) 
+      (pairV (cons (numV 6) (numV 5))))
+
+; parse a fst expression
+(test (myself-k2 '(parse (pair (sym fst) (pair (sym pair) (pair 6 5))))) 
+      (pairV (cons (symV 'fst)
+                   (pairV (cons (symV 'pair) 
+                                (pairV (cons 
+                                        (pairV (cons (symV 'num) (numV 6))) 
+                                        (pairV (cons (symV 'num) (numV 5))))))))))
+      
+; eval a fst expression
+(test (myself-k2 '(eval (parse (pair (sym fst) (pair (sym pair) (pair 6 5)))) (pair 0 0))) 
+      (numV 6))
+
+; parse a snd expression
+(test (myself-k2 '(parse (pair (sym snd) (pair (sym pair) (pair 6 5))))) 
+      (pairV (cons (symV 'snd)
+                   (pairV (cons (symV 'pair) 
+                                (pairV (cons 
+                                        (pairV (cons (symV 'num) (numV 6))) 
+                                        (pairV (cons (symV 'num) (numV 5))))))))))
+      
+; eval a snd expression
+(test (myself-k2 '(eval (parse (pair (sym snd) (pair (sym pair) (pair 6 5)))) (pair 0 0))) 
+      (numV 5))
+
+; parse a numb? expression
+(test (myself-k2 '(parse (pair (sym numb?) 6)))
+      (pairV (cons (symV 'numb?) (pairV (cons (symV 'num) (numV 6))))))
+
+(test (myself-k2 '(parse (pair (sym numb?) (sym x))))
+      (pairV (cons (symV 'numb?) (pairV (cons (symV 'sym) (symV 'x))))))
+
+; eval a numb? expression
+(test (myself-k2 '(eval (parse (pair (sym numb?) 42)) (pair 0 0))) 
+      (numV 0))
+(test (myself-k2 '(eval (parse (pair (sym numb?) (sym x))) (pair 0 0))) 
+      (numV 1))
+
+; parse a symb? expression
+(test (myself-k2 '(parse (pair (sym symb?) 6)))
+      (pairV (cons (symV 'symb?) (pairV (cons (symV 'num) (numV 6))))))
+
+(test (myself-k2 '(parse (pair (sym symb?) (sym x))))
+      (pairV (cons (symV 'symb?) (pairV (cons (symV 'sym) (symV 'x))))))
+
+; eval a symb? expression
+(test (myself-k2 '(eval (parse (pair (sym symb?) 42)) (pair 0 0))) 
+      (numV 1))
+(test (myself-k2 '(eval (parse (pair (sym symb?) (sym x))) (pair 0 0))) 
+      (numV 0))
+
+; TODO: add tests here for pear? and proc?, which are now implemented in parse and eval
+
 
 
 ; can i try to explain to myself how parsing works....?
