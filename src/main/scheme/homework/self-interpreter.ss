@@ -195,7 +195,7 @@
           (if (eq? (symV-s l)(symV-s r)) 
               (numV 0)
               (numV 1))
-          (error "same? expected two nums or two syms"))))
+          (numV 1))))
 
 (define (mathV op l r)
   (if 
@@ -238,7 +238,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; pair
+;; Y
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Y combinator
@@ -388,8 +388,17 @@
 ;; list library
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define option-lib
+  (create-lib (list base-lib)
+    (list
+     (list 'some `{fun {x} {pair {sym just} x}})
+     (list 'none `{fun {x} {pair {sym none} x}}) ; weird to use x here at all, but ok for now.
+     (list 'is-some? `{fun {x} {if0 {pear? x} {if0 {same {sym just} {fst x}} 0 1} 1}})
+     (list 'get `{fun {o} {if0 {is-some? o} {snd o} {sym error-get-on-none}}})
+     )))
+
 (define list-lib
-  (create-lib (list math-lib base-lib)
+  (create-lib (list option-lib math-lib base-lib)
    (list 
     (list 'mapreduce  
           `{Y {fun {MR} 
@@ -397,6 +406,16 @@
                         {if0 xs id {g {f {fst xs}} {MR f g id {snd xs}}}}}}})
     (list 'reduce `{fun {g id xs} {mapreduce {fun {x} x} g id xs}})
     (list 'map `{fun {f xs} {mapreduce f {fun {x y} {pair x y}} 0 xs}})
+    (list 'find `{fun {f xs} {mapreduce
+                              ; map to (f(x), x)
+                              {fun {x} {pair {f x} x}}
+                              ; reduce takes the first value where f(x) is true
+                              ; y represents what weve found so far
+                              ; x represents the current item. 
+                              {fun {x y} {if0 {is-some? y} y {if0 {fst x} {some x} y}}}
+                              ; id is none
+                              {none 1}
+                              xs}})
     (list 'sum `{fun {l} {reduce addf 0 l}}))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -460,6 +479,10 @@
        `(sum
          (map (fun (x) (+ x 10)) (pair 0 (pair 0 (pair 0 (pair 0 0))))))))
       40)
+
+; find
+(test (to-plt (myself
+       `(find (fun (x) (same? x 5)) (pair 5 0)))) 5)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; math lib tests
@@ -557,8 +580,13 @@
    (list 
     (list 'parse `{Y {fun {PARSE} {fun {sexpr} 
             {if0 {numb? sexpr} {pair {sym num} sexpr}
-            {if0 {symb? sexpr} {pair {sym sym} sexpr}
+            {if0 {symb? sexpr} {pair {sym id} sexpr}
             {if0 {pear? sexpr}
+                 ; sym
+                 ; (pair (sym sym) (sym x)) -> ((symV 'sym) . (symV x))
+                 {if0 {same? {sym sym} {fst sexpr}}
+                      ; TODO - maybe this could check to make sure the snd is a symV       
+                      {pair {sym sym} {snd sexpr}}
                  ; add 
                  ; (pair (sym add) (pair lhs rhs)) -> ((symV 'add) . (lhs . rhs))
                  {if0 {same? {sym add} {fst sexpr}}
@@ -604,12 +632,16 @@
                             {with {t {PARSE {fst {snd {snd sexpr}}}}}
                                   {with {f {PARSE {snd {snd {snd sexpr}}}}}
                                         {pair {sym if0} {pair b {pair t f}}}}}}
-                 {sym parse-error}}}}}}}}}}}
-                 {sym parse-error}}
-                 {sym parse-error}}}}}})
+                 {sym parse-error-1}}}}}}}}}}}}
+                 {sym parse-error-2}}
+                 {sym parse-error-3}}}}}})
     
     (list 'domath `{fun {l r op}
           {if0 {and {numb? l} {numb? r}} {op l r} {sym eval-error-math-expected-numbers}}})
+    
+    (list 'lookup `{fun {s env} 
+                        {with {f {find {fun {x} {same? {fst x} s}} env}}
+                              {if0 {is-some? f} {snd {get f}} 1}}})
     
     ; important eval question, can i return the same values?
     ; for example, can i take (numV 5) and return (numV 5)
@@ -617,6 +649,8 @@
             {with {type {fst expr}} {with {body {snd expr}}
               ; numbers (pairV (cons (symV 'num) (numV 5))) -> NumV
               {if0 {same? type {sym num}} body
+              ; ids (pairV (cons (symV 'id) (symV 'x))) -> Myself-Val
+              {if0 {same? type {sym id}} {lookup body env}
               ; symbols (pairV (cons (symV 'sym) (symV 'x))) -> SymV
               {if0 {same? type {sym sym}} body
               ; add ((symV 'add) . (lhs . rhs)) -> numV
@@ -651,7 +685,7 @@
               {if0 {same? type {sym pear?}} {if0 {pear? {EVAL body env}} 0 1}
               ; proc? ((symV 'proc?) . x) -> numV (0 or 1)
               {if0 {same? type {sym proc?}} {if0 {proc? {EVAL body env}} 0 1}     
-              {sym eval-error}}}}}}}}}}}}}}}}}})
+              {sym eval-error}}}}}}}}}}}}}}}}}}})
     )))
 
 (define myself-meta-lib (create-lib (list eval-lib list-lib math-lib boolean-lib base-lib) '()))
@@ -662,10 +696,15 @@
 ; eval a num
 (test (myself-k2 '(eval (parse 5) (pair 0 0))) (numV 5))
 
-; parse a sym
-(test (myself-k2 '(parse (sym f))) (pairV (cons (symV 'sym) (symV 'f))))
-; eval a symbol
-(test (myself-k2 '(eval (parse (sym x)) (pair 0 0))) (symV 'x))
+; parse an id
+(test (myself-k2 '(parse (sym f))) (pairV (cons (symV 'id) (symV 'f))))
+; eval a id
+(test (myself-k2 '(eval (parse (sym x)) (pair 0 0))) (symV 'x))  ;; TODO: THIS IS REALLY AN ID!!!
+
+; parse an sym
+(test (myself-k2 '(parse (pair (sym sym) (sym f)))) (pairV (cons (symV 'sym) (symV 'f))))
+; eval a sym
+(test (myself-k2 '(eval (parse (pair (sym sym) (sym x))) (pair 0 0))) (symV 'x))
 
 ; so instead of (+ 5 6), i have: (pair (sym add) (pair 5 6))
 ; my quest was concerned with not changing the representation too dramatically
@@ -746,7 +785,7 @@
       (pairV (cons (symV 'numb?) (pairV (cons (symV 'num) (numV 6))))))
 
 (test (myself-k2 '(parse (pair (sym numb?) (sym x))))
-      (pairV (cons (symV 'numb?) (pairV (cons (symV 'sym) (symV 'x))))))
+      (pairV (cons (symV 'numb?) (pairV (cons (symV 'id) (symV 'x))))))
 
 ; eval a numb? expression
 (test (myself-k2 '(eval (parse (pair (sym numb?) 42)) (pair 0 0))) 
@@ -758,16 +797,51 @@
 (test (myself-k2 '(parse (pair (sym symb?) 6)))
       (pairV (cons (symV 'symb?) (pairV (cons (symV 'num) (numV 6))))))
 
-(test (myself-k2 '(parse (pair (sym symb?) (sym x))))
+; basically horrible. to create a symbol i have to say 
+; (pair (sym sym) (sym the-Sym-I-Want))
+; that is a function call to the sym function, with the symbol i want. 
+(test (myself-k2 '(parse (pair (sym symb?) (pair (sym sym)(sym x)))))
       (pairV (cons (symV 'symb?) (pairV (cons (symV 'sym) (symV 'x))))))
+
+; the code below really means (symb? (pair 6 5))
+(test (myself-k2 '(parse (pair (sym symb?) (pair (sym pair) (pair 6 5)))))
+      (pairV (cons (symV 'symb?) 
+                   (pairV (cons (symV 'pair) 
+                                (pairV (cons 
+                                        (pairV (cons (symV 'num) (numV 6))) 
+                                        (pairV (cons (symV 'num) (numV 5))))))))))
 
 ; eval a symb? expression
 (test (myself-k2 '(eval (parse (pair (sym symb?) 42)) (pair 0 0))) 
       (numV 1))
+; yes this is ugly. its the equivelant of '(symb? (sym x))
+; written that way is nice. unfortunately, i dont have much power in my parser. 
 (test (myself-k2 '(eval (parse (pair (sym symb?) (sym x))) (pair 0 0))) 
       (numV 0))
 
-; TODO: add tests here for pear? and proc?, which are now implemented in parse and eval
+; parse a pear? expression
+(test (myself-k2 '(parse (pair (sym pear?) 6)))
+      (pairV (cons (symV 'pear?) (pairV (cons (symV 'num) (numV 6))))))
+
+(test (myself-k2 '(parse (pair (sym add) (pair 5 6)))) 
+      (pairV (cons (symV 'add) 
+                   (pairV (cons 
+                           (pairV (cons (symV 'num) (numV 5))) 
+                           (pairV (cons (symV 'num) (numV 6))))))))
+
+(test (myself-k2 '(parse (pair (sym pear?) (pair (sym pair) (pair 6 5)))))
+      (pairV (cons (symV 'pear?) 
+                   (pairV (cons (symV 'pair) 
+                                (pairV (cons 
+                                        (pairV (cons (symV 'num) (numV 6))) 
+                                        (pairV (cons (symV 'num) (numV 5))))))))))
+; eval a pear? expression
+(test (myself-k2 '(eval (parse (pair (sym pear?) (sym x))) (pair 0 0))) 
+      (numV 1))
+(test (myself-k2 '(eval (parse (pair (sym pear?) (pair (sym pair) (pair 6 5)))) (pair 0 0))) 
+      (numV 0))
+
+; TODO: add tests here proc?, which are now implemented in parse and eval
 
 
 
@@ -792,4 +866,32 @@
 ; some very concerning news: if i call eval without the second arg, the program hangs forever!
 ;(test (myself-k2 '(eval (parse 5))) (numV 5))
 
-; ugh, how do i represent the empty list? just using (pair 0 0) for now. will i need to add empty? to myself?
+; ugh, how do i represent the empty list? just using (pair 0 0) for now. 
+; will i need to add empty? to myself?
+; also, it would be awful nice to be able to create arbitrary length lists. 
+; i thought that pair would be sufficient, but it makes for horrible code. 
+; the language needs to have list as a special form 
+; (or add varaidic functions, but im not sure i have time to tackle that)
+; i could probably just handle that in the parser itself.
+
+
+
+;im having problems with id vs sym. for myself to self interpret, it has to recognize symbols, 
+;and able to compare them. in particular, it has to be able have a symb? predicate and a same? function.
+;symb? would take a myself expression. to interpret symb?, you first have to interpret its argument,
+;and then determine if the result is a symV. that means that myself must have symV as a possible return value.
+;and that means that the language must be able to create symVs. maybe we add a sym function to do that
+;for us. scheme itself differentiates between symbols and ids like so, x is an id, 'x is a symbol. 
+;in myself (at least according to the parser), 'x (scheme symbol) is an id. and '(sym x) is a symbol.
+;the original parser has the ability to understand scheme symbols. however, the new parser that is written
+;in myself does not have the luxury of understanding scheme symbols. it can of course, check to see if
+;something is a symV, and treat that symV as an id, the same way the original parser did. 
+;so the new parser will simple ask, symb? and if true return an id. but then how do we represent
+;and create symbols in the new language, if symbols are to be understood as ids? we had added the sym
+;function to the original language... if symb? returns false (And some other simple checks), the parser
+;will move on to checking if what it has is a list, and if so, check the first thing in the list. 
+;it could have this list (sym (symV 'x)). that is how it knows!
+
+
+
+
