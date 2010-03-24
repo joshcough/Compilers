@@ -190,7 +190,7 @@
 (define (subV l r) (mathV - l r))
 (define (sameV l r) 
   (if (and (numV? l) (numV? r)) 
-      (mathV eq? l r)
+      (mathV (λ (x y) (if (eq? x y) 0 1)) l r)
       (if (and (symV? l) (symV? r))
           (if (eq? (symV-s l)(symV-s r)) 
               (numV 0)
@@ -393,8 +393,9 @@
     (list
      (list 'some `{fun {x} {pair {sym just} x}})
      (list 'none `{fun {x} {pair {sym none} x}}) ; weird to use x here at all, but ok for now.
-     (list 'is-some? `{fun {x} {if0 {pear? x} {if0 {same {sym just} {fst x}} 0 1} 1}})
+     (list 'is-some? `{fun {x} {if0 {pear? x} {if0 {same? {sym just} {fst x}} 0 1} 1}})
      (list 'get `{fun {o} {if0 {is-some? o} {snd o} {sym error-get-on-none}}})
+     (list 'omap `{fun {f o} {if {is-some? o} {some {f {snd o}}} {none 1}}})
      )))
 
 (define list-lib
@@ -407,12 +408,11 @@
     (list 'reduce `{fun {g id xs} {mapreduce {fun {x} x} g id xs}})
     (list 'map `{fun {f xs} {mapreduce f {fun {x y} {pair x y}} 0 xs}})
     (list 'find `{fun {f xs} {mapreduce
-                              ; map to (f(x), x)
-                              {fun {x} {pair {f x} x}}
+                              {fun {x} {if0 {f x} {some x} {none 1}}}
                               ; reduce takes the first value where f(x) is true
                               ; y represents what weve found so far
                               ; x represents the current item. 
-                              {fun {x y} {if0 {is-some? y} y {if0 {fst x} {some x} y}}}
+                              {fun {x y} {if0 {is-some? y} y {if0 {is-some? x} x y}}}
                               ; id is none
                               {none 1}
                               xs}})
@@ -480,9 +480,22 @@
          (map (fun (x) (+ x 10)) (pair 0 (pair 0 (pair 0 (pair 0 0))))))))
       40)
 
+
+
+(test (to-plt (myself `(same? 5 5))) 0)
+
 ; find
-(test (to-plt (myself
-       `(find (fun (x) (same? x 5)) (pair 5 0)))) 5)
+(test (to-plt (myself `(find (fun (x) (same? x 5)) (pair 5 0))))
+      (to-plt (myself '(some 5))))
+
+(test (to-plt (myself `(find (fun (x) (same? x 7)) (pair 5 0))))
+      (to-plt (myself '(none 1))))
+
+(test (to-plt (myself `(find (fun (x) (same? x 10)) (pair 20 (pair 10 (pair 5 0))))))
+      (to-plt (myself '(some 10))))
+
+(test (to-plt (myself `(find (fun (x) (same? x 7)) (pair 20 (pair 10 (pair 5 0))))))
+      (to-plt (myself '(none 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; math lib tests
@@ -641,11 +654,11 @@
     
     (list 'lookup `{fun {s env} 
                         {with {f {find {fun {x} {same? {fst x} s}} env}}
-                              {if0 {is-some? f} {snd {get f}} 1}}})
+                              {if0 {is-some? f} {snd {get f}} {sym error-unknown-id}}}})
     
     ; important eval question, can i return the same values?
     ; for example, can i take (numV 5) and return (numV 5)
-    (list 'eval `{Y {fun {EVAL} {fun {expr env}
+    (list 'real-eval `{Y {fun {EVAL} {fun {expr env}
             {with {type {fst expr}} {with {body {snd expr}}
               ; numbers (pairV (cons (symV 'num) (numV 5))) -> NumV
               {if0 {same? type {sym num}} body
@@ -686,6 +699,9 @@
               ; proc? ((symV 'proc?) . x) -> numV (0 or 1)
               {if0 {same? type {sym proc?}} {if0 {proc? {EVAL body env}} 0 1}     
               {sym eval-error}}}}}}}}}}}}}}}}}}})
+    
+    (list 'empty-env `{fun {dummy} {pair {pair 0 0} 0}})
+    (list 'eval `{fun {exp} {real-eval exp {empty-env 0}}})
     )))
 
 (define myself-meta-lib (create-lib (list eval-lib list-lib math-lib boolean-lib base-lib) '()))
@@ -694,17 +710,19 @@
 ; parse a num
 (test (myself-k2 '(parse 5))       (pairV (cons (symV 'num) (numV 5))))
 ; eval a num
-(test (myself-k2 '(eval (parse 5) (pair 0 0))) (numV 5))
+(test (myself-k2 '(eval (parse 5))) (numV 5))
 
 ; parse an id
 (test (myself-k2 '(parse (sym f))) (pairV (cons (symV 'id) (symV 'f))))
 ; eval a id
-(test (myself-k2 '(eval (parse (sym x)) (pair 0 0))) (symV 'x))  ;; TODO: THIS IS REALLY AN ID!!!
+(test (myself-k2 '(real-eval (parse (sym x)) (pair (pair (sym x) 7) 0))) (numV 7))
+; unknown id
+(test (myself-k2 '(real-eval (parse (sym x)) (pair (pair (sym y) 7) 0))) (symV 'error-unknown-id))
 
 ; parse an sym
 (test (myself-k2 '(parse (pair (sym sym) (sym f)))) (pairV (cons (symV 'sym) (symV 'f))))
 ; eval a sym
-(test (myself-k2 '(eval (parse (pair (sym sym) (sym x))) (pair 0 0))) (symV 'x))
+(test (myself-k2 '(eval (parse (pair (sym sym) (sym x))))) (symV 'x))
 
 ; so instead of (+ 5 6), i have: (pair (sym add) (pair 5 6))
 ; my quest was concerned with not changing the representation too dramatically
@@ -719,7 +737,7 @@
                            (pairV (cons (symV 'num) (numV 6))))))))
 
 ; eval an add expression
-(test (myself-k2 '(eval (parse (pair (sym add) (pair 5 6))) (pair 0 0))) (numV 11))
+(test (myself-k2 '(eval (parse (pair (sym add) (pair 5 6))))) (numV 11))
 
 ; parse an sub expression
 (test (myself-k2 '(parse (pair (sym sub) (pair 6 5)))) 
@@ -729,7 +747,7 @@
                            (pairV (cons (symV 'num) (numV 5))))))))
       
 ; eval a sub expression
-(test (myself-k2 '(eval (parse (pair (sym sub) (pair 6 5))) (pair 0 0))) (numV 1))
+(test (myself-k2 '(eval (parse (pair (sym sub) (pair 6 5))))) (numV 1))
       
 ; parse an if expression
 (test (myself-k2 '(parse (pair (sym if0) (pair 0 (pair 5 6))))) 
@@ -740,11 +758,11 @@
                                         (pairV (cons (symV 'num) (numV 6))))))))))
       
 ; eval an if expression
-(test (myself-k2 '(eval (parse (pair (sym if0) (pair 0 (pair 42 6)))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym if0) (pair 0 (pair 42 6)))))) 
       (numV 42))
-(test (myself-k2 '(eval (parse (pair (sym if0) (pair 1 (pair 42 54)))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym if0) (pair 1 (pair 42 54)))))) 
       (numV 54))
-
+-
 ; parse a pair expression
 (test (myself-k2 '(parse (pair (sym pair) (pair 6 5)))) 
       (pairV (cons (symV 'pair) 
@@ -753,7 +771,7 @@
                            (pairV (cons (symV 'num) (numV 5))))))))
       
 ; eval a pair expression
-(test (myself-k2 '(eval (parse (pair (sym pair) (pair 6 5))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym pair) (pair 6 5))))) 
       (pairV (cons (numV 6) (numV 5))))
 
 ; parse a fst expression
@@ -765,7 +783,7 @@
                                         (pairV (cons (symV 'num) (numV 5))))))))))
       
 ; eval a fst expression
-(test (myself-k2 '(eval (parse (pair (sym fst) (pair (sym pair) (pair 6 5)))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym fst) (pair (sym pair) (pair 6 5)))))) 
       (numV 6))
 
 ; parse a snd expression
@@ -777,7 +795,7 @@
                                         (pairV (cons (symV 'num) (numV 5))))))))))
       
 ; eval a snd expression
-(test (myself-k2 '(eval (parse (pair (sym snd) (pair (sym pair) (pair 6 5)))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym snd) (pair (sym pair) (pair 6 5)))))) 
       (numV 5))
 
 ; parse a numb? expression
@@ -788,9 +806,11 @@
       (pairV (cons (symV 'numb?) (pairV (cons (symV 'id) (symV 'x))))))
 
 ; eval a numb? expression
-(test (myself-k2 '(eval (parse (pair (sym numb?) 42)) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym numb?) 42)))) 
       (numV 0))
-(test (myself-k2 '(eval (parse (pair (sym numb?) (sym x))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym numb?) (sym x))))) 
+      (numV 1))
+(test (myself-k2 '(eval (parse (pair (sym numb?) (pair (sym sym) (sym x)))))) 
       (numV 1))
 
 ; parse a symb? expression
@@ -812,11 +832,11 @@
                                         (pairV (cons (symV 'num) (numV 5))))))))))
 
 ; eval a symb? expression
-(test (myself-k2 '(eval (parse (pair (sym symb?) 42)) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym symb?) 42)))) 
       (numV 1))
 ; yes this is ugly. its the equivelant of '(symb? (sym x))
 ; written that way is nice. unfortunately, i dont have much power in my parser. 
-(test (myself-k2 '(eval (parse (pair (sym symb?) (sym x))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym symb?) (sym x))))) 
       (numV 0))
 
 ; parse a pear? expression
@@ -836,9 +856,9 @@
                                         (pairV (cons (symV 'num) (numV 6))) 
                                         (pairV (cons (symV 'num) (numV 5))))))))))
 ; eval a pear? expression
-(test (myself-k2 '(eval (parse (pair (sym pear?) (sym x))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym pear?) (sym x))))) 
       (numV 1))
-(test (myself-k2 '(eval (parse (pair (sym pear?) (pair (sym pair) (pair 6 5)))) (pair 0 0))) 
+(test (myself-k2 '(eval (parse (pair (sym pear?) (pair (sym pair) (pair 6 5)))))) 
       (numV 0))
 
 ; TODO: add tests here proc?, which are now implemented in parse and eval
