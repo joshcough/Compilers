@@ -20,9 +20,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (define-type Myself
   [num (n number?)]
+  [numb? (x Myself?)]
   
-  ; are both of these really needed?
   [sym (s symbol?)]
+  [symb? (x Myself?)]
+  
   [id (name symbol?)]
   
   [add (lhs Myself?) (rhs Myself?)]
@@ -32,23 +34,20 @@
   [fun (param symbol?) (body Myself?)]
   [app (fun Myself?) (arg Myself?)]
   
-  [listy (l (listof Myself?))]
-  [l-first (l Myself?)]
-  [l-rest (l Myself?)]
+  [my-list (l (listof Myself?))]
+  [my-car (l Myself?)]
+  [my-cdr (l Myself?)]
   [my-cons (l Myself?) (r Myself?)] 
+  [is-list? (x Myself?)]
+  [is-empty? (l Myself?)]
   
   ; for every primitive in the language, you need a predicate for it
   ; or is it every possible result value? is there a difference?
-  [numb? (x Myself?)]
-  [symb? (x Myself?)]
-  [is-list? (x Myself?)]
-  [is-empty? (l Myself?)]
   [proc? (x Myself?)]
   
   ; magic equality test that hopefully returns 0 (true) if
   ; two numbers are the same, or two symbols are the same.....
-  [same? (lhs Myself?) (rhs Myself?)]
-  )
+  [same? (lhs Myself?) (rhs Myself?)])
 
 (define-type Myself-Val
   [numV (n number?)]
@@ -76,9 +75,9 @@
        [(if0) (if0 (parse (second sexpr))
                    (parse (third sexpr))
                    (parse (fourth sexpr)))]
-       [(listy) (listy (map parse (cdr sexpr)))]
-       [(l-first) (l-first (parse (second sexpr)))]
-       [(l-rest) (l-rest (parse (second sexpr)))]
+       [(my-list) (my-list (map parse (cdr sexpr)))]
+       [(my-car) (my-car (parse (second sexpr)))]
+       [(my-cdr) (my-cdr (parse (second sexpr)))]
        [(my-cons) (my-cons (parse (second sexpr)) (parse (third sexpr)))]
        [(sym) (sym (second sexpr))]
        [(same?) (same? (parse (second sexpr)) (parse (third sexpr)))]
@@ -89,8 +88,7 @@
        [(proc?) (proc? (parse (second sexpr)))]
        [(fun) (parse-fun sexpr)]
        ;; assume any other symbols are function names, therefore application.
-       [else (parse-app sexpr)]
-       )]
+       [else (parse-app sexpr)])]
     [else (error "unexpected token")]))
  
 ;; parse-with : sexpr -> fun
@@ -152,19 +150,19 @@
                          ;(printf "applying (~s/~s)" id a)
                          (interp body (cons (symValPair id a) cl-env)))]
              [else (error "application expected procedure")]))]
-    [listy (l) (listV (map (λ (x) (interp x env)) l))]
+    [my-list (l) (listV (map (λ (x) (interp x env)) l))]
     [my-cons (x l) 
          (type-case Myself-Val (interp l env)
            [listV (l) (listV (cons (interp x env) l))]
-           [else (error "l-first expected list")])]
-    [l-first (l) 
+           [else (error "my-car expected list")])]
+    [my-car (l) 
          (type-case Myself-Val (interp l env)
            [listV (l) (car l)]
-           [else (error "l-first expected list")])]
-    [l-rest (l) 
+           [else (error "my-car expected list")])]
+    [my-cdr (l) 
          (type-case Myself-Val (interp l env)
            [listV (l) (listV (cdr l))]
-           [else (error "l-rest expected list")])]
+           [else (error "my-cdr expected list")])]
 
     ; TODO - write tests
     [numb? (x) 
@@ -343,21 +341,14 @@
 (test (interp-expr (parse '((fun (x x y y) y) 5 6 7 8))) 8)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; pair tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;(test (interp-expr (parse '(pair 1 5))) (cons (numV 1) (numV 5)))
-;(test (interp-expr (parse '(l-first (pair 1 5)))) 1)
-;(test (interp-expr (parse '(2nd (pair 1 5)))) 5)
-;(test (interp-expr (parse '(2nd (pair (pair 1 5) (pair 5 1))))) (cons (numV 5) (numV 1)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; list tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(test (interp-expr (parse '(listy 1 5))) (list (numV 1) (numV 5)))
-(test (interp-expr (parse '(listy 1 5 10))) (list (numV 1) (numV 5) (numV 10)))
-(test (interp-expr (parse '(l-first (listy 1 5)))) 1)
-(test (interp-expr (parse '(l-first (l-rest (listy 1 5))))) 5)
-(test (interp-expr (parse '(l-first (l-rest (listy (listy 1 5) (listy 5 1)))))) (list (numV 5) (numV 1)))
+
+(test (interp-expr (parse '(my-list 1 5))) (list (numV 1) (numV 5)))
+(test (interp-expr (parse '(my-list 1 5 10))) (list (numV 1) (numV 5) (numV 10)))
+(test (interp-expr (parse '(my-car (my-list 1 5)))) 1)
+(test (interp-expr (parse '(my-car (my-cdr (my-list 1 5))))) 5)
+(test (interp-expr (parse '(my-car (my-cdr (my-list (my-list 1 5) (my-list 5 1)))))) (list (numV 5) (numV 1)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -415,11 +406,11 @@
 (define option-lib
   (create-lib (list base-lib)
     (list
-     (list 'some `{fun {x} {listy {sym just} x}})
-     (list 'none `{fun {x} {listy {sym none} x}}) ; weird to use x here at all, but ok for now.
-     (list 'is-some? `{fun {x} {if0 {is-list? x} {if0 {same? {sym just} {l-first x}} 0 1} 1}})
-     (list 'get `{fun {o} {if0 {is-some? o} {2nd o} {sym error-get-on-none}}})
-     (list 'omap `{fun {f o} {if {is-some? o} {some {f {l-first {l-rest o}}}} {none 1}}})
+     (list 'some `{fun {x} {my-list {sym just} x}})
+     (list 'none `{fun {x} {my-list {sym none} x}}) ; weird to use x here at all, but ok for now.
+     (list 'is-some? `{fun {x} {if0 {is-list? x} {if0 {same? {sym just} {my-car x}} 0 1} 1}})
+     (list 'get `{fun {o} {if0 {is-some? o} {my-car {my-cdr o}} {sym error-get-on-none}}})
+     (list 'omap `{fun {f o} {if {is-some? o} {some {f {get o}}} {none 1}}})
      )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -429,17 +420,17 @@
 (define list-lib
   (create-lib (list option-lib math-lib base-lib)
    (list
-    (list '1st `(fun (l) (l-first l)))
-    (list '2nd `(fun (l) (l-first (l-rest l))))
-    (list '3rd `(fun (l) (l-first (l-rest (l-rest l)))))
-    (list '4th `(fun (l) (l-first (l-rest (l-rest (l-rest l))))))
-    (list '5th `(fun (l) (l-first (l-rest (l-rest (l-rest (l-rest l))))))) 
+    (list '1st `(fun (l) (my-car l)))
+    (list '2nd `(fun (l) (my-car (my-cdr l))))
+    (list '3rd `(fun (l) (my-car (my-cdr (my-cdr l)))))
+    (list '4th `(fun (l) (my-car (my-cdr (my-cdr (my-cdr l))))))
+    (list '5th `(fun (l) (my-car (my-cdr (my-cdr (my-cdr (my-cdr l))))))) 
     (list 'mapreduce  
           `{Y {fun {MR} 
                    {fun {f g id xs} 
-                        {if0 {is-empty? xs} id {g {f {1st xs}} {MR f g id {l-rest xs}}}}}}})
+                        {if0 {is-empty? xs} id {g {f {1st xs}} {MR f g id {my-cdr xs}}}}}}})
     (list 'reduce `{fun {g id xs} {mapreduce {fun {x} x} g id xs}})
-    (list 'map `{fun {f xs} {mapreduce f {fun {x y} {my-cons x y}} {listy} xs}})
+    (list 'map `{fun {f xs} {mapreduce f {fun {x y} {my-cons x y}} {my-list} xs}})
     (list 'find `{fun {f xs} {mapreduce
                               {fun {x} {if0 {f x} {some x} {none 1}}}
                               ; reduce takes the first value where f(x) is true
@@ -477,51 +468,53 @@
 ;; list tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(test (to-plt (myself '(l-first (listy 2 3)))) 2)
-(test (to-plt (myself '(2nd (listy 2 0)))) 0)
-(test (to-plt (myself '{2nd {listy 1 2}})) 2)
-(test (to-plt (myself '{2nd {l-first {listy {listy 1 2} {listy 3 4}}}})) 2)
-(test (to-plt (myself '{with {p {listy 1 2}}{+ {l-first p} {2nd p}}})) 3)
-(test (to-plt (myself '{with {p {listy {fun {x} {+ x 1}} 2}}{{l-first p} {2nd p}}})) 3)
+(test (to-plt (myself '(my-car (my-list 2 3)))) 2)
+(test (to-plt (myself '(2nd (my-list 2 0)))) 0)
+(test (to-plt (myself '{2nd {my-list 1 2}})) 2)
+(test (to-plt (myself '{2nd {my-car {my-list {my-list 1 2} {my-list 3 4}}}})) 2)
+(test (to-plt (myself '{with {p {my-list 1 2}}{+ {my-car p} {2nd p}}})) 3)
+(test (to-plt (myself '{with {p {my-list {fun {x} {+ x 1}} 2}}{{my-car p} {2nd p}}})) 3)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; list library tests
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; sum
-(test (to-plt (myself '(sum (listy)))) 0)
-(test (to-plt (myself '(sum (listy 1 0)))) 1)
-(test (to-plt (myself '(sum (listy 2 1 0)))) 3)
-(test (to-plt (myself '(sum (listy 9 2 1 0)))) 12)
-(test (to-plt (myself '(sum (listy 9 2 1 0)))) 12)
-(test (to-plt (myself '(sum (listy 0 0 0 0 0 0 0 0)))) 0)
+(test (to-plt (myself '(sum (my-list)))) 0)
+(test (to-plt (myself '(sum (my-list 1 0)))) 1)
+(test (to-plt (myself '(sum (my-list 2 1 0)))) 3)
+(test (to-plt (myself '(sum (my-list 9 2 1 0)))) 12)
+(test (to-plt (myself '(sum (my-list 9 2 1 0)))) 12)
+(test (to-plt (myself '(sum (my-list 0 0 0 0 0 0 0 0)))) 0)
 
 ; reduce
 
-(test (to-plt (myself `(reduce addf 0 (listy 0 0 0 0)))) 0)
-(test (to-plt (myself `(reduce addf 5 (listy 10 20 30 40)))) 105)
+(test (to-plt (myself `(reduce addf 0 (my-list 0 0 0 0)))) 0)
+(test (to-plt (myself `(reduce addf 5 (my-list 10 20 30 40)))) 105)
 
 ; map
 
 ; since lists are functions, i cant easily test the results of map for equality
 ; so instead, i map, then sum, then check the answer. 
 
-(test (to-plt (myself `(sum (map (fun (x) (+ x 10)) (listy 0 0 0 0)))))
+(test (to-plt (myself `(sum (map (fun (x) x) (my-list))))) 0)
+
+(test (to-plt (myself `(sum (map (fun (x) (+ x 10)) (my-list 0 0 0 0)))))
       40)
 
 (test (to-plt (myself `(same? 5 5))) 0)
 
 ; find
-(test (to-plt (myself `(find (fun (x) (same? x 5)) (listy 5 0))))
+(test (to-plt (myself `(find (fun (x) (same? x 5)) (my-list 5 0))))
       (to-plt (myself '(some 5))))
 
-(test (to-plt (myself `(find (fun (x) (same? x 7)) (listy 5 0))))
+(test (to-plt (myself `(find (fun (x) (same? x 7)) (my-list 5 0))))
       (to-plt (myself '(none 1))))
 
-(test (to-plt (myself `(find (fun (x) (same? x 10)) (listy 20 10 5))))
+(test (to-plt (myself `(find (fun (x) (same? x 10)) (my-list 20 10 5))))
       (to-plt (myself '(some 10))))
 
-(test (to-plt (myself `(find (fun (x) (same? x 7)) (listy 20 10 5))))
+(test (to-plt (myself `(find (fun (x) (same? x 7)) (my-list 20 10 5))))
       (to-plt (myself '(none 1))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -608,8 +601,8 @@
 ; ((symV 'fun) . (id . body))
 ; ((symV 'app) . (f . a))
 ; ((symV 'list) . (lhs . rhs))           ; parsed,evaled
-; ((symV 'l-first) . lst)                    ; parsed,evaled
-; ((symV l-rest) . lst)                    ; parsed,evaled
+; ((symV 'my-car) . lst)                    ; parsed,evaled
+; ((symV my-cdr) . lst)                    ; parsed,evaled
 ; ((symV 'numb?) . x)                    ; parsed,evaled
 ; ((symV 'symb?) . x)                    ; parsed,evaled
 ; ((symV 'is-list?) . x)                    ; parsed,evaled
@@ -619,60 +612,53 @@
   (create-lib (list list-lib option-lib math-lib boolean-lib base-lib)
    (list 
     (list 'parse `{Y {fun {PARSE} {fun {sexpr} 
-            {if0 {numb? sexpr} {listy {sym num} sexpr}
-            {if0 {symb? sexpr} {listy {sym id} sexpr}
+            {if0 {numb? sexpr} {my-list {sym num} sexpr}
+            {if0 {symb? sexpr} {my-list {sym id} sexpr}
             {if0 {is-list? sexpr}
+                 {with {op {1st sexpr}}
                  ; sym
                  ; (list (sym sym) (sym x)) -> ((symV 'sym) . (symV x))
-                 {if0 {same? {sym sym} {1st sexpr}}
+                 {if0 {same? {sym sym} op}
                       ; TODO - maybe this could check to make sure the 2nd is a symV       
-                      {listy {sym sym} {2nd sexpr}}
+                      {my-list {sym sym} {2nd sexpr}}
                  ; add 
                  ; (list (sym add) (list lhs rhs)) -> ((symV 'add) . (lhs . rhs))
-                 {if0 {same? {sym add} {1st sexpr}}
-                      {with {lhs {PARSE {2nd sexpr}}} 
-                            {with {rhs {PARSE {3rd sexpr}}}
-                      {listy {sym add} lhs rhs}}}
+                 {if0 {same? {sym add} op}
+                      {my-list {sym add} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
                  ; sub 
                  ; (list (sym sub) (list lhs rhs)) -> ((symV 'sub) . (lhs . rhs))
-                 {if0 {same? {sym sub} {1st sexpr}}
-                      {with {lhs {PARSE {2nd sexpr}}} 
-                            {with {rhs {PARSE {3rd sexpr}}}
-                      {listy {sym sub} lhs rhs}}}
+                 {if0 {same? {sym sub} op}
+                      {my-list {sym sub} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
                  ; list
                  ; (list (sym list) (list lhs rhs)) -> ((symV 'list) . (lhs . rhs))
-                 {if0 {same? {sym list} {1st sexpr}}
-                      {with {lhs {PARSE {2nd sexpr}}} 
-                            {with {rhs {PARSE {3rd sexpr}}}
-                      {listy {sym list} lhs rhs}}}
+                 {if0 {same? {sym my-list} op}
+                      {my-list {sym my-list} {map {fun {x} {PARSE x}} {my-cdr sexpr}}}
                  ; numb? (list (sym numb?) x) -> ((symV 'numb?) . x) 
-                 {if0 {same? {sym numb?} {1st sexpr}}
-                      {listy {sym numb?} {PARSE {2nd sexpr}}}
+                 {if0 {same? {sym numb?} op}
+                      {my-list {sym numb?} {PARSE {2nd sexpr}}}
                  ; symb? (list (sym symb?) x) -> ((symV 'symb?) . x) 
-                 {if0 {same? {sym symb?} {1st sexpr}}
-                      {listy {sym symb?} {PARSE {2nd sexpr}}}
+                 {if0 {same? {sym symb?} op}
+                      {my-list {sym symb?} {PARSE {2nd sexpr}}}
                  ; is-list? (list (sym list?) x) -> ((symV 'list?) . x) 
-                 {if0 {same? {sym is-list?} {1st sexpr}}
-                      {listy {sym is-list?} {PARSE {2nd sexpr}}}
+                 {if0 {same? {sym is-list?} op}
+                      {my-list {sym is-list?} {PARSE {2nd sexpr}}}
                  ; proc? (list (sym proc?) x) -> ((symV 'proc?) . x) 
-                 {if0 {same? {sym proc?} {1st sexpr}}
-                      {listy {sym proc?} {PARSE {2nd sexpr}}}
-                 ; l-first (list (sym l-first) x) -> ((symV 'l-first) . x) 
-                 {if0 {same? {sym l-first} {l-first sexpr}}
-                      {listy {sym l-first} {PARSE {2nd sexpr}}}
-                 ; l-rest (list (sym l-rest) x) -> ((symV 'l-rest) . x) 
-                 {if0 {same? {sym l-rest} {1st sexpr}}
-                      {listy {sym l-rest} {PARSE {2nd sexpr}}}
+                 {if0 {same? {sym proc?} op}
+                      {my-list {sym proc?} {PARSE {2nd sexpr}}}
+                 ; my-car (list (sym my-car) x) -> ((symV 'my-car) . x) 
+                 {if0 {same? {sym my-car} op}
+                      {my-list {sym my-car} {PARSE {2nd sexpr}}}
+                 ; my-cdr (list (sym my-cdr) x) -> ((symV 'my-cdr) . x) 
+                 {if0 {same? {sym my-cdr} op}
+                      {my-list {sym my-cdr} {PARSE {2nd sexpr}}}
                  ; if0
                  ; (list (sym if0) (list (test (list texpr fexpr)))) 
                  ; ->  
                  ; ((symV 'if0) . (test . (then . else)))
-                 {if0 {same? {sym if0} {1st sexpr}}
-                      {with {b {PARSE {2nd sexpr}}}
-                            {with {t {PARSE {3rd sexpr}}}
-                                  {with {f {PARSE {4th sexpr}}}
-                                        {listy {sym if0} b t f}}}}
-                 {sym parse-error-1}}}}}}}}}}}}
+                 {if0 {same? {sym if0} op}
+                      {my-list {sym if0}
+                               {PARSE {2nd sexpr}}{PARSE {3rd sexpr}}{PARSE {4th sexpr}}}
+                 {sym parse-error-1}}}}}}}}}}}}}
                  {sym parse-error-2}}
                  {sym parse-error-3}}}}}})
     
@@ -680,22 +666,22 @@
           {if0 {and {numb? l} {numb? r}} {op l r} {sym eval-error-math-expected-numbers}}})
     
     (list 'lookup `{fun {s env} 
-                        {with {f {find {fun {x} {same? {1st x} s}} env}}
-                              {if0 {is-some? f} {2nd {get f}} {sym error-unknown-id}}}})
+                        {with {f {find {fun {x} {same? {my-car x} s}} env}}
+                              {if0 {is-some? f} {my-car {my-cdr {get f}}} {sym error-unknown-id}}}})
     
     ; important eval question, can i return the same values?
     ; for example, can i take (numV 5) and return (numV 5)
     (list 'real-eval `{Y {fun {EVAL} {fun {expr env}
-            {with {type {1st expr}} {with {body {2nd expr}}
+            {with {type {1st expr}} {with {body {my-cdr expr}}
               ; numbers (listV (list (symV 'num) (numV 5))) -> NumV
-              {if0 {same? type {sym num}} body
+              {if0 {same? type {sym num}} {1st body}
               ; ids (listV (list (symV 'id) (symV 'x))) -> Myself-Val
-              {if0 {same? type {sym id}} {lookup body env}
+              {if0 {same? type {sym id}} {lookup {1st body} env}
               ; symbols (listV (list (symV 'sym) (symV 'x))) -> SymV
-              {if0 {same? type {sym sym}} body
+              {if0 {same? type {sym sym}} {1st body}
               ; add ((symV 'add) . (lhs . rhs)) -> numV
               {if0 {same? type {sym add}}
-                   {with {l {{EVAL {1st body}} env}} {with {r {{EVAL {2nd body}} env}}
+                   {with {l {EVAL {1st body} env}} {with {r {EVAL {2nd body} env}}
                      {domath l r {fun {x y} {+ x y}}}}}
               ; sub ((symV 'sub) . (lhs . rhs)) -> numV
               {if0 {same? type {sym sub}}
@@ -703,20 +689,19 @@
                      {domath l r {fun {x y} {- x y}}}}}
               ; if0 ((symV 'if0) . (test . (then . else))) -> Myself-Val
               {if0 {same? type {sym if0}}
-                   {if0 {EVAL {1st body} env} 
-                        {EVAL {1st {2nd body}} env} 
-                        {EVAL {2nd {2nd body}} env}}
-              ; list ((symV 'list) . (lhs . rhs)) -> listV
-              {if0 {same? type {sym list}}
-                   {map {fun {x} {EVAL x env} body}}
-              ; l-first ((symV 'l-first) . x) -> Myself-Val
-              {if0 {same? type {sym l-first}} 
+                   {if0 {EVAL {1st body} env} {EVAL {2nd body} env} {EVAL {3rd body} env}}
+              ; my-list ((symV 'my-list) (listV x1 ... xn)) -> listV
+              ;(listV (list (symV 'my-list) (listV (list))))
+              {if0 {same? type {sym my-list}}
+                   {map {fun {x} {EVAL x env}} body}
+              ; my-car ((symV 'my-car) . x) -> Myself-Val
+              {if0 {same? type {sym my-car}}
                    {with {x {EVAL body env}}
                          {if0 {is-list? x} {1st x} {sym eval-error-1st-expected-list}}}
-              ; 2nd ((symV '2nd) . x) -> Myself-Val
-              {if0 {same? type {sym 2nd}} 
+              ; my-cdr ((symV 'my-cdr) . x) -> Myself-Val
+              {if0 {same? type {sym my-cdr}}
                    {with {x {EVAL body env}}
-                         {if0 {is-list? x} {2nd x} {sym eval-error-2nd-expected-list}}}
+                         {if0 {is-list? x} {my-cdr x} {sym eval-error-2nd-expected-list}}}
               ; numb? ((symV 'numb?) . x) -> numV (0 or 1)
               {if0 {same? type {sym numb?}} {if0 {numb? {EVAL body env}} 0 1}
               ; symb? ((symV 'symb?) . x) -> numV (0 or 1)
@@ -727,7 +712,7 @@
               {if0 {same? type {sym proc?}} {if0 {proc? {EVAL body env}} 0 1}     
               {sym eval-error}}}}}}}}}}}}}}}}}}})
     
-    (list 'eval `{fun {exp} {real-eval exp {listy}}})
+    (list 'eval `{fun {exp} {real-eval exp {my-list}}})
     )))
 
 (define myself-meta-lib (create-lib (list eval-lib list-lib option-lib math-lib boolean-lib base-lib) '()))
@@ -741,14 +726,14 @@
 ; parse an id
 (test (myself-k2 '(parse (sym f))) (listV (list (symV 'id) (symV 'f))))
 ; eval a id
-(test (myself-k2 '(real-eval (parse (sym x)) (listy (listy (sym x) 7)))) (numV 7))
+(test (myself-k2 '(real-eval (parse (sym x)) (my-list (my-list (sym x) 7)))) (numV 7))
 ; unknown id
-(test (myself-k2 '(real-eval (parse (sym x)) (listy (listy (sym y) 7)))) (symV 'error-unknown-id))
+(test (myself-k2 '(real-eval (parse (sym x)) (my-list (my-list (sym y) 7)))) (symV 'error-unknown-id))
 
 ; parse an sym
-(test (myself-k2 '(parse (listy (sym sym) (sym f)))) (listV (list (symV 'sym) (symV 'f))))
+(test (myself-k2 '(parse (my-list (sym sym) (sym f)))) (listV (list (symV 'sym) (symV 'f))))
 ; eval a sym
-(test (myself-k2 '(eval (parse (listy (sym sym) (sym x))))) (symV 'x))
+(test (myself-k2 '(eval (parse (my-list (sym sym) (sym x))))) (symV 'x))
 
 ; so instead of (+ 5 6), i have: (list (sym add) (list 5 6))
 ; my quest was concerned with not changing the representation too dramatically
@@ -756,134 +741,142 @@
 ; does this qualify as dramatic? im not sure...really, they are kind of the same.
 ; just that the original implementation can rely on schemes reader, and myself cant.
 ; parse an add expression
-(test (myself-k2 '(parse (listy (sym add) 5 6))) 
+(test (myself-k2 '(parse (my-list (sym add) 5 6))) 
       (listV (list (symV 'add) 
                    (listV (list (symV 'num) (numV 5)))
                    (listV (list (symV 'num) (numV 6))))))
 
 ; eval an add expression
-(test (myself-k2 '(eval (parse (listy (sym add) 5 6)))) (numV 11))
+(test (myself-k2 '(eval (parse (my-list (sym add) 5 6)))) (numV 11))
 
 ; parse an sub expression
-(test (myself-k2 '(parse (listy (sym sub) 6 5))) 
-      (listV (list (symV 'sub) 
+(test (myself-k2 '(parse (my-list (sym sub) 6 5))) 
+      (listV (list (symV 'sub)
                    (listV (list (symV 'num) (numV 6)))
                    (listV (list (symV 'num) (numV 5))))))
       
 ; eval a sub expression
-(test (myself-k2 '(eval (parse (listy (sym sub) 6 5)))) (numV 1))
+(test (myself-k2 '(eval (parse (my-list (sym sub) 6 5)))) (numV 1))
       
 ; parse an if expression
-(test (myself-k2 '(parse (listy (sym if0) 0 5 6))) 
+(test (myself-k2 '(parse (my-list (sym if0) 0 5 6))) 
       (listV (list (symV 'if0)
-                   (listV (list (listV (list (symV 'num) (numV 0))) 
-                                (listV (list
-                                        (listV (list (symV 'num) (numV 5))) 
-                                        (listV (list (symV 'num) (numV 6))))))))))
+                   (listV (list (symV 'num) (numV 0)))
+                   (listV (list (symV 'num) (numV 5))) 
+                   (listV (list (symV 'num) (numV 6))))))
       
 ; eval an if expression
-(test (myself-k2 '(eval (parse (listy (sym if0) 0 42 6)))) 
+(test (myself-k2 '(eval (parse (my-list (sym if0) 0 42 6)))) 
       (numV 42))
-(test (myself-k2 '(eval (parse (listy (sym if0) 1 42 54)))) 
+(test (myself-k2 '(eval (parse (my-list (sym if0) 1 42 54))))
       (numV 54))
 
 ; parse a list expression
-(test (myself-k2 '(parse (listy (sym list) 6 5))) 
-      (listV (list (symV 'list) 
-                   (listV (list 
-                           (listV (list (symV 'num) (numV 6))) 
-                           (listV (list (symV 'num) (numV 5))))))))
+(test (myself-k2 '(parse (my-list (sym my-list))))
+      (listV (list (symV 'my-list) (listV (list)))))
+
+(test (myself-k2 '(parse (my-list (sym my-list) 6)))
+      (listV (list (symV 'my-list) 
+                   (listV (list (listV (list (symV 'num) (numV 6))))))))
+
+(test (myself-k2 '(parse (my-list (sym my-list) 6 5)))
+      (listV (list (symV 'my-list) 
+                   (listV (list (listV (list (symV 'num) (numV 6)))
+                                (listV (list (symV 'num) (numV 5))))))))
       
 ; eval a list expression
-(test (myself-k2 '(eval (parse (listy (sym list) 6 5)))) 
+(test (myself-k2 '(eval (parse (my-list (sym my-list))))) 
+      (listV (list)))
+
+(test (myself-k2 '(eval (parse (my-list (sym my-list) 6 5))))
       (listV (list (numV 6) (numV 5))))
 
-; parse a l-first expression
-(test (myself-k2 '(parse (listy (sym l-first) (listy (sym list) 6 5)))) 
-      (listV (list (symV 'l-first)
-                   (listV (list (symV 'list) 
-                                (listV (list 
-                                        (listV (list (symV 'num) (numV 6))) 
-                                        (listV (list (symV 'num) (numV 5))))))))))
-      
-; eval a l-first expression
-(test (myself-k2 '(eval (parse (listy (sym l-first) (listy (sym list) 6 5))))) 
-      (numV 6))
-
-; parse a 2nd expression
-(test (myself-k2 '(parse (listy (sym 2nd) (listy (sym list) 6 5)))) 
-      (listV (list (symV '2nd)
-                   (listV (list (symV 'list) 
-                                (listV (list 
-                                        (listV (list (symV 'num) (numV 6))) 
-                                        (listV (list (symV 'num) (numV 5))))))))))
-      
-; eval a 2nd expression
-(test (myself-k2 '(eval (parse (listy (sym 2nd) (listy (sym list) 6 5))))) 
-      (numV 5))
-
-; parse a numb? expression
-(test (myself-k2 '(parse (listy (sym numb?) 6)))
-      (listV (list (symV 'numb?) (listV (list (symV 'num) (numV 6))))))
-
-(test (myself-k2 '(parse (listy (sym numb?) (sym x))))
-      (listV (list (symV 'numb?) (listV (list (symV 'id) (symV 'x))))))
-
-; eval a numb? expression
-(test (myself-k2 '(eval (parse (listy (sym numb?) 42)))) 
-      (numV 0))
-(test (myself-k2 '(eval (parse (listy (sym numb?) (sym x))))) 
-      (numV 1))
-(test (myself-k2 '(eval (parse (listy (sym numb?) (listy (sym sym) (sym x)))))) 
-      (numV 1))
-
-; parse a symb? expression
-(test (myself-k2 '(parse (listy (sym symb?) 6)))
-      (listV (list (symV 'symb?) (listV (list (symV 'num) (numV 6))))))
-
-; basically horrible. to create a symbol i have to say 
-; (list (sym sym) (sym the-Sym-I-Want))
-; that is a function call to the sym function, with the symbol i want. 
-(test (myself-k2 '(parse (listy (sym symb?) (listy (sym sym)(sym x)))))
-      (listV (list (symV 'symb?) (listV (list (symV 'sym) (symV 'x))))))
-
-; the code below really means (symb? (list 6 5))
-(test (myself-k2 '(parse (listy (sym symb?) (listy (sym list) 6 5))))
-      (listV (list (symV 'symb?) 
-                   (listV (list (symV 'list) 
-                                (listV (list 
-                                        (listV (list (symV 'num) (numV 6))) 
-                                        (listV (list (symV 'num) (numV 5))))))))))
-
-; eval a symb? expression
-(test (myself-k2 '(eval (parse (listy (sym symb?) 42)))) 
-      (numV 1))
-; yes this is ugly. its the equivelant of '(symb? (sym x))
-; written that way is nice. unfortunately, i dont have much power in my parser. 
-(test (myself-k2 '(eval (parse (listy (sym symb?) (sym x))))) 
-      (numV 0))
-
-; parse a is-list? expression
-(test (myself-k2 '(parse (listy (sym is-list?) 6)))
-      (listV (list (symV 'is-list?) (listV (list (symV 'num) (numV 6))))))
-
-(test (myself-k2 '(parse (listy (sym add) 5 6))) 
-      (listV (list (symV 'add) 
-                   (listV (list 
-                           (listV (list (symV 'num) (numV 5))) 
-                           (listV (list (symV 'num) (numV 6))))))))
-
-(test (myself-k2 '(parse (listy (sym is-list?) (listy (sym list) 6 5))))
-      (listV (list (symV 'is-list?) 
-                   (listV (list (symV 'list) 
-                                (listV (list 
-                                        (listV (list (symV 'num) (numV 6))) 
-                                        (listV (list (symV 'num) (numV 5))))))))))
-; eval a is-list? expression
-(test (myself-k2 '(eval (parse (listy (sym is-list?) (sym x))))) 
-      (numV 1))
-(test (myself-k2 '(eval (parse (listy (sym is-list?) (listy (sym list) 6 5))))) 
-      (numV 0))
+;; parse a my-car expression
+;(test (myself-k2 '(parse (my-list (sym my-car) (my-list (sym list) 6 5)))) 
+;      (listV (list (symV 'my-car)
+;                   (listV (list (symV 'list) 
+;                                (listV (list 
+;                                        (listV (list (symV 'num) (numV 6))) 
+;                                        (listV (list (symV 'num) (numV 5))))))))))
+;      
+;; eval a my-car expression
+;(test (myself-k2 '(eval (parse (my-list (sym my-car) (my-list (sym list) 6 5))))) 
+;      (numV 6))
+;
+;; parse a 2nd expression
+;(test (myself-k2 '(parse (my-list (sym 2nd) (my-list (sym list) 6 5)))) 
+;      (listV (list (symV '2nd)
+;                   (listV (list (symV 'list) 
+;                                (listV (list 
+;                                        (listV (list (symV 'num) (numV 6))) 
+;                                        (listV (list (symV 'num) (numV 5))))))))))
+;      
+;; eval a 2nd expression
+;(test (myself-k2 '(eval (parse (my-list (sym 2nd) (my-list (sym list) 6 5))))) 
+;      (numV 5))
+;
+;; parse a numb? expression
+;(test (myself-k2 '(parse (my-list (sym numb?) 6)))
+;      (listV (list (symV 'numb?) (listV (list (symV 'num) (numV 6))))))
+;
+;(test (myself-k2 '(parse (my-list (sym numb?) (sym x))))
+;      (listV (list (symV 'numb?) (listV (list (symV 'id) (symV 'x))))))
+;
+;; eval a numb? expression
+;(test (myself-k2 '(eval (parse (my-list (sym numb?) 42)))) 
+;      (numV 0))
+;(test (myself-k2 '(eval (parse (my-list (sym numb?) (sym x))))) 
+;      (numV 1))
+;(test (myself-k2 '(eval (parse (my-list (sym numb?) (my-list (sym sym) (sym x)))))) 
+;      (numV 1))
+;
+;; parse a symb? expression
+;(test (myself-k2 '(parse (my-list (sym symb?) 6)))
+;      (listV (list (symV 'symb?) (listV (list (symV 'num) (numV 6))))))
+;
+;; basically horrible. to create a symbol i have to say 
+;; (list (sym sym) (sym the-Sym-I-Want))
+;; that is a function call to the sym function, with the symbol i want. 
+;(test (myself-k2 '(parse (my-list (sym symb?) (my-list (sym sym)(sym x)))))
+;      (listV (list (symV 'symb?) (listV (list (symV 'sym) (symV 'x))))))
+;
+;; the code below really means (symb? (list 6 5))
+;(test (myself-k2 '(parse (my-list (sym symb?) (my-list (sym list) 6 5))))
+;      (listV (list (symV 'symb?) 
+;                   (listV (list (symV 'list) 
+;                                (listV (list 
+;                                        (listV (list (symV 'num) (numV 6))) 
+;                                        (listV (list (symV 'num) (numV 5))))))))))
+;
+;; eval a symb? expression
+;(test (myself-k2 '(eval (parse (my-list (sym symb?) 42)))) 
+;      (numV 1))
+;; yes this is ugly. its the equivelant of '(symb? (sym x))
+;; written that way is nice. unfortunately, i dont have much power in my parser. 
+;(test (myself-k2 '(eval (parse (my-list (sym symb?) (sym x))))) 
+;      (numV 0))
+;
+;; parse a is-list? expression
+;(test (myself-k2 '(parse (my-list (sym is-list?) 6)))
+;      (listV (list (symV 'is-list?) (listV (list (symV 'num) (numV 6))))))
+;
+;(test (myself-k2 '(parse (my-list (sym add) 5 6))) 
+;      (listV (list (symV 'add) 
+;                   (listV (list 
+;                           (listV (list (symV 'num) (numV 5))) 
+;                           (listV (list (symV 'num) (numV 6))))))))
+;
+;(test (myself-k2 '(parse (my-list (sym is-list?) (my-list (sym list) 6 5))))
+;      (listV (list (symV 'is-list?) 
+;                   (listV (list (symV 'list) 
+;                                (listV (list 
+;                                        (listV (list (symV 'num) (numV 6))) 
+;                                        (listV (list (symV 'num) (numV 5))))))))))
+;; eval a is-list? expression
+;(test (myself-k2 '(eval (parse (my-list (sym is-list?) (sym x))))) 
+;      (numV 1))
+;(test (myself-k2 '(eval (parse (my-list (sym is-list?) (my-list (sym list) 6 5))))) 
+;      (numV 0))
 
 ; TODO: add tests here proc?, which are now implemented in parse and eval
 
