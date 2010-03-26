@@ -267,94 +267,94 @@
 
 (define addf `{fun {x y} {+ x y}})
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; parse tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;;; parse basics
-;(test (parse 7) (num 7))
-;(test (parse 'a) (id 'a))
-;(test (parse '(+ 6 7)) (add (num 6) (num 7)))
-;(test (parse '(- 6 7)) (sub (num 6) (num 7)))
-;(test (parse '(+ 6 (+ 6 7))) (add (num 6) (add (num 6) (num 7))))
-;(test (parse '(- 6 (- 6 7))) (sub (num 6) (sub (num 6) (num 7))))
-;(test (parse '(with (x 7) x)) (app (fun 'x (id 'x)) (num 7)))
-;(test (parse '(if0 0 1 2)) (if0 (num 0) (num 1) (num 2)))
-;
-;;; parse application tests
-;(test/exn (parse-app '(x)) "appliction without arguments")
-;(test (parse-app '(x y)) (app (id 'x)(id 'y)))
-;(test (parse-app '(x y z)) (app (app (id 'x)(id 'y)) (id 'z)))
-;(test (parse-app '(w x y z)) (app (app (app (id 'w)(id 'x)) (id 'y)) (id 'z)))
-;(test (parse-app '(0 Q (+ 3 6))) (app (app (num 0) (id 'Q)) (add (num 3) (num 6))))
-;
-;;; parse fun tests
-;(test/exn (parse-fun '(fun () x)) "bad syntax")
-;(test (parse-fun '(fun (x) x)) (fun 'x (id 'x)))
-;(test (parse-fun '(fun (x y) x)) (fun 'x (fun 'y (id 'x))))
-;(test (parse-fun '(fun (x x) x)) (fun 'x (fun 'x (id 'x))))
-;(test (parse-fun '(fun (x y z) (+ (+ x y) z))) 
-;      (fun 'x (fun 'y (fun 'z (add (add (id 'x) (id 'y))(id 'z))))))
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; interp tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 
-;;; simple tests just to make sure interp returns myself-vals
-;; simple numer case here
-;(test (interp (parse 7) '()) (numV 7))
-;; at least make sure we return simple closures
-;; this would the place to put tests for more complicated
-;; closures, if any errors arise. i haven't had any.
-;(test (interp (parse '(fun (x) (+ x 2))) '()) 
-;      (closureV 'x (add (id 'x) (num 2)) '()))
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; interp-expr tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;;; tests not requiring the library functions, just the interpreter
-;(test (interp-expr (parse 0)) 0)
-;(test (interp-expr (parse (- 10 3))) 7)
-;(test (interp-expr (parse (+ 3 4))) 7)
-;(test (interp-expr (parse '((fun (x) (+ x 2)) 5))) 7)
-;(test (interp-expr (parse '((fun (x) (fun (y) (+ x y))) 5 2))) 7)
-;(test (interp-expr (parse '((fun (x) (fun (y) (+ x y))) 5))) 'procedure)
-;(test (interp-expr (parse '(fun (x) (+ x 2)))) 'procedure)
-;(test (interp-expr (parse '(if0 0 1 2))) 1)
-;(test (interp-expr (parse '(if0 1 1 2))) 2)
-;
-;;; bad math test
-;(test/exn (interp-expr (parse '{+ {fun {x} x} 1})) 
-;          "numeric operation expected number")
-;
-;;; bad application test
-;(test/exn (interp-expr (parse '{1 2})) "application expected procedure")
-;(test/exn (interp-expr (parse '(0 f A 2 Y 0 w A))) "free identifier") 
-;(test/exn (interp-expr (parse '(0 Q (+ 3 6)))) "free identifier")
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; function tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;(test (interp-expr (parse '((fun (x) (fun (x) x)) 5 6))) 6)
-;
-;; test for functions with the same id in arg list more than once
-;(test (interp-expr (parse '((fun (x x) x) 5 6))) 6)
-;(test (interp-expr (parse '((fun (x x x) x) 5 6 7))) 7)
-;(test (interp-expr (parse '((fun (x y x) x) 5 6 7))) 7)
-;(test (interp-expr (parse '((fun (x x y) x) 5 6 7))) 6)
-;(test (interp-expr (parse '((fun (x x y y) y) 5 6 7 8))) 8)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; list tests
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;(test (interp-expr (parse '(my-list 1 5))) (list (numV 1) (numV 5)))
-;(test (interp-expr (parse '(my-list 1 5 10))) (list (numV 1) (numV 5) (numV 10)))
-;(test (interp-expr (parse '(my-car (my-list 1 5)))) 1)
-;(test (interp-expr (parse '(my-car (my-cdr (my-list 1 5))))) 5)
-;(test (interp-expr (parse '(my-car (my-cdr (my-list (my-list 1 5) (my-list 5 1)))))) (list (numV 5) (numV 1)))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; parse tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; parse basics
+(test (parse 7) (num 7))
+(test (parse 'a) (id 'a))
+(test (parse '(+ 6 7)) (add (num 6) (num 7)))
+(test (parse '(- 6 7)) (sub (num 6) (num 7)))
+(test (parse '(+ 6 (+ 6 7))) (add (num 6) (add (num 6) (num 7))))
+(test (parse '(- 6 (- 6 7))) (sub (num 6) (sub (num 6) (num 7))))
+(test (parse '(with (x 7) x)) (app (fun 'x (id 'x)) (num 7)))
+(test (parse '(if0 0 1 2)) (if0 (num 0) (num 1) (num 2)))
+
+;; parse application tests
+(test/exn (parse-app '(x)) "appliction without arguments")
+(test (parse-app '(x y)) (app (id 'x)(id 'y)))
+(test (parse-app '(x y z)) (app (app (id 'x)(id 'y)) (id 'z)))
+(test (parse-app '(w x y z)) (app (app (app (id 'w)(id 'x)) (id 'y)) (id 'z)))
+(test (parse-app '(0 Q (+ 3 6))) (app (app (num 0) (id 'Q)) (add (num 3) (num 6))))
+
+;; parse fun tests
+(test/exn (parse-fun '(fun () x)) "bad syntax")
+(test (parse-fun '(fun (x) x)) (fun 'x (id 'x)))
+(test (parse-fun '(fun (x y) x)) (fun 'x (fun 'y (id 'x))))
+(test (parse-fun '(fun (x x) x)) (fun 'x (fun 'x (id 'x))))
+(test (parse-fun '(fun (x y z) (+ (+ x y) z))) 
+      (fun 'x (fun 'y (fun 'z (add (add (id 'x) (id 'y))(id 'z))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; interp tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+;; simple tests just to make sure interp returns myself-vals
+; simple numer case here
+(test (interp (parse 7) '()) (numV 7))
+; at least make sure we return simple closures
+; this would the place to put tests for more complicated
+; closures, if any errors arise. i haven't had any.
+(test (interp (parse '(fun (x) (+ x 2))) '()) 
+      (closureV 'x (add (id 'x) (num 2)) '()))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; interp-expr tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; tests not requiring the library functions, just the interpreter
+(test (interp-expr (parse 0)) 0)
+(test (interp-expr (parse (- 10 3))) 7)
+(test (interp-expr (parse (+ 3 4))) 7)
+(test (interp-expr (parse '((fun (x) (+ x 2)) 5))) 7)
+(test (interp-expr (parse '((fun (x) (fun (y) (+ x y))) 5 2))) 7)
+(test (interp-expr (parse '((fun (x) (fun (y) (+ x y))) 5))) 'procedure)
+(test (interp-expr (parse '(fun (x) (+ x 2)))) 'procedure)
+(test (interp-expr (parse '(if0 0 1 2))) 1)
+(test (interp-expr (parse '(if0 1 1 2))) 2)
+
+;; bad math test
+(test/exn (interp-expr (parse '{+ {fun {x} x} 1})) 
+          "numeric operation expected number")
+
+;; bad application test
+(test/exn (interp-expr (parse '{1 2})) "application expected procedure")
+(test/exn (interp-expr (parse '(0 f A 2 Y 0 w A))) "free identifier") 
+(test/exn (interp-expr (parse '(0 Q (+ 3 6)))) "free identifier")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; function tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (interp-expr (parse '((fun (x) (fun (x) x)) 5 6))) 6)
+
+; test for functions with the same id in arg list more than once
+(test (interp-expr (parse '((fun (x x) x) 5 6))) 6)
+(test (interp-expr (parse '((fun (x x x) x) 5 6 7))) 7)
+(test (interp-expr (parse '((fun (x y x) x) 5 6 7))) 7)
+(test (interp-expr (parse '((fun (x x y) x) 5 6 7))) 6)
+(test (interp-expr (parse '((fun (x x y y) y) 5 6 7 8))) 8)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; list tests
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(test (interp-expr (parse '(my-list 1 5))) (list (numV 1) (numV 5)))
+(test (interp-expr (parse '(my-list 1 5 10))) (list (numV 1) (numV 5) (numV 10)))
+(test (interp-expr (parse '(my-car (my-list 1 5)))) 1)
+(test (interp-expr (parse '(my-car (my-cdr (my-list 1 5))))) 5)
+(test (interp-expr (parse '(my-car (my-cdr (my-list (my-list 1 5) (my-list 5 1)))))) (list (numV 5) (numV 1)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -598,21 +598,21 @@
 ; the first item in the list will indicate the datatype of the second
 ; for simplicity, i omit the outer list for the actual ast listings below
 
-; ((symV 'num) . (numV 7))               ; parsed,evaled
-; ((symV 'sym) . (symV 'something))      ; parsed,evaled
-; ((symV 'add) . (lhs . rhs))            ; parsed,evaled
-; ((symV 'sub) . (lhs . rhs))            ; parsed,evaled
-; ((symV 'id) . (symV 'something))       ; parsed,evaled
-; ((symV 'if) . (test . (then . else)))  ; parsed,evaled
-; ((symV 'fun) . (id . body))
-; ((symV 'app) . (f . a))
-; ((symV 'list) . (lhs . rhs))           ; parsed,evaled
-; ((symV 'my-car) . lst)                    ; parsed,evaled
-; ((symV my-cdr) . lst)                    ; parsed,evaled
-; ((symV 'numb?) . x)                    ; parsed,evaled
-; ((symV 'symb?) . x)                    ; parsed,evaled
-; ((symV 'is-list?) . x)                    ; parsed,evaled
-; ((symV 'proc?) . x)                    ; parsed,evaled
+; ((symV 'num) (numV 7))               ; parsed,evaled
+; ((symV 'sym) (symV 'something))      ; parsed,evaled
+; ((symV 'add) lhs rhs)                ; parsed,evaled
+; ((symV 'sub) lhs rhs)                ; parsed,evaled
+; ((symV 'id) (symV 'something))       ; parsed,evaled
+; ((symV 'if) test then else)          ; parsed,evaled
+; ((symV 'fun) id body)
+; ((symV 'app) f a)
+; ((symV 'list) x1 ... xn)             ; parsed,evaled
+; ((symV 'my-car) lst)                 ; parsed,evaled
+; ((symV my-cdr) lst)                  ; parsed,evaled
+; ((symV 'numb?) x)                    ; parsed,evaled
+; ((symV 'symb?) x)                    ; parsed,evaled
+; ((symV 'is-list?) x)                 ; parsed,evaled
+; ((symV 'proc?) x)                    ; parsed,evaled
 
 (define eval-lib
   (create-lib (list list-lib option-lib math-lib boolean-lib base-lib)
@@ -664,7 +664,15 @@
                  {if0 {same? {sym if0} op}
                       {my-list {sym if0}
                                {PARSE {2nd sexpr}}{PARSE {3rd sexpr}}{PARSE {4th sexpr}}}
-                 {sym parse-error-1}}}}}}}}}}}}}
+                 ; function
+                 {if0 {same? {sym fun} op}
+                      {my-list {sym fun}
+                      ; TODO check for symbol in 2nd position
+                               {PARSE {2nd sexpr}}{PARSE {3rd sexpr}}}     
+                 ; application
+                 {my-list {sym app} op {PARSE {2nd sexpr}}}
+                 
+                 }}}}}}}}}}}}}
                  {sym parse-error-2}}
                  {sym parse-error-3}}}}}})
     
@@ -697,7 +705,7 @@
               {if0 {same? type {sym if0}}
                    {if0 {EVAL {1st body} env} {EVAL {2nd body} env} {EVAL {3rd body} env}}
               ; my-list ((symV 'my-list) (listV x1 ... xn)) -> listV
-              {if0 {same? type {sym my-list}} ;{my-print body}
+              {if0 {same? type {sym my-list}}
                    {map {fun {x} {EVAL x env}} body}
               ; my-car ((symV 'my-car) . x) -> Myself-Val
               {if0 {same? type {sym my-car}}
@@ -714,8 +722,15 @@
               ; is-list? ((symV 'is-list?) . x) -> numV (0 or 1)
               {if0 {same? type {sym is-list?}} {if0 {is-list? {EVAL {1st body} env}} 0 1}
               ; proc? ((symV 'proc?) . x) -> numV (0 or 1)
-              {if0 {same? type {sym proc?}} {if0 {proc? {EVAL {1st body} env}} 0 1}     
-              {sym eval-error}}}}}}}}}}}}}}}}}}})
+              {if0 {same? type {sym proc?}} {if0 {proc? {EVAL {1st body} env}} 0 1}
+              
+              ; fun ((symV 'fun) id body)
+              {if0 {same? type {sym fun}} TODO
+                   
+              ; app ((symV 'app) f a)
+              {if0 {same? type {sym app}} TODO    
+                   
+              {sym eval-error}}}}}}}}}}}}}}}}}}}}})
     
     (list 'eval `{fun {exp} {real-eval exp {my-list}}})
     )))
