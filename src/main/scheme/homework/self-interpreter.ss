@@ -356,7 +356,6 @@
 (test (interp-expr (parse '(my-car (my-cdr (my-list 1 5))))) 5)
 (test (interp-expr (parse '(my-car (my-cdr (my-list (my-list 1 5) (my-list 5 1)))))) (list (numV 5) (numV 1)))
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; library
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -667,10 +666,10 @@
                  ; function
                  {if0 {same? {sym fun} op}
                       {my-list {sym fun}
-                      ; TODO check for symbol in 2nd position
-                               {PARSE {2nd sexpr}}{PARSE {3rd sexpr}}}     
+                               ; TODO check for symbol in 2nd position
+                               {2nd sexpr} {PARSE {3rd sexpr}}}     
                  ; application
-                 {my-list {sym app} op {PARSE {2nd sexpr}}}
+                 {my-list {sym app} (PARSE op) {PARSE {2nd sexpr}}}
                  
                  }}}}}}}}}}}}}
                  {sym parse-error-2}}
@@ -723,13 +722,13 @@
               {if0 {same? type {sym is-list?}} {if0 {is-list? {EVAL {1st body} env}} 0 1}
               ; proc? ((symV 'proc?) . x) -> numV (0 or 1)
               {if0 {same? type {sym proc?}} {if0 {proc? {EVAL {1st body} env}} 0 1}
-              
               ; fun ((symV 'fun) id body)
-              {if0 {same? type {sym fun}} TODO
-                   
+              {if0 {same? type {sym fun}} {my-list {sym closure} {1st body} {2nd body}}
               ; app ((symV 'app) f a)
-              {if0 {same? type {sym app}} TODO    
-                   
+              {if0 {same? type {sym app}}
+                   {with {f {EVAL {1st body} env}}
+                         {with {a {EVAL {2nd body} env}}
+                               {EVAL {3rd f} {my-cons {my-list {2nd f} a} env}}}}
               {sym eval-error}}}}}}}}}}}}}}}}}}}}})
     
     (list 'eval `{fun {exp} {real-eval exp {my-list}}})
@@ -902,6 +901,26 @@
 (test (myself-k2 '(eval (parse (my-list (sym is-list?) (my-list (sym my-list) 6 5))))) 
       (numV 0))
 
+; parse a fun (fun {x} 5}
+(test (myself-k2 '(parse (my-list (sym fun) (sym x) 5))) 
+       (listV (list (symV 'fun)(symV 'x)(listV (list (symV 'num) (numV 5))))))
+
+; eval a fun (fun {x} 5}
+(test (myself-k2 '(eval (parse (my-list (sym fun) (sym x) 5)))) 
+       (listV (list (symV 'closure)(symV 'x)(listV (list (symV 'num) (numV 5))))))
+
+
+; parse a app {{fun {x} x} 7}
+(test (myself-k2 '(parse (my-list (my-list (sym fun) (sym x) (sym x)) 7))) 
+       (listV (list (symV 'app) 
+                    (listV (list (symV 'fun)(symV 'x)(listV (list (symV 'id) (symV 'x)))))
+                    (listV (list (symV 'num) (numV 7))))))
+
+; eval a app {{fun {x} x} 7}
+(test (myself-k2 '(eval (parse (my-list (my-list (sym fun) (sym x) (sym x)) 7)))) 
+       (numV 7))
+
+
 ; TODO: add tests here proc?, which are now implemented in parse and eval
 
 
@@ -951,7 +970,3 @@
 ;function to the original language... if symb? returns false (And some other simple checks), the parser
 ;will move on to checking if what it has is a list, and if so, check the first thing in the list. 
 ;it could have this list (sym (symV 'x)). that is how it knows!
-
-
-
-
