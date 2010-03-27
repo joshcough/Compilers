@@ -41,10 +41,7 @@
   [is-list? (x Myself?)]
   [is-empty? (l Myself?)]
   
-  ; for every primitive in the language, you need a predicate for it
-  ; or is it every possible result value? is there a difference?
-  [proc? (x Myself?)]
-  
+  ; for debugging
   [my-print (x Myself?)]
   
   ; magic equality test that hopefully returns 0 (true) if
@@ -87,7 +84,6 @@
        [(symb?) (symb? (parse (second sexpr)))]
        [(is-list?) (is-list? (parse (second sexpr)))]
        [(is-empty?) (is-empty? (parse (second sexpr)))]
-       [(proc?) (proc? (parse (second sexpr)))]
        [(my-print) (my-print (parse (second sexpr)))]
        [(fun) (parse-fun sexpr)]
        ;; assume any other symbols are function names, therefore application.
@@ -189,11 +185,6 @@
     [is-empty? (x) 
          (type-case Myself-Val (interp x env)
            [listV (l) (if (empty? l) (numV 0) (numV 1))]
-           [else (numV 1)])]
-    ; TODO - write tests
-    [proc? (x) 
-         (type-case Myself-Val (interp x env)
-           [closureV (a b env) (numV 0)]
            [else (numV 1)])]
     )))
 
@@ -580,38 +571,113 @@
 ;; PART 2 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; Notes On Parsing
+
+; Notes On Code Representation in Myself
+
 ; the first important question is: 
 ; what representation am i going to parse?
-
 ; answer: it can only be things that the language can understand
-; so, syms, nums, lists, functions. but, we probably wont pass the parser functions.
+; in particular, symV, numV, listV, closureV. but, we probably wont pass the parser closures.
 
-; next important question is:
-; what is the AST going to look like?
-; one thing is for certain, it must be a legal Myself-Val
-; because it will be the output of the parser.
-; my best first guess:
+; that doesn't really answer the question though, but it gets us closer.
+; first lets explore what code looks like in scheme:
+; (+ 6 7) is a list containing the symbol '+ and the numbers 6 and 7
+; each of those things can be represented in Myself, however a little bit more verbose:
+; (my-list (sym +) 6 7)
 
-; (listV ((symV 'num) . (numV 7)))
+; this brings up a few questions:
+; why cant Myself use exactly the same representation? 
+; to answer that question is to really understand how code Myself is interpreted.
+; assuming that there exists parse and eval functions in the Myself library,
+; then one should call them like so:
+; (eval (parse (my-list (sym +) 6 7)))
+; but lets first explore they were called like so:
+; (eval (parse (+ 6 7)))
+; the key here, is remember that this is Myself code that needs to be parsed and 
+; evaluated by the original Myself parsed and evaluator. 
+; That IS the runtime for Myself.
+; We'll call these original functions myself-k1-parse and myself-k1-eval.
+; We expand the code, then, to:
+; (myself-k1-eval (myself-k1-parse (eval (parse (+ 6 7)))))
+; And knowing what we already know about evaluation in myself-k1-eval,
+; We can reduce this to (eval (parse (numV 13)))
+; I'm not being 100% complete here, but thats because I believe the material is mostly understood.
+; this finally answers the question of why we cant use that original representation.
+; its not a list! (+ 6 7) is not a list in Myself. its a function call. 
+; parse needs to work on lists. the only way to represent lists in myself is with my-list.
+; so we go back to the original - (my-list (sym +) 6 7)
+; the story is still somewhat incomplete however. 
+; the next question concerns the use the sym function. 
+; why is it needed? why cant we say (my-list + 6 7)
+; the answer lies in the original parser. when it encounters the +
+; it sees it as a bare symbol. it treats bare symbols as ids
+; and passes myself-k1-eval (id +) in the AST. 
+; when myself-k1-eval interprets the list, it interprets each of the items in the list.
+; then it comes across (id +), it attempts to look it up in the environment,
+; and its not there, and the evaluation fails. 
+; when (sym +) is used, the parser parses this as symbol creation, instead of an id. 
+; in scheme, its the difference between x and 'x.
+; unfortunately Myself doesn't have such an easy syntax. 
+; at this point, one might ask, well then how do we represent ids? 
+; the answer to this is quite simple. (sym the-id-you-want)
+; as long as it appears in the right location in your code, it will properly 
+; be parsed as an id. for example: (my-list (sym +) (sym x) (sym y))
+; adds the ids x and y. 
+; but then how do you represent symbols themselves? 
+; to answer that, we need to know about function application. 
+; in Myself-K2, function application looks like so:
+; (my-list (sym +) (sym x) (sym y)), but we already know that.
+; but this is the key to creating symbols. (sym +) is very much like a function application.
+; its not technically a function, but you can basically consider it to be. 
+; therefore, we use the following syntax to create the symbol 'x:
+; (my-list (sym sym) (sym x))
+; brutal, i know. 
+
+; last notes on representation:
+; we know that instead of (+ 5 6), we use (list (sym +) 5 6)
+; one goal of this project was concerned with not changing the representation too dramatically.
+; does this qualify as dramatic? yes and no. it should be clear from the explanation above that
+; these both have the same meaning (in myself k1 vs myself k2)
+; just that the original implementation can rely on schemes reader, and Myself cant.
+; this means that, if we did have a more sophisticated parser, its possible that 
+; we could get close to the same syntax. however, in order to do that, 
+; you'd probably have to add more power to Myself-k1. 
+; but the next goal of this project was to determine the smallest set of features
+; needed to enable self-interpretation. both goals are very ambiguous, and it seems in fact,
+; in direct opposition to one another. to use the same representation you 
+; must add features to the language. to get the smallest set of features you 
+; must remove features from the language. 
+; i think i've found on OK balance between the two opposing forces. 
+; the code at times, is quite ugly. but, i've already added more features than I 
+; originally anticipated. i think this fits the definition of good compromise:
+; both sides are unhappy. :)
+
+; Notes on AST Representation in Myself
+
+; next important question is: what is the AST going to look like?
+; fortunately, this is an easier question to answer. 
+; the AST must be a legal Myself-Val because it will be the output of the parser.
+
+; (listV ((symV 'num) (numV 7)))
 
 ; the first item in the list will indicate the datatype of the second
-; for simplicity, i omit the outer list for the actual ast listings below
+; for simplicity, i omit the outer list for the actual ast listings below:
 
-; ((symV 'num) (numV 7))               ; parsed,evaled
-; ((symV 'sym) (symV 'something))      ; parsed,evaled
-; ((symV 'add) lhs rhs)                ; parsed,evaled
-; ((symV 'sub) lhs rhs)                ; parsed,evaled
-; ((symV 'id) (symV 'something))       ; parsed,evaled
-; ((symV 'if) test then else)          ; parsed,evaled
+; ((symV 'num) (numV 7))               
+; ((symV 'sym) (symV 'something))     
+; ((symV '+) lhs rhs)               
+; ((symV '-) lhs rhs)               
+; ((symV 'id) (symV 'something))      
+; ((symV 'if) test then else)         
 ; ((symV 'fun) id body)
 ; ((symV 'app) f a)
-; ((symV 'list) x1 ... xn)             ; parsed,evaled
-; ((symV 'my-car) lst)                 ; parsed,evaled
-; ((symV my-cdr) lst)                  ; parsed,evaled
-; ((symV 'numb?) x)                    ; parsed,evaled
-; ((symV 'symb?) x)                    ; parsed,evaled
-; ((symV 'is-list?) x)                 ; parsed,evaled
-; ((symV 'proc?) x)                    ; parsed,evaled
+; ((symV 'list) x1 ... xn)            
+; ((symV 'my-car) lst)                
+; ((symV 'my-cdr) lst)                 
+; ((symV 'numb?) x)                   
+; ((symV 'symb?) x)                   
+; ((symV 'is-list?) x)  
 
 (define eval-lib
   (create-lib (list list-lib option-lib math-lib boolean-lib base-lib)
@@ -622,44 +688,38 @@
             {if0 {is-list? sexpr}
                  {with {op {1st sexpr}}
                  ; sym
-                 ; (list (sym sym) (sym x)) -> ((symV 'sym) . (symV x))
+                 ; (list (sym sym) (sym x)) -> ((symV 'sym) (symV x))
                  {if0 {same? {sym sym} op}
                       ; TODO - maybe this could check to make sure the 2nd is a symV       
                       {my-list {sym sym} {2nd sexpr}}
-                 ; add 
-                 ; (list (sym add) (list lhs rhs)) -> ((symV 'add) . (lhs . rhs))
-                 {if0 {same? {sym add} op}
-                      {my-list {sym add} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
-                 ; sub 
-                 ; (list (sym sub) (list lhs rhs)) -> ((symV 'sub) . (lhs . rhs))
-                 {if0 {same? {sym sub} op}
-                      {my-list {sym sub} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
+                 ; + 
+                 ; (list (sym +) (list lhs rhs)) -> ((symV '+) lhs rhs)
+                 {if0 {same? {sym +} op}
+                      {my-list {sym +} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
+                 ; - 
+                 ; (list (sym -) (list lhs rhs)) -> ((symV '-) lhs rhs)
+                 {if0 {same? {sym -} op}
+                      {my-list {sym -} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
                  ; list
-                 ; (list (sym list) (list lhs rhs)) -> ((symV 'list) . (lhs . rhs))
+                 ; (list (sym list) (list lhs rhs)) -> ((symV 'list) lhs rhs)
                  {if0 {same? {sym my-list} op}
                       {my-cons {sym my-list} {map {fun {x} {PARSE x}} {my-cdr sexpr}}}
-                 ; numb? (list (sym numb?) x) -> ((symV 'numb?) . x) 
+                 ; numb? (list (sym numb?) x) -> ((symV 'numb?) x) 
                  {if0 {same? {sym numb?} op}
                       {my-list {sym numb?} {PARSE {2nd sexpr}}}
-                 ; symb? (list (sym symb?) x) -> ((symV 'symb?) . x) 
+                 ; symb? (list (sym symb?) x) -> ((symV 'symb?) x) 
                  {if0 {same? {sym symb?} op}
                       {my-list {sym symb?} {PARSE {2nd sexpr}}}
-                 ; is-list? (list (sym list?) x) -> ((symV 'list?) . x) 
+                 ; is-list? (list (sym list?) x) -> ((symV 'list?) x) 
                  {if0 {same? {sym is-list?} op}
                       {my-list {sym is-list?} {PARSE {2nd sexpr}}}
-                 ; proc? (list (sym proc?) x) -> ((symV 'proc?) . x) 
-                 {if0 {same? {sym proc?} op}
-                      {my-list {sym proc?} {PARSE {2nd sexpr}}}
-                 ; my-car (list (sym my-car) x) -> ((symV 'my-car) . x) 
+                 ; my-car (list (sym my-car) x) -> ((symV 'my-car) x) 
                  {if0 {same? {sym my-car} op}
                       {my-list {sym my-car} {PARSE {2nd sexpr}}}
-                 ; my-cdr (list (sym my-cdr) x) -> ((symV 'my-cdr) . x) 
+                 ; my-cdr (list (sym my-cdr) x) -> ((symV 'my-cdr) x) 
                  {if0 {same? {sym my-cdr} op}
                       {my-list {sym my-cdr} {PARSE {2nd sexpr}}}
-                 ; if0
-                 ; (list (sym if0) (list (test (list texpr fexpr)))) 
-                 ; ->  
-                 ; ((symV 'if0) . (test . (then . else)))
+                 ; if0 (list (sym if0) test texpr fexpr) -> ((symV 'if0) test then else)
                  {if0 {same? {sym if0} op}
                       {my-list {sym if0}
                                {PARSE {2nd sexpr}}{PARSE {3rd sexpr}}{PARSE {4th sexpr}}}
@@ -670,10 +730,12 @@
                                {2nd sexpr} {PARSE {3rd sexpr}}}     
                  ; application
                  {my-list {sym app} (PARSE op) {PARSE {2nd sexpr}}}
-                 
-                 }}}}}}}}}}}}}
-                 {sym parse-error-2}}
-                 {sym parse-error-3}}}}}})
+                 }}}}}}}}}}}}
+                 ; not a numb, symb or list, must be a closure
+                 {sym parse-error}}
+                 {sym parse-error}}
+                 {sym parse-error}}
+            }}})
     
     (list 'domath `{fun {l r op}
           {if0 {and {numb? l} {numb? r}} {op l r} {sym eval-error-math-expected-numbers}}})
@@ -682,22 +744,21 @@
                         {with {f {find {fun {x} {same? {my-car x} s}} env}}
                               {if0 {is-some? f} {my-car {my-cdr {get f}}} {sym error-unknown-id}}}})
     
-    ; important eval question, can i return the same values?
-    ; for example, can i take (numV 5) and return (numV 5)
+    ; eval
     (list 'real-eval `{Y {fun {EVAL} {fun {expr env}
             {with {type {1st expr}} {with {body {my-cdr expr}}
-              ; numbers (listV (list (symV 'num) (numV 5))) -> NumV
+              ; numbers ((symV 'num) (numV 5)) -> NumV
               {if0 {same? type {sym num}} {1st body}
-              ; ids (listV (list (symV 'id) (symV 'x))) -> Myself-Val
+              ; ids ((symV 'id) (symV 'x)) -> Myself-Val
               {if0 {same? type {sym id}} {lookup {1st body} env}
-              ; symbols (listV (list (symV 'sym) (symV 'x))) -> SymV
+              ; symbols ((symV 'sym) (symV 'x)) -> SymV
               {if0 {same? type {sym sym}} {1st body}
-              ; add ((symV 'add) . (lhs . rhs)) -> numV
-              {if0 {same? type {sym add}}
+              ; + ((symV '+) lhs rhs) -> numV
+              {if0 {same? type {sym +}}
                    {with {l {EVAL {1st body} env}} {with {r {EVAL {2nd body} env}}
                      {domath l r {fun {x y} {+ x y}}}}}
-              ; sub ((symV 'sub) . (lhs . rhs)) -> numV
-              {if0 {same? type {sym sub}}
+              ; - ((symV '-) . (lhs . rhs)) -> numV
+              {if0 {same? type {sym -}}
                    {with {l {EVAL {1st body} env}} {with {r {EVAL {2nd body} env}}
                      {domath l r {fun {x y} {- x y}}}}}
               ; if0 ((symV 'if0) . (test . (then . else))) -> Myself-Val
@@ -720,16 +781,15 @@
               {if0 {same? type {sym symb?}} {if0 {symb? {EVAL {1st body} env}} 0 1}
               ; is-list? ((symV 'is-list?) . x) -> numV (0 or 1)
               {if0 {same? type {sym is-list?}} {if0 {is-list? {EVAL {1st body} env}} 0 1}
-              ; proc? ((symV 'proc?) . x) -> numV (0 or 1)
-              {if0 {same? type {sym proc?}} {if0 {proc? {EVAL {1st body} env}} 0 1}
               ; fun ((symV 'fun) id body)
               {if0 {same? type {sym fun}} {my-list {sym closure} {1st body} {2nd body}}
               ; app ((symV 'app) f a)
               {if0 {same? type {sym app}}
+                   ; TODO check that f is a closure.
                    {with {f {EVAL {1st body} env}}
                          {with {a {EVAL {2nd body} env}}
                                {EVAL {3rd f} {my-cons {my-list {2nd f} a} env}}}}
-              {sym eval-error}}}}}}}}}}}}}}}}}}}}})
+              {sym eval-error}}}}}}}}}}}}}}}}}}}})
     
     (list 'eval `{fun {exp} {real-eval exp {my-list}}})
     )))
@@ -754,28 +814,23 @@
 ; eval a sym
 (test (myself-k2 '(eval (parse (my-list (sym sym) (sym x))))) (symV 'x))
 
-; so instead of (+ 5 6), i have: (list (sym add) (list 5 6))
-; my quest was concerned with not changing the representation too dramatically
-; parsing has a big say here...
-; does this qualify as dramatic? im not sure...really, they are kind of the same.
-; just that the original implementation can rely on schemes reader, and myself cant.
-; parse an add expression
-(test (myself-k2 '(parse (my-list (sym add) 5 6))) 
-      (listV (list (symV 'add) 
+; parse an + expression
+(test (myself-k2 '(parse (my-list (sym +) 5 6))) 
+      (listV (list (symV '+) 
                    (listV (list (symV 'num) (numV 5)))
                    (listV (list (symV 'num) (numV 6))))))
 
-; eval an add expression
-(test (myself-k2 '(eval (parse (my-list (sym add) 5 6)))) (numV 11))
+; eval an + expression
+(test (myself-k2 '(eval (parse (my-list (sym +) 5 6)))) (numV 11))
 
-; parse an sub expression
-(test (myself-k2 '(parse (my-list (sym sub) 6 5))) 
-      (listV (list (symV 'sub)
+; parse an - expression
+(test (myself-k2 '(parse (my-list (sym -) 6 5))) 
+      (listV (list (symV '-)
                    (listV (list (symV 'num) (numV 6)))
                    (listV (list (symV 'num) (numV 5))))))
       
-; eval a sub expression
-(test (myself-k2 '(eval (parse (my-list (sym sub) 6 5)))) (numV 1))
+; eval a - expression
+(test (myself-k2 '(eval (parse (my-list (sym -) 6 5)))) (numV 1))
       
 ; parse an if expression
 (test (myself-k2 '(parse (my-list (sym if0) 0 5 6))) 
@@ -859,9 +914,6 @@
 (test (myself-k2 '(parse (my-list (sym symb?) 6)))
       (listV (list (symV 'symb?) (listV (list (symV 'num) (numV 6))))))
 
-;; basically horrible. to create a symbol i have to say 
-;; (list (sym sym) (sym the-Sym-I-Want))
-;; that is a function call to the sym function, with the symbol i want. 
 (test (myself-k2 '(parse (my-list (sym symb?) (my-list (sym sym)(sym x)))))
       (listV (list (symV 'symb?) (listV (list (symV 'sym) (symV 'x))))))
 
@@ -873,19 +925,17 @@
                                 (listV (list (symV 'num) (numV 5))))))))
 
 ;; eval a symb? expression
+(test (myself-k2 '(eval (parse (my-list (sym symb?) (my-list (sym sym)(sym x)))))) 
+      (numV 0))
 (test (myself-k2 '(eval (parse (my-list (sym symb?) 42)))) 
       (numV 1))
-;; yes this is ugly. its the equivelant of '(symb? (sym x))
-;; written that way is nice. unfortunately, i dont have much power in my parser. 
-(test (myself-k2 '(eval (parse (my-list (sym symb?) (sym x))))) 
-      (numV 0))
 
 ;; parse a is-list? expression
 (test (myself-k2 '(parse (my-list (sym is-list?) 6)))
       (listV (list (symV 'is-list?) (listV (list (symV 'num) (numV 6))))))
 
-(test (myself-k2 '(parse (my-list (sym add) 5 6))) 
-      (listV (list (symV 'add) 
+(test (myself-k2 '(parse (my-list (sym +) 5 6))) 
+      (listV (list (symV '+) 
                    (listV (list (symV 'num) (numV 5)))
                    (listV (list (symV 'num) (numV 6))))))
 
@@ -921,8 +971,11 @@
        (numV 7))
 
 
-; TODO: add tests here proc?, which are now implemented in parse and eval
-
+; NOTES TO SELF
+; these notes were taken along the way, and i decided to keep them
+; as an example of some of the thought that i had along the way
+; and examples of what I learned. 
+; however, they are pretty scattered
 
 ; can i try to explain to myself how parsing works....?
 ; myself-k2 first parses the sexpr (parse 5) (using the original parser written in plt scheme)
@@ -937,8 +990,7 @@
 ;(test (myself-k2 '(app (eval ((symV 'num) (numV 7)))) (numV 7))
 
 ; more notes:
-; i should probably have my own test library written in Myself
-; it might be very useful to have print and error functions
+; it might be very useful to have an error functions
 
 ; even something as simple as add is changing the representation a lot!
 
@@ -952,7 +1004,6 @@
 ; the language needs to have list as a special form 
 ; (or add varaidic functions, but im not sure i have time to tackle that)
 ; i could probably just handle that in the parser itself.
-
 
 
 ;im having problems with id vs sym. for myself to self interpret, it has to recognize symbols, 
