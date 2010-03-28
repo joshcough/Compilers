@@ -598,38 +598,38 @@
             {if0 {is-list? sexpr}
                  {with {op {1st sexpr}}
                  ; sym
-                 ; (list (sym sym) (sym x)) -> ((symV 'sym) (symV x))
+                 ; (my-list (sym sym) (sym x)) -> ((symV 'sym) (symV x))
                  {if0 {same? {sym sym} op}
                       ; TODO - maybe this could check to make sure the 2nd is a symV       
                       {my-list {sym sym} {2nd sexpr}}
                  ; + 
-                 ; (list (sym +) (list lhs rhs)) -> ((symV '+) lhs rhs)
+                 ; (my-list (sym +) lhs rhs) -> ((symV '+) lhs rhs)
                  {if0 {same? {sym +} op}
                       {my-list {sym +} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
                  ; - 
-                 ; (list (sym -) (list lhs rhs)) -> ((symV '-) lhs rhs)
+                 ; (my-list (sym -) lhs rhs) -> ((symV '-) lhs rhs)
                  {if0 {same? {sym -} op}
                       {my-list {sym -} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
-                 ; list
-                 ; (list (sym list) (list lhs rhs)) -> ((symV 'list) lhs rhs)
+                 ; my-list
+                 ; (my-list (sym my-list) lhs rhs) -> ((symV 'list) lhs rhs)
                  {if0 {same? {sym my-list} op}
                       {my-cons {sym my-list} {map {fun {x} {PARSE x}} {my-cdr sexpr}}}
-                 ; numb? (list (sym numb?) x) -> ((symV 'numb?) x) 
+                 ; numb? (my-list (sym numb?) x) -> ((symV 'numb?) x) 
                  {if0 {same? {sym numb?} op}
                       {my-list {sym numb?} {PARSE {2nd sexpr}}}
-                 ; symb? (list (sym symb?) x) -> ((symV 'symb?) x) 
+                 ; symb? (my-list (sym symb?) x) -> ((symV 'symb?) x) 
                  {if0 {same? {sym symb?} op}
                       {my-list {sym symb?} {PARSE {2nd sexpr}}}
-                 ; is-list? (list (sym list?) x) -> ((symV 'list?) x) 
+                 ; is-list? (my-list (sym list?) x) -> ((symV 'list?) x) 
                  {if0 {same? {sym is-list?} op}
                       {my-list {sym is-list?} {PARSE {2nd sexpr}}}
-                 ; my-car (list (sym my-car) x) -> ((symV 'my-car) x) 
+                 ; my-car (my-list (sym my-car) x) -> ((symV 'my-car) x) 
                  {if0 {same? {sym my-car} op}
                       {my-list {sym my-car} {PARSE {2nd sexpr}}}
-                 ; my-cdr (list (sym my-cdr) x) -> ((symV 'my-cdr) x) 
+                 ; my-cdr (my-list (sym my-cdr) x) -> ((symV 'my-cdr) x) 
                  {if0 {same? {sym my-cdr} op}
                       {my-list {sym my-cdr} {PARSE {2nd sexpr}}}
-                 ; if0 (list (sym if0) test texpr fexpr) -> ((symV 'if0) test then else)
+                 ; if0 (my-list (sym if0) test texpr fexpr) -> ((symV 'if0) test then else)
                  {if0 {same? {sym if0} op}
                       {my-list {sym if0}
                                {PARSE {2nd sexpr}}{PARSE {3rd sexpr}}{PARSE {4th sexpr}}}
@@ -667,29 +667,29 @@
               {if0 {same? type {sym +}}
                    {with {l {EVAL {1st body} env}} {with {r {EVAL {2nd body} env}}
                      {domath l r {fun {x y} {+ x y}}}}}
-              ; - ((symV '-) . (lhs . rhs)) -> numV
+              ; - ((symV '-) lhs rhs) -> numV
               {if0 {same? type {sym -}}
                    {with {l {EVAL {1st body} env}} {with {r {EVAL {2nd body} env}}
                      {domath l r {fun {x y} {- x y}}}}}
-              ; if0 ((symV 'if0) . (test . (then . else))) -> Myself-Val
+              ; if0 ((symV 'if0) test then else) -> Myself-Val
               {if0 {same? type {sym if0}}
                    {if0 {EVAL {1st body} env} {EVAL {2nd body} env} {EVAL {3rd body} env}}
-              ; my-list ((symV 'my-list) (listV x1 ... xn)) -> listV
+              ; my-list ((symV 'my-list) x1 ... xn) -> listV
               {if0 {same? type {sym my-list}}
                    {map {fun {x} {EVAL x env}} body}
-              ; my-car ((symV 'my-car) . x) -> Myself-Val
+              ; my-car ((symV 'my-car) x) -> Myself-Val
               {if0 {same? type {sym my-car}}
                    {with {x {EVAL {1st body} env}}
                          {if0 {is-list? x} {1st x} {sym eval-error-1st-expected-list}}}
-              ; my-cdr ((symV 'my-cdr) . x) -> Myself-Val
+              ; my-cdr ((symV 'my-cdr) x) -> Myself-Val
               {if0 {same? type {sym my-cdr}}
                    {with {x {EVAL {1st body} env}}
                          {if0 {is-list? x} {my-cdr x} {sym eval-error-2nd-expected-list}}}
-              ; numb? ((symV 'numb?) . x) -> numV (0 or 1)
+              ; numb? ((symV 'numb?) x) -> numV (0 or 1)
               {if0 {same? type {sym numb?}} {if0 {numb? {EVAL {1st body} env}} 0 1}
-              ; symb? ((symV 'symb?) . x) -> numV (0 or 1)
+              ; symb? ((symV 'symb?) x) -> numV (0 or 1)
               {if0 {same? type {sym symb?}} {if0 {symb? {EVAL {1st body} env}} 0 1}
-              ; is-list? ((symV 'is-list?) . x) -> numV (0 or 1)
+              ; is-list? ((symV 'is-list?) x) -> numV (0 or 1)
               {if0 {same? type {sym is-list?}} {if0 {is-list? {EVAL {1st body} env}} 0 1}
               ; fun ((symV 'fun) id body)
               {if0 {same? type {sym fun}} {my-list {sym closure} {1st body} {2nd body}}
