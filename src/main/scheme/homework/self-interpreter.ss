@@ -635,9 +635,10 @@
 ; brutal, i know. 
 
 ; last notes on representation:
-; we know that instead of (+ 5 6), we use (list (sym +) 5 6)
+; we know that instead of (+ 5 6), we use (my-list (sym +) 5 6)
 ; one goal of this project was concerned with not changing the representation too dramatically.
-; does this qualify as dramatic? yes and no. it should be clear from the explanation above that
+; does this qualify as dramatic? yes and no. 
+; its ugly, but it should be clear from the explanation above that
 ; these both have the same meaning (in myself k1 vs myself k2)
 ; just that the original implementation can rely on schemes reader, and Myself cant.
 ; this means that, if we did have a more sophisticated parser, its possible that 
