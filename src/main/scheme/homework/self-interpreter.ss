@@ -161,10 +161,11 @@
          (type-case Myself-Val (interp l env)
            [listV (l) (car l)]
            [else (error "my-car expected list")])]
-    [my-cdr (l) 
-         (type-case Myself-Val (interp l env)
+    [my-cdr (l) (begin (printf "~s~n" l)
+         (let ([x (interp l env)])
+         (type-case Myself-Val x
            [listV (l) (listV (cdr l))]
-           [else (error "my-cdr expected list")])]
+           [else (begin (printf "~s~n" x) (error "my-cdr expected list"))])))]
 
     ; TODO - write tests
     [numb? (x) 
@@ -588,7 +589,9 @@
 ; ((symV 'is-empty?) x)
 ; ((symV 'numb?) x)                   
 ; ((symV 'symb?) x)                   
-; ((symV 'is-list?) x)  
+; ((symV 'is-list?) x)
+
+; TODO!!! implement my-cons!!!
 
 (define eval-lib
   (create-lib (list list-lib option-lib math-lib boolean-lib base-lib)
@@ -598,21 +601,17 @@
             {if0 {symb? sexpr} {my-list {sym id} sexpr}
             {if0 {is-list? sexpr}
                  {with {op {1st sexpr}}
-                 ; sym
-                 ; (my-list (sym sym) (sym x)) -> ((symV 'sym) (symV x))
+                 ; sym (my-list (sym sym) (sym x)) -> ((symV 'sym) (symV x))
                  {if0 {same? {sym sym} op}
                       ; TODO - maybe this could check to make sure the 2nd is a symV       
                       {my-list {sym sym} {2nd sexpr}}
-                 ; + 
-                 ; (my-list (sym +) lhs rhs) -> ((symV '+) lhs rhs)
+                 ; + (my-list (sym +) lhs rhs) -> ((symV '+) lhs rhs)
                  {if0 {same? {sym +} op}
                       {my-list {sym +} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
-                 ; - 
-                 ; (my-list (sym -) lhs rhs) -> ((symV '-) lhs rhs)
+                 ; - (my-list (sym -) lhs rhs) -> ((symV '-) lhs rhs)
                  {if0 {same? {sym -} op}
                       {my-list {sym -} {PARSE {2nd sexpr}} {PARSE {3rd sexpr}}}
-                 ; my-list
-                 ; (my-list (sym my-list) lhs rhs) -> ((symV 'list) lhs rhs)
+                 ; my-list (my-list (sym my-list) lhs rhs) -> ((symV 'list) lhs rhs)
                  {if0 {same? {sym my-list} op}
                       {my-cons {sym my-list} {map {fun {x} {PARSE x}} {my-cdr sexpr}}}
                  ; numb? (my-list (sym numb?) x) -> ((symV 'numb?) x) 
@@ -707,6 +706,9 @@
                                {EVAL {3rd f} {my-cons {my-list {2nd f} a} env}}}}
               {sym eval-error}}}}}}}}}}}}}}}}}}}}})
     
+    ; this starts evaluation with an empty environment.
+    ; i wonder if there is a way to get the original myself environment,
+    ; and therefore all the library functions...
     (list 'eval `{fun {exp} {real-eval exp {my-list}}})
     )))
 
@@ -885,6 +887,10 @@
 ; eval a app {{fun {x} x} 7}
 (test (myself-k2 '(eval (parse (my-list (my-list (sym fun) (sym x) (sym x)) 7)))) 
        (numV 7))
+
+; eval a app {{fun {x} {+ x x}} 7}
+(test (myself-k2 '(eval (parse (my-list (my-list (sym fun) (sym x) (my-list (sym +) (sym x) (sym x))) 7)))) 
+       (numV 14))
 
 
 ; NOTES TO SELF
