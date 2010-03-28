@@ -585,6 +585,7 @@
 ; ((symV 'my-car) lst)                
 ; ((symV 'my-cdr) lst) 
 ; ((symV 'is-list?) x)
+; ((symV 'is-empty?) x)
 ; ((symV 'numb?) x)                   
 ; ((symV 'symb?) x)                   
 ; ((symV 'is-list?) x)  
@@ -623,6 +624,9 @@
                  ; is-list? (my-list (sym list?) x) -> ((symV 'list?) x) 
                  {if0 {same? {sym is-list?} op}
                       {my-list {sym is-list?} {PARSE {2nd sexpr}}}
+                 ; is-empty? (my-list (sym is-empty?) x) -> ((symV 'is-empty?) x) 
+                 {if0 {same? {sym is-empty?} op}
+                      {my-list {sym is-empty?} {PARSE {2nd sexpr}}}
                  ; my-car (my-list (sym my-car) x) -> ((symV 'my-car) x) 
                  {if0 {same? {sym my-car} op}
                       {my-list {sym my-car} {PARSE {2nd sexpr}}}
@@ -640,7 +644,7 @@
                                {2nd sexpr} {PARSE {3rd sexpr}}}     
                  ; application
                  {my-list {sym app} (PARSE op) {PARSE {2nd sexpr}}}
-                 }}}}}}}}}}}}
+                 }}}}}}}}}}}}}
                  ; not a numb, symb or list, must be a closure
                  {sym parse-error}}
                  {sym parse-error}}
@@ -685,6 +689,8 @@
               {if0 {same? type {sym my-cdr}}
                    {with {x {EVAL {1st body} env}}
                          {if0 {is-list? x} {my-cdr x} {sym eval-error-2nd-expected-list}}}
+              ; is-empty? ((symV is-empty?) x) -> numV (0 or 1)
+              {if0 {same? type {sym is-empty?}} {if0 {is-empty? {EVAL {1st body} env}} 0 1}     
               ; numb? ((symV 'numb?) x) -> numV (0 or 1)
               {if0 {same? type {sym numb?}} {if0 {numb? {EVAL {1st body} env}} 0 1}
               ; symb? ((symV 'symb?) x) -> numV (0 or 1)
@@ -699,7 +705,7 @@
                    {with {f {EVAL {1st body} env}}
                          {with {a {EVAL {2nd body} env}}
                                {EVAL {3rd f} {my-cons {my-list {2nd f} a} env}}}}
-              {sym eval-error}}}}}}}}}}}}}}}}}}}})
+              {sym eval-error}}}}}}}}}}}}}}}}}}}}})
     
     (list 'eval `{fun {exp} {real-eval exp {my-list}}})
     )))
