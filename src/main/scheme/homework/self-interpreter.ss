@@ -571,6 +571,24 @@
 ;; PART 2 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; AST Representation
+;
+; ((symV 'num) (numV 7))               
+; ((symV 'sym) (symV 'something))     
+; ((symV '+) lhs rhs)               
+; ((symV '-) lhs rhs)               
+; ((symV 'id) (symV 'something))      
+; ((symV 'if) test then else)         
+; ((symV 'fun) id body)
+; ((symV 'app) f a)
+; ((symV 'my-list) x1 ... xn)            
+; ((symV 'my-car) lst)                
+; ((symV 'my-cdr) lst) 
+; ((symV 'is-list?) x)
+; ((symV 'numb?) x)                   
+; ((symV 'symb?) x)                   
+; ((symV 'is-list?) x)  
+
 (define eval-lib
   (create-lib (list list-lib option-lib math-lib boolean-lib base-lib)
    (list 
