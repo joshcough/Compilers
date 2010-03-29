@@ -1,0 +1,6 @@
+#lang planet plai/plai:1:14
+(print-only-errors #t)
+
+(define-type Class
+  [class (n number?)])
+
