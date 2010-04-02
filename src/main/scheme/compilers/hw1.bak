@@ -1,0 +1,8 @@
+#lang scheme
+
+(main
+ (main 
+  (ebx <- 20) ; how many fibs we want
+  (eax <- (alloc ebx 1)) ; gives an array of size 20 filled with 1's
+  
+  
