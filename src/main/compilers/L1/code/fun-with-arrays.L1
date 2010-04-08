@@ -17,9 +17,11 @@
 
   (ebx -= 1)
   (edx += 1)
-  (cjump ebx < 1 :printer :end)
+  (cjump ebx < 1 :printer :filler)
 
   ; then print out each item.
   :printer
   (eax <- (print edi)) 
+
+  :end
 ))

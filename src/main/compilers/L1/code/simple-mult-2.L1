@@ -1,0 +1,11 @@
+((
+  ; to multiply an encoded number
+  (esi <- 5) ; 2, 101
+  (esi *= 2) ; first mult by 2; 5*2 = 10 (1010)
+  (esi -= 1) ; then subtract 1 (1010 - 1 = 1001) 
+  (eax <- (print esi))
+
+  (esi *= 2) 
+  (esi -= 1)
+  (eax <- (print esi))
+))

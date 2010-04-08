@@ -1,0 +1,28 @@
+((
+  (esi <- 2)
+  :0
+
+  (goto :wefowifwef_wefowfoiwejf_AOIOAOIDJOAI_93493sdfij23nfsdUH)
+  :wefowifwef_wefowfoiwejf_AOIOAOIDJOAI_93493sdfij23nfsdUH
+  (goto :112345)
+  :112345
+  (goto :9)
+  :9
+  (goto :_)
+  :_
+  (goto :__________________________________)
+  :__________________________________
+  (goto :_______________999)
+  :_______________999
+  (goto :_______________aaa)
+  :_______________aaa
+  (goto :_______________AAA)
+  :_______________AAA
+  
+  (esi -= 1)
+  (cjump esi = 0 :_A_A_A_A_A_A_A_A_ :0)
+  
+  :_A_A_A_A_A_A_A_A_
+  (eax <- 3)
+  (eax <- (print eax))
+  ))
