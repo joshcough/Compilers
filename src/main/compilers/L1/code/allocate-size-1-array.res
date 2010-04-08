@@ -1,3 +1,3 @@
 L1 interpreter v3:
 
-2
+{s:1, 1}
