@@ -1,0 +1,7 @@
+((
+  (esi <- 7) ; set esi to 3
+  (esi -= 2) ; decrement esi. 111 - 10 = 101 = 5 = 2
+  (eax <- (print esi))
+  (esi -= 2) ; decrement esi. 101 - 10 = 11 = 3 = 1
+  (eax <- (print esi))
+))

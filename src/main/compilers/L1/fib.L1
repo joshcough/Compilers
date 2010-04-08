@@ -1,0 +1,49 @@
+(((esi <- 89)  ;; loop termination variable; this is 44 in reality
+  (eax <- (allocate esi 3))
+  (edi <- eax) ;; save this register for the array base pointer 
+  (ebx <- 5)   ;; loop index variable, starts at 2 (encoded as 5).
+  
+  :loop
+  (cjump ebx < esi :keep_going :done)
+  :keep_going
+  
+  ;; compute a[ebx-2], putting it into edx
+  (edx <- ebx)
+  (edx -= 4)   ;; - decrement by 2. 
+  (edx -= 1)   ;; - convert a 2a+1 number into 
+  (edx *= 2)   ;;     4a for the index calculation
+  (edx += edi) ;; - add in the base pointer
+  (edx += 4)   ;; - skip past the size word
+  (edx <- (mem edx 0))
+  
+  ;; compute a[ebx-1], putting it into ecx
+  (ecx <- ebx)
+  (ecx -= 2)    ;; - decrement by 1.
+  (ecx -= 1)    ;; - convert a 2a+1 number into
+  (ecx *= 2)    ;;      4a for the index calculation
+  (ecx += edi)  ;; - add in the base pointer
+  (ecx += 4)    ;; - skip past the size word
+  (ecx <- (mem ecx 0))
+  
+  ;; put the sum of a[ebx-2]+a[ebx-1] into edx
+  (edx += ecx)
+  (edx -= 1) ;; number conversion...
+  
+  ;; compute the location of a[ebx], putting it into ecx
+  (ecx <- ebx)
+  (ecx -= 1)   ;; - convert a 2a+1 number into 
+  (ecx *= 2)   ;;     4a for the index calculation
+  (ecx += 4)   ;; - skip past the size word
+  (ecx += edi) ;; - add in the base pointer 
+  
+  ;; store the sum a[ebx-2]+a[ebx-1] into a[ebx]
+  ((mem ecx 0) <- edx)
+  
+  ;; increment the loop counter
+  (ebx += 2) ;; this is what adding by one is.
+  
+  ;; go back to the loop test
+  (goto :loop)
+  
+  :done
+  (eax <- (print edi))))

@@ -1,0 +1,7 @@
+(((esi <- 7) ; eax is 3
+  (edi <- 7) ; edi is also 3
+  (esi += edi) ; edi should be 14 (1110) .... but thats not encoded...how could it work?
+  (eax <- (print esi)) ; not sure, but it prints 7 anyway.
+  (esi -= 1) ; when adding two of our encoded numbers, we must subtract 1.
+  (eax <- (print esi)) ; this prints 6 properly
+  ))

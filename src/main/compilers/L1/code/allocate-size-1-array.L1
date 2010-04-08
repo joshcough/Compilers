@@ -1,0 +1,3 @@
+; a single array containing only a single 1 (3 is encoded version of 1)
+(((eax <- (allocate 3 3))
+  (eax <- (print eax))))

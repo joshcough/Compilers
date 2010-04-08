@@ -1,0 +1,9 @@
+((
+  (eax <- (allocate 5 5)) ; size 2 array of 2's. you can only allocate into eax.
+  (edi <- eax) ; save the array pointer in edi
+  (esi <- (mem edi 4)) ; put the first element in esi
+  (eax <- (print esi)) ; print it
+  (esi <- (mem edi 8)) ; put the second element into esi
+  (eax <- (print esi)) ; print it
+  (eax <- (print edi)) ; print the whole array just for fun
+))
