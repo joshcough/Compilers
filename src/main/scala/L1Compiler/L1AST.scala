@@ -2,7 +2,7 @@ package L1Compiler
 
 object L1AST {
 
-  trait L1
+  case class L1(main: L1Function, funs:List[L1Function])
 
   trait Instruction
   trait S extends Instruction
@@ -57,4 +57,7 @@ object L1AST {
   case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction
   case class Call(s:S) extends Instruction
   case object Return extends Instruction
+
+  case class L1Function(name: Label, body: List[Instruction])
+
 }

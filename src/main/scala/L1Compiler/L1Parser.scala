@@ -5,8 +5,15 @@ import L1AST._
 
 object L1Parser extends Parser[L1] {
 
-  def parse(exp:Any): L1 = {
-    new L1{}
+  def parse(exp:Any): L1 = exp match {
+    case (main:List[Any]) :: funcs => L1(parseMain(main), funcs map parseFunction)
+    case _ => error("bad L1 program")
+  }
+
+  def parseMain(exp: List[Any]) = L1Function(Label("main"), exp map parseInstruction)
+  def parseFunction(exp: Any): L1Function = exp match {
+    case (l:Symbol) :: xs => L1Function(parseLabel(l.toString), xs map parseInstruction)
+    case _ => error("bad function: " + exp)
   }
 
   def parseInstruction(expr: Any): Instruction = expr match {
