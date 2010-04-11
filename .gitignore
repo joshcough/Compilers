@@ -1,0 +1,5 @@
+lib_managed/
+out/
+project/boot/
+project/build/target/
+target/

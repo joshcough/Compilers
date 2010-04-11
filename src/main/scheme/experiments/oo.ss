@@ -160,6 +160,8 @@
                  (params (list (param (id 'x) (type-id (id 'Int)))
                                (param (id 'y) (type-id (id 'Int))))) 
                  (class-body (list (fun-def (id 'left) 
-                                            (params (list (param (id 'el) (type-id (id 'Int))) 
-                                                          (param (id 'ar) (type-id (id 'Int))))) 
-                                            (block (list (simpler-expr (id-expr (id 'el))))))))))
+                                            (params (list 
+                                                     (param (id 'el) (type-id (id 'Int))) 
+                                                     (param (id 'ar) (type-id (id 'Int))))) 
+                                            (block (list 
+                                                    (simpler-expr (id-expr (id 'el))))))))))

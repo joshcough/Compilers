@@ -1,5 +1,7 @@
 package homework
 
+import reader._
+
 object HW1 {
 
   trait Exp

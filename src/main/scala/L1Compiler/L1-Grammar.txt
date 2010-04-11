@@ -1,0 +1,33 @@
+i ::= (x <- s)            ;; assign to a register
+    | (x <- (mem x n4))   ;; read from memory @ x+n4
+    | ((mem x n4) <- s)   ;; update memory @ x+n4
+
+    | (x += s)            ;; increment x by s
+    | (x -= s)            ;; decrement x by s
+    | (x *= s)            ;; multiply x by x
+    | (cx <- s cmp s)     ;; save result of a comparison
+
+    | label               ;; target of a jump
+    | (goto s)            ;; unconditional jump
+    | (cjump s cmp s label label) ;; conditional jump
+
+    | (call s)            ;; call a function [see below]
+    | (return)            ;; return from a function
+
+    ;; two calls into the runtime system, one to print a value:
+    | (eax <- (print s))
+    ;; and one to allocate & initialize some space
+    | (eax <- (allocate s s))
+
+And a few helper non-terminals:
+
+s     ::= x | num | label
+x     ::= cx | esi | edi | ebp | esp
+cx    ::= eax | ecx | edx | ebx
+cmp   ::= < | <= | =
+label ::= sequence of alpha-numeric characters or underscore,
+          but starting with a colon, ie matching this regexp:
+          #rx"^:[a-zA-Z0-9_]$"
+num   ::= number between (inclusive) -2^31 and (2^31)-1
+n4    ::= number between (inclusive) -2^31 and (2^31)-1
+          that is divisble by 4

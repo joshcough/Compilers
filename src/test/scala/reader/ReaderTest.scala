@@ -1,4 +1,4 @@
-package homework
+package reader
 
 import org.scalatest.FunSuite
 import org.scalatest.matchers.MustMatchers
@@ -8,9 +8,9 @@ class ReaderTest extends FunSuite with MustMatchers {
   // primitivate cases
   testRead("1", 1)
   testRead("'g'", 'g')
-  testRead("'1'", '1')
-  testRead("hello", 'hello)
-  testRead("\"hello\"", "\"hello\"")
+  testRead("'1'", '1')  // this is the character 1, not the number.
+  testRead("hello", 'hello) // unquoted strings are symbols.
+  testRead("\"hello\"", "\"hello\"") // quoted strings are strings.
   testRead("\"hello world\"", "\"hello world\"")
 
   // list cases
@@ -18,6 +18,10 @@ class ReaderTest extends FunSuite with MustMatchers {
   testRead("(\"hey\" world)", List("\"hey\"", 'world))
   // just add a bunch of white space to the last test
   testRead(" (  \"hey\"    world   )   ", List("\"hey\"", 'world))
+  // nested list cases
+  testRead("(hey (hey world) world)", List('hey, List('hey, 'world), 'world))
+  testRead("(hey (hey world) world 1 (1 2))",
+    List('hey, List('hey, 'world), 'world, 1, List(1, 2)))
 
   // error cases
   testRead("'aa'", Error("unclosed character literal"))

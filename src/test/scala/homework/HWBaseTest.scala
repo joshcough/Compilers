@@ -1,5 +1,7 @@
 package homework
 
+import reader._
+
 abstract class HWBaseTest[E,V](val interpreter:Interpreter[E,V] with Parser[E]) extends org.scalatest.FunSuite {
 
   def read(s:String): Any = new Reader().read(s)

@@ -1,0 +1,1 @@
+(eax += edx) -> addl %edx, %eax
