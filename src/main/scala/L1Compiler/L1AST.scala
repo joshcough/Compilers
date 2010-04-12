@@ -2,13 +2,14 @@ package L1Compiler
 
 object L1AST {
 
+  object L1{ def apply(main: L1Function): L1 = L1(main, Nil) }
   case class L1(main: L1Function, funs:List[L1Function])
 
   trait Instruction
   trait S extends Instruction
   case class Num(n: Int) extends S
   case class Label(l: String) extends S
-  abstract class Register(name: Symbol) extends S
+  abstract class Register(val name: String) extends S
   object XRegister {
     def apply(s: Symbol): Option[XRegister] = s match {
       case 'esi => Some(esi)
@@ -18,11 +19,11 @@ object L1AST {
       case _ => None
     }
   }
-  sealed abstract case class XRegister(x: Symbol) extends Register(x)
-  object esi extends XRegister('esi)
-  object edi extends XRegister('edi)
-  object ebp extends XRegister('ebp)
-  object esp extends XRegister('esp)
+  sealed abstract case class XRegister(x: String) extends Register(x)
+  object esi extends XRegister("esi")
+  object edi extends XRegister("edi")
+  object ebp extends XRegister("ebp")
+  object esp extends XRegister("esp")
   object CXRegister {
     def apply(s: Symbol): Option[CXRegister] = s match {
       case 'eax => Some(eax)
@@ -32,11 +33,11 @@ object L1AST {
       case _ => None
     }
   }
-  sealed abstract case class CXRegister(cx: Symbol) extends Register(cx)
-  object eax extends CXRegister('eax)
-  object ecx extends CXRegister('ecx)
-  object edx extends CXRegister('edx)
-  object ebx extends CXRegister('ebx)
+  sealed abstract case class CXRegister(cx: String) extends Register(cx)
+  object eax extends CXRegister("eax")
+  object ecx extends CXRegister("ecx")
+  object edx extends CXRegister("edx")
+  object ebx extends CXRegister("ebx")
 
   case class Comp(s1: S, op: CompOp, s2: S) extends Instruction
   sealed abstract case class CompOp(op: String)

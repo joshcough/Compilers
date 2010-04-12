@@ -2,31 +2,24 @@
 <project version="4">
   <component name="ChangeListManager" verified="true">
     <list default="true" readonly="true" id="3f448114-07b2-4346-b69b-05eabb14f3ad" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/homework/HW1Test.scala" afterPath="$PROJECT_DIR$/src/test/scala/homework/HW1Test.scala" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/homework/HWBaseTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/homework/HWBaseTest.scala" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\fun-with-arrays.res" afterPath="" />
-      <change type="MOVED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\test\scala\homework\ReaderTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/reader/ReaderTest.scala" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/L1Compiler/L1Parser.scala" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\simple-stack-stuff.res" afterPath="" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\gotos.res" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/project/build.properties" afterPath="$PROJECT_DIR$/project/build.properties" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\simple-mem-read.res" afterPath="" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\print-zero.res" afterPath="" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\labels-fun.res" afterPath="" />
-      <change type="MOVED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\scala\homework\Interpreter.scala" afterPath="$PROJECT_DIR$/src/main/scala/reader/Interpreter.scala" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\simple-cjump-truth.res" afterPath="" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/test/scala/L1Compiler/L1ParserTest.scala" />
+      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\scala\tony\Intermediate.scala" afterPath="" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/scala/L1Compiler/L1X86Generator.scala" />
+      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\scala\tony\Exercises.scala" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/interpreter/LazyInterpreterTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/interpreter/LazyInterpreterTest.scala" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/L1Compiler/L1AST.scala" afterPath="$PROJECT_DIR$/src/main/scala/L1Compiler/L1AST.scala" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/interpreter/InterpreterBaseTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/interpreter/InterpreterBaseTest.scala" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/test/scala/L1Compiler/L1X86Test.scala" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/homework/HW2Test.scala" afterPath="$PROJECT_DIR$/src/test/scala/homework/HW2Test.scala" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/scala/L1Compiler/L1ParserTest.scala" afterPath="$PROJECT_DIR$/src/test/scala/L1Compiler/L1ParserTest.scala" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/homework/HW2.scala" afterPath="$PROJECT_DIR$/src/main/scala/homework/HW2.scala" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\simple-mem-write.res" afterPath="" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\double-decrement.res" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scheme/experiments/oo.ss" afterPath="$PROJECT_DIR$/src/main/scheme/experiments/oo.ss" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/homework/HW1.scala" afterPath="$PROJECT_DIR$/src/main/scala/homework/HW1.scala" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\simple-mult-2.res" afterPath="" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\allocate-size-2-array.res" afterPath="" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\neg.res" afterPath="" />
-      <change type="DELETED" beforePath="C:\Users\josh\Desktop\work\Interpreters\src\main\compilers\L1\code\print-one.res" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/scala/interpreter/LazyInterpreter.scala" afterPath="$PROJECT_DIR$/src/main/scala/interpreter/LazyInterpreter.scala" />
     </list>
-    <ignored path=".idea/workspace.xml" />
     <ignored path="Interpreters.iws" />
+    <ignored path=".idea/workspace.xml" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,16 +79,34 @@
       <file leaf-file-name="L1-Grammar.txt" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/scala/L1Compiler/L1-Grammar.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="16" column="41" selection-start="649" selection-end="649" vertical-scroll-proportion="0.0">
+            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="L1Parser.scala" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="L1Parser.scala" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/scala/L1Compiler/L1Parser.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+            <state line="5" column="7" selection-start="59" selection-end="59" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="L1AST.scala" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/L1Compiler/L1AST.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="1" column="0" selection-start="19" selection-end="19" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="L1X86Generator.scala" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/L1Compiler/L1X86Generator.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="15" column="0" selection-start="277" selection-end="277" vertical-scroll-proportion="0.34343433">
               <folding />
             </state>
           </provider>
@@ -104,7 +115,16 @@
       <file leaf-file-name="L1ParserTest.scala" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/test/scala/L1Compiler/L1ParserTest.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="28" column="0" selection-start="728" selection-end="728" vertical-scroll-proportion="0.0">
+            <state line="88" column="0" selection-start="3534" selection-end="3534" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="L1X86Test.scala" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/scala/L1Compiler/L1X86Test.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="17" column="0" selection-start="488" selection-end="488" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -120,16 +140,22 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/main/compilers/L1Compiler/L1-Grammer.txt" />
-        <option value="$PROJECT_DIR$/src/main/scala/reader/Interpreter.scala" />
         <option value="$PROJECT_DIR$/src/test/scala/reader/ReaderTest.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/homework/HW2.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/homework/HW1.scala" />
-        <option value="$PROJECT_DIR$/src/test/scala/homework/HWBaseTest.scala" />
         <option value="$PROJECT_DIR$/src/main/compilers/L1Compiler/L1Parser.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/L1Compiler/L1-Grammar.txt" />
+        <option value="$PROJECT_DIR$/src/test/scala/homework/HW1Test.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/homework/HW2Test.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/homework/HWBaseTest.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/homework/HW2.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/homework/HW1.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/interpreter/LazyInterpreter.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/interpreter/InterpreterBaseTest.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/interpreter/LazyInterpreterTest.scala" />
         <option value="$PROJECT_DIR$/src/test/scala/L1Compiler/L1ParserTest.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/L1Compiler/L1Parser.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/L1Compiler/L1AST.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/L1Compiler/L1X86Test.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/L1Compiler/L1X86Generator.scala" />
       </list>
     </option>
   </component>
@@ -166,11 +192,16 @@
       <showLibraryContents />
       <hideEmptyPackages />
       <abbreviatePackageNames />
-      <autoscrollToSource />
-      <autoscrollFromSource />
+      <autoscrollToSource ProjectPane="true" />
+      <autoscrollFromSource ProjectPane="true" />
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Favorites" />
+      <pane id="Scope" />
+      <pane id="PackagesPane">
+        <subPane />
+      </pane>
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -186,6 +217,58 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="Interpreters" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Interpreters" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Interpreters" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="scala" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="reader" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Interpreters" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Interpreters" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="scala" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="L1Compiler" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -247,64 +330,58 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="scheme" />
+              <option name="myItemId" value="scala" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Interpreters" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Interpreters" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="scala" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="L1Compiler" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
-      <pane id="Favorites" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="project.structure.last.edited" value="Modules" />
     <property name="GoToFile.includeJavaFiles" value="false" />
+    <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
-    <property name="GoToClass.toSaveIncludeLibraries" value="false" />
-    <property name="recentsLimit" value="5" />
+    <property name="options.splitter.main.proportions" value="0.3" />
     <property name="MemberChooser.sorted" value="false" />
-    <property name="MemberChooser.showClasses" value="true" />
+    <property name="recentsLimit" value="5" />
+    <property name="options.lastSelected" value="org.jetbrains.plugins.scala.compiler.ScalacConfigurable" />
     <property name="project.structure.side.proportion" value="0.2" />
-    <property name="GoToClass.includeLibraries" value="false" />
-    <property name="dynamic.classpath" value="false" />
     <property name="MemberChooser.copyJavadoc" value="false" />
+    <property name="GoToClass.toSaveIncludeLibraries" value="false" />
+    <property name="MemberChooser.showClasses" value="true" />
+    <property name="GoToClass.includeLibraries" value="false" />
+    <property name="options.searchVisible" value="true" />
+    <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="dynamic.classpath" value="false" />
   </component>
-  <component name="RunManager" selected="ScalaTest.ParseAssignmentsTest">
-    <configuration default="false" name="HWBaseTest" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
-      <module name="compilers" />
-      <setting name="path" value="homework.HWBaseTest" />
-      <setting name="package" value="" />
-      <setting name="vmparams" value="" />
-      <setting name="params" value="" />
-      <setting name="version" value="false" />
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Run" />
-      <method />
-    </configuration>
-    <configuration default="false" name="HW1Test" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
-      <module name="compilers" />
-      <setting name="path" value="homework.HW1Test" />
-      <setting name="package" value="" />
-      <setting name="vmparams" value="" />
-      <setting name="params" value="" />
-      <setting name="version" value="false" />
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Run" />
-      <method />
-    </configuration>
-    <configuration default="false" name="ReaderTest" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
-      <module name="compilers" />
-      <setting name="path" value="reader.ReaderTest" />
-      <setting name="package" value="" />
-      <setting name="vmparams" value="" />
-      <setting name="params" value="" />
-      <setting name="version" value="false" />
-      <RunnerSettings RunnerId="Run" />
-      <ConfigurationWrapper RunnerId="Run" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="ScalaTest.GeneratorTests">
     <configuration default="false" name="ParsePrimitivesTest" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
       <module name="compilers" />
       <setting name="path" value="L1Compiler.ParsePrimitivesTest" />
@@ -330,6 +407,39 @@
       </RunnerSettings>
       <RunnerSettings RunnerId="Run" />
       <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="L1Tests" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
+      <module name="compilers" />
+      <setting name="path" value="L1Compiler.L1Tests" />
+      <setting name="package" value="" />
+      <setting name="vmparams" value="" />
+      <setting name="params" value="" />
+      <setting name="version" value="false" />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="PF" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
+      <module name="compilers" />
+      <setting name="path" value="L1Compiler.PF" />
+      <setting name="package" value="" />
+      <setting name="vmparams" value="" />
+      <setting name="params" value="" />
+      <setting name="version" value="false" />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="GeneratorTests" type="ScalaTestRunConfiguration" factoryName="ScalaTest" temporary="true">
+      <module name="compilers" />
+      <setting name="path" value="L1Compiler.GeneratorTests" />
+      <setting name="package" value="" />
+      <setting name="vmparams" value="" />
+      <setting name="params" value="" />
+      <setting name="version" value="false" />
+      <RunnerSettings RunnerId="Run" />
       <ConfigurationWrapper RunnerId="Run" />
       <method />
     </configuration>
@@ -439,11 +549,11 @@
       </method>
     </configuration>
     <list size="5">
-      <item index="0" class="java.lang.String" itemvalue="ScalaTest.HWBaseTest" />
-      <item index="1" class="java.lang.String" itemvalue="ScalaTest.HW1Test" />
-      <item index="2" class="java.lang.String" itemvalue="ScalaTest.ReaderTest" />
-      <item index="3" class="java.lang.String" itemvalue="ScalaTest.ParsePrimitivesTest" />
-      <item index="4" class="java.lang.String" itemvalue="ScalaTest.ParseAssignmentsTest" />
+      <item index="0" class="java.lang.String" itemvalue="ScalaTest.ParsePrimitivesTest" />
+      <item index="1" class="java.lang.String" itemvalue="ScalaTest.ParseAssignmentsTest" />
+      <item index="2" class="java.lang.String" itemvalue="ScalaTest.L1Tests" />
+      <item index="3" class="java.lang.String" itemvalue="ScalaTest.PF" />
+      <item index="4" class="java.lang.String" itemvalue="ScalaTest.GeneratorTests" />
     </list>
     <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
       <Host>localhost</Host>
@@ -468,27 +578,27 @@
     <supportedVersion>125</supportedVersion>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1382" height="784" extended-state="6" />
+    <frame x="-8" y="-8" width="1382" height="784" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32852563" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32852563" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
-      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25" sideWeight="0.67788464" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25" sideWeight="0.67948717" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39903846" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.31089744" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.30929488" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="VcsManagerConfiguration">
@@ -520,86 +630,110 @@
     <breakpoint-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/test/scala/homework/HW2Test.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="6" selection-start="38" selection-end="38" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/compilers/L1/code/allocate-size-1-array.res">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/compilers/L1/code/allocate-size-1-array.L1">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/reader/Interpreter.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="14" selection-start="14" selection-end="14" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="0" column="14" selection-start="14" selection-end="14" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/homework/HW1.scala">
+    <entry file="file://$PROJECT_DIR$/src/test/scala/reader/ReaderTest.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="31" column="7" selection-start="0" selection-end="977" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="7" column="4" selection-start="149" selection-end="149" vertical-scroll-proportion="0.043037973" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/test/scala/homework/HW1Test.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="28" selection-start="60" selection-end="60" vertical-scroll-proportion="0.0">
+        <state line="4" column="8" selection-start="2" selection-end="347" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/homework/HW2Test.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="4" column="8" selection-start="0" selection-end="6449" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/test/scala/homework/HWBaseTest.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="0" selection-start="278" selection-end="278" vertical-scroll-proportion="0.0">
+        <state line="4" column="17" selection-start="0" selection-end="721" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/homework/HW2.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="77" column="19" selection-start="2842" selection-end="2842" vertical-scroll-proportion="0.0">
+        <state line="4" column="9" selection-start="2" selection-end="3040" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/scala/reader/ReaderTest.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/homework/HW1.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="7" column="4" selection-start="149" selection-end="149" vertical-scroll-proportion="0.043037973">
+        <state line="4" column="9" selection-start="0" selection-end="1047" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/interpreter/LazyInterpreter.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2" column="9" selection-start="2" selection-end="1811" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/interpreter/InterpreterBaseTest.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="8" selection-start="2" selection-end="798" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/interpreter/LazyInterpreterTest.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="13" column="29" selection-start="459" selection-end="459" vertical-scroll-proportion="0.5755208">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/L1Compiler/L1-Grammar.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="16" column="41" selection-start="649" selection-end="649" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/scala/L1Compiler/L1ParserTest.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="0" selection-start="728" selection-end="728" vertical-scroll-proportion="0.0">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/L1Compiler/L1Parser.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+        <state line="5" column="7" selection-start="59" selection-end="59" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/L1Compiler/L1AST.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1" column="0" selection-start="19" selection-end="19" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/L1Compiler/L1ParserTest.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="88" column="0" selection-start="3534" selection-end="3534" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/L1Compiler/L1X86Test.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="17" column="0" selection-start="488" selection-end="488" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/L1Compiler/L1X86Generator.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="15" column="0" selection-start="277" selection-end="277" vertical-scroll-proportion="0.34343433">
           <folding />
         </state>
       </provider>
