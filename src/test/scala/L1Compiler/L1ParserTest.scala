@@ -3,11 +3,10 @@ package L1Compiler
 import reader._
 import L1AST._
 
-class L1Tests extends ParsePrimitivesTest with
+class L1ParseTests extends ParsePrimitivesTest with
         ParseAssignmentsTest with ParseMathTest with
         ParseCJumpTest with ParseOtherStuffTest with ParseProgramsTest
 
-class PF extends ParseProgramsTest
 trait ParseProgramsTest extends L1ParserTest{
   testParse("(((eax <- 7)))" ->
           L1(L1Function(Label("main"),
@@ -114,6 +113,18 @@ trait ParseOtherStuffTest extends L1ParserTest {
   testParseInstruction("(call :func)" -> Call(Label("func")))
   testParseInstruction("(call eax)" -> Call(eax))
   testParseInstruction("(return)" -> Return)
+
+//  testParseSExpr(
+//    (List(
+//      List(
+//        List('esi, '<-, 7),
+//        List('edi, '<-, 7),
+//        List('esi, '+=, 'edi),
+//        List('esi, '-=, 1),
+//        List('eax, '<-, List('print, 'esi))
+//        )
+//      ) -> L1(L1Function(Label("main"),
+//             List(RegisterAssignment(eax, Num(7)))))))  
 }
 
 abstract class L1ParserTest extends org.scalatest.FunSuite{
@@ -121,6 +132,10 @@ abstract class L1ParserTest extends org.scalatest.FunSuite{
   def read(s:String): Any = new Reader().read(s)
   def parseInstruction(a:Any) = parser parseInstruction a
   def parse(a:Any) = parser parse a
+
+  def testParseSExpr(t: (Any, L1)){
+    test(t._1 + " => " + t._2){ assert(parse(t._1) === t._2) }
+  }
 
   def testParse(t: (String, L1)): Unit = {
     test(t._1 + " => " + t._2){ assert(parse(read(t._1)) === t._2) }

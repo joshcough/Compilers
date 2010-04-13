@@ -5,7 +5,12 @@ import L1AST._
 import FileHelper._
 import java.io.File
 
-class GeneratorTests extends GenMathInstructionsTest with RegisterAssigmentInstructionsTest with GenFullProgramTest
+class GeneratorTests extends GenMathInstructionsTest with
+        RegisterAssigmentInstructionsTest with GenFullProgramTest with TestCompilerVsInterpreter
+
+trait TestCompilerVsInterpreter extends L1X86Test{
+  testCompilerVsInterpreter("add-two-registers.L1")
+}
 
 trait GenFullProgramTest extends L1X86Test {
   testCompileString("(((eax <- 5)(eax <- (print eax))))" -> "2")
@@ -19,16 +24,26 @@ trait GenMathInstructionsTest extends L1X86Test {
   testInstructionGen("(eax -= ecx)" -> "subl %ecx, %eax")
 }
 
-
 trait RegisterAssigmentInstructionsTest extends L1X86Test {
   testInstructionGen("(eax <- 7)" -> "movl $7, %eax")
 }
 
 trait L1X86Test extends org.scalatest.FunSuite{
   val parser = L1Parser
-  def read(s:String): Any = new Reader().read(s)
+  def stripComments(code:String) = code.split("\n").map(s => s.takeWhile(_!=';').trim).mkString
+  def read(code:String): Any = {
+    //println("stripping: " + code)
+    val stripped = stripComments(code)
+    //println("reading: " + stripped)
+    val r = new Reader().read(stripped)
+    //println("read: " + r)
+    r
+  }
   def parseInstruction(a:Any) = parser parseInstruction a
-  def parse(a:Any) = parser parse a
+  def parse(a:Any) = {
+    //println("parsing: " + a)
+    parser parse a
+  }
   def generateCodeForInstruction(i:Instruction) = L1X86Generator.generateCode(i)
   def generateCode(program:L1) = L1X86Generator.generateCode(program)
 
@@ -38,27 +53,34 @@ trait L1X86Test extends org.scalatest.FunSuite{
     }
   }
 
-  def testCompileFile(t: (String, String)): Unit = {
-    testCompile(t._1, t._2, new File(t._1).read)
+  type Results = String
+
+  def testCompileFile(t: (String, String)) { testCompile(t._1, new File(t._1).read, t._2) }
+  def testCompileString(t: (String, String)) { testCompile(t._1, t._1, t._2) }
+  private def testCompile(testName: String, code: String, expectedResults: String): Unit = {
+    test(testName + " => " + expectedResults){
+      assert(compileAndRunCode(code) === expectedResults)
+    }
   }
 
-  def testCompileString(t: (String, String)): Unit = {
-    testCompile(t._1, t._2, t._1)
-  }  
+  import CommandRunner._
 
-  private def testCompile(testName: String, expectedResults: String, stringToRead: String): Unit = {
+  private def compileAndRunCode(code:String): Results = {
+    new File("/tmp/test.S").write(generateCode(parse(read(code))))
+    runAndDieOneErrors("gcc -O2 -c -o /tmp/runtime.o ./src/main/compilers/L1/runtime.c")
+    runAndDieOneErrors("as -o /tmp/test.o /tmp/test.S")
+    runAndDieOneErrors("gcc -o /tmp/a.out /tmp/test.o /tmp/runtime.o")
+    runAndDieOneErrors("/tmp/a.out")
+  }
 
-    def runAndDieOneErrors(cmd:String): String = {
-      val (out, err) = CommandRunner(cmd)
-      if(err != "") error("[" + cmd + "] died with the following errors:\n" + err) else out
+  def testCompilerVsInterpreter(filename: String) {
+    def L1File(name:String) = "./src/main/compilers/L1/" + name
+    def runInterpreter = {
+      val (out, err) = CommandRunner(L1File("L1") + " " + "code/" + filename)
+      if(err != "Welcome to L1, v5") error("interpreter died with the following errors:\n" + err)
+      out
     }
-
-    test(testName + " => " + expectedResults){
-      new File("/tmp/test.S").write(generateCode(parse(read(stringToRead))))
-      runAndDieOneErrors("gcc -O2 -c -o /tmp/runtime.o ./src/main/compilers/L1/runtime.c")
-      runAndDieOneErrors("as -o /tmp/test.o /tmp/test.S")
-      runAndDieOneErrors("gcc -o /tmp/a.out /tmp/test.o /tmp/runtime.o")
-      assert(runAndDieOneErrors("/tmp/a.out") === expectedResults)
-    }
+    def runCompilerGeneratedCode = compileAndRunCode(new File(L1File("code/" + filename)).read)
+    test(filename){ assert(runCompilerGeneratedCode === runInterpreter) }
   }
 }

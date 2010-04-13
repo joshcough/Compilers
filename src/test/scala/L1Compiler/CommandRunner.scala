@@ -13,6 +13,11 @@ object CommandRunner {
     }
     (readAll(stdOut).mkString("\n"), readAll(stdError).mkString("\n"))
   }
+
+  def runAndDieOneErrors(cmd:String): String = {
+    val (out, err) = CommandRunner(cmd)
+    if(err != "") error("[" + cmd + "] died with the following errors:\n" + err) else out
+  }
 }
 
 import java.io._
@@ -22,7 +27,7 @@ class FileHelper(file : File) {
     try{ fw.write(text) }
     finally{ fw.close }
   }
-  def read: String = scala.io.Source.fromFile(file).getLines().mkString
+  def read: String = scala.io.Source.fromFile(file).getLines().mkString("\n")
 //  def foreachLine(proc : String=>Unit) : Unit = {
 //    val br = new BufferedReader(new FileReader(file))
 //    try{ while(br.ready) proc(br.readLine) }
