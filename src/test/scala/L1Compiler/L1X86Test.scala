@@ -6,10 +6,35 @@ import FileHelper._
 import java.io.File
 
 class GeneratorTests extends GenMathInstructionsTest with
-        RegisterAssigmentInstructionsTest with GenFullProgramTest with TestCompilerVsInterpreter
+        RegisterAssigmentInstructionsTest with GenFullProgramTest
 
-trait TestCompilerVsInterpreter extends L1X86Test{
-  testCompilerVsInterpreter("add-two-registers.L1")
+class TestCompilerVsInterpreter extends L1X86Test{
+  val testFiles =  List("add-two-registers.L1",
+    "compare-negs.L1",
+    "labels-fun.L1",
+    "simple-cjump-false.L1",
+    "simple-mem-write.L1",
+    "allocate-size-1000-array.L1",
+    "double-decrement.L1",
+    "neg.L1",
+    "simple-cjump-truth.L1",
+    "simple-mult-2.L1",
+    "allocate-size-1-array.L1",
+    "fun-with-arrays.L1",
+    "print-eax.L1",
+    "simple-decrement.L1",
+    "simple-mult.L1",
+    "allocate-size-2-array.L1",
+    "fun-with-arrays-part-2.L1",
+    "print-one.L1",
+    "simple-increment-eax.L1",
+    "simple-stack-stuff.L1",
+    "cjump-on-registers.L1",
+    "gotos.L1",
+    "print-zero.L1",
+    "simple-mem-read.L1",
+    "use-stack-pointer.L1")
+  testFiles.foreach(testCompilerVsInterpreter)
 }
 
 trait GenFullProgramTest extends L1X86Test {
