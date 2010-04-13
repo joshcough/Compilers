@@ -49,7 +49,7 @@ object L1AST {
   case class MemRead(loc: MemLoc) extends Instruction
   case class MemWrite(loc: MemLoc, e: S) extends Instruction
   case class Print(e: S) extends Instruction
-  case class Allocate(r: Register, init: Num) extends Instruction
+  case class Allocate(s:S, init: Num) extends Instruction
   case class Increment(x: Register, s: S) extends Instruction
   case class Decrement(x: Register, s: S) extends Instruction
   case class Multiply(x: Register, s: S) extends Instruction

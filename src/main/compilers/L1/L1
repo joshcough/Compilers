@@ -2,6 +2,4 @@
 
 # pass --help on the commandline to get the flags
 
-
-#mzscheme 1-interp-main.ss "$@"
-/Applications/PLT\ Scheme\ v4.2.5/bin/mzscheme 1-interp-main.ss "$@"
+mzscheme 1-interp-main.ss "$@"
