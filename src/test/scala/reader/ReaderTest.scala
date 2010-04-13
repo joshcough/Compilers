@@ -6,7 +6,9 @@ import org.scalatest.matchers.MustMatchers
 class ReaderTest extends FunSuite with MustMatchers {
 
   // primitivate cases
+  testRead("0", 0)
   testRead("1", 1)
+  testRead("-1", -1)
   testRead("'g'", 'g')
   testRead("'1'", '1')  // this is the character 1, not the number.
   testRead("hello", 'hello) // unquoted strings are symbols.
@@ -16,6 +18,8 @@ class ReaderTest extends FunSuite with MustMatchers {
   // list cases
   testRead("(hey world)", List('hey, 'world))
   testRead("(\"hey\" world)", List("\"hey\"", 'world))
+  testRead("(esi <- -1)", List('esi, '<-, -1))
+
   // just add a bunch of white space to the last test
   testRead(" (  \"hey\"    world   )   ", List("\"hey\"", 'world))
   // nested list cases

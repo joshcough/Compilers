@@ -9,7 +9,8 @@ class GeneratorTests extends GenMathInstructionsTest with
         RegisterAssigmentInstructionsTest with GenFullProgramTest
 
 class TestCompilerVsInterpreter extends L1X86Test{
-  val testFiles =  List("add-two-registers.L1",
+  val testFiles =  List(
+    "add-two-registers.L1",
     "compare-negs.L1",
     "labels-fun.L1",
     "simple-cjump-false.L1",

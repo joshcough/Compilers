@@ -32,9 +32,10 @@ class Reader {
       (Symbol(chars.mkString), rest)
     }
 
-    def readNum(stream:Stream[Char]): (Int, Stream[Char]) = {
+    def readNum(stream:Stream[Char], negate:Boolean): (Int, Stream[Char]) = {
       val (chars, rest) = stream.span( Character.isDigit(_) )
-      (chars.mkString.toInt, rest)
+      val n = chars.mkString.toInt
+      (if(negate) -n else n, rest)
     }
 
     def readStringLit(stream: Stream[Char], acc: String): (String, Stream[Char]) = {
@@ -58,7 +59,8 @@ class Reader {
       case '"' #:: tail => readStringLit(tail, "\"")
       case '\'' #:: tail => readCharLit(tail)
       case ')' #:: _    => error("unexpected list terminator")
-      case c #:: tail if(Character.isDigit(c)) => readNum(stream)
+      case c #:: tail if(Character.isDigit(c)) => readNum(stream, negate=false)
+      case '-' #:: c #:: tail if(Character.isDigit(c)) => readNum(c #:: tail, negate=true)
       case _ => readSymbol(stream)
     }
   }
