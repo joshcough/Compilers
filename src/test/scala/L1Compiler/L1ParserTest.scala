@@ -9,29 +9,29 @@ class L1ParseTests extends ParsePrimitivesTest with
 
 trait ParseProgramsTest extends L1ParserTest{
   testParse("(((eax <- 7)))" ->
-          L1(L1Function(Label("main"),
+          L1(L1Function(LabelDeclaration(Label("main")),
              List(RegisterAssignment(eax, Num(7)))))
   )
 
   testParse("(((eax <- 7) (ebx <- 8)))" ->
-          L1(L1Function(Label("main"),
+          L1(L1Function(LabelDeclaration(Label("main")),
              List(RegisterAssignment(eax, Num(7)),
                RegisterAssignment(ebx, Num(8)))))
   )
 
   testParse("(((eax <- 7)) (:fun2 (ecx <- 8)))" ->
-          L1(L1Function(Label("main"),
+          L1(L1Function(LabelDeclaration(Label("main")),
              List(RegisterAssignment(eax, Num(7)))),
-            List(L1Function(Label("fun2"),
+            List(L1Function(LabelDeclaration(Label("fun2")),
              List(RegisterAssignment(ecx, Num(8))))))
   )
   
   testParse("(((eax <- 7)) (:fun2 (ecx <- 8)) (:fun3 (edx <- 10)))" ->
-          L1(L1Function(Label("main"),
+          L1(L1Function(LabelDeclaration(Label("main")),
              List(RegisterAssignment(eax, Num(7)))),
             List(
-              L1Function(Label("fun2"), List(RegisterAssignment(ecx, Num(8)))),
-              L1Function(Label("fun3"), List(RegisterAssignment(edx, Num(10))))))
+              L1Function(LabelDeclaration(Label("fun2")), List(RegisterAssignment(ecx, Num(8)))),
+              L1Function(LabelDeclaration(Label("fun3")), List(RegisterAssignment(edx, Num(10))))))
   )
 }
 
@@ -44,7 +44,7 @@ trait ParsePrimitivesTest extends L1ParserTest {
   testParseInstruction("edi" -> edi)
   testParseInstruction("ebp" -> ebp)
   testParseInstruction("esp" -> esp)
-  testParseInstruction(":hey" -> Label("hey"))
+  testParseInstruction(":hey" -> LabelDeclaration(Label("hey")))
   testParseInstruction("1" -> Num(1))
   testParseInstructionError("eex" -> "eex is an invalid register")
 }
@@ -123,7 +123,7 @@ trait ParseOtherStuffTest extends L1ParserTest {
 //        List('esi, '-=, 1),
 //        List('eax, '<-, List('print, 'esi))
 //        )
-//      ) -> L1(L1Function(Label("main"),
+//      ) -> L1(L1Function(LabelDeclaration(Label("main")),
 //             List(RegisterAssignment(eax, Num(7)))))))  
 }
 

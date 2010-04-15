@@ -10,9 +10,9 @@ object L1Parser extends Parser[L1] {
     case _ => error("bad L1 program")
   }
 
-  def parseMain(exp: List[Any]) = L1Function(Label("main"), exp map parseInstruction)
+  def parseMain(exp: List[Any]) = L1Function(LabelDeclaration(Label("main")), exp map parseInstruction)
   def parseFunction(exp: Any): L1Function = exp match {
-    case (l:Symbol) :: xs => L1Function(parseLabel(l.toString), xs map parseInstruction)
+    case (l:Symbol) :: xs => L1Function(LabelDeclaration(parseLabel(l.toString)), xs map parseInstruction)
     case _ => error("bad function: " + exp)
   }
 
@@ -20,7 +20,10 @@ object L1Parser extends Parser[L1] {
     // TODO: had to put this here because of a serious compiler bug. investigate.
     // (cjump s cmp s label label) ;; conditional jump
     case 'cjump :: xs => parseCJump(expr)
-    case s: Symbol => parseLabelOrRegister(s)
+    case s: Symbol => parseLabelOrRegister(s) match {
+      case l:Label => LabelDeclaration(l)
+      case r => r
+    }
     // num   ::= number between (inclusive) -2^31 and (2^31)-1
     // TODO: check range
     case n: Int => Num(n)

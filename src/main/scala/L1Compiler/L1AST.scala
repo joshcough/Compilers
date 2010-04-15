@@ -9,6 +9,7 @@ object L1AST {
   trait S extends Instruction
   case class Num(n: Int) extends S
   case class Label(l: String) extends S
+  case class LabelDeclaration(l: Label) extends Instruction
   abstract class Register(val name: String) extends S
   object XRegister {
     def apply(s: Symbol): Option[XRegister] = s match {
@@ -59,6 +60,6 @@ object L1AST {
   case class Call(s:S) extends Instruction
   case object Return extends Instruction
 
-  case class L1Function(name: Label, body: List[Instruction])
+  case class L1Function(name: LabelDeclaration, body: List[Instruction])
 
 }

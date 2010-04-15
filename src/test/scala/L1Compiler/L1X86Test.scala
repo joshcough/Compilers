@@ -5,37 +5,16 @@ import L1AST._
 import FileHelper._
 import java.io.File
 
+object Dir {
+  val L1 = "./src/main/compilers/L1/"
+  def testFiles = new File(L1+ "/code").list.toList.filter(_.endsWith("L1"))
+}
+
 class GeneratorTests extends GenMathInstructionsTest with
         RegisterAssigmentInstructionsTest with GenFullProgramTest
 
 class TestCompilerVsInterpreter extends L1X86Test{
-  val testFiles =  List(
-    "add-two-registers.L1",
-    "compare-negs.L1",
-    "labels-fun.L1",
-    "simple-cjump-false.L1",
-    "simple-mem-write.L1",
-    "allocate-size-1000-array.L1",
-    "double-decrement.L1",
-    "neg.L1",
-    "simple-cjump-truth.L1",
-    "simple-mult-2.L1",
-    "allocate-size-1-array.L1",
-    "fun-with-arrays.L1",
-    "print-eax.L1",
-    "simple-decrement.L1",
-    "simple-mult.L1",
-    "allocate-size-2-array.L1",
-    "fun-with-arrays-part-2.L1",
-    "print-one.L1",
-    "simple-increment-eax.L1",
-    "simple-stack-stuff.L1",
-    "cjump-on-registers.L1",
-    "gotos.L1",
-    "print-zero.L1",
-    "simple-mem-read.L1",
-    "use-stack-pointer.L1")
-  testFiles.foreach(testCompilerVsInterpreter)
+  Dir.testFiles.foreach(testCompilerVsInterpreter)
 }
 
 trait GenFullProgramTest extends L1X86Test {
@@ -92,7 +71,9 @@ trait L1X86Test extends org.scalatest.FunSuite{
   import CommandRunner._
 
   private def compileAndRunCode(code:String): Results = {
-    new File("/tmp/test.S").write(generateCode(parse(read(code))))
+    val generatedCode = generateCode(parse(read(code)))
+    println(generatedCode)
+    new File("/tmp/test.S").write(generatedCode)
     runAndDieOneErrors("gcc -O2 -c -o /tmp/runtime.o ./src/main/compilers/L1/runtime.c")
     runAndDieOneErrors("as -o /tmp/test.o /tmp/test.S")
     runAndDieOneErrors("gcc -o /tmp/a.out /tmp/test.o /tmp/runtime.o")
@@ -100,7 +81,7 @@ trait L1X86Test extends org.scalatest.FunSuite{
   }
 
   def testCompilerVsInterpreter(filename: String) {
-    def L1File(name:String) = "./src/main/compilers/L1/" + name
+    def L1File(name:String) = Dir.L1 + name
     def runInterpreter = {
       val (out, err) = CommandRunner(L1File("L1") + " " + "code/" + filename)
       if(err != "Welcome to L1, v5") error("interpreter died with the following errors:\n" + err)
