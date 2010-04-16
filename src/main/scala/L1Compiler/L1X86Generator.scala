@@ -7,7 +7,10 @@ object L1X86Generator{
   def generateCode(ast: L1): String = {
     header + generateMain(ast.main) + ast.funs.map(generateFunc).mkString + footer
   }
-  def generateMain(main: L1Function) = main.body.map(i => "\t" + generateCode(i) + "\n").mkString
+  def generateMain(main: L1Function) = {
+    val footer = 	join("popl %ebp", "popl %edi", "popl %esi", "popl %ebx", "leave", "ret")
+    main.body.map(i => "\t" + generateCode(i) + "\n").mkString + footer + "\n"
+  }
 
   def generateFunc(f: L1Function) = {
     join( generateCode(f.name) + "\n" + f.body.map(i => "\t" + generateCode(i) + "\n").mkString )
@@ -43,14 +46,20 @@ object L1X86Generator{
         val jmp = s match { case Label(name) => name; case _ => generateCode(s) }
         join("pushl " + generateCode(label), "pushl %ebp", "movl %esp, %ebp", jump(s), declare(label))
       }
-      // (cjump eax < ebx :true :false)
-      case CJump(Comp(r:Register, LessThan, s:S), l1, l2) =>
-        join("cmpl " + generateCode(s) + ", " + generateCode(r), jumpIfLess(l1), jump(l2))
-      case CJump(Comp(n1:Num, LessThan, n2:Num), l1, l2) => if(n1.n < n2.n) jump(l1) else jump(l2)
-      // (cjump 11 < ebx :true :false)
-      case CJump(Comp(n:Num, LessThan, r:Register), l1, l2) => // special case (see lecture 3)
-        join("cmpl " + generateCode(n) + ", " + generateCode(r), jumpIfGreater(l1), jump(l2))
 
+      case Comp(s:S, LessThan, s:S) => "cmpl " + generateCode(s) + ", " + generateCode(r)
+
+      /////////// cjump < //////////
+
+      // special case for two numbers
+      case CJump(Comp(n1:Num, LessThan, n2:Num), l1, l2) => if(n1.n < n2.n) jump(l1) else jump(l2)
+      // (cjump 11 < ebx :true :false) // special case. destination just be a register.
+      case CJump(Comp(n:Num, LessThan, r:Register), l1, l2) =>
+        join("cmpl " + generateCode(n) + ", " + generateCode(r), jumpIfGreater(l1), jump(l2))
+      case CJump(comp, l1, l2) => join(generateCode(comp), jumpIfLess(l1), jump(l2))
+
+      /////////// cjump == //////////
+      
       case CJump(Comp(r:Register, EqualTo, s:S), l1, l2) =>
         join("cmpl " + generateCode(s) + ", " + generateCode(r), jumpIfEqual(l1), jump(l2))
 
@@ -91,14 +100,30 @@ go:
 
   def footer =
 """
-	popl   %ebp
-	popl   %edi
-	popl   %esi
-	popl   %ebx
-	leave
-	ret
 	.size	go, .-go
 	.ident	"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2"
 	.section	.note.GNU-stack,"",@progbits
 """
 }
+
+
+/*
+      (eax <- ebx < ecx)
+
+    Here we need another trick; the x86 instruction set only let us
+    update the lowest 8 bits with the result of a condition code. So,
+    we do that, and then fill out the rest of the bits with zeros with
+    a separate instruction:
+
+      cmp %ecx, %ebx
+      setl %al
+      movzbl %al, %eax
+
+   Here are the correspondances between the cx registers and the
+   places where the condition codes can be stored:
+
+    %eax's lowest 8 bits are %al
+    %ecx's lowest 8 bits are %cl
+    %edx's lowest 8 bits are %dl
+    %ebx's lowest 8 bits are %bl
+*/
