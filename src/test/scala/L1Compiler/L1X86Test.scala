@@ -49,12 +49,12 @@ trait L1X86Test extends org.scalatest.FunSuite{
     //println("parsing: " + a)
     parser parse a
   }
-  def generateCodeForInstruction(i:Instruction) = L1X86Generator.generateCode(i)
+  def generateCodeForInstruction(i:Instruction) = L1X86Generator.X86Inst.dump(L1X86Generator.generateCode(i))
   def generateCode(program:L1) = L1X86Generator.generateCode(program)
 
   def testInstructionGen(t: (String, String)): Unit = {
     test(t._1 + " => " + t._2){
-      assert(generateCodeForInstruction(parseInstruction(read(t._1))) === t._2)
+      assert(generateCodeForInstruction(parseInstruction(read(t._1))).trim === t._2.trim)
     }
   }
 
