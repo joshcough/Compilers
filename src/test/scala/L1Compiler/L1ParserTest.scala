@@ -3,39 +3,43 @@ package L1Compiler
 import reader._
 import L1AST._
 
-class L1ParseTests extends ParsePrimitivesTest with
-        ParseAssignmentsTest with ParseMathTest with
-        ParseCJumpTest with ParseOtherStuffTest with ParseProgramsTest
+class ParseProgramsTest extends L1ParserTest{
+//  testParse("(((eax <- 7)))" ->
+//          L1(L1Function(LabelDeclaration(Label("main")),
+//             List(RegisterAssignment(eax, Num(7)))))
+//  )
+//
+//  testParse("(((eax <- 7) (ebx <- 8)))" ->
+//          L1(L1Function(LabelDeclaration(Label("main")),
+//             List(RegisterAssignment(eax, Num(7)),
+//               RegisterAssignment(ebx, Num(8)))))
+//  )
+//
+//  testParse("(((eax <- 7)) (:fun2 (ecx <- 8)))" ->
+//          L1(L1Function(LabelDeclaration(Label("main")),
+//             List(RegisterAssignment(eax, Num(7)))),
+//            List(L1Function(LabelDeclaration(Label("fun2")),
+//             List(RegisterAssignment(ecx, Num(8))))))
+//  )
+//
+//  testParse("(((eax <- 7)) (:fun2 (ecx <- 8)) (:fun3 (edx <- 10)))" ->
+//          L1(L1Function(LabelDeclaration(Label("main")),
+//             List(RegisterAssignment(eax, Num(7)))),
+//            List(
+//              L1Function(LabelDeclaration(Label("fun2")), List(RegisterAssignment(ecx, Num(8)))),
+//              L1Function(LabelDeclaration(Label("fun3")), List(RegisterAssignment(edx, Num(10))))))
+//  )
 
-trait ParseProgramsTest extends L1ParserTest{
-  testParse("(((eax <- 7)))" ->
+  testParse("""((
+  :aint_gonna_happen
+  :terminate))""" ->
           L1(L1Function(LabelDeclaration(Label("main")),
-             List(RegisterAssignment(eax, Num(7)))))
-  )
-
-  testParse("(((eax <- 7) (ebx <- 8)))" ->
-          L1(L1Function(LabelDeclaration(Label("main")),
-             List(RegisterAssignment(eax, Num(7)),
-               RegisterAssignment(ebx, Num(8)))))
-  )
-
-  testParse("(((eax <- 7)) (:fun2 (ecx <- 8)))" ->
-          L1(L1Function(LabelDeclaration(Label("main")),
-             List(RegisterAssignment(eax, Num(7)))),
-            List(L1Function(LabelDeclaration(Label("fun2")),
-             List(RegisterAssignment(ecx, Num(8))))))
-  )
-  
-  testParse("(((eax <- 7)) (:fun2 (ecx <- 8)) (:fun3 (edx <- 10)))" ->
-          L1(L1Function(LabelDeclaration(Label("main")),
-             List(RegisterAssignment(eax, Num(7)))),
-            List(
-              L1Function(LabelDeclaration(Label("fun2")), List(RegisterAssignment(ecx, Num(8)))),
-              L1Function(LabelDeclaration(Label("fun3")), List(RegisterAssignment(edx, Num(10))))))
+             List(LabelDeclaration(Label("aint_gonna_happen")),
+                  LabelDeclaration(Label("terminate")))))
   )
 }
 
-trait ParsePrimitivesTest extends L1ParserTest {
+class ParsePrimitivesTest extends L1ParserTest {
   testParseInstruction("eax" -> eax)
   testParseInstruction("ebx" -> ebx)
   testParseInstruction("ecx" -> ecx)
@@ -49,7 +53,7 @@ trait ParsePrimitivesTest extends L1ParserTest {
   testParseInstructionError("eex" -> "eex is an invalid register")
 }
 
-trait ParseAssignmentsTest extends L1ParserTest {
+class ParseAssignmentsTest extends L1ParserTest {
   // simple register writes
   testParseInstruction("(eax <- 7)" -> RegisterAssignment(eax, Num(7)))
   testParseInstruction("(eax <- ebx)" -> RegisterAssignment(eax, ebx))
@@ -86,13 +90,13 @@ trait ParseAssignmentsTest extends L1ParserTest {
   testParseInstructionError("(ebx <- eax < eex)" -> "eex is an invalid register")
 }
 
-trait ParseMathTest extends L1ParserTest {
+class ParseMathTest extends L1ParserTest {
   testParseInstruction("(eax += 7)" -> Increment(eax, Num(7)))
   testParseInstruction("(eax -= ebx)" -> Decrement(eax, ebx))
   testParseInstruction("(ebx *= eax)" -> Multiply(ebx, eax))
 }
 
-trait ParseCJumpTest extends L1ParserTest {
+class ParseCJumpTest extends L1ParserTest {
   testParseInstruction("(cjump eax = eax :true :false)" ->
           CJump(Comp(eax, EqualTo, eax), Label("true"), Label("false")))
   testParseInstruction("(cjump eax < ebx :true :false)" ->
@@ -106,7 +110,7 @@ trait ParseCJumpTest extends L1ParserTest {
   testParseInstructionError("(cjump 2 <= efx :true :false)" -> "efx is an invalid register")
 }
 
-trait ParseOtherStuffTest extends L1ParserTest {
+class ParseOtherStuffTest extends L1ParserTest {
   testParseInstruction("(goto ebx)" -> Goto(ebx))
   testParseInstruction("(goto :label)" -> Goto(Label("label")))
   testParseInstruction("(goto 7)" -> Goto(Num(7)))

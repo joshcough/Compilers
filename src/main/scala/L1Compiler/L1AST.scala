@@ -34,7 +34,9 @@ object L1AST {
       case _ => None
     }
   }
-  sealed abstract case class CXRegister(cx: String) extends Register(cx)
+  sealed abstract case class CXRegister(cx: String) extends Register(cx){
+    def low8 = "%" + cx(1) + "l"
+  }
   object eax extends CXRegister("eax")
   object ecx extends CXRegister("ecx")
   object edx extends CXRegister("edx")

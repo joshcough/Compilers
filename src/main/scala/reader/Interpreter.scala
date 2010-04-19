@@ -28,7 +28,7 @@ class Reader {
     }
 
     def readSymbol(stream:Stream[Char]): (Symbol, Stream[Char]) = {
-      val (chars, rest) = stream.span( ! List('(', ')', ' ').contains(_) )
+      val (chars, rest) = stream.span( ! List('(', ')', ' ', '\n').contains(_) )
       (Symbol(chars.mkString), rest)
     }
 
@@ -56,6 +56,7 @@ class Reader {
     stream match {
       case '(' #:: tail => readList(tail, Nil)
       case ' ' #:: tail => readWithRest(tail)
+      case '\n' #:: tail => readWithRest(tail)
       case '"' #:: tail => readStringLit(tail, "\"")
       case '\'' #:: tail => readCharLit(tail)
       case ')' #:: _    => error("unexpected list terminator")

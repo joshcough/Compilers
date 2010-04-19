@@ -60,12 +60,20 @@ object L1X86Generator {
       case LabelDeclaration(l) => X86Inst(declare(l))
       case r:Register => X86Inst("%" + r.name)
       case MemLoc(r, off) => X86Inst(off.n + "(" + generateCode(r).head + ")")
-      // TODO register assignment where s is a Comp
+
+      case RegisterAssignment(cx:CXRegister, c@Comp(r1:Register,op,r2:Register)) => {
+        X86Inst(
+          "cmp " + generateCode(r2).head + ", " + generateCode(r1).head,
+          setInstruction(op) + " " + cx.low8,
+          "movzbl " + cx.low8 + ", " + generateCode(cx).head)
+      }
       case RegisterAssignment(r1, s) =>
         X86Inst("movl " + generateCode(s).head + ", " + generateCode(r1).head)
+
       case MemWrite(loc, s) =>
         X86Inst("movl " + generateCode(s).head + ", " + generateCode(loc).head)
       case MemRead(loc) => generateCode(loc)
+
       //edx += ecx  =>  addl %ecx, %edx
       case Increment(r, s) =>
         X86Inst("addl " + generateCode(s).head + ", " + generateCode(r).head)
@@ -76,49 +84,72 @@ object L1X86Generator {
       case Multiply(r, s) =>
         X86Inst("imull " + generateCode(s).head + ", " + generateCode(r).head)
 
-      case Print(s) => X86Inst("pushl " + generateCode(s).head, "call print", "addl $4,%esp")
+      case Print(s) =>
+        X86Inst(
+          "pushl " + generateCode(s).head,
+          "call print",
+          "addl $4,%esp")
+
       case Allocate(s, n) =>
         X86Inst(
           "pushl " + generateCode(n).head,
           "pushl " + generateCode(s).head,
           "call allocate", "addl $8, %esp")
+
       case Goto(s) => X86Inst(jump(s))
+
       case Call(s) => {
         val label = nextNewLabel
         val jmp = s match { case Label(name) => name; case _ => generateCode(s) }
         X86Inst(
           "pushl " + generateCode(label).head,
-          "pushl %ebp", "movl %esp, %ebp",
+          "pushl %ebp",
+          "movl %esp, %ebp",
           jump(s),
           declare(label))
       }
 
-      case Comp(s1:S, LessThan, s2:S) =>
-        X86Inst("cmpl " + generateCode(s2).head + ", " + generateCode(s1).head) // check this!
+      case Comp(s1:S, _, s2:S) =>
+        X86Inst("cmpl " + generateCode(s2).head + ", " + generateCode(s1).head)
 
-      /////////// cjump < //////////
+      /////////// cjump //////////
 
       // special case for two numbers
-      case CJump(Comp(n1:Num, LessThan, n2:Num), l1, l2) =>
-        if(n1.n < n2.n) X86Inst(jump(l1)) else X86Inst(jump(l2))
-      case CJump(Comp(n1:Num, LessThanOrEqualTo, n2:Num), l1, l2) =>
-        if(n1.n <= n2.n) X86Inst(jump(l1)) else X86Inst(jump(l2))
-      // (cjump 11 < ebx :true :false) // special case. destination just be a register.
-      case CJump(Comp(n:Num, LessThan, r:Register), l1, l2) =>
-        X86Inst(
-          "cmpl " + generateCode(n).head + ", " + generateCode(r),
-          jumpIfGreater(l1),
-          jump(l2))
-      case CJump(Comp(s1,LessThan,s2), l1, l2) =>
-        generateCode(Comp(s1,LessThan,s2)) ::: X86Inst(jumpIfLess(l1), jump(l2))
+      case CJump(Comp(n1:Num, op, n2:Num), l1, l2) => {
+        val b = op match {
+          case LessThan => n1.n < n2.n
+          case LessThanOrEqualTo => n1.n <= n2.n
+          case EqualTo => n1.n == n2.n
+        }
+        if(b) X86Inst(jump(l1)) else X86Inst(jump(l2))
+      }
 
-      /////////// cjump == //////////
-      
-      case CJump(Comp(r:Register, EqualTo, s:S), l1, l2) =>
+      // (cjump 11 < ebx :true :false) // special case. destination just be a register.
+      case CJump(Comp(n:Num, op, r:Register), l1, l2) => {
+        val jumpInstruction = op match {
+          case LessThan => jumpIfGreater(l1)
+          case LessThanOrEqualTo => jumpIfGreaterOrEqual(l1)
+          case EqualTo => jumpIfEqual(l1)
+        }
         X86Inst(
-          "cmpl " + generateCode(s).head + ", " + generateCode(r).head,
-          jumpIfEqual(l1),
+          // magic reversal happens here.
+          // LessThan ignored. had to pick one. see genCode(Comp...)
+          generateCode(Comp(r,LessThan,n)).head, 
+          jumpInstruction,
           jump(l2))
+      }
+      
+      case CJump(cmp@Comp(s1,op,s2), l1, l2) => {
+        val jumpInstruction = op match {
+          case LessThan => jumpIfLess(l1)
+          case LessThanOrEqualTo => jumpIfLessThanOrEqual(l1)
+          case EqualTo => jumpIfEqual(l1)
+        }
+        X86Inst(
+          generateCode(cmp).head,
+          jumpInstruction,
+          jump(l2))
+      }
 
       case Return =>
         X86Inst(
@@ -141,30 +172,16 @@ object L1X86Generator {
   }
 
   def jumpIfLess(l:Label) = "jl L1_" + l.l
+  def jumpIfLessThanOrEqual(l:Label) = "jle L1_" + l.l
   def jumpIfGreater(l:Label) = "jg L1_" + l.l
+  def jumpIfGreaterOrEqual(l:Label) = "jge L1_" + l.l
   def jumpIfEqual(l:Label) = "je L1_" + l.l
 
   def declare(l:Label) = "L1_" + l.l + ":"
+
+  def setInstruction(op:CompOp) = op match {
+    case LessThan => "setl"
+    case LessThanOrEqualTo => "setle"
+    case EqualTo => "sete"
+  }
 }
-
-
-/*
-      (eax <- ebx < ecx)
-
-    Here we need another trick; the x86 instruction set only let us
-    update the lowest 8 bits with the result of a condition code. So,
-    we do that, and then fill out the rest of the bits with zeros with
-    a separate instruction:
-
-      cmp %ecx, %ebx
-      setl %al
-      movzbl %al, %eax
-
-   Here are the correspondances between the cx registers and the
-   places where the condition codes can be stored:
-
-    %eax's lowest 8 bits are %al
-    %ecx's lowest 8 bits are %cl
-    %edx's lowest 8 bits are %dl
-    %ebx's lowest 8 bits are %bl
-*/
