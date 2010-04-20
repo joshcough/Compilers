@@ -1,0 +1,13 @@
+((
+  (ebx <- 5)
+  (ecx <- 1)
+  :boogers
+  (eax <- :boogers)
+  (ebx -= 2)
+  (ecx += 2)
+  (cjump ebx < 2 :the_end :the_next)
+  :the_next
+  (goto eax)
+  :the_end
+  (eax <- (print ecx))
+))

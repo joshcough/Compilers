@@ -168,7 +168,7 @@ object L1X86Generator {
 
   def jump(s:S) = s match {
     case Label(name) => "jmp L1_" + name
-    case _ => "jmp " + generateCode(s)
+    case _ => "jmp *" + generateCode(s).head
   }
 
   def jumpIfLess(l:Label) = "jl L1_" + l.l

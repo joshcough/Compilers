@@ -34,7 +34,7 @@ object L1Parser extends Parser[L1] {
     case List(s1: Symbol, '+=, s2:Any) => Increment(parseRegister(s1), parseNumOrRegister(s2))
     case List(s1: Symbol, '-=, s2:Any) => Decrement(parseRegister(s1), parseNumOrRegister(s2))
     case List(s1: Symbol, '*=, s2:Any) => Multiply(parseRegister(s1), parseNumOrRegister(s2))
-    case List('goto, s:Any) => Goto(parseS(s))
+    case List('goto, s:Symbol) => Goto(parseLabelOrRegister(s))
     case List('call, s:Any) => Call(parseS(s))
     case List('return) => Return
     case _ => error("unexpected token: " + expr)
@@ -92,7 +92,7 @@ object L1Parser extends Parser[L1] {
     (x, '<-, s) match {
       //(x <- s) ;; assign to a register
       case (x: Symbol, '<-, i: Int) => RegisterAssignment(parseRegister(x), Num(i))
-      case (x: Symbol, '<-, s: Symbol) => RegisterAssignment(parseRegister(x), parseRegister(s))
+      case (x: Symbol, '<-, s: Symbol) => RegisterAssignment(parseRegister(x), parseLabelOrRegister(s))
       // | (x <- (mem x n4))   ;; read from memory @ x+n4
       case (x1: Symbol, '<-, List('mem, x2:Symbol, n4:Int)) =>
         RegisterAssignment(parseRegister(x1), MemRead(MemLoc(parseRegister(x2), Num(n4))))

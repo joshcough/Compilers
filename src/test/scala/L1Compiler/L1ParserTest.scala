@@ -113,10 +113,11 @@ class ParseCJumpTest extends L1ParserTest {
 class ParseOtherStuffTest extends L1ParserTest {
   testParseInstruction("(goto ebx)" -> Goto(ebx))
   testParseInstruction("(goto :label)" -> Goto(Label("label")))
-  testParseInstruction("(goto 7)" -> Goto(Num(7)))
   testParseInstruction("(call :func)" -> Call(Label("func")))
   testParseInstruction("(call eax)" -> Call(eax))
   testParseInstruction("(return)" -> Return)
+
+  testParseInstructionError("(goto 7)" -> "unexpected token: List('goto, 7)")
 
 //  testParseSExpr(
 //    (List(

@@ -30,6 +30,15 @@ class RegisterAssigmentInstructionsTest extends L1X86Test {
   testInstructionGen("(eax <- 7)" -> List("movl $7, %eax"))
 }
 
+
+class JmpInstructionsTest extends L1X86Test {
+  testInstructionGen("(eax <- :some_label)" -> List("movl $L1_some_label, %eax"))
+  testInstructionGen("(goto :some_label)" -> List("jmp L1_some_label"))
+  testInstructionGen("(goto eax)" -> List("jmp *%eax"))
+}
+
+
+
 class ComparisonInstructionsTest extends L1X86Test {
   testInstructionGen("(eax <- esi < edi)" ->
           List("cmp %edi, %esi", "setl %al", "movzbl %al, %eax"))
@@ -100,7 +109,7 @@ trait L1X86Test extends org.scalatest.FunSuite{
 
   private def compileAndRunCode(code:String): Results = {
     val generatedCode = generateCode(parse(read(code)))
-    println(generatedCode)
+    generatedCode.split("\n").zipWithIndex.foreach{ case (c,i) => println(i + ":\t" + c) }
     new File("/tmp/test.S").write(generatedCode)
     runAndDieOneErrors("gcc -O2 -c -o /tmp/runtime.o ./src/main/compilers/L1/runtime.c")
     runAndDieOneErrors("as -o /tmp/test.o /tmp/test.S")
@@ -112,53 +121,10 @@ trait L1X86Test extends org.scalatest.FunSuite{
     def L1File(name:String) = Dir.L1 + name
     def runInterpreter = {
       val (out, err) = CommandRunner(L1File("L1") + " " + "code/" + filename)
-      if(err != "Welcome to L1, v5") error("interpreter died with the following errors:\n" + err)
+      if(err != "Welcome to L1, v7") error("interpreter died with the following errors:\n" + err)
       out
     }
     def runCompilerGeneratedCode = compileAndRunCode(new File(L1File("code/" + filename)).read)
     test(filename){ assert(runCompilerGeneratedCode === runInterpreter) }
   }
 }
-//
-//object boo {
-//
-//  List(List(
-//    List('ecx, '<-, 6),
-//    List('edx, '<-, 5),
-//    List('cjump, 'ecx, '<, 'edx, ':keep_going, ':done),
-//    ':keep_going,
-//    List('eax, '<-, List('print, 9999999)),
-//    ':done, List('esi, '<-, 'ecx),
-//    List('edi, '<-, 'edx),
-//    List('eax, '<-, List('print, 'edx)),
-//    List('ebx, '<-, 'edi, '<, 'esi),
-//    List('eax, '<-, List('print, 'ebx)),
-//    List('ebx, '<-, 'edi, '<=, 'esi),
-//    List('eax, '<-, List('print, 'ebx)),
-//    List('ebx, '<-, 'esi, '<, 'edi),
-//    List('cjump, 'ebx, '<=, 0, ':terminate, ':aint_gonna_happen),
-//    ':aint_gonna_happen:terminate,
-//    List('eax, '<-, List('print, 85))))
-//
-//
-//  L1(L1Function(LabelDeclaration(Label(main)),
-//    List(
-//      RegisterAssignment(CXRegister(ecx),Num(6)),
-//      RegisterAssignment(CXRegister(edx),Num(5)),
-//      CJump(Comp(CXRegister(ecx),CompOp(<,setl),CXRegister(edx)),Label(keep_going),Label(done)),
-//      LabelDeclaration(Label(keep_going)),
-//      Print(Num(9999999)),
-//      LabelDeclaration(Label(done)),
-//      RegisterAssignment(XRegister(esi),CXRegister(ecx)),
-//      RegisterAssignment(XRegister(edi),CXRegister(edx)),
-//      Print(CXRegister(edx)),
-//      RegisterAssignment(CXRegister(ebx),Comp(XRegister(edi),CompOp(<,setl),XRegister(esi))),
-//      Print(CXRegister(ebx)),
-//      RegisterAssignment(CXRegister(ebx),Comp(XRegister(edi),CompOp(<=,setle),XRegister(esi))),
-//      Print(CXRegister(ebx)),
-//      RegisterAssignment(CXRegister(ebx),Comp(XRegister(esi),CompOp(<,setl),XRegister(edi))),
-//      CJump(Comp(CXRegister(ebx),CompOp(<=,setle),Num(0)),Label(terminate),Label(aint_gonna_happen)),
-//      LabelDeclaration(Label(aint_gonna_happen:terminate)),
-//      Print(Num(85)))),List())
-//
-//}
