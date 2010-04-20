@@ -94,6 +94,14 @@ class ParseMathTest extends L1ParserTest {
   testParseInstruction("(eax += 7)" -> Increment(eax, Num(7)))
   testParseInstruction("(eax -= ebx)" -> Decrement(eax, ebx))
   testParseInstruction("(ebx *= eax)" -> Multiply(ebx, eax))
+
+  testParseInstruction("(ebx >>= eax)" -> RightShift(ebx, eax))
+  testParseInstruction("(ecx <<= eax)" -> LeftShift(ecx, eax))
+  testParseInstruction("(edx &= eax)" -> BitwiseAnd(edx, eax))
+
+  testParseInstruction("(ebx >>= 7)" -> RightShift(ebx, Num(7)))
+  testParseInstruction("(ecx <<= 8)" -> LeftShift(ecx, Num(8)))
+  testParseInstruction("(edx &= 9)" -> BitwiseAnd(edx, Num(9)))
 }
 
 class ParseCJumpTest extends L1ParserTest {

@@ -76,15 +76,19 @@ object L1X86Generator {
         X86Inst("movl " + generateCode(s).head + ", " + generateCode(loc).head)
       case MemRead(loc) => generateCode(loc)
 
-      //edx += ecx  =>  addl %ecx, %edx
       case Increment(r, s) =>
         X86Inst("addl " + generateCode(s).head + ", " + generateCode(r).head)
-      //edx += ecx  =>  addl %ecx, %edx
       case Decrement(r, s) =>
         X86Inst("subl " + generateCode(s).head + ", " + generateCode(r).head)
-      // TODO: does this have to only work with eax somehow? 
       case Multiply(r, s) =>
         X86Inst("imull " + generateCode(s).head + ", " + generateCode(r).head)
+
+      case RightShift(r, s) => //todo
+        X86Inst("sarl " + generateCode(s).head + ", " + generateCode(r).head)
+      case LeftShift(r, s) =>
+        X86Inst("sall " + generateCode(s).head + ", " + generateCode(r).head)
+      case BitwiseAnd(r, s) => //todo
+        X86Inst("andl " + generateCode(s).head + ", " + generateCode(r).head)
 
       case Print(s) =>
         X86Inst(

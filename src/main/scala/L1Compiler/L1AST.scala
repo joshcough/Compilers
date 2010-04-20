@@ -72,4 +72,8 @@ object L1AST {
 
   case class L1Function(name: LabelDeclaration, body: List[Instruction])
 
+  case class LeftShift(r:Register, s:S) extends Instruction
+  case class RightShift(r:Register, s:S) extends Instruction
+  case class BitwiseAnd(r:Register, s:S) extends Instruction
+
 }

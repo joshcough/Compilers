@@ -31,9 +31,15 @@ object L1Parser extends Parser[L1] {
     // TODO: maybe just call this directly instead of going through parseAssignment
     case List(x: Any, '<-, s1: Any, cmp: Symbol, s2:Any) => parseAssignment(x, (s1, cmp, s2))
     // math ops
-    case List(s1: Symbol, '+=, s2:Any) => Increment(parseRegister(s1), parseNumOrRegister(s2))
-    case List(s1: Symbol, '-=, s2:Any) => Decrement(parseRegister(s1), parseNumOrRegister(s2))
-    case List(s1: Symbol, '*=, s2:Any) => Multiply(parseRegister(s1), parseNumOrRegister(s2))
+    case List(s1: Symbol, op:Symbol, s2:Any) => op match {
+      case '+= => Increment(parseRegister(s1), parseNumOrRegister(s2))
+      case '-= => Decrement(parseRegister(s1), parseNumOrRegister(s2))
+      case '*= => Multiply(parseRegister(s1), parseNumOrRegister(s2))
+      case '>>= => RightShift(parseRegister(s1), parseNumOrRegister(s2))
+      case '<<= => LeftShift(parseRegister(s1), parseNumOrRegister(s2))
+      case '&= => BitwiseAnd(parseRegister(s1), parseNumOrRegister(s2))
+    }
+
     case List('goto, s:Symbol) => Goto(parseLabelOrRegister(s))
     case List('call, s:Any) => Call(parseS(s))
     case List('return) => Return
