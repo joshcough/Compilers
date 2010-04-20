@@ -7,7 +7,7 @@ import java.io.File
 
 object Dir {
   val L1 = "./src/main/compilers/L1/"
-  def testFiles = new File(L1+ "/code").list.toList.filter(_.endsWith("shifts.L1"))
+  def testFiles = new File(L1+ "/code").list.toList.filter(_.endsWith("L1"))
 }
 
 class TestCompilerVsInterpreter extends L1X86Test{
