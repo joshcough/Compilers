@@ -23,9 +23,10 @@ void print_content(void** in, int depth) {
   }
 }
 
-void print(void* l) {
+int print(void* l) {
   print_content(l,0);
   printf("\n");
+  return 1;
 }
 
 #define HEAP_SIZE 1048576  // one megabyte
@@ -50,7 +51,7 @@ void* allocate(int fw_size, void *fw_fill) {
 
   allocptr+=(size+1);
   words_allocated+=(size+1);
-  
+
   if (words_allocated < HEAP_SIZE) {
     *((int*)ret)=size;
     void** data = ret+1;
@@ -76,5 +77,4 @@ int main() {
   go();   // call into the generated code
   return 0;
 }
-
 

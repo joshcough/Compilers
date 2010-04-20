@@ -43,10 +43,18 @@ object L1AST {
   object ebx extends CXRegister("ebx")
 
   case class Comp(s1: S, op: CompOp, s2: S) extends Instruction
-  sealed abstract case class CompOp(op: String)
-  object LessThan extends CompOp("<")
-  object LessThanOrEqualTo extends CompOp("<=")
-  object EqualTo extends CompOp("=")
+  sealed abstract case class CompOp(op: String){
+    def apply(x:Int, y:Int): Boolean
+  }
+  object LessThan extends CompOp("<"){
+    def apply(x:Int, y:Int) = x < y
+  }
+  object LessThanOrEqualTo extends CompOp("<="){
+    def apply(x:Int, y:Int) = x <= y
+  }
+  object EqualTo extends CompOp("="){
+    def apply(x:Int, y:Int) = x == y    
+  }
   case class RegisterAssignment(r: Register, s: Instruction) extends Instruction
   case class MemLoc(basePointer: Register, offset: Num) extends Instruction
   case class MemRead(loc: MemLoc) extends Instruction

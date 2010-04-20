@@ -61,12 +61,14 @@ object L1X86Generator {
       case r:Register => X86Inst("%" + r.name)
       case MemLoc(r, off) => X86Inst(off.n + "(" + generateCode(r).head + ")")
 
-      case RegisterAssignment(cx:CXRegister, c@Comp(r1:Register,op,r2:Register)) => {
+      case RegisterAssignment(cx:CXRegister, c@Comp(r:Register,op,s:S)) => {
         X86Inst(
-          "cmp " + generateCode(r2).head + ", " + generateCode(r1).head,
+          "cmp " + generateCode(s).head + ", " + generateCode(r).head,
           setInstruction(op) + " " + cx.low8,
           "movzbl " + cx.low8 + ", " + generateCode(cx).head)
       }
+      case RegisterAssignment(cx:CXRegister, c@Comp(n1:Num,op,n2:Num)) =>
+        X86Inst("movl $" + (if(op(n1.n, n2.n)) 1 else 0) + ", " + generateCode(cx).head)
       case RegisterAssignment(r1, s) =>
         X86Inst("movl " + generateCode(s).head + ", " + generateCode(r1).head)
 
@@ -116,12 +118,7 @@ object L1X86Generator {
 
       // special case for two numbers
       case CJump(Comp(n1:Num, op, n2:Num), l1, l2) => {
-        val b = op match {
-          case LessThan => n1.n < n2.n
-          case LessThanOrEqualTo => n1.n <= n2.n
-          case EqualTo => n1.n == n2.n
-        }
-        if(b) X86Inst(jump(l1)) else X86Inst(jump(l2))
+        if(op(n1.n, n2.n)) X86Inst(jump(l1)) else X86Inst(jump(l2))
       }
 
       // (cjump 11 < ebx :true :false) // special case. destination just be a register.

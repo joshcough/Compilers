@@ -7,7 +7,7 @@ import java.io.File
 
 object Dir {
   val L1 = "./src/main/compilers/L1/"
-  def testFiles = new File(L1+ "/code").list.toList.filter(_.endsWith(".L1"))
+  def testFiles = new File(L1+ "/code").list.toList.filter(_.endsWith("L1"))
 }
 
 class TestCompilerVsInterpreter extends L1X86Test{
@@ -41,7 +41,7 @@ class JmpInstructionsTest extends L1X86Test {
 
 class ComparisonInstructionsTest extends L1X86Test {
   testInstructionGen("(eax <- esi < edi)" ->
-          List("cmp %edi, %esi", "setl %al", "movzbl %al, %eax"))
+          List("cmp %edi, %esi", "setl %al", "movzbl %al, %eax"))  
   testInstructionGen("(ebx <- esi < edi)" ->
           List("cmp %edi, %esi", "setl %bl", "movzbl %bl, %ebx"))
   testInstructionGen("(ecx <- esi < edi)" ->
@@ -66,6 +66,19 @@ class ComparisonInstructionsTest extends L1X86Test {
           List("cmp %edi, %esi", "sete %cl", "movzbl %cl, %ecx"))
   testInstructionGen("(edx <- esi = edi)" ->
           List("cmp %edi, %esi", "sete %dl", "movzbl %dl, %edx"))
+
+  testInstructionGen("(eax <- 7 < 8)" -> List("movl $1, %eax"))
+  testInstructionGen("(eax <- 7 <= 8)" -> List("movl $1, %eax"))
+  testInstructionGen("(eax <- 7 = 8)" -> List("movl $0, %eax"))
+  testInstructionGen("(eax <- 8 < 7)" -> List("movl $0, %eax"))
+  testInstructionGen("(eax <- 8 <= 7)" -> List("movl $0, %eax"))
+  testInstructionGen("(eax <- 8 <= 8)" -> List("movl $1, %eax"))
+  testInstructionGen("(eax <- 8 = 7)" -> List("movl $0, %eax"))
+  testInstructionGen("(eax <- 8 = 8)" -> List("movl $1, %eax"))
+
+  testInstructionGen("(edx <- 7 < 8)" -> List("movl $1, %edx"))
+  testInstructionGen("(edx <- 7 <= 8)" -> List("movl $1, %edx"))
+  testInstructionGen("(edx <- 7 = 8)" -> List("movl $0, %edx"))
 }
 
 trait L1X86Test extends org.scalatest.FunSuite{
