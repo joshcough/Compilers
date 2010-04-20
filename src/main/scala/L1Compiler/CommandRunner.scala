@@ -28,22 +28,6 @@ class FileHelper(file : File) {
     finally{ fw.close }
   }
   def read: String = scala.io.Source.fromFile(file).getLines().mkString("\n")
-//  def foreachLine(proc : String=>Unit) : Unit = {
-//    val br = new BufferedReader(new FileReader(file))
-//    try{ while(br.ready) proc(br.readLine) }
-//    finally{ br.close }
-//  }
-//  def deleteAll : Unit = {
-//    def deleteFile(dfile : File) : Unit = {
-//      if(dfile.isDirectory){
-//        val subfiles = dfile.listFiles
-//        if(subfiles != null)
-//          subfiles.foreach{ f => deleteFile(f) }
-//      }
-//      dfile.delete
-//    }
-//    deleteFile(file)
-//  }
 }
 object FileHelper{
   implicit def file2helper(file : File) = new FileHelper(file)

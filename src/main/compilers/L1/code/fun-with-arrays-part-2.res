@@ -1,5 +1,3 @@
-L1 interpreter v3:
-
 50
 49
 48
