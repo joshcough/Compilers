@@ -14,26 +14,13 @@ object Dir {
 
 import Dir._
 
-object L1Compiler {
-  val parser = L1Parser
+trait L1Compiler extends L1Parser with L1CodeGenerator { 
   def stripComments(code:String) = code.split("\n").map(s => s.takeWhile(_!=';').trim).mkString(" ")
   def read(code:String): Any = {
-    //println("stripping: " + code)
     val stripped = stripComments(code)
-    //println("reading: " + stripped)
     val r = new Reader().read(stripped)
-    //println("read: " + r)
     r
   }
-  def parseInstruction(a:Any) = parser parseInstruction a
-  def parse(a:Any) = {
-    //println("parsing: " + a)
-    val parsed = parser parse a
-    //println("parsed: " + parsed)
-    parsed
-  }
-  def generateCodeForInstruction(i:Instruction) = L1X86Generator.X86Inst.dump(L1X86Generator.generateCode(i))
-  def generateCode(program:L1) = L1X86Generator.generateCode(program)
 
   type Results = String
 
@@ -57,18 +44,29 @@ object L1Compiler {
 
 }
 
+trait L1CodeGenerator{
+  def generateCode(ast:L1):String
+}
+
 trait Runner{
   def run(filename:String): String
 }
 
 object L1Runner extends Runner {
+
+  def main(args:Array[String]){
+    run(args(0))
+  }
+
   def run(filename:String) = {
-    L1Compiler.compileFile(filename)
+    val compiler = new L1Compiler with L1X86Generator
+    compiler.compileFile(filename)
     runAndDieOneErrors("./a.out")
   }
 
   def compileAndRunCode(code:String): String = {
-    L1Compiler.compileCodeAndWriteOutput(code, "test.L1")
+    val compiler = new L1Compiler with L1X86Generator
+    compiler.compileCodeAndWriteOutput(code, "test.L1")
     runAndDieOneErrors("./a.out")
   }
 }

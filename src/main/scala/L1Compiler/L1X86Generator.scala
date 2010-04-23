@@ -2,17 +2,20 @@ package L1Compiler
 
 import L1AST.{Instruction => L1Instruction, _}
 
-object L1X86Generator {
-
+object X86Inst {
   type X86Inst = String
-  object X86Inst{
-    def apply(is:X86Inst*) = List(is:_*)
-    def dump(insts: List[X86Inst]) = {
-      insts.map{ i =>
-        (if(i.endsWith(":") || i.startsWith(".globl")) i else "\t" + i) + "\n"
-      }.mkString
-    }
+  def apply(is: X86Inst*) = List(is: _*)
+  def dump(insts: List[X86Inst]) = {
+    insts.map {
+      i =>
+        (if (i.endsWith(":") || i.startsWith(".globl")) i else "\t" + i) + "\n"
+    }.mkString
   }
+}
+
+trait L1X86Generator extends L1CodeGenerator{
+
+  import X86Inst._
 
   def generateCode(ast: L1): String = {
     val header: List[X86Inst] =
@@ -37,7 +40,7 @@ object L1X86Generator {
             X86Inst.dump(footer)
   }
   
-  def generateMain(main: L1Function):List[X86Inst] = {
+  private def generateMain(main: L1Function):List[X86Inst] = {
     val footer:List[X86Inst] =
       X86Inst(
         "popl %ebp",
@@ -46,77 +49,90 @@ object L1X86Generator {
         "popl %ebx",
         "leave",
         "ret")
-    main.body.flatMap(generateCode) ::: footer
+    main.body.flatMap(genInst) ::: footer
   }
 
-  def generateFunc(f: L1Function):List[X86Inst] = {
-    generateCode(f.name) ::: f.body.flatMap(generateCode)
+  private def generateFunc(f: L1Function):List[X86Inst] = {
+    genInst(f.name) ::: f.body.flatMap(genInst)
   }
 
-  def generateCode(inst: L1Instruction): List[X86Inst] = {
+  def genInst(inst: L1Instruction): List[X86Inst] = {
+
+    def jump(s: S) = s match {
+      case Label(name) => "jmp L1_" + name
+      case _ => "jmp *" + genInst(s).head
+    }
+
+    def jumpIfLess(l: Label) = "jl L1_" + l.l
+    def jumpIfLessThanOrEqual(l: Label) = "jle L1_" + l.l
+    def jumpIfGreater(l: Label) = "jg L1_" + l.l
+    def jumpIfGreaterOrEqual(l: Label) = "jge L1_" + l.l
+    def jumpIfEqual(l: Label) = "je L1_" + l.l
+
+    def declare(l: Label) = "L1_" + l.l + ":"
+
+    def setInstruction(op: CompOp) = op match {
+      case LessThan => "setl"
+      case LessThanOrEqualTo => "setle"
+      case EqualTo => "sete"
+    }
+
+    def tri(theOp:String, s1:L1Instruction, s2:L1Instruction): String = triple(theOp,genInst(s1).head,s2)
+    def triple(theOp:String, s1:String, s2:L1Instruction): String = {
+      theOp + " " + s1 + ", " + genInst(s2).head
+    }
+
     inst match {
       case Num(n) => X86Inst("$" + n)
       case Label(l) => X86Inst("$L1_" + l)
       case LabelDeclaration(l) => X86Inst(declare(l))
       case r:Register => X86Inst("%" + r.name)
-      case MemLoc(r, off) => X86Inst(off.n + "(" + generateCode(r).head + ")")
+      case MemLoc(r, off) => X86Inst(off.n + "(" + genInst(r).head + ")")
 
       case RegisterAssignment(cx:CXRegister, c@Comp(r:Register,op,s:S)) => {
         X86Inst(
-          "cmp " + generateCode(s).head + ", " + generateCode(r).head,
+          tri("cmp", s, r),
           setInstruction(op) + " " + cx.low8,
-          "movzbl " + cx.low8 + ", " + generateCode(cx).head)
+          triple("movzbl", cx.low8, cx))
       }
       case RegisterAssignment(cx:CXRegister, c@Comp(n1:Num,op,n2:Num)) =>
-        X86Inst("movl $" + (if(op(n1.n, n2.n)) 1 else 0) + ", " + generateCode(cx).head)
-      case RegisterAssignment(r1, s) =>
-        X86Inst("movl " + generateCode(s).head + ", " + generateCode(r1).head)
+        X86Inst(triple("movl", "$" + (if(op(n1.n, n2.n)) 1 else 0), cx))
+      case RegisterAssignment(r1, s) => X86Inst(tri("movl", s, r1))
 
-      case MemWrite(loc, s) =>
-        X86Inst("movl " + generateCode(s).head + ", " + generateCode(loc).head)
-      case MemRead(loc) => generateCode(loc)
-
-      case Increment(r, s) =>
-        X86Inst("addl " + generateCode(s).head + ", " + generateCode(r).head)
-      case Decrement(r, s) =>
-        X86Inst("subl " + generateCode(s).head + ", " + generateCode(r).head)
-      case Multiply(r, s) =>
-        X86Inst("imull " + generateCode(s).head + ", " + generateCode(r).head)
-
-      case RightShift(r, s) => //todo
-        X86Inst("sarl " + generateCode(s).head + ", " + generateCode(r).head)
-      case LeftShift(r, s) =>
-        X86Inst("sall " + generateCode(s).head + ", " + generateCode(r).head)
-      case BitwiseAnd(r, s) => //todo
-        X86Inst("andl " + generateCode(s).head + ", " + generateCode(r).head)
+      case MemWrite(loc, s) => X86Inst(tri("movl", s, loc))
+      case MemRead(loc) => genInst(loc)
+      case Increment(r, s) => X86Inst(tri("addl", s, r))
+      case Decrement(r, s) => X86Inst(tri("subl", s, r))
+      case Multiply(r, s) => X86Inst(tri("imull", s, r))
+      case RightShift(r, s) => X86Inst(tri("sarl", s, r))
+      case LeftShift(r, s) => X86Inst(tri("sall", s, r))
+      case BitwiseAnd(r, s) => X86Inst(tri("andl", s, r))
+      case Comp(s1:S, _, s2:S) => X86Inst(tri("cmpl", s2, s1))
 
       case Print(s) =>
         X86Inst(
-          "pushl " + generateCode(s).head,
+          "pushl " + genInst(s).head,
           "call print",
-          "addl $4,%esp")
+          "addl $4, %esp")
 
       case Allocate(s, n) =>
         X86Inst(
-          "pushl " + generateCode(n).head,
-          "pushl " + generateCode(s).head,
+          "pushl " + genInst(n).head,
+          "pushl " + genInst(s).head,
           "call allocate", "addl $8, %esp")
 
       case Goto(s) => X86Inst(jump(s))
 
       case Call(s) => {
         val label = nextNewLabel
-        val jmp = s match { case Label(name) => name; case _ => generateCode(s) }
+        val jmp = s match { case Label(name) => name; case _ => genInst(s) }
         X86Inst(
-          "pushl " + generateCode(label).head,
+          "pushl " + genInst(label).head,
           "pushl %ebp",
           "movl %esp, %ebp",
           jump(s),
           declare(label))
       }
-
-      case Comp(s1:S, _, s2:S) =>
-        X86Inst("cmpl " + generateCode(s2).head + ", " + generateCode(s1).head)
 
       /////////// cjump //////////
 
@@ -135,7 +151,7 @@ object L1X86Generator {
         X86Inst(
           // magic reversal happens here.
           // LessThan ignored. had to pick one. see genCode(Comp...)
-          generateCode(Comp(r,LessThan,n)).head, 
+          genInst(Comp(r,LessThan,n)).head, 
           jumpInstruction,
           jump(l2))
       }
@@ -147,7 +163,7 @@ object L1X86Generator {
           case EqualTo => jumpIfEqual(l1)
         }
         X86Inst(
-          generateCode(cmp).head,
+          genInst(cmp).head,
           jumpInstruction,
           jump(l2))
       }
@@ -161,28 +177,9 @@ object L1X86Generator {
   }
 
   // figure out a better way to do this crap:
-  var labelCount = -1
-  def nextNewLabel = {
+  private var labelCount = -1
+  private def nextNewLabel = {
     labelCount+=1
     Label("Generated_Label_" + labelCount) 
-  }
-
-  def jump(s:S) = s match {
-    case Label(name) => "jmp L1_" + name
-    case _ => "jmp *" + generateCode(s).head
-  }
-
-  def jumpIfLess(l:Label) = "jl L1_" + l.l
-  def jumpIfLessThanOrEqual(l:Label) = "jle L1_" + l.l
-  def jumpIfGreater(l:Label) = "jg L1_" + l.l
-  def jumpIfGreaterOrEqual(l:Label) = "jge L1_" + l.l
-  def jumpIfEqual(l:Label) = "je L1_" + l.l
-
-  def declare(l:Label) = "L1_" + l.l + ":"
-
-  def setInstruction(op:CompOp) = op match {
-    case LessThan => "setl"
-    case LessThanOrEqualTo => "setle"
-    case EqualTo => "sete"
   }
 }

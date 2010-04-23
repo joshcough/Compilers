@@ -1,35 +1,33 @@
 package L1Compiler
 
-import reader._
 import L1AST._
 
 class ParseProgramsTest extends L1ParserTest{
-//  testParse("(((eax <- 7)))" ->
-//          L1(L1Function(LabelDeclaration(Label("main")),
-//             List(RegisterAssignment(eax, Num(7)))))
-//  )
-//
-//  testParse("(((eax <- 7) (ebx <- 8)))" ->
-//          L1(L1Function(LabelDeclaration(Label("main")),
-//             List(RegisterAssignment(eax, Num(7)),
-//               RegisterAssignment(ebx, Num(8)))))
-//  )
-//
-//  testParse("(((eax <- 7)) (:fun2 (ecx <- 8)))" ->
-//          L1(L1Function(LabelDeclaration(Label("main")),
-//             List(RegisterAssignment(eax, Num(7)))),
-//            List(L1Function(LabelDeclaration(Label("fun2")),
-//             List(RegisterAssignment(ecx, Num(8))))))
-//  )
-//
-//  testParse("(((eax <- 7)) (:fun2 (ecx <- 8)) (:fun3 (edx <- 10)))" ->
-//          L1(L1Function(LabelDeclaration(Label("main")),
-//             List(RegisterAssignment(eax, Num(7)))),
-//            List(
-//              L1Function(LabelDeclaration(Label("fun2")), List(RegisterAssignment(ecx, Num(8)))),
-//              L1Function(LabelDeclaration(Label("fun3")), List(RegisterAssignment(edx, Num(10))))))
-//  )
+  testParse("(((eax <- 7)))" ->
+          L1(L1Function(LabelDeclaration(Label("main")),
+             List(RegisterAssignment(eax, Num(7)))))
+  )
 
+  testParse("(((eax <- 7) (ebx <- 8)))" ->
+          L1(L1Function(LabelDeclaration(Label("main")),
+             List(RegisterAssignment(eax, Num(7)),
+               RegisterAssignment(ebx, Num(8)))))
+  )
+
+  testParse("(((eax <- 7)) (:fun2 (ecx <- 8)))" ->
+          L1(L1Function(LabelDeclaration(Label("main")),
+             List(RegisterAssignment(eax, Num(7)))),
+            List(L1Function(LabelDeclaration(Label("fun2")),
+             List(RegisterAssignment(ecx, Num(8))))))
+  )
+
+  testParse("(((eax <- 7)) (:fun2 (ecx <- 8)) (:fun3 (edx <- 10)))" ->
+          L1(L1Function(LabelDeclaration(Label("main")),
+             List(RegisterAssignment(eax, Num(7)))),
+            List(
+              L1Function(LabelDeclaration(Label("fun2")), List(RegisterAssignment(ecx, Num(8)))),
+              L1Function(LabelDeclaration(Label("fun3")), List(RegisterAssignment(edx, Num(10))))))
+  )
   testParse("""((
   :aint_gonna_happen
   :terminate))""" ->
@@ -124,27 +122,12 @@ class ParseOtherStuffTest extends L1ParserTest {
   testParseInstruction("(call :func)" -> Call(Label("func")))
   testParseInstruction("(call eax)" -> Call(eax))
   testParseInstruction("(return)" -> Return)
-
   testParseInstructionError("(goto 7)" -> "unexpected token: List('goto, 7)")
-
-//  testParseSExpr(
-//    (List(
-//      List(
-//        List('esi, '<-, 7),
-//        List('edi, '<-, 7),
-//        List('esi, '+=, 'edi),
-//        List('esi, '-=, 1),
-//        List('eax, '<-, List('print, 'esi))
-//        )
-//      ) -> L1(L1Function(LabelDeclaration(Label("main")),
-//             List(RegisterAssignment(eax, Num(7)))))))  
 }
 
 abstract class L1ParserTest extends org.scalatest.FunSuite{
-  val parser = L1Parser
-  def read(s:String): Any = new Reader().read(s)
-  def parseInstruction(a:Any) = parser parseInstruction a
-  def parse(a:Any) = parser parse a
+  val compiler = new L1Compiler with L1X86Generator
+  import compiler._
 
   def testParseSExpr(t: (Any, L1)){
     test(t._1 + " => " + t._2){ assert(parse(t._1) === t._2) }

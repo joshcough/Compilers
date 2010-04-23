@@ -1,7 +1,5 @@
 package L1Compiler
 
-import reader._
-import L1AST._
 import FileHelper._
 import java.io.File
 
@@ -75,12 +73,12 @@ class ComparisonInstructionsTest extends L1X86Test {
 
 trait L1X86Test extends org.scalatest.FunSuite{
 
-  import L1Compiler._
-  import L1Interpreter._
+  val compiler = new L1Compiler with L1X86Generator
+  import compiler._
 
   def testInstructionGen(t: (String, List[String])): Unit = {
     test(t._1 + " => " + t._2){
-      assert(L1X86Generator.generateCode(parseInstruction(read(t._1))) === t._2)
+      assert(genInst(compiler.parseInstruction(read(t._1))) === t._2)
     }
   }
 

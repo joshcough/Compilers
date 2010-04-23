@@ -3,7 +3,7 @@ package L1Compiler
 import reader._
 import L1AST._
 
-object L1Parser extends Parser[L1] {
+trait L1Parser extends Parser[L1] {
 
   def parse(exp:Any): L1 = exp match {
     case (main:List[Any]) :: funcs => L1(parseMain(main), funcs map parseFunction)
