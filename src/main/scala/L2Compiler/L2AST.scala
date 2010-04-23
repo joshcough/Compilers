@@ -62,7 +62,7 @@ object L2AST {
   case class MemRead(loc: MemLoc) extends Instruction
   case class MemWrite(loc: MemLoc, e: S) extends Instruction
   case class Print(e: S) extends Instruction
-  case class Allocate(s:S, init: Num) extends Instruction
+  case class Allocate(n:S, init: S) extends Instruction
   case class Increment(x: X, s: S) extends Instruction
   case class Decrement(x: X, s: S) extends Instruction
   case class Multiply(x: X, s: S) extends Instruction
