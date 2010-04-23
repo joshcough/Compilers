@@ -62,7 +62,7 @@ object HW2 {
         case With(id, named, body) =>
           checkIdsWithBinders(named, binders) ::: checkIdsWithBinders (body, id :: binders)
       }
-      l.toSet.toList.sort(_.toString < _.toString)
+      l.toSet.toList.sortWith(_.toString < _.toString)
     }
     checkIdsWithBinders(wae, Nil)
   }
@@ -75,7 +75,7 @@ object HW2 {
       case Sub(l,r) => bindingIds(l) ::: bindingIds(r)
       case With(id, named, body) => id :: bindingIds(named) ::: bindingIds(body)
     }
-    l.toSet.toList.sort(_.toString < _.toString)
+    l.toSet.toList.sortWith(_.toString < _.toString)
   }
 
 }

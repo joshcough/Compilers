@@ -1,0 +1,23 @@
+p ::= ((i ...) (label i ...) ...)
+i ::= (x <- s)
+     | (x <- (mem x n4))
+     | ((mem x n4) <- s)
+     | (x aop= s)
+     | (cx <- s cmp s)
+     | label
+     | (goto s)
+     | (cjump s cmp s label label)
+     | (call s)
+     | (return)
+     | (eax <- (print s))
+     | (eax <- (allocate s s))
+aop= ::= += | -= | *=
+cmp ::= < | <= | =
+s ::= x | num | label
+x, y ::= any-variable-at-all | reg
+cx ::= x
+reg ::= eax | ecx | edx | ebx | esi | edi | ebp | esp
+
+# Only difference with L1, L1 had:
+#x, y ::= cx | esi | edi | ebp | esp
+#cx ::= eax | ecx | edx | ebx

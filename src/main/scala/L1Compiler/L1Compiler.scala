@@ -16,24 +16,18 @@ import Dir._
 
 trait L1Compiler extends L1Parser with L1CodeGenerator { 
   def stripComments(code:String) = code.split("\n").map(s => s.takeWhile(_!=';').trim).mkString(" ")
-  def read(code:String): Any = {
-    val stripped = stripComments(code)
-    val r = new Reader().read(stripped)
-    r
-  }
-
-  type Results = String
+  def read(code:String): Any = new Reader().read(stripComments(code))
 
   def compileFile(filename:String) {
     compileCodeAndWriteOutput(new File(filename).read, filename)
   }
 
   // just return the assembly code result
-  def compileToAssembly(code:String): String = generateCode(parse(read(code)))
+  def compile(code:String): String = generateCode(parse(read(code)))
 
   def compileCodeAndWriteOutput(code:String, originalL1Filename:String){
-    val compiledCode = compileToAssembly(code)
-    compiledCode.split("\n").zipWithIndex.foreach{ case (c,i) => println(i + ":\t" + c) }
+    val compiledCode = compile(code)
+    //compiledCode.split("\n").zipWithIndex.foreach{ case (c,i) => println(i + ":\t" + c) }
     val outputAssemblyFile = originalL1Filename.dropRight(3) + ".S"
     val outputOFile = originalL1Filename.dropRight(3) + ".o"
     new File(outputAssemblyFile).write(compiledCode)
