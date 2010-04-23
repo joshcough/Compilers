@@ -73,7 +73,7 @@ class ComparisonInstructionsTest extends L1X86Test {
 
 trait L1X86Test extends org.scalatest.FunSuite{
 
-  val compiler = new L1Compiler with L1X86Generator
+  val compiler = new L1Compiler with X86.L1X86Generator
   import compiler._
 
   def testInstructionGen(t: (String, List[String])): Unit = {
@@ -86,12 +86,12 @@ trait L1X86Test extends org.scalatest.FunSuite{
   def testCompileString(t: (String, String)) { testCompile(t._1, t._1, t._2) }
   private def testCompile(testName: String, code: String, expectedResults: String): Unit = {
     test(testName + " => " + expectedResults){
-      assert(L1Runner.compileAndRunCode(code) === expectedResults)
+      assert(X86.L1X86Runner.compileAndRunCode(code) === expectedResults)
     }
   }
 
   def testCompilerVsInterpreter(filename: String) {
     val fullPath = Dir.L1File("code/" + filename)
-    test(filename){ assert(L1Runner.run(fullPath) === L1Interpreter.run(fullPath)) }
+    test(filename){ assert(X86.L1X86Runner.run(fullPath) === L1Interpreter.run(fullPath)) }
   }
 }

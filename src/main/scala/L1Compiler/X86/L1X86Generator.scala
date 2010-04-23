@@ -1,6 +1,6 @@
-package L1Compiler
+package L1Compiler.X86
 
-import L1AST.{Instruction => L1Instruction, _}
+import L1Compiler.L1AST.{Instruction => L1Instruction, _}
 
 object X86Inst {
   type X86Inst = String
@@ -13,7 +13,7 @@ object X86Inst {
   }
 }
 
-trait L1X86Generator extends L1CodeGenerator{
+trait L1X86Generator extends L1Compiler.L1CodeGenerator{
 
   import X86Inst._
 
