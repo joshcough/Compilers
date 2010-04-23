@@ -3,3 +3,9 @@ out/
 project/boot/
 project/build/target/
 target/
+src/main/compilers/L1/code/*.S
+.idea/workspace.xml
+a.out
+runtime.o
+test.S
+test.o
