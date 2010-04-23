@@ -1,6 +1,7 @@
-package L1Compiler
+package L1Compiler.X86
 
-import FileHelper._
+import L1Compiler._
+import L1Compiler.FileHelper._
 import java.io.File
 
 class TestCompilerVsInterpreter extends L1X86Test{
