@@ -4,7 +4,6 @@ import L2AST._
 
 // ebx, esi, and edi are callee / function save
 // eax, edx, and ecx are caller / application save / arguments (in that order)
-//  case class L2Function(name: LabelDeclaration, body: List[Instruction])
 trait Liveness {
 
   def gen(i:Instruction): Set[X] = {
@@ -12,7 +11,6 @@ trait Liveness {
     i match {
       case Num(_) => Set()
       case x: X => Set(x)
-
       case Allocate(n:S, init:S) => g(n,init)
       case Assignment(x, i) => gen(i)
       case Increment(x, s) => g(x, s)
@@ -33,7 +31,6 @@ trait Liveness {
       case _ => Set()
     }
   }
-  
   def kill(i:Instruction): Set[X] = i match {
     case Allocate(n:S, init:S) => Set(eax)
     case Assignment(x, _) => Set(x)
@@ -60,13 +57,11 @@ trait Liveness {
       out(n) = ∪{in(m) | m ∈ succ(n)}
     */
   case class InstuctionInOutSet(i:Instruction, in:Set[X], out:Set[X])
-
   def inout(f:L2Function): List[InstuctionInOutSet] = {
     val (head::rest) = inout((f.name :: f.body).map(InstuctionInOutSet(_, Set[X](), Set[X]())))
     val newHead = head.copy(in = head.in - ebx - edi -esi)
     newHead :: rest
   }
-
   def inout(acc:List[InstuctionInOutSet]): List[InstuctionInOutSet] = {
     def in(iios:InstuctionInOutSet) = gen(iios.i) union (iios.out -- kill(iios.i))
     val next = acc.foldRight((List[InstuctionInOutSet](), Set[X]())){

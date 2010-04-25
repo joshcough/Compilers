@@ -2,6 +2,7 @@ package L2Compiler
 
 import org.scalatest.FunSuite
 import Graph._
+import L2AST._
 
 class GraphTests extends FunSuite {
   test("create graph"){
@@ -16,5 +17,12 @@ class GraphTests extends FunSuite {
   test("dups ignored"){
     assert(Graph("a" <-> "b", "b" <-> "a", "a"<->"b") === Graph(Set("a" <-> "b", "b" <-> "a")))
     assert(Graph("a" <-> "b", "b" <-> "a", "b"<->"a") === Graph(Set("a" <-> "b", "b" <-> "a")))
+  }
+
+  test("register graph"){
+    assert(Graph(eax <-> ecx) === Graph(Set(eax <-> ecx, ecx <-> eax)))
+    val g = Graph(eax <-> Variable("x"))
+    println(g)
+    assert(g === Graph(Set(eax <-> Variable("x"), Variable("x") <-> eax)))
   }
 }
