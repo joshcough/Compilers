@@ -55,26 +55,25 @@ object L2AST {
     def apply(x:Int, y:Int) = x <= y
   }
   object EqualTo extends CompOp("="){
-    def apply(x:Int, y:Int) = x == y    
+    def apply(x:Int, y:Int) = x == y
   }
+
+  case class Allocate(n:S, init: S) extends Instruction
   case class Assignment(x: X, s: Instruction) extends Instruction
+  case class Increment(x: X, s: S) extends Instruction
+  case class Decrement(x: X, s: S) extends Instruction
+  case class Multiply(x: X, s: S) extends Instruction
+  case class LeftShift(x: X, s:S) extends Instruction
+  case class RightShift(x: X, s:S) extends Instruction
+  case class BitwiseAnd(x: X, s:S) extends Instruction
   case class MemLoc(basePointer: X, offset: Num) extends Instruction
   case class MemRead(loc: MemLoc) extends Instruction
   case class MemWrite(loc: MemLoc, e: S) extends Instruction
   case class Print(e: S) extends Instruction
-  case class Allocate(n:S, init: S) extends Instruction
-  case class Increment(x: X, s: S) extends Instruction
-  case class Decrement(x: X, s: S) extends Instruction
-  case class Multiply(x: X, s: S) extends Instruction
   // TODO: check if interpreter allows (goto num) and (goto register)
   case class Goto(s: S) extends Instruction
   case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction
   case class Call(s:S) extends Instruction
   case object Return extends Instruction
-
   case class L2Function(name: LabelDeclaration, body: List[Instruction])
-
-  case class LeftShift(x: X, s:S) extends Instruction
-  case class RightShift(x: X, s:S) extends Instruction
-  case class BitwiseAnd(x: X, s:S) extends Instruction
 }

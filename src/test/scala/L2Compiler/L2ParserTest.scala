@@ -132,12 +132,14 @@ abstract class L2ParserTest extends org.scalatest.FunSuite{
   }
   import compiler._
 
+  def parseProgram(s:String) = parse(read(s))
+
   def testParseSExpr(t: (Any, L2)){
     test(t._1 + " => " + t._2){ assert(parse(t._1) === t._2) }
   }
 
   def testParse(t: (String, L2)): Unit = {
-    test(t._1 + " => " + t._2){ assert(parse(read(t._1)) === t._2) }
+    test(t._1 + " => " + t._2){ assert(parseProgram(t._1) === t._2) }
   }
 
   def testParseInstruction(t: (String, Instruction)): Unit = {

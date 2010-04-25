@@ -32,10 +32,14 @@ class Reader {
       (Symbol(chars.mkString), rest)
     }
 
-    def readNum(stream:Stream[Char], negate:Boolean): (Int, Stream[Char]) = {
-      val (chars, rest) = stream.span( Character.isDigit(_) )
-      val n = chars.mkString.toInt
-      (if(negate) -n else n, rest)
+    def readNumOrMaybeSymbol(stream:Stream[Char], negate:Boolean): (Any, Stream[Char]) = {
+      val (chars, rest) = stream.span( ! List('(', ')', ' ', '\n').contains(_) )
+      // if there are any non number characters, this must be a symbol
+      if(chars.exists(c => ! Character.isDigit(c))) (Symbol(chars.mkString), rest)
+      else {
+        val n = chars.mkString.toInt
+        (if(negate) -n else n, rest)
+      }
     }
 
     def readStringLit(stream: Stream[Char], acc: String): (String, Stream[Char]) = {
@@ -60,8 +64,12 @@ class Reader {
       case '"' #:: tail => readStringLit(tail, "\"")
       case '\'' #:: tail => readCharLit(tail)
       case ')' #:: _    => error("unexpected list terminator")
-      case c #:: tail if(Character.isDigit(c)) => readNum(stream, negate=false)
-      case '-' #:: c #:: tail if(Character.isDigit(c)) => readNum(c #:: tail, negate=true)
+      case c #:: tail if(Character.isDigit(c)) => {
+        readNumOrMaybeSymbol(stream, negate=false)
+      }
+      case '-' #:: c #:: tail if(Character.isDigit(c)) => {
+        readNumOrMaybeSymbol(c #:: tail, negate=true)
+      }
       case _ => readSymbol(stream)
     }
   }

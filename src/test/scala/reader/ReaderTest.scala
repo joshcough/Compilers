@@ -10,7 +10,8 @@ class ReaderTest extends FunSuite with MustMatchers {
   testRead("1", 1)
   testRead("-1", -1)
   testRead("'g'", 'g')
-  testRead("'1'", '1')  // this is the character 1, not the number.
+  testRead("'1'", '1')  // this is the character 1, not the number
+  testRead("2x2", Symbol("2x2"))
   testRead("hello", 'hello) // unquoted strings are symbols.
   testRead("\"hello\"", "\"hello\"") // quoted strings are strings.
   testRead("\"hello world\"", "\"hello world\"")

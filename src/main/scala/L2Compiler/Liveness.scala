@@ -2,88 +2,79 @@ package L2Compiler
 
 import L2AST._
 
+// ebx, esi, and edi are callee / function save
+// eax, edx, and ecx are caller / application save / arguments (in that order)
+//  case class L2Function(name: LabelDeclaration, body: List[Instruction])
 trait Liveness {
 
-  def gen(i:Instruction): List[X] = {
-    def g(i: Instruction, s2: S) = (gen(i) ::: gen(s2)).removeDuplicates
+  def gen(i:Instruction): Set[X] = {
+    def g(i: Instruction, s2: S) = gen(i) union gen(s2)
     i match {
-      case Num(_) => Nil
-      case x: X => List(x)
+      case Num(_) => Set()
+      case x: X => Set(x)
 
+      case Allocate(n:S, init:S) => g(n,init)
       case Assignment(x, i) => gen(i)
-      case Multiply(x, s) => g(x, s)
       case Increment(x, s) => g(x, s)
       case Decrement(x, s) => g(x, s)
+      case Multiply(x, s) => g(x, s)
       case LeftShift(x, s) => g(x, s)
       case RightShift(x, s) => g(x, s)
       case BitwiseAnd(x, s) => g(x, s)
       case Comp(s1, op, s2) => g(s1,s2)
       case CJump(comp, l1, l2) => gen(comp)
-
-      case MemLoc(bp, _) => List(bp)
+      case MemLoc(bp, _) => Set(bp)
       case MemRead(loc) => gen(loc)
       case MemWrite(loc, s:S) => g(loc,s)
-      case Print(s:S) => gen(s) :+ eax
-      case Allocate(n:S, init:S) => g(n,init)
+      case Print(s:S) => gen(s) union Set(eax)
       case Goto(s: S) => gen(s)
-      case Return => Nil // for now
+      case Call(s:S) => gen(s)
+      case Return => Set(ebx, edi, esi)
+      case _ => Set()
     }
   }
   
-  def kill(i:Instruction): List[X] = i match {
-    case Assignment(x, _) => List(x)
-    case Multiply(x, _) => List(x)
-    case Increment(x, _) => List(x)
-    case Decrement(x, _) => List(x)
-    case LeftShift(x, _) => List(x)
-    case RightShift(x, _) => List(x)
-    case BitwiseAnd(x, _) => List(x)
+  def kill(i:Instruction): Set[X] = i match {
+    case Allocate(n:S, init:S) => Set(eax)
+    case Assignment(x, _) => Set(x)
+    case Increment(x, _) => Set(x)
+    case Decrement(x, _) => Set(x)
+    case Multiply(x, _) => Set(x)
+    case LeftShift(x, _) => Set(x)
+    case RightShift(x, _) => Set(x)
+    case BitwiseAnd(x, _) => Set(x)
+    case MemLoc(bp, _) => Set()
+    case MemRead(loc) => Set()
+    case MemWrite(loc, s:S) => Set()
+    case Print(s:S) => Set(eax)
+    case Goto(s: S) => Set()
+    case Comp(s1, op, s2) => Set()
+    case CJump(comp, l1, l2) => Set()
+    case Call(s:S) => Set(eax, edx, ecx)
+    case Return => Set()
+    case _ => Set()
+  }
 
-    case Print(s:S) => List(eax)
-    case Allocate(n:S, init:S) => List(eax)
+  /**
+      in(n) = gen(n-th-inst) ∪ (out (n) - kill(n-th-inst))
+      out(n) = ∪{in(m) | m ∈ succ(n)}
+    */
+  case class InstuctionInOutSet(i:Instruction, in:Set[X], out:Set[X])
 
-    case MemLoc(bp, _) => Nil
-    case MemRead(loc) => Nil
-    case MemWrite(loc, s:S) => Nil
-    case Goto(s: S) => Nil
-    case Comp(s1, op, s2) => Nil
-    case CJump(comp, l1, l2) => Nil
+  def inout(f:L2Function): List[InstuctionInOutSet] = {
+    val (head::rest) = inout((f.name :: f.body).map(InstuctionInOutSet(_, Set[X](), Set[X]())))
+    val newHead = head.copy(in = head.in - ebx - edi -esi)
+    newHead :: rest
+  }
 
-    case Return => Nil // for now
+  def inout(acc:List[InstuctionInOutSet]): List[InstuctionInOutSet] = {
+    def in(iios:InstuctionInOutSet) = gen(iios.i) union (iios.out -- kill(iios.i))
+    val next = acc.foldRight((List[InstuctionInOutSet](), Set[X]())){
+      case (iios, (acc, lastIn)) => {
+        val newIn = in(iios)
+        (InstuctionInOutSet(iios.i, newIn, lastIn) :: acc, newIn)
+      }
+    }._1
+    if(next == acc) acc else inout(next)
   }
 }
-
-/**
- * From page 60 in lecture notes 4. Gen and kill with ret and call handling.
- *
- *                  gen           kill
- 1:              ()            (ebx edi esi)
-    :f
- 2:              (edx)         (x2)
-    (x2 <- edx)
- 3:              (x2)          (x2)
-    (x2 *= x2)
- 4:              (x2)          (2x2)
-    (2x2 <- x2)
- 5:              (2x2)         (2x2)
-    (2x2 *= 2)
- 6:              (edx)         (3x)
-    (3x <- edx)
- 7:              (3x)          (3x)
-    (3x *= 3)
- 8:              (2x2)         (eax)
-    (eax <- 2x2)
- 9:              (3x eax)      (eax)
-    (eax += 3x)
-10:              (eax)         (eax)
-    (eax += 4)
-11:              (ebx edi esi) ()
-    (return)
-
- */
-
-
-/**
-  case class Call(s:S) extends Instruction
-  case class L2Function(name: LabelDeclaration, body: List[Instruction])
- */
