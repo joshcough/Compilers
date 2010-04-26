@@ -273,4 +273,22 @@ class LivenessTest extends L2ParserTest {
     assert(interference === expected)
   }
 
+  test("legit graph coloring"){
+    val code = """
+ (((x2 <- edx)
+ (x2 *= x2)
+ (2x2 <- x2)
+ (2x2 *= 2)
+ (3x <- edx)
+ (3x *= 3)
+ (eax <- 2x2)
+ (eax += 3x)
+ (eax += 4)
+ (return)))
+"""
+    val interference = buildInterferenceSet(inout(code))
+    println(RegisterColorGraph.base.addInterference(interference).color)
+    //TODO assert!
+  }
+
 }

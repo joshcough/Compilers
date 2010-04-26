@@ -51,7 +51,7 @@ class BiDirectionalGraphTests extends FunSuite {
     assert(g.contains(x -> eax))
   }
 
-  import java.awt.Color._
+  import RegisterColorGraph._
 
   test("simple color graph"){
     val g = BiDirectionalGraph((eax, GRAY) -> (ebx -> GRAY))
@@ -60,7 +60,7 @@ class BiDirectionalGraphTests extends FunSuite {
   }
 
   test("replace in simple color graph"){
-    val g = BiDirectionalGraph((eax, GRAY) -> (ebx -> GRAY)).replace((eax,GRAY), (eax, GREEN))
+    val g = BiDirectionalGraph[(X, Color)]((eax, GRAY) -> (ebx -> GRAY)).replace((eax,GRAY), (eax, GREEN))
     assert(g.contains((eax, GREEN) -> (ebx -> GRAY)))
     assert(g.contains((ebx, GRAY) -> (eax -> GREEN)))
   }

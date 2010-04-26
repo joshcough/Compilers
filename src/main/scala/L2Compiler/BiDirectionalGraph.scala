@@ -22,12 +22,17 @@ case class BiDirectionalGraph[T](connections:Set[(T,T)]){
   })
 }
 
-
-import java.awt.Color
-import java.awt.Color._
 import L2AST._
 
 object RegisterColorGraph{
+  case class Color(name:String)
+  object RED extends Color("Red")
+  object GREEN extends Color("Green")
+  object BLUE extends Color("Blue")
+  object YELLOW extends Color("Yellow")
+  object CYAN extends Color("Cyan")
+  object MAGENTA extends Color("Magenta")
+  object GRAY extends Color("Gray")
   type ColoredNode = (X, Color)
   val colors = List(RED,GREEN,BLUE,YELLOW,CYAN,MAGENTA)
   def base: RegisterColorGraph = {
@@ -53,6 +58,16 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
   // inserts the new item as GRAY
   def connect(itemNotInGraph:X, itemInGraph:X): RegisterColorGraph = {
     RegisterColorGraph(data + ((itemInGraph -> GRAY) -> (itemInGraph -> colorOf(itemInGraph))))
+  }
+  def member_?(x:X) = data.find(n => n._1._1 == x).isDefined
+  def connected_?(x1:X, x2:X) = data.find(n => n._1._1 == x1 && n._2._1 == x2).isDefined
+  def addInterference(connections:Set[(X,X)]): RegisterColorGraph = connections.toList match {
+    case Nil => this
+    case (x1,x2)::xs => {
+      val x1Color = if(member_?(x1)) colorOf(x1) else GRAY
+      val x2Color = if(member_?(x2)) colorOf(x2) else GRAY
+      RegisterColorGraph(data + ((x1 -> x1Color -> (x2 -> x2Color)))).addInterference(xs.toSet)
+    }
   }
   def color: Option[RegisterColorGraph] = {
     def isGray(node:ColoredNode) = node._2 == GRAY
