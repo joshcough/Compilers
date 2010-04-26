@@ -72,4 +72,12 @@ trait Liveness {
     }._1
     if(next == acc) acc else inout(next)
   }
+
+  def buildInterferenceSet(iioss: List[InstuctionInOutSet]): Set[(X,X)] = {
+    val ins = iioss.map(_.in)
+    val outs = iioss.map(_.out)
+    val in_interference = ins.flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
+    val out_interference = ins.flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
+    in_interference ++ out_interference
+  }
 }

@@ -4,9 +4,13 @@ import L2AST._
 
 class LivenessTest extends L2ParserTest {
   val liveness = new Liveness{}
-  import liveness.InstuctionInOutSet
+  import liveness._
   def inout(code:String) = liveness.inout(parseProgram(code).main)
-
+  def interferingVariables(code:String) = buildInterferenceSet(inout(code)).filter{
+    case (x:Variable,y:Variable) => true
+    case _ => false
+  }
+  
   test("test from lecture notes") {
     val code = """
  (((x2 <- edx)
@@ -221,4 +225,52 @@ class LivenessTest extends L2ParserTest {
         Set(ebx, edi, esi),
         Set())))
   }
+
+  test("interference 1"){
+    val code = """
+ (((x2 <- edx)
+ (x2 *= x2)
+ (2x2 <- x2)
+ (2x2 *= 2)
+ (3x <- edx)
+ (3x *= 3)
+ (eax <- 2x2)
+ (eax += 3x)
+ (eax += 4)
+ (return)))
+"""
+    assert(interferingVariables(code) ===
+            Set((Variable("3x"),Variable("2x2")), (Variable("2x2"),Variable("3x"))))
+  }
+
+  test("interference 2"){
+        val code = """
+ (((z1 <- ebx)
+ (z2 <- edi)
+ (z3 <- esi)
+ (in <- edx)
+ (call :g)
+ (edx <- in)
+ (g-ans <- eax)
+ (call :h)
+ (eax += g-ans)
+ (ebx <- z1)
+ (edi <- z2)
+ (esi <- z3)
+ (return)))
+"""
+    val interference = interferingVariables(code)
+    val expected = Set((Variable("z1"),Variable("z2")), (Variable("z2"),Variable("z1")),
+        (Variable("g-ans"),Variable("z2")), (Variable("z2"),Variable("g-ans")),
+        (Variable("z2"),Variable("in")), (Variable("in"),Variable("z2")),
+        (Variable("g-ans"),Variable("z1")), (Variable("z1"),Variable("g-ans")),
+        (Variable("z3"),Variable("z1")), (Variable("z1"),Variable("z3")),
+        (Variable("in"),Variable("z1")), (Variable("z1"),Variable("in")),
+        (Variable("z3"),Variable("z2")), (Variable("z2"),Variable("z3")),
+        (Variable("z3"),Variable("g-ans")), (Variable("g-ans"),Variable("z3")),
+        (Variable("z3"),Variable("in")), (Variable("in"),Variable("z3"))
+        )
+    assert(interference === expected)
+  }
+
 }
