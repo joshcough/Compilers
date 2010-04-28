@@ -62,6 +62,10 @@ trait Liveness {
     val newHead = head.copy(in = head.in - ebx - edi -esi)
     newHead :: rest
   }
+  
+  def inoutHack(ins:List[Instruction]): List[InstuctionInOutSet] = {
+    inout(ins.map(InstuctionInOutSet(_, Set[X](), Set[X]())))
+  }
   def inout(acc:List[InstuctionInOutSet]): List[InstuctionInOutSet] = {
     def in(iios:InstuctionInOutSet) = gen(iios.i) union (iios.out -- kill(iios.i))
     val next = acc.foldRight((List[InstuctionInOutSet](), Set[X]())){

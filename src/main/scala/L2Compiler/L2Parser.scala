@@ -12,9 +12,11 @@ trait L2Parser extends Parser[L2] {
 
   def parseMain(exp: List[Any]) = L2Function(LabelDeclaration(Label("main")), exp map parseInstruction)
   def parseFunction(exp: Any): L2Function = exp match {
-    case (l:Symbol) :: xs => L2Function(LabelDeclaration(parseLabel(l.toString)), xs map parseInstruction)
+    case (l:Symbol) :: xs => L2Function(LabelDeclaration(parseLabel(l.toString)), parseInstructionList(xs))
     case _ => error("bad function: " + exp)
   }
+
+  def parseInstructionList(xs: List[Any]) = xs map parseInstruction
 
   def parseInstruction(expr: Any): Instruction = expr match {
     // TODO: had to put this here because of a serious compiler bug. investigate.

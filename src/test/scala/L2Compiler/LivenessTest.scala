@@ -7,9 +7,24 @@ class LivenessTest extends L2CompilerTest {
 
   import compiler._
 
+  test("from homework"){
+    // should result in:
+    // ((in (eax) (eax x)) (out (eax x) ()))
+    val code = "((x <- 1) (eax += x)) x -4 s"
+    assert(inout(code) === List(
+      InstuctionInOutSet(
+        Assignment(Variable("x"),Num(1)),
+          Set(eax),
+          Set(eax, Variable("x"))),
+      InstuctionInOutSet(
+        Increment(eax,Variable("x")),
+          Set(eax, Variable("x")),
+          Set())))
+  }
+
   test("test from lecture notes") {
     val code = """
- (((x2 <- edx)
+ ((x2 <- edx)
  (x2 *= x2)
  (2x2 <- x2)
  (2x2 *= 2)
@@ -18,16 +33,16 @@ class LivenessTest extends L2CompilerTest {
  (eax <- 2x2)
  (eax += 3x)
  (eax += 4)
- (return)))
+ (return))
 """
     assert(inout(code) ===
     List(
-      // :main
-      //  (edx)   (ebx edi edx esi)
-      InstuctionInOutSet(
-        LabelDeclaration(Label("main")),
-          Set(edx),
-          Set(edx, edi, esi, ebx)),
+//      // :main
+//      //  (edx)   (ebx edi edx esi)
+//      InstuctionInOutSet(
+//        LabelDeclaration(Label("main")),
+//          Set(edx),
+//          Set(edx, edi, esi, ebx)),
       // (x2 <- edx)
       // (ebx edi edx esi)     (ebx edi edx esi x2)
       InstuctionInOutSet(
@@ -79,23 +94,24 @@ class LivenessTest extends L2CompilerTest {
       // (ebx edi esi)         ()
       InstuctionInOutSet(Return,
         Set(ebx, edi, esi),Set())))
+
   }
 
   test("call"){
  val code = """
-(((in <- edx)
+((in <- edx)
  (call :g)
  (edx <- in)
  (g-ans <- eax)
  (call :h)
  (eax += g-ans)
- (return)))"""
+ (return))"""
     assert(inout(code) === List(
-      // :f
-      // (edx)                   (ebx edi edx esi)
-      InstuctionInOutSet(LabelDeclaration(Label("main")),
-        Set(edx),
-        Set(edx, edi, esi, ebx)),
+//      // :f
+//      // (edx)                   (ebx edi edx esi)
+//      InstuctionInOutSet(LabelDeclaration(Label("main")),
+//        Set(edx),
+//        Set(edx, edi, esi, ebx)),
       // (in <- edx)
       // (ebx edi edx esi)       (ebx edi esi in)
       InstuctionInOutSet(Assignment(Variable("in"),edx),
@@ -135,7 +151,7 @@ class LivenessTest extends L2CompilerTest {
 
   test("more"){
     val code = """
- (((z1 <- ebx)
+ ((z1 <- ebx)
  (z2 <- edi)
  (z3 <- esi)
  (in <- edx)
@@ -147,14 +163,14 @@ class LivenessTest extends L2CompilerTest {
  (ebx <- z1)
  (edi <- z2)
  (esi <- z3)
- (return)))
+ (return))
 """
     assert(inout(code) === List(
-      // :main
-      //    (edx)                (ebx edi edx esi)
-      InstuctionInOutSet(LabelDeclaration(Label("main")),
-        Set(edx),
-        Set(ebx, edi, esi, edx)),
+//      // :main
+//      //    (edx)                (ebx edi edx esi)
+//      InstuctionInOutSet(LabelDeclaration(Label("main")),
+//        Set(edx),
+//        Set(ebx, edi, esi, edx)),
       // (z1 <- ebx)
       //    (ebx edi edx esi)    (edi edx esi z1)
       InstuctionInOutSet(Assignment(Variable("z1"),ebx),
@@ -224,7 +240,7 @@ class LivenessTest extends L2CompilerTest {
 
   test("interference 1"){
     val code = """
- (((x2 <- edx)
+ ((x2 <- edx)
  (x2 *= x2)
  (2x2 <- x2)
  (2x2 *= 2)
@@ -233,7 +249,7 @@ class LivenessTest extends L2CompilerTest {
  (eax <- 2x2)
  (eax += 3x)
  (eax += 4)
- (return)))
+ (return))
 """
     assert(interferingVariables(code) ===
             Set((Variable("3x"),Variable("2x2")), (Variable("2x2"),Variable("3x"))))
@@ -241,7 +257,7 @@ class LivenessTest extends L2CompilerTest {
 
   test("interference 2"){
         val code = """
- (((z1 <- ebx)
+ ((z1 <- ebx)
  (z2 <- edi)
  (z3 <- esi)
  (in <- edx)
@@ -253,7 +269,7 @@ class LivenessTest extends L2CompilerTest {
  (ebx <- z1)
  (edi <- z2)
  (esi <- z3)
- (return)))
+ (return))
 """
     val interference = interferingVariables(code)
     val expected = Set((Variable("z1"),Variable("z2")), (Variable("z2"),Variable("z1")),
@@ -271,7 +287,7 @@ class LivenessTest extends L2CompilerTest {
 
   test("legit graph coloring"){
     val code = """
- (((x2 <- edx)
+ ((x2 <- edx)
  (x2 *= x2)
  (2x2 <- x2)
  (2x2 *= 2)
@@ -280,7 +296,7 @@ class LivenessTest extends L2CompilerTest {
  (eax <- 2x2)
  (eax += 3x)
  (eax += 4)
- (return)))
+ (return))
 """
     // this must be colorable.
     val coloredGraph = attemptToColor(code).get
@@ -291,13 +307,13 @@ class LivenessTest extends L2CompilerTest {
 
   test("uncolorable"){
     val code = """
-            ((((mem ebp -4) <- edx)
+            (((mem ebp -4) <- edx)
             (call :g)
             (edx <- (mem ebp -4))
             (g-ans <- eax)
             (call :h)
             (eax += g-ans)
-            (return)))"""
+            (return))"""
     println(inout(code))
     //println(attemptToColor(code))
   }

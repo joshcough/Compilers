@@ -9,6 +9,7 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite{
   import compiler._
 
   def parseProgram(s:String) = parse(read(s))
+  def parseInstructionListThing(s:String) = parseInstructionList(read(s).asInstanceOf[List[Any]])
 
   def testParseSExpr(t: (Any, L2)){
     test(t._1 + " => " + t._2){ assert(parse(t._1) === t._2) }
@@ -29,7 +30,7 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite{
     }
   }
 
-  def inout(code:String) = compiler.inout(parseProgram(code).main)
+  def inout(code:String) = compiler.inoutHack(parseInstructionListThing(code))
   def interferingVariables(code:String) = buildInterferenceSet(inout(code)).filter{
     case (x:Variable,y:Variable) => true
     case _ => false
@@ -45,4 +46,8 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite{
     //println(newProgram)
     assert(newProgram.body === expected.toList)
   }
+
+
+  //((x <- 1) (eax += x)) x -4 s
+  
 }
