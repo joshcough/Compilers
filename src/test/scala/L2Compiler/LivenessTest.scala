@@ -1,6 +1,7 @@
 package L2Compiler
 
 import L2AST._
+import RegisterColorGraph._
 
 class LivenessTest extends L2ParserTest {
   val liveness = new Liveness{}
@@ -286,9 +287,28 @@ class LivenessTest extends L2ParserTest {
  (eax += 4)
  (return)))
 """
-    val interference = buildInterferenceSet(inout(code))
-    println(RegisterColorGraph.base.addInterference(interference).color)
-    //TODO assert!
+    // this must be colorable.
+    val coloredGraph = attemptToColor(code).get
+    assert(coloredGraph.colorOf(Variable("x2")) === RED)
+    assert(coloredGraph.colorOf(Variable("2x2")) === RED)
+    assert(coloredGraph.colorOf(Variable("3x")) === GREEN)
+  }
+
+  test("uncolorable"){
+    val code = """
+            ((((mem ebp -4) <- edx)
+            (call :g)
+            (edx <- (mem ebp -4))
+            (g-ans <- eax)
+            (call :h)
+            (eax += g-ans)
+            (return)))"""
+    println(inout(code))
+    //println(attemptToColor(code))
+  }
+
+  def attemptToColor(code:String) = {
+    RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(code))).color
   }
 
 }

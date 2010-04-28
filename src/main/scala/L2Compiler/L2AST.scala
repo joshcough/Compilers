@@ -5,12 +5,12 @@ object L2AST {
   object L2{ def apply(main: L2Function): L2 = L2(main, Nil) }
   case class L2(main: L2Function, funs:List[L2Function])
 
-  trait Instruction
-  trait S extends Instruction
+  sealed trait Instruction
+  sealed trait S extends Instruction
   case class Num(n: Int) extends S
   case class Label(l: String) extends S
   case class LabelDeclaration(l: Label) extends Instruction
-  trait X extends S
+  sealed trait X extends S
   case class Variable(val name: String) extends X
   abstract class Register(val name: String) extends X
   object XRegister {

@@ -110,7 +110,7 @@ trait L2Parser extends Parser[L2] {
       // (eax <- (allocate s s))
       case ('eax, '<-, List('allocate, s, i:Int)) => Allocate(parseNumOrX(s), Num(i))
       //(cx <- s cmp s)
-      //TODO!!! can any var at all get this? used to be just cx
+      //TODO!!! can any var at all get this? used to be just cx - yes, but now handle in interference graph.
       case (cx:Symbol, '<-, (s1: Any, cmp: Symbol, s2: Any)) =>
         Assignment(parseX(cx), parseComp(s1, cmp, s2))
       case _ => error("bad assignment statement")
