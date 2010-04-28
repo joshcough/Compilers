@@ -2,13 +2,7 @@ package L2Compiler
 
 import L2Compiler.L2AST._
 
-class SpillTests extends L2ParserTest {
-  def spill(code:String) = new Spill{}.spill(Variable("x"), -4, "s_", parseProgram(code).main)
-  def testSpill(code:String, expected: Instruction*) = test(code){
-    val newProgram = spill(code)
-    //println(newProgram)
-    assert(newProgram.body === expected.toList)
-  }
+class SpillTests extends L2CompilerTest {
 
   /**
      *(((x <- 1) (eax += x))) x -4 s

@@ -3,15 +3,10 @@ package L2Compiler
 import L2AST._
 import RegisterColorGraph._
 
-class LivenessTest extends L2ParserTest {
-  val liveness = new Liveness{}
-  import liveness._
-  def inout(code:String) = liveness.inout(parseProgram(code).main)
-  def interferingVariables(code:String) = buildInterferenceSet(inout(code)).filter{
-    case (x:Variable,y:Variable) => true
-    case _ => false
-  }
-  
+class LivenessTest extends L2CompilerTest {
+
+  import compiler._
+
   test("test from lecture notes") {
     val code = """
  (((x2 <- edx)
@@ -307,8 +302,5 @@ class LivenessTest extends L2ParserTest {
     //println(attemptToColor(code))
   }
 
-  def attemptToColor(code:String) = {
-    RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(code))).color
-  }
 
 }

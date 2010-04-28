@@ -2,7 +2,7 @@ package L2Compiler
 
 import L2AST._
 
-class ParseProgramsTest extends L2ParserTest{
+class ParseProgramsTest extends L2CompilerTest{
   testParse("(((eax <- 7)))" ->
           L2(L2Function(LabelDeclaration(Label("main")),
              List(Assignment(eax, Num(7)))))
@@ -37,7 +37,7 @@ class ParseProgramsTest extends L2ParserTest{
   )
 }
 
-class ParsePrimitivesTest extends L2ParserTest {
+class ParsePrimitivesTest extends L2CompilerTest {
   testParseInstruction("eax" -> eax)
   testParseInstruction("ebx" -> ebx)
   testParseInstruction("ecx" -> ecx)
@@ -51,7 +51,7 @@ class ParsePrimitivesTest extends L2ParserTest {
   testParseInstruction("eex" -> Variable("eex"))
 }
 
-class ParseAssignmentsTest extends L2ParserTest {
+class ParseAssignmentsTest extends L2CompilerTest {
   // simple register writes
   testParseInstruction("(eax <- 7)" -> Assignment(eax, Num(7)))
   testParseInstruction("(eax <- ebx)" -> Assignment(eax, ebx))
@@ -88,7 +88,7 @@ class ParseAssignmentsTest extends L2ParserTest {
   testParseInstruction("(ebx <- eax < eex)" -> Assignment(ebx, Comp(eax, LessThan, Variable("eex"))))
 }
 
-class ParseMathTest extends L2ParserTest {
+class ParseMathTest extends L2CompilerTest {
   testParseInstruction("(eax += 7)" -> Increment(eax, Num(7)))
   testParseInstruction("(eax -= ebx)" -> Decrement(eax, ebx))
   testParseInstruction("(ebx *= eax)" -> Multiply(ebx, eax))
@@ -102,7 +102,7 @@ class ParseMathTest extends L2ParserTest {
   testParseInstruction("(edx &= 9)" -> BitwiseAnd(edx, Num(9)))
 }
 
-class ParseCJumpTest extends L2ParserTest {
+class ParseCJumpTest extends L2CompilerTest {
   testParseInstruction("(cjump eax = eax :true :false)" ->
           CJump(Comp(eax, EqualTo, eax), Label("true"), Label("false")))
   testParseInstruction("(cjump eax < ebx :true :false)" ->
@@ -117,39 +117,11 @@ class ParseCJumpTest extends L2ParserTest {
           CJump(Comp(Num(2), LessThanOrEqualTo, Variable("efx")), Label("true"), Label("false")))
 }
 
-class ParseOtherStuffTest extends L2ParserTest {
+class ParseOtherStuffTest extends L2CompilerTest {
   testParseInstruction("(goto ebx)" -> Goto(ebx))
   testParseInstruction("(goto :label)" -> Goto(Label("label")))
   testParseInstruction("(call :func)" -> Call(Label("func")))
   testParseInstruction("(call eax)" -> Call(eax))
   testParseInstruction("(return)" -> Return)
   testParseInstructionError("(goto 7)" -> "unexpected token: List('goto, 7)")
-}
-
-abstract class L2ParserTest extends org.scalatest.FunSuite{
-  val compiler = new L2Compiler{
-    def generateCode(ast:L2):String = error("not needed for parsing")
-  }
-  import compiler._
-
-  def parseProgram(s:String) = parse(read(s))
-
-  def testParseSExpr(t: (Any, L2)){
-    test(t._1 + " => " + t._2){ assert(parse(t._1) === t._2) }
-  }
-
-  def testParse(t: (String, L2)): Unit = {
-    test(t._1 + " => " + t._2){ assert(parseProgram(t._1) === t._2) }
-  }
-
-  def testParseInstruction(t: (String, Instruction)): Unit = {
-    test(t._1 + " => " + t._2){ assert(parseInstruction(read(t._1)) === t._2) }
-  }
-
-  def testParseInstructionError(t: (String, String)): Unit  = {
-    test(t._1 + " => " + t._2){
-      val ex = intercept[Exception] { parseInstruction(read(t._1)) }
-      assert(ex.getMessage === t._2)
-    }
-  }
 }

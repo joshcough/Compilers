@@ -9,7 +9,7 @@ trait L2CodeGenerator{
   def generateCode(ast:L2):String
 }
 
-trait L2Compiler extends L2Parser with L2CodeGenerator { 
+trait L2Compiler extends L2Parser with L2CodeGenerator with Liveness with Spill { 
   def stripComments(code:String) = code.split("\n").map(s => s.takeWhile(_!=';').trim).mkString(" ")
   def read(code:String): Any = new Reader().read(stripComments(code))
   def compileFile(filename:String) = compile(new File(filename).read)
