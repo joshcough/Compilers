@@ -5,14 +5,26 @@ object L2AST {
   object L2{ def apply(main: L2Function): L2 = L2(main, Nil) }
   case class L2(main: L2Function, funs:List[L2Function])
 
-  sealed trait Instruction
+  sealed trait Instruction{
+    def toL2Code: String
+  }
   sealed trait S extends Instruction
-  case class Num(n: Int) extends S
-  case class Label(l: String) extends S
-  case class LabelDeclaration(l: Label) extends Instruction
+  case class Num(n: Int) extends S {
+    def toL2Code: String = n.toString
+  }
+  case class Label(l: String) extends S {
+    def toL2Code: String = ":" + l
+  } 
+  case class LabelDeclaration(l: Label) extends Instruction {
+    def toL2Code: String = l.toL2Code
+  }
   sealed trait X extends S
-  case class Variable(val name: String) extends X
-  abstract class Register(val name: String) extends X
+  case class Variable(val name: String) extends X {
+    def toL2Code: String = name
+  }
+  abstract class Register(val name: String) extends X {
+    def toL2Code: String = name        
+  }
   object XRegister {
     def apply(s: Symbol): Option[XRegister] = s match {
       case 'esi => Some(esi)
@@ -44,7 +56,9 @@ object L2AST {
   object edx extends CXRegister("edx")
   object ebx extends CXRegister("ebx")
 
-  case class Comp(s1: S, op: CompOp, s2: S) extends Instruction
+  case class Comp(s1: S, op: CompOp, s2: S) extends Instruction {
+    def toL2Code: String = s1.toL2Code + " " + op.op + " " + s2.toL2Code
+  }
   sealed abstract case class CompOp(op: String){
     def apply(x:Int, y:Int): Boolean
   }
@@ -58,22 +72,54 @@ object L2AST {
     def apply(x:Int, y:Int) = x == y
   }
 
-  case class Allocate(n:S, init: S) extends Instruction
-  case class Assignment(x: X, s: Instruction) extends Instruction
-  case class Increment(x: X, s: S) extends Instruction
-  case class Decrement(x: X, s: S) extends Instruction
-  case class Multiply(x: X, s: S) extends Instruction
-  case class LeftShift(x: X, s:S) extends Instruction
-  case class RightShift(x: X, s:S) extends Instruction
-  case class BitwiseAnd(x: X, s:S) extends Instruction
-  case class MemLoc(basePointer: X, offset: Num) extends Instruction
-  case class MemRead(loc: MemLoc) extends Instruction
-  case class MemWrite(loc: MemLoc, e: S) extends Instruction
-  case class Print(e: S) extends Instruction
+  case class Allocate(n:S, init: S) extends Instruction {
+    def toL2Code: String = "(allocate " + n.toL2Code + " " + init.toL2Code + ")"        
+  }
+  case class Assignment(x: X, s: Instruction) extends Instruction {
+    def toL2Code: String = "(" + x.toL2Code + " <- " + s.toL2Code + ")"
+  }
+  case class Increment(x: X, s: S) extends Instruction {
+    def toL2Code: String = "(" + x.toL2Code + " += " + s.toL2Code + ")"
+  }
+  case class Decrement(x: X, s: S) extends Instruction {
+    def toL2Code: String = "(" + x.toL2Code + " -= " + s.toL2Code + ")"
+  }
+  case class Multiply(x: X, s: S) extends Instruction {
+    def toL2Code: String = "(" + x.toL2Code + " *= " + s.toL2Code + ")"
+  }
+  case class LeftShift(x: X, s:S) extends Instruction {
+    def toL2Code: String = "(" + x.toL2Code + " <<= " + s.toL2Code + ")"
+  }
+  case class RightShift(x: X, s:S) extends Instruction {
+    def toL2Code: String = "(" + x.toL2Code + " >>= " + s.toL2Code + ")"
+  }
+  case class BitwiseAnd(x: X, s:S) extends Instruction {
+    def toL2Code: String = "(" + x.toL2Code + " &= " + s.toL2Code + ")"
+  }
+  case class MemLoc(basePointer: X, offset: Num) extends Instruction {
+    def toL2Code: String = "(mem" + basePointer.toL2Code + offset.toL2Code + ")"
+  }
+  case class MemRead(loc: MemLoc) extends Instruction {
+    def toL2Code: String = loc.toL2Code
+  }
+  case class MemWrite(loc: MemLoc, e: S) extends Instruction {
+    def toL2Code: String = "(" + loc.toL2Code + " <- " + e.toL2Code + ")"
+  }
+  case class Print(e: S) extends Instruction {
+    def toL2Code: String = "(print " + e.toL2Code + ")"        
+  }
   // TODO: check if interpreter allows (goto num) and (goto register)
-  case class Goto(s: S) extends Instruction
-  case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction
-  case class Call(s:S) extends Instruction
-  case object Return extends Instruction
+  case class Goto(s: S) extends Instruction {
+    def toL2Code: String = "(goto " + s.toL2Code + ")"
+  }
+  case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction {
+    def toL2Code: String = "(cjump " + comp.toL2Code + " " + l1.toL2Code  + " " + l2.toL2Code + ")"
+  }
+  case class Call(s:S) extends Instruction {
+    def toL2Code: String = "(call " + s.toL2Code + ")"
+  }
+  case object Return extends Instruction {
+    def toL2Code: String = "(return)"        
+  }
   case class L2Function(name: LabelDeclaration, body: List[Instruction])
 }
