@@ -127,6 +127,4 @@ class SpillTests extends L2CompilerTest {
     CJump(Comp(Variable("y"),LessThan,Variable("s_0")),Label("l1"),Label("l2")))
   testSpill("((cjump y < y :l1 :l2))",
     CJump(Comp(Variable("y"),LessThan,Variable("y")),Label("l1"),Label("l2")))
-
-
 }
