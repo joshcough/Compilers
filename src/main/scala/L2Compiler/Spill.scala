@@ -51,7 +51,10 @@ trait Spill {
         // y <- z
         else List(ass)
       }
-      case ass@Assignment(v1:Variable, read@MemRead(MemLoc(v2:Variable, off))) => {
+      case ass@Assignment(r:Register, v2:Variable) => {
+        if( v2 == spillVar ) List(Assignment(r, readSpillVar)) else List(ass)
+      }
+      case ass@Assignment(v1, read@MemRead(MemLoc(v2:Variable, off))) => {
         if(v1 == v2 && v1 == spillVar) {
           // funny case, x <- (mem x n) where x is spill var
           // (s_0 <- (mem ebp stackOffset))
@@ -83,7 +86,7 @@ trait Spill {
         }
         else List(ass)
       }
-      case ass@Assignment(v:Variable, comp@Comp(x1, op, x2)) => {
+      case ass@Assignment(v, comp@Comp(x1, op, x2)) => {
         if( v == spillVar ){
           // (x <- x < x) ... wtf
           // (s_0 <- (mem ebp stackOffset))

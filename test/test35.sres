@@ -1,0 +1,8 @@
+((in <- edx)
+(call :g)
+(edx <- in)
+((mem ebp -4) <- eax)
+(call :h)
+(s_0 <- (mem ebp -4))
+(eax += s_0)
+(return))

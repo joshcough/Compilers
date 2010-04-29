@@ -1,0 +1,7 @@
+((in <- edx)
+ (call :g)
+ (edx <- in)
+ (g-ans <- eax)
+ (call :h)
+ (eax += g-ans)
+ (return)) g-ans -4 s_
