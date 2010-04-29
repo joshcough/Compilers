@@ -157,7 +157,6 @@ trait Spill {
           else List(ass)
         }
       }
-
       // finally, instruction must be x <- register or x <- constant
       // if v is not spillVar, we just end up returning the entire thing. 
       case ass@Assignment(v:Variable, s:S) if(v == spillVar) =>
@@ -171,88 +170,71 @@ trait Spill {
       case rs@RightShift(x:X, s:S) => biop(x,s,rs,RightShift(_,_))
       case bwa@BitwiseAnd(x:X, s:S) => biop(x,s,bwa,BitwiseAnd(_,_))
 
-      //case _ => List(i)
+      // (eax <- (print x))
+      case Print(s:S) if s == spillVar => {
+        val newVar0 = newVar()
+        List(Assignment(newVar0, readSpillVar),Print(newVar0))
+      }
+      case Goto(s:S) if s == spillVar => {
+        val newVar0 = newVar()
+        List(Assignment(newVar0, readSpillVar),Goto(newVar0))
+      }
+      case Call(s:S) if s == spillVar => {
+        val newVar0 = newVar()
+        List(Assignment(newVar0, readSpillVar),Call(newVar0))
+      }
+      case mw@MemWrite(loc@MemLoc(base, off), s) => {
+        // ((mem x 4) <- x)
+        // (s_0 <- (mem ebp stackOffset))
+        // ((mem s_0 4) <- s_0)
+        if(base == spillVar && s == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), newVar0))
+        }
+        // ((mem x 4) <- y)
+        // (s_0 <- (mem ebp stackOffset))
+        // ((mem s_0 4) <- y)
+        else if(base == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), s))
+        }
+        // ((mem y 4) <- x)
+        // (s_0 <- (mem ebp stackOffset))
+        // ((mem y 4) <- s_0)
+        else if(s == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), s))
+        }
+        else List(mw)
+      }
+      case a@Allocate(n, init) => {
+        //(eax <- (allocate x x))
+        if(n == spillVar && init == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),Allocate(newVar0, newVar0))
+        }
+        //(eax <- (allocate x i))
+        else if(n == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),Allocate(newVar0, init))
+        }
+        //(eax <- (allocate n x))
+        else if(init == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),Allocate(n, newVar0))
+        }
+        else List(a)
+      }
+      //case CJump => error("todo")
+      case _ => List(i)
     }
     ins.flatMap(spill)
   }
 }
 
 /**
- * package L2Compiler
-
-object L2AST {
-
-  object L2{ def apply(main: L2Function): L2 = L2(main, Nil) }
-  case class L2(main: L2Function, funs:List[L2Function])
-
-  sealed trait Instruction{
-    def toL2Code: String
-  }
-  sealed trait S extends Instruction
-  case class Num(n: Int) extends S {
-    def toL2Code: String = n.toString
-  }
-  case class Label(l: String) extends S {
-    def toL2Code: String = ":" + l
-  }
-  case class LabelDeclaration(l: Label) extends Instruction {
-    def toL2Code: String = l.toL2Code
-  }
-  sealed trait X extends S
-  case class Variable(val name: String) extends X {
-    def toL2Code: String = name
-  }
-  abstract class Register(val name: String) extends X {
-    def toL2Code: String = name
-  }
-  case class Comp(s1: S, op: CompOp, s2: S) extends Instruction {
-    def toL2Code: String = s1.toL2Code + " " + op.op + " " + s2.toL2Code
-  }
-  sealed abstract case class CompOp(op: String){
-    def apply(x:Int, y:Int): Boolean
-  }
-  object LessThan extends CompOp("<"){
-    def apply(x:Int, y:Int) = x < y
-  }
-  object LessThanOrEqualTo extends CompOp("<="){
-    def apply(x:Int, y:Int) = x <= y
-  }
-  object EqualTo extends CompOp("="){
-    def apply(x:Int, y:Int) = x == y
-  }
-
-  case class Allocate(n:S, init: S) extends Instruction {
-    def toL2Code: String = "(allocate " + n.toL2Code + " " + init.toL2Code + ")"
-  }
-  case class Assignment(x: X, s: Instruction) extends Instruction {
-    def toL2Code: String = "(" + x.toL2Code + " <- " + s.toL2Code + ")"
-  }
-  case class MemLoc(basePointer: X, offset: Num) extends Instruction {
-    def toL2Code: String = "(mem " + basePointer.toL2Code + " " + offset.toL2Code + ")"
-  }
-  case class MemRead(loc: MemLoc) extends Instruction {
-    def toL2Code: String = loc.toL2Code
-  }
-  case class MemWrite(loc: MemLoc, e: S) extends Instruction {
-    def toL2Code: String = "(" + loc.toL2Code + " <- " + e.toL2Code + ")"
-  }
-  case class Print(e: S) extends Instruction {
-    def toL2Code: String = "(print " + e.toL2Code + ")"
-  }
-  // TODO: check if interpreter allows (goto num) and (goto register)
-  case class Goto(s: S) extends Instruction {
-    def toL2Code: String = "(goto " + s.toL2Code + ")"
-  }
   case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction {
     def toL2Code: String = "(cjump " + comp.toL2Code + " " + l1.toL2Code  + " " + l2.toL2Code + ")"
   }
-  case class Call(s:S) extends Instruction {
-    def toL2Code: String = "(call " + s.toL2Code + ")"
-  }
-  case object Return extends Instruction {
-    def toL2Code: String = "(return)"
-  }
-  case class L2Function(name: LabelDeclaration, body: List[Instruction])
 }
-
  */

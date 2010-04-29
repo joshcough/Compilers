@@ -110,7 +110,7 @@ trait L2Parser extends Parser[L2] {
       case ('eax, '<-, List('print, s)) => Print(parseNumOrX(s))
       // ;; and one to allocate & initialize some space
       // (eax <- (allocate s s))
-      case ('eax, '<-, List('allocate, s, i:Int)) => Allocate(parseNumOrX(s), Num(i))
+      case ('eax, '<-, List('allocate, s1, s2)) => Allocate(parseNumOrX(s1), parseNumOrX(s2))
       //(cx <- s cmp s)
       //TODO!!! can any var at all get this? used to be just cx - yes, but now handle in interference graph.
       case (cx:Symbol, '<-, (s1: Any, cmp: Symbol, s2: Any)) =>
