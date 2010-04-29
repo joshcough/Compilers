@@ -78,7 +78,7 @@ object L2AST {
   }
 
   case class Allocate(n:S, init: S) extends Instruction {
-    def toL2Code: String = "(allocate " + n.toL2Code + " " + init.toL2Code + ")"        
+    def toL2Code: String = "(eax <- (allocate " + n.toL2Code + " " + init.toL2Code + "))"
   }
   case class Assignment(x: X, s: Instruction) extends Instruction {
     def toL2Code: String = "(" + x.toL2Code + " <- " + s.toL2Code + ")"
