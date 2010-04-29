@@ -4,6 +4,13 @@ import L2Compiler.L2AST._
 
 class SpillTests extends L2CompilerTest {
 
+  def testSpill(code:String, expected: Instruction*) = test(code){
+    val newProgramList =
+      compiler.spill(Variable("x"), -4, "s_", compiler.parseInstructionListThing(code))
+    //println(newProgram)
+    assert(newProgramList === expected.toList)
+  }
+
   /**
      *(((x <- 1) (eax += x))) x -4 s
      *   (((mem ebp -4) <- 1)

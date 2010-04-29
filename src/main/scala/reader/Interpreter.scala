@@ -8,12 +8,14 @@ trait Parser[E] {
   def parse(exp: Any): E
 }
 
-class Reader {
+trait Reader {
 
-  def read(s:String): Any = read(s.toStream)
+  def read(s:String): Any = read(stripComments(s).toStream)
+  def stripComments(code:String) = code.split("\n").map(s => s.takeWhile(_!=';').trim).mkString(" ")
 
   def read(stream:Stream[Char]): Any = readWithRest(stream)._1
 
+  def readWithRest(s:String): (Any, Stream[Char]) = readWithRest(s.toStream)
   def readWithRest(stream:Stream[Char]): (Any, Stream[Char]) = {
 
     def readList(stream: Stream[Char], acc: List[Any]): (List[Any], Stream[Char]) = {

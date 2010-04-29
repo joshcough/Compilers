@@ -14,10 +14,8 @@ object Dir {
 
 import Dir._
 
-trait L1Compiler extends L1Parser with L1CodeGenerator { 
-  def stripComments(code:String) = code.split("\n").map(s => s.takeWhile(_!=';').trim).mkString(" ")
-  def read(code:String): Any = new Reader().read(stripComments(code))
-
+trait L1Compiler extends Reader with L1Parser with L1CodeGenerator {
+  
   def compileFile(filename:String) {
     compileCodeAndWriteOutput(new File(filename).read, filename)
   }

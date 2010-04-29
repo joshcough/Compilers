@@ -97,7 +97,7 @@ object L2AST {
     def toL2Code: String = "(" + x.toL2Code + " &= " + s.toL2Code + ")"
   }
   case class MemLoc(basePointer: X, offset: Num) extends Instruction {
-    def toL2Code: String = "(mem" + basePointer.toL2Code + offset.toL2Code + ")"
+    def toL2Code: String = "(mem " + basePointer.toL2Code + " " + offset.toL2Code + ")"
   }
   case class MemRead(loc: MemLoc) extends Instruction {
     def toL2Code: String = loc.toL2Code
