@@ -3,7 +3,7 @@ package L2Compiler
 import L2Compiler.L2AST._
 
 trait Spill {
-  def spill(spillVar:Variable, stackOffset: Int, spillPrefix:String, fun: L2Function): L2Function = {
+  def spill(spillVar:Variable, stackOffset: Int, spillPrefix:String, ins: List[Instruction]): List[Instruction] = {
     val memLoc = MemLoc(ebp, Num(stackOffset))
     val readSpillVar = MemRead(memLoc)
     def biop(x:X, s:S, default: Instruction, f: (X,S) => Instruction): List[Instruction] = {
@@ -86,6 +86,6 @@ trait Spill {
 
       case _ => List(i)
     }
-    new L2Function(fun.name, fun.body.flatMap(spill))
+    ins.flatMap(spill)
   }
 }

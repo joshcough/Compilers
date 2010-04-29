@@ -40,11 +40,11 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite{
     RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(code))).color
   }
 
-  def spill(code:String) = compiler.spill(Variable("x"), -4, "s_", parseProgram(code).main)
+  def spill(code:String) = compiler.spill(Variable("x"), -4, "s_", parseInstructionListThing(code))
   def testSpill(code:String, expected: Instruction*) = test(code){
-    val newProgram = spill(code)
+    val newProgramList = spill(code)
     //println(newProgram)
-    assert(newProgram.body === expected.toList)
+    assert(newProgramList === expected.toList)
   }
 
 
