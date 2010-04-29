@@ -7,7 +7,6 @@ class SpillTests extends L2CompilerTest {
   def testSpill(code:String, expected: Instruction*) = test(code){
     val newProgramList =
       compiler.spill(Variable("x"), -4, "s_", compiler.parseInstructionListThing(code))
-    //println(newProgram)
     assert(newProgramList === expected.toList)
   }
 
@@ -116,4 +115,18 @@ class SpillTests extends L2CompilerTest {
     Allocate(Variable("s_0"),Variable("s_0")),
     Assignment(Variable("s_1"),MemRead(MemLoc(ebp,Num(-4)))),
     Allocate(Variable("s_1"),Variable("s_1")))
+
+  testSpill("((cjump x < x :l1 :l2))",
+    Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
+    CJump(Comp(Variable("s_0"),LessThan,Variable("s_0")),Label("l1"),Label("l2")))
+  testSpill("((cjump x < y :l1 :l2))",
+    Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
+    CJump(Comp(Variable("s_0"),LessThan,Variable("y")),Label("l1"),Label("l2")))
+  testSpill("((cjump y < x :l1 :l2))",
+    Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
+    CJump(Comp(Variable("y"),LessThan,Variable("s_0")),Label("l1"),Label("l2")))
+  testSpill("((cjump y < y :l1 :l2))",
+    CJump(Comp(Variable("y"),LessThan,Variable("y")),Label("l1"),Label("l2")))
+
+
 }

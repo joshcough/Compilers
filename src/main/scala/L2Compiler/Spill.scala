@@ -225,16 +225,26 @@ trait Spill {
         }
         else List(a)
       }
-      //case CJump => error("todo")
+      case cj@CJump(Comp(s1, op, s2), l1, l2) => {
+        // (cjump x < x :l1 :l2)
+        if(s1 == spillVar && s2 == spillVar) {
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar), CJump(Comp(newVar0, op, newVar0), l1, l2))
+        }
+        // (cjump x < y  :l1 :l2)
+        else if(s1 == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar), CJump(Comp(newVar0, op, s2), l1, l2))
+        }
+        // (cjump y < x :l1 :l2)
+        else if(s2 == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar), CJump(Comp(s1, op, newVar0), l1, l2))
+        }
+        else List(cj)
+      }
       case _ => List(i)
     }
     ins.flatMap(spill)
   }
 }
-
-/**
-  case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction {
-    def toL2Code: String = "(cjump " + comp.toL2Code + " " + l1.toL2Code  + " " + l2.toL2Code + ")"
-  }
-}
- */
