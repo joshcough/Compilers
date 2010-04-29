@@ -20,9 +20,11 @@ object L2AST {
   }
   sealed trait X extends S
   case class Variable(val name: String) extends X {
+    override def toString = "Variable(\"" + name + "\")"
     def toL2Code: String = name
   }
   abstract class Register(val name: String) extends X {
+    override def toString = name
     def toL2Code: String = name        
   }
   object XRegister {
@@ -63,12 +65,15 @@ object L2AST {
     def apply(x:Int, y:Int): Boolean
   }
   object LessThan extends CompOp("<"){
+    override def toString = "LessThan"
     def apply(x:Int, y:Int) = x < y
   }
   object LessThanOrEqualTo extends CompOp("<="){
+    override def toString = "LessThanOrEqualTo"
     def apply(x:Int, y:Int) = x <= y
   }
   object EqualTo extends CompOp("="){
+    override def toString = "EqualTo"
     def apply(x:Int, y:Int) = x == y
   }
 

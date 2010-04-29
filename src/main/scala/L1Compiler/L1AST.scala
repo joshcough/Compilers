@@ -10,7 +10,9 @@ object L1AST {
   case class Num(n: Int) extends S
   case class Label(l: String) extends S
   case class LabelDeclaration(l: Label) extends Instruction
-  abstract class Register(val name: String) extends S
+  abstract class Register(val name: String) extends S{
+    override def toString = name
+  }
   object XRegister {
     def apply(s: Symbol): Option[XRegister] = s match {
       case 'esi => Some(esi)
