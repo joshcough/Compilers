@@ -17,15 +17,12 @@ trait L2Compiler extends Reader with L2Parser with L2CodeGenerator with Liveness
   def parseProgram(s:String) = parse(read(s))
   def parseInstructionListThing(s:String): List[Instruction] = parseInstructionList(read(s).asInstanceOf[List[Any]])
   def parseInstructionListThing(a:List[Any]): List[Instruction] = parseInstructionList(a)
-  def inout(code:String) = inoutHack(parseInstructionListThing(code))
-  def inoutHack(ins:List[Instruction]): List[InstuctionInOutSet] = {
-    inout(ins.map(InstuctionInOutSet(_, Set[X](), Set[X]())))
-  }
+  def inout(code:String):List[InstuctionInOutSet] = inout(parse(read(code)).main)
   def interferingVariables(code:String) = buildInterferenceSet(inout(code)).filter{
     case (x:Variable,y:Variable) => true
     case _ => false
   }
-  def attemptToColor(code:String) = RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(code))).color
+  def attemptToColor(code:String) =
+    RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(code))).color
   def spill(code:String):List[Instruction] = spill(Variable("x"), -4, "s_", parseInstructionListThing(code))
-
 }

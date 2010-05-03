@@ -65,8 +65,8 @@ trait Liveness {
     val newHead = head.copy(in = head.in - ebx - edi -esi)
     newHead :: rest
   }
-  
-  def inout(acc:List[InstuctionInOutSet]): List[InstuctionInOutSet] = {
+
+  private def inout(acc:List[InstuctionInOutSet]): List[InstuctionInOutSet] = {
     def in(iios:InstuctionInOutSet) = gen(iios.i) union (iios.out -- kill(iios.i))
     val next = acc.foldRight((List[InstuctionInOutSet](), Set[X]())){
       case (iios, (acc, lastIn)) => {
@@ -78,7 +78,8 @@ trait Liveness {
   }
 
   /**
-   * TODO cx <- instructions, plus possibly some more stuff.
+   * TODO - not yet using the kill set as part of interference!
+   * TODO cx <- instructions
    */
   def buildInterferenceSet(iioss: List[InstuctionInOutSet]): Set[(X,X)] = {
     val ins = iioss.map(_.in)
@@ -89,8 +90,6 @@ trait Liveness {
   }
 
   def liveRanges(iioss: List[InstuctionInOutSet]): List[List[LiveRange]] = {
-    val inSets = iioss.map(_.in)
-    val variablesAndRegisters = inSets.foldLeft(Set[X]()){ case (acc, s) => acc union s}
     def liveRanges(x: X, sets: List[List[X]]): List[LiveRange] = sets match {
       case Nil => Nil
       case y::ys => {
@@ -100,6 +99,8 @@ trait Liveness {
         } else liveRanges(x, sets.dropWhile(! _.contains(x)))
       }
     }
+    val inSets = iioss.map(_.in)
+    val variablesAndRegisters = inSets.foldLeft(Set[X]()){ case (acc, s) => acc union s}
     for(x <- variablesAndRegisters.toList) yield liveRanges(x, inSets.map(_.toList))
   }
 }

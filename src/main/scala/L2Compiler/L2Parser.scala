@@ -8,7 +8,7 @@ trait L2Parser extends Parser[L2] {
 
   def parse(exp:Any): L2 = exp match {
     case (main:List[_]) :: funcs => L2(parseMain(main), funcs map parseFunction)
-    case _ => error("bad L2 program")
+    case _ => println(exp); error("bad L2 program")
   }
 
   def parseMain(exp: List[Any]) = Func(LabelDeclaration(Label("main")), exp map parseInstruction)
