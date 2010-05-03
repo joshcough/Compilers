@@ -3,6 +3,7 @@ package L2Compiler
 import java.io.File
 import reader.Reader
 import L2AST._
+import L1Compiler.L1AST._
 import L1Compiler.FileHelper._
 
 trait L2CodeGenerator{

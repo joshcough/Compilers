@@ -1,6 +1,8 @@
 package L2Compiler
 
 import L2AST._
+import L1Compiler.L1AST._
+
 
 //((x <- 1) (eax += x)) x -4 s
 abstract class L2CompilerTest extends org.scalatest.FunSuite{

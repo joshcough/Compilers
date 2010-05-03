@@ -1,6 +1,9 @@
 package L2Compiler
 
 import L2AST._
+import L1Compiler.L1AST._
+
+case class LiveRange(x:X, range:Int)
 
 // ebx, esi, and edi are callee / function save
 // eax, edx, and ecx are caller / application save / arguments (in that order)
@@ -57,7 +60,7 @@ trait Liveness {
       out(n) = ∪{in(m) | m ∈ succ(n)}
     */
   case class InstuctionInOutSet(i:Instruction, in:Set[X], out:Set[X])
-  def inout(f:L2Function): List[InstuctionInOutSet] = {
+  def inout(f:Func): List[InstuctionInOutSet] = {
     val (head::rest) = inout((f.name :: f.body).map(InstuctionInOutSet(_, Set[X](), Set[X]())))
     val newHead = head.copy(in = head.in - ebx - edi -esi)
     newHead :: rest
@@ -74,6 +77,9 @@ trait Liveness {
     if(next == acc) acc else inout(next)
   }
 
+  /**
+   * TODO cx <- instructions, plus possibly some more stuff.
+   */
   def buildInterferenceSet(iioss: List[InstuctionInOutSet]): Set[(X,X)] = {
     val ins = iioss.map(_.in)
     val outs = iioss.map(_.out)
@@ -81,4 +87,20 @@ trait Liveness {
     val out_interference = ins.flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
     in_interference ++ out_interference
   }
+
+  def liveRanges(iioss: List[InstuctionInOutSet]): List[List[LiveRange]] = {
+    val inSets = iioss.map(_.in)
+    val variablesAndRegisters = inSets.foldLeft(Set[X]()){ case (acc, s) => acc union s}
+    def liveRanges(x: X, sets: List[List[X]]): List[LiveRange] = sets match {
+      case Nil => Nil
+      case y::ys => {
+        if(y contains x) {
+          val (h,t) = sets.span(_.contains(x))
+          LiveRange(x, h.size) :: liveRanges (x, t)
+        } else liveRanges(x, sets.dropWhile(! _.contains(x)))
+      }
+    }
+    for(x <- variablesAndRegisters.toList) yield liveRanges(x, inSets.map(_.toList))
+  }
 }
+

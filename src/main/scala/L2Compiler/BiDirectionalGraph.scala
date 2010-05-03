@@ -23,6 +23,7 @@ case class BiDirectionalGraph[T](connections:Set[(T,T)]){
 }
 
 import L2AST._
+import L1Compiler.L1AST._
 
 object RegisterColorGraph{
   case class Color(name:String)

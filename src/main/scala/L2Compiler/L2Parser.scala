@@ -2,6 +2,7 @@ package L2Compiler
 
 import reader._
 import L2AST._
+import L1Compiler.L1AST._
 
 trait L2Parser extends Parser[L2] {
 
@@ -10,9 +11,9 @@ trait L2Parser extends Parser[L2] {
     case _ => error("bad L2 program")
   }
 
-  def parseMain(exp: List[Any]) = L2Function(LabelDeclaration(Label("main")), exp map parseInstruction)
-  def parseFunction(exp: Any): L2Function = exp match {
-    case (l:Symbol) :: xs => L2Function(LabelDeclaration(parseLabel(l.toString)), parseInstructionList(xs))
+  def parseMain(exp: List[Any]) = Func(LabelDeclaration(Label("main")), exp map parseInstruction)
+  def parseFunction(exp: Any): Func = exp match {
+    case (l:Symbol) :: xs => Func(LabelDeclaration(parseLabel(l.toString)), parseInstructionList(xs))
     case _ => error("bad function: " + exp)
   }
 

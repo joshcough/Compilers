@@ -10,9 +10,9 @@ trait L1Parser extends Parser[L1] {
     case _ => error("bad L1 program")
   }
 
-  def parseMain(exp: List[Any]) = L1Function(LabelDeclaration(Label("main")), exp map parseInstruction)
-  def parseFunction(exp: Any): L1Function = exp match {
-    case (l:Symbol) :: xs => L1Function(LabelDeclaration(parseLabel(l.toString)), xs map parseInstruction)
+  def parseMain(exp: List[Any]) = Func(LabelDeclaration(Label("main")), exp map parseInstruction)
+  def parseFunction(exp: Any): Func = exp match {
+    case (l:Symbol) :: xs => Func(LabelDeclaration(parseLabel(l.toString)), xs map parseInstruction)
     case _ => error("bad function: " + exp)
   }
 
@@ -97,11 +97,11 @@ trait L1Parser extends Parser[L1] {
   def parseAssignment(x: Any, s: Any) = {
     (x, '<-, s) match {
       //(x <- s) ;; assign to a register
-      case (x: Symbol, '<-, i: Int) => RegisterAssignment(parseRegister(x), Num(i))
-      case (x: Symbol, '<-, s: Symbol) => RegisterAssignment(parseRegister(x), parseLabelOrRegister(s))
+      case (x: Symbol, '<-, i: Int) => Assignment(parseRegister(x), Num(i))
+      case (x: Symbol, '<-, s: Symbol) => Assignment(parseRegister(x), parseLabelOrRegister(s))
       // | (x <- (mem x n4))   ;; read from memory @ x+n4
       case (x1: Symbol, '<-, List('mem, x2:Symbol, n4:Int)) =>
-        RegisterAssignment(parseRegister(x1), MemRead(MemLoc(parseRegister(x2), Num(n4))))
+        Assignment(parseRegister(x1), MemRead(MemLoc(parseRegister(x2), Num(n4))))
       // | ((mem x n4) <- s)   ;; update memory @ x+n4
       case (List('mem, x:Symbol, n4:Int), '<-, x2) =>
         MemWrite(MemLoc(parseRegister(x), Num(n4)), parseNumOrRegister(x2))
@@ -114,7 +114,7 @@ trait L1Parser extends Parser[L1] {
       case ('eax, '<-, List('allocate, s1, s2)) => Allocate(parseNumOrRegister(s1), parseNumOrRegister(s2))
       //(cx <- s cmp s)
       case (cx:Symbol, '<-, (s1: Any, cmp: Symbol, s2: Any)) =>
-        RegisterAssignment(parseCxRegister(cx), parseComp(s1, cmp, s2))
+        Assignment(parseCxRegister(cx), parseComp(s1, cmp, s2))
       case _ => error("bad assignment statement")
     }
   }

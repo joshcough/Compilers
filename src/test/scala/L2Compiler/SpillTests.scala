@@ -1,6 +1,7 @@
 package L2Compiler
 
-import L2Compiler.L2AST._
+import L2AST._
+import L1Compiler.L1AST._
 
 class SpillTests extends L2CompilerTest {
 

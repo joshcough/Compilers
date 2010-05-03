@@ -2,6 +2,7 @@ package L2Compiler
 
 import org.scalatest.FunSuite
 import L2AST._
+import L1Compiler.L1AST._
 
 class BiDirectionalGraphTests extends FunSuite {
   test("create graph"){

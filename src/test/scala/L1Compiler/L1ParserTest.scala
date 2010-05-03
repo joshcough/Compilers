@@ -4,34 +4,34 @@ import L1AST._
 
 class ParseProgramsTest extends L1ParserTest{
   testParse("(((eax <- 7)))" ->
-          L1(L1Function(LabelDeclaration(Label("main")),
-             List(RegisterAssignment(eax, Num(7)))))
+          L1(Func(LabelDeclaration(Label("main")),
+             List(Assignment(eax, Num(7)))))
   )
 
   testParse("(((eax <- 7) (ebx <- 8)))" ->
-          L1(L1Function(LabelDeclaration(Label("main")),
-             List(RegisterAssignment(eax, Num(7)),
-               RegisterAssignment(ebx, Num(8)))))
+          L1(Func(LabelDeclaration(Label("main")),
+             List(Assignment(eax, Num(7)),
+               Assignment(ebx, Num(8)))))
   )
 
   testParse("(((eax <- 7)) (:fun2 (ecx <- 8)))" ->
-          L1(L1Function(LabelDeclaration(Label("main")),
-             List(RegisterAssignment(eax, Num(7)))),
-            List(L1Function(LabelDeclaration(Label("fun2")),
-             List(RegisterAssignment(ecx, Num(8))))))
+          L1(Func(LabelDeclaration(Label("main")),
+             List(Assignment(eax, Num(7)))),
+            List(Func(LabelDeclaration(Label("fun2")),
+             List(Assignment(ecx, Num(8))))))
   )
 
   testParse("(((eax <- 7)) (:fun2 (ecx <- 8)) (:fun3 (edx <- 10)))" ->
-          L1(L1Function(LabelDeclaration(Label("main")),
-             List(RegisterAssignment(eax, Num(7)))),
+          L1(Func(LabelDeclaration(Label("main")),
+             List(Assignment(eax, Num(7)))),
             List(
-              L1Function(LabelDeclaration(Label("fun2")), List(RegisterAssignment(ecx, Num(8)))),
-              L1Function(LabelDeclaration(Label("fun3")), List(RegisterAssignment(edx, Num(10))))))
+              Func(LabelDeclaration(Label("fun2")), List(Assignment(ecx, Num(8)))),
+              Func(LabelDeclaration(Label("fun3")), List(Assignment(edx, Num(10))))))
   )
   testParse("""((
   :aint_gonna_happen
   :terminate))""" ->
-          L1(L1Function(LabelDeclaration(Label("main")),
+          L1(Func(LabelDeclaration(Label("main")),
              List(LabelDeclaration(Label("aint_gonna_happen")),
                   LabelDeclaration(Label("terminate")))))
   )
@@ -53,15 +53,15 @@ class ParsePrimitivesTest extends L1ParserTest {
 
 class ParseAssignmentsTest extends L1ParserTest {
   // simple register writes
-  testParseInstruction("(eax <- 7)" -> RegisterAssignment(eax, Num(7)))
-  testParseInstruction("(eax <- ebx)" -> RegisterAssignment(eax, ebx))
-  testParseInstruction("(ebx <- eax)" -> RegisterAssignment(ebx, eax))
+  testParseInstruction("(eax <- 7)" -> Assignment(eax, Num(7)))
+  testParseInstruction("(eax <- ebx)" -> Assignment(eax, ebx))
+  testParseInstruction("(ebx <- eax)" -> Assignment(ebx, eax))
 
   // mem read
   testParseInstruction("(eax <- (mem eax 4))" ->
-          RegisterAssignment(eax, MemRead(MemLoc(eax, Num(4)))))
+          Assignment(eax, MemRead(MemLoc(eax, Num(4)))))
   testParseInstruction("(eax <- (mem ebx 4))" ->
-          RegisterAssignment(eax, MemRead(MemLoc(ebx, Num(4)))))
+          Assignment(eax, MemRead(MemLoc(ebx, Num(4)))))
 
   // mem write
   testParseInstruction("((mem ebx 4) <- 7)" -> MemWrite(MemLoc(ebx, Num(4)), Num(7)))
@@ -81,10 +81,10 @@ class ParseAssignmentsTest extends L1ParserTest {
 
   // cmp
   //(cx <- s cmp s)
-  testParseInstruction("(ebx <- 1 < 2)" -> RegisterAssignment(ebx, Comp(Num(1), LessThan, Num(2))))
-  testParseInstruction("(ebx <- ebx < 2)" -> RegisterAssignment(ebx, Comp(ebx, LessThan, Num(2))))
-  testParseInstruction("(ebx <- eax < 2)" -> RegisterAssignment(ebx, Comp(eax, LessThan, Num(2))))
-  testParseInstruction("(ebx <- eax < edx)" -> RegisterAssignment(ebx, Comp(eax, LessThan, edx)))
+  testParseInstruction("(ebx <- 1 < 2)" -> Assignment(ebx, Comp(Num(1), LessThan, Num(2))))
+  testParseInstruction("(ebx <- ebx < 2)" -> Assignment(ebx, Comp(ebx, LessThan, Num(2))))
+  testParseInstruction("(ebx <- eax < 2)" -> Assignment(ebx, Comp(eax, LessThan, Num(2))))
+  testParseInstruction("(ebx <- eax < edx)" -> Assignment(ebx, Comp(eax, LessThan, edx)))
   testParseInstructionError("(ebx <- eax < eex)" -> "eex is an invalid register")
 }
 

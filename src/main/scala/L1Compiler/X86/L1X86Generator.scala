@@ -40,7 +40,7 @@ trait L1X86Generator extends L1Compiler.L1CodeGenerator{
             X86Inst.dump(footer)
   }
   
-  private def generateMain(main: L1Function):List[X86Inst] = {
+  private def generateMain(main: Func):List[X86Inst] = {
     val footer:List[X86Inst] =
       X86Inst(
         "popl %ebp",
@@ -52,7 +52,7 @@ trait L1X86Generator extends L1Compiler.L1CodeGenerator{
     main.body.flatMap(genInst) ::: footer
   }
 
-  private def generateFunc(f: L1Function):List[X86Inst] = {
+  private def generateFunc(f: Func):List[X86Inst] = {
     genInst(f.name) ::: f.body.flatMap(genInst)
   }
 
@@ -89,15 +89,15 @@ trait L1X86Generator extends L1Compiler.L1CodeGenerator{
       case r:Register => X86Inst("%" + r.name)
       case MemLoc(r, off) => X86Inst(off.n + "(" + genInst(r).head + ")")
 
-      case RegisterAssignment(cx:CXRegister, c@Comp(r:Register,op,s:S)) => {
+      case Assignment(cx:CXRegister, c@Comp(r:Register,op,s:S)) => {
         X86Inst(
           tri("cmp", s, r),
           setInstruction(op) + " " + cx.low8,
           triple("movzbl", cx.low8, cx))
       }
-      case RegisterAssignment(cx:CXRegister, c@Comp(n1:Num,op,n2:Num)) =>
+      case Assignment(cx:CXRegister, c@Comp(n1:Num,op,n2:Num)) =>
         X86Inst(triple("movl", "$" + (if(op(n1.n, n2.n)) 1 else 0), cx))
-      case RegisterAssignment(r1, s) => X86Inst(tri("movl", s, r1))
+      case Assignment(r1, s) => X86Inst(tri("movl", s, r1))
 
       case MemWrite(loc, s) => X86Inst(tri("movl", s, loc))
       case MemRead(loc) => genInst(loc)

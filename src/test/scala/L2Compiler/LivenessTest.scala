@@ -1,7 +1,8 @@
 package L2Compiler
 
-import L2AST._
 import RegisterColorGraph._
+import L1Compiler.L1AST._
+import L2AST._
 
 class LivenessTest extends L2CompilerTest {
 
@@ -319,4 +320,52 @@ class LivenessTest extends L2CompilerTest {
   }
 
 
+  test("some live ranges"){
+    val code = """
+ ((z1 <- ebx)
+ (z2 <- edi)
+ (z3 <- esi)
+ (in <- edx)
+ (call :g)
+ (edx <- in)
+ (g-ans <- eax)
+ (call :h)
+ (eax += g-ans)
+ (ebx <- z1)
+ (edi <- z2)
+ (esi <- z3)
+ (return))
+"""
+    assert(liveRanges(inout(code)) === List(
+      List(LiveRange(Variable("z2"),9)),
+      List(LiveRange(eax,2), LiveRange(eax,1)),
+      List(LiveRange(Variable("in"),2)),
+      List(LiveRange(edi,2), LiveRange(edi,2)),
+      List(LiveRange(edx,4)),
+      List(LiveRange(esi,3), LiveRange(esi,1)),
+      List(LiveRange(Variable("g-ans"),2)),
+      List(LiveRange(Variable("z1"),9)),
+      List(LiveRange(Variable("z3"),9)),
+      List(LiveRange(ebx,1), LiveRange(ebx,3))))
+
+  }
+
+  test("choose spill variable"){
+    val code = """
+ ((z1 <- ebx)
+ (z2 <- edi)
+ (z3 <- esi)
+ (in <- edx)
+ (call :g)
+ (edx <- in)
+ (g-ans <- eax)
+ (call :h)
+ (eax += g-ans)
+ (ebx <- z1)
+ (edi <- z2)
+ (esi <- z3)
+ (return))
+"""
+    assert(chooseSpillVar(liveRanges(inout(code))) === Some(Variable("z2")))
+  }
 }
