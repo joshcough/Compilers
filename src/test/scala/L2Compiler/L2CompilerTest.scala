@@ -8,7 +8,7 @@ import L1Compiler.L1AST._
 abstract class L2CompilerTest extends org.scalatest.FunSuite{
 
   val compiler = new L2Compiler{
-    def generateCode(ast:L2):String = error("TODO")
+    def generateCode(ast:L2):L1 = error("TODO")
   }
   import compiler._
 

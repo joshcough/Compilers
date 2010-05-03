@@ -6,13 +6,12 @@ import L2AST._
 import L1Compiler.L1AST._
 import L1Compiler.FileHelper._
 
-trait L2CodeGenerator{
-  def generateCode(ast:L2):String
-}
-
-trait L2Compiler extends Reader with L2Parser with L2CodeGenerator with Liveness with Spill {
+trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   def compileFile(filename:String) = compile(new File(filename).read)
-  def compile(code:String): String = generateCode(parse(read(code)))
+
+  def compile(code:String): L1 = {
+    val ast = parse(read(code))
+  }
 
   def parseProgram(s:String) = parse(read(s))
   def parseInstructionListThing(s:String): List[Instruction] = parseInstructionList(read(s).asInstanceOf[List[Any]])

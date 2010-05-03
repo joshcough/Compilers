@@ -1,5 +1,6 @@
 package L2Compiler
 
+import L1Compiler.L1AST._
 import L2Compiler.L2AST._
 import L1Compiler.FileHelper._
 import java.io.File
@@ -8,7 +9,7 @@ import java.io.File
 object HW2 {
 
   val compiler = new L2Compiler{
-    def generateCode(ast:L2):String = error("TODO")
+    def generateCode(ast:L2):L1 = error("TODO")
   }
   import compiler._
 
