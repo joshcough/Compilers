@@ -12,6 +12,13 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   def compile(code: String): L1 = {
     def color(f:Func) = RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(f))).color
 
+    def initialRewrite(f:Func) = {
+      val z1 = Assignment(Variable("z1"), ebx)
+      val z2 = Assignment(Variable("z2"), edi)
+      val z3 = Assignment(Variable("z3"), esi)
+      Func(f.name, z1 :: z1 :: z3 :: f.body)
+    }
+
     def colorCompletely(f: Func): (Func, RegisterColorGraph) = {
       def colorCompletely(f: Func, offset: Int): (Func, RegisterColorGraph) = {
         color(f) match {
@@ -25,7 +32,7 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
       colorCompletely(f, -4)
     }
     val ast = parseProgram(code)
-    val funsAndColors = (ast.main :: ast.funs).map(colorCompletely)
+    val funsAndColors = (ast.main :: ast.funs).map(f => colorCompletely(initialRewrite(f)))
     val elOneFunctions = funsAndColors.map {
       case (func, colorGraph) => colorGraph.replaceVarsWithRegisters(func)
     }
