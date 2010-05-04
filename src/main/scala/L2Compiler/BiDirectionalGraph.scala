@@ -87,4 +87,11 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
       }
     }
   }
+  def replaceVarsWithRegisters(f:Func): Func = {
+    Func(f.name, f.body.map(replaceVarsWithRegisters))
+  }
+
+  def replaceVarsWithRegisters(i:Instruction): Instruction = {
+    i
+  }
 }

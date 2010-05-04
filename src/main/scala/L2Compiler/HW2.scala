@@ -23,8 +23,8 @@ object HW2 {
   //  ((in (eax) (eax x)) (out (eax x) ()))
   def liveness(input:String){
     val res = inout(input)
-    val inSet = res.map(_.in).map(s => "(" + s.map(_.toL2Code).mkString(" ") + ")").mkString(" ")
-    val outSet = res.map(_.out).map(s => "(" + s.map(_.toL2Code).mkString(" ") + ")").mkString(" ")
+    val inSet = res.map(_.in).map(s => "(" + s.map(_.toCode).mkString(" ") + ")").mkString(" ")
+    val outSet = res.map(_.out).map(s => "(" + s.map(_.toCode).mkString(" ") + ")").mkString(" ")
     println("((in " + inSet + ") (out " + outSet + "))")
   }
   
@@ -38,6 +38,6 @@ object HW2 {
     var newProgram = compiler.spill(
       Variable(varToSpill.toString.drop(1)), offset.toString.toInt,
       prefix.toString.drop(1), parseInstructionListThing(program.asInstanceOf[List[Any]]))
-    println("(" + newProgram.map(_.toL2Code).mkString("\n") + ")")
+    println("(" + newProgram.map(_.toCode).mkString("\n") + ")")
   }
 }

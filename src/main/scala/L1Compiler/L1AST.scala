@@ -7,69 +7,69 @@ object L1AST extends Instructions with Registers with Comps {
   case class Func(name: LabelDeclaration, body: List[Instruction])
 
   case class Allocate(n:S, init: S) extends Instruction {
-    def toL2Code: String = "(eax <- (allocate " + n.toL2Code + " " + init.toL2Code + "))"
+    def toCode: String = "(eax <- (allocate " + n.toCode + " " + init.toCode + "))"
   }
   case class Assignment(x: X, s: Instruction) extends Instruction {
-    def toL2Code: String = "(" + x.toL2Code + " <- " + s.toL2Code + ")"
+    def toCode: String = "(" + x.toCode + " <- " + s.toCode + ")"
   }
   case class Increment(x: X, s: S) extends Instruction {
-    def toL2Code: String = "(" + x.toL2Code + " += " + s.toL2Code + ")"
+    def toCode: String = "(" + x.toCode + " += " + s.toCode + ")"
   }
   case class Decrement(x: X, s: S) extends Instruction {
-    def toL2Code: String = "(" + x.toL2Code + " -= " + s.toL2Code + ")"
+    def toCode: String = "(" + x.toCode + " -= " + s.toCode + ")"
   }
   case class Multiply(x: X, s: S) extends Instruction {
-    def toL2Code: String = "(" + x.toL2Code + " *= " + s.toL2Code + ")"
+    def toCode: String = "(" + x.toCode + " *= " + s.toCode + ")"
   }
   case class LeftShift(x: X, s:S) extends Instruction {
-    def toL2Code: String = "(" + x.toL2Code + " <<= " + s.toL2Code + ")"
+    def toCode: String = "(" + x.toCode + " <<= " + s.toCode + ")"
   }
   case class RightShift(x: X, s:S) extends Instruction {
-    def toL2Code: String = "(" + x.toL2Code + " >>= " + s.toL2Code + ")"
+    def toCode: String = "(" + x.toCode + " >>= " + s.toCode + ")"
   }
   case class BitwiseAnd(x: X, s:S) extends Instruction {
-    def toL2Code: String = "(" + x.toL2Code + " &= " + s.toL2Code + ")"
+    def toCode: String = "(" + x.toCode + " &= " + s.toCode + ")"
   }
   case class MemLoc(basePointer: X, offset: Num) extends Instruction {
-    def toL2Code: String = "(mem " + basePointer.toL2Code + " " + offset.toL2Code + ")"
+    def toCode: String = "(mem " + basePointer.toCode + " " + offset.toCode + ")"
   }
   case class MemRead(loc: MemLoc) extends Instruction {
-    def toL2Code: String = loc.toL2Code
+    def toCode: String = loc.toCode
   }
   case class MemWrite(loc: MemLoc, e: S) extends Instruction {
-    def toL2Code: String = "(" + loc.toL2Code + " <- " + e.toL2Code + ")"
+    def toCode: String = "(" + loc.toCode + " <- " + e.toCode + ")"
   }
   case class Print(e: S) extends Instruction {
-    def toL2Code: String = "(print " + e.toL2Code + ")"
+    def toCode: String = "(print " + e.toCode + ")"
   }
   // TODO: check if interpreter allows (goto num) and (goto register)
   case class Goto(s: S) extends Instruction {
-    def toL2Code: String = "(goto " + s.toL2Code + ")"
+    def toCode: String = "(goto " + s.toCode + ")"
   }
   case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction {
-    def toL2Code: String = "(cjump " + comp.toL2Code + " " + l1.toL2Code  + " " + l2.toL2Code + ")"
+    def toCode: String = "(cjump " + comp.toCode + " " + l1.toCode  + " " + l2.toCode + ")"
   }
   case class Call(s:S) extends Instruction {
-    def toL2Code: String = "(call " + s.toL2Code + ")"
+    def toCode: String = "(call " + s.toCode + ")"
   }
   case object Return extends Instruction {
-    def toL2Code: String = "(return)"
+    def toCode: String = "(return)"
   }
 }
 
 trait Instructions {
   trait Instruction{
-    def toL2Code: String
+    def toCode: String
   }
   trait S extends Instruction
   case class Num(n: Int) extends S {
-    def toL2Code: String = n.toString
+    def toCode: String = n.toString
   }
   case class Label(l: String) extends S {
-    def toL2Code: String = ":" + l
+    def toCode: String = ":" + l
   }
   case class LabelDeclaration(l: Label) extends Instruction {
-    def toL2Code: String = l.toL2Code
+    def toCode: String = l.toCode
   }
   trait X extends S
 }
@@ -77,7 +77,7 @@ trait Instructions {
 trait Registers extends Instructions {
   abstract class Register(val name: String) extends X {
     override def toString = name
-    def toL2Code: String = name
+    def toCode: String = name
   }
   object XRegister {
     def apply(s: Symbol): Option[XRegister] = s match {
@@ -113,7 +113,7 @@ trait Registers extends Instructions {
 
 trait Comps extends Instructions{
   case class Comp(s1: S, op: CompOp, s2: S) extends Instruction {
-    def toL2Code: String = s1.toL2Code + " " + op.op + " " + s2.toL2Code
+    def toCode: String = s1.toCode + " " + op.op + " " + s2.toCode
   }
   sealed abstract case class CompOp(op: String){
     def apply(x:Int, y:Int): Boolean

@@ -7,6 +7,6 @@ object L2AST {
 
   case class Variable(val name: String) extends X {
     override def toString = "Variable(\"" + name + "\")"
-    def toL2Code: String = name
+    def toCode: String = name
   }
 }
