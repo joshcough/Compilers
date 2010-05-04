@@ -30,7 +30,7 @@ object L1AST extends Instructions with Registers with Comps {
   case class BitwiseAnd(x: X, s:S) extends Instruction {
     def toCode: String = "(" + x.toCode + " &= " + s.toCode + ")"
   }
-  case class MemLoc(basePointer: X, offset: Num) extends Instruction {
+  case class MemLoc(basePointer: X, offset: S) extends Instruction {
     def toCode: String = "(mem " + basePointer.toCode + " " + offset.toCode + ")"
   }
   case class MemRead(loc: MemLoc) extends Instruction {
