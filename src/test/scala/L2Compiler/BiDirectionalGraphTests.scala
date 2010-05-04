@@ -3,6 +3,7 @@ package L2Compiler
 import org.scalatest.FunSuite
 import L2AST._
 import L1Compiler.L1AST._
+import RegisterColorGraph._
 
 class BiDirectionalGraphTests extends FunSuite {
   test("create graph"){
@@ -52,7 +53,6 @@ class BiDirectionalGraphTests extends FunSuite {
     assert(g.contains(x -> eax))
   }
 
-  import RegisterColorGraph._
 
   test("simple color graph"){
     val g = BiDirectionalGraph((eax, GRAY) -> (ebx -> GRAY))
@@ -87,11 +87,14 @@ class BiDirectionalGraphTests extends FunSuite {
       (eax, GRAY) -> (ebx -> GRAY),
       (eax, GRAY) -> (ecx -> GRAY),
       (ebx, GRAY) -> (ecx -> GRAY))).color.get
-    assert(g2.data.contains((eax, GREEN) -> (ebx -> RED)))
-    assert(g2.data.contains((eax, GREEN) -> (ecx -> BLUE)))
-    assert(g2.data.contains((ecx, BLUE) -> (eax -> GREEN)))
-    assert(g2.data.contains((ebx, RED) -> (ecx -> BLUE)))
-    assert(g2.data.contains((ecx, BLUE) -> (ebx -> RED)))
+
+    println(g2)
+
+    assert(g2.data.contains((eax, BLUE) -> (ebx -> RED)))
+    assert(g2.data.contains((eax, BLUE) -> (ecx -> GREEN)))
+    assert(g2.data.contains((ecx, GREEN) -> (eax -> BLUE)))
+    assert(g2.data.contains((ebx, RED) -> (ecx -> GREEN)))
+    assert(g2.data.contains((ecx, GREEN) -> (ebx -> RED)))
   }
 
   test("base register color graph"){

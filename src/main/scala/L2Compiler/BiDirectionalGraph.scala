@@ -93,11 +93,12 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
 
   // only exists to make the code shorter
   private def rep(i:Instruction): Instruction = replaceVarsWithRegisters(i)
-
   private def rep(x:X): X = x match {
     case v:Variable => colorOf(v).register
     case _ => x
   }
+  private def rep(loc:MemLoc): MemLoc = MemLoc(rep(loc.basePointer),loc.offset)
+  private def rep(c:Comp): Comp = Comp(rep(c.x1), c.op, rep(c.x2))
 
   def replaceVarsWithRegisters(i:Instruction): Instruction = i match {
     case Allocate(n, init) => Allocate(rep(n), rep(init))
@@ -108,14 +109,12 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
     case LeftShift(s1, s2) => LeftShift(rep(s1), rep(s2))
     case RightShift(s1, s2) => RightShift(rep(s1), rep(s2))
     case BitwiseAnd(s1, s2) => BitwiseAnd(rep(s1), rep(s2))
-    case MemLoc(basePointer, offset) => MemLoc(rep(basePointer),rep(offset))
     case MemRead(loc) => MemRead(rep(loc))
-    case MemWrite(loc, e) => MemRead(rep(loc), rep(e))
-    case Print(e) => Print(rep)
+    case MemWrite(loc, e) => MemWrite(rep(loc), rep(e))
+    case Print(s) => Print(rep(s))
     case Goto(s) => Goto(rep(s))
     case CJump(comp, l1, l2) => CJump(rep(comp), l1, l2)
     case Call(s) => Call(rep(s))
-    case Comp(s1, op, s2) => Comp(rep(s1), op, rep(s2))
     case _ => i
   }
 }

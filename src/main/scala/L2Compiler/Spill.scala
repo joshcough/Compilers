@@ -16,7 +16,7 @@ trait Spill {
       newVarCount += 1
       Variable(spillPrefix + newVarCount)
     }
-    def biop(x:X, s:S, default: Instruction, f: (X,S) => Instruction): List[Instruction] = {
+    def biop(x:X, s:X, default: Instruction, f: (X,X) => Instruction): List[Instruction] = {
       // (x += x)
       if(x == s && x == spillVar) {
         val newVar0 = newVar()
@@ -164,27 +164,27 @@ trait Spill {
       }
       // finally, instruction must be x <- register or x <- constant
       // if v is not spillVar, we just end up returning the entire thing. 
-      case ass@Assignment(v:Variable, s:S) if(v == spillVar) =>
+      case ass@Assignment(v:Variable, s:X) if(v == spillVar) =>
         List(MemWrite(memLoc, s))
 
       ///////////// Biop //////////////////
-      case mul@Multiply(x:X, s:S) => biop(x,s,mul,Multiply(_,_))
-      case inc@Increment(x:X, s:S) => biop(x,s,inc,Increment(_,_))
-      case dec@Decrement(x:X, s:S) => biop(x,s,dec,Decrement(_,_))
-      case ls@LeftShift(x:X, s:S) => biop(x,s,ls,LeftShift(_,_))
-      case rs@RightShift(x:X, s:S) => biop(x,s,rs,RightShift(_,_))
-      case bwa@BitwiseAnd(x:X, s:S) => biop(x,s,bwa,BitwiseAnd(_,_))
+      case mul@Multiply(x:X, s:X) => biop(x,s,mul,Multiply(_,_))
+      case inc@Increment(x:X, s:X) => biop(x,s,inc,Increment(_,_))
+      case dec@Decrement(x:X, s:X) => biop(x,s,dec,Decrement(_,_))
+      case ls@LeftShift(x:X, s:X) => biop(x,s,ls,LeftShift(_,_))
+      case rs@RightShift(x:X, s:X) => biop(x,s,rs,RightShift(_,_))
+      case bwa@BitwiseAnd(x:X, s:X) => biop(x,s,bwa,BitwiseAnd(_,_))
 
       // (eax <- (print x))
-      case Print(s:S) if s == spillVar => {
+      case Print(s:X) if s == spillVar => {
         val newVar0 = newVar()
         List(Assignment(newVar0, readSpillVar),Print(newVar0))
       }
-      case Goto(s:S) if s == spillVar => {
+      case Goto(s:X) if s == spillVar => {
         val newVar0 = newVar()
         List(Assignment(newVar0, readSpillVar),Goto(newVar0))
       }
-      case Call(s:S) if s == spillVar => {
+      case Call(s:X) if s == spillVar => {
         val newVar0 = newVar()
         List(Assignment(newVar0, readSpillVar),Call(newVar0))
       }

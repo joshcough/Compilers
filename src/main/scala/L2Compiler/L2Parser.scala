@@ -54,12 +54,12 @@ trait L2Parser extends Parser[L2] {
     case s: Symbol => parseLabelOrX(s)
   }
 
-  def parseNumOrX(exp:Any): S = exp match {
+  def parseNumOrX(exp:Any): X = exp match {
     case n: Int => Num(n)
     case s: Symbol => parseX(s)
   }
 
-  def parseLabelOrX(s: Symbol): S = {
+  def parseLabelOrX(s: Symbol): X = {
     if (s.toString.startsWith("':")) parseLabel(s.toString) else parseX(s)
   }
 
