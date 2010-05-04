@@ -88,8 +88,6 @@ class BiDirectionalGraphTests extends FunSuite {
       (eax, GRAY) -> (ecx -> GRAY),
       (ebx, GRAY) -> (ecx -> GRAY))).color.get
 
-    println(g2)
-
     assert(g2.data.contains((eax, BLUE) -> (ebx -> RED)))
     assert(g2.data.contains((eax, BLUE) -> (ecx -> GREEN)))
     assert(g2.data.contains((ecx, GREEN) -> (eax -> BLUE)))
