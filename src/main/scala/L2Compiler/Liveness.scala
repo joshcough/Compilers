@@ -28,7 +28,7 @@ trait Liveness {
       case MemLoc(bp, _) => Set(bp)
       case MemRead(loc) => gen(loc)
       case MemWrite(loc, s) => g(loc,s)
-      case Print(s) => gen(s) union Set(eax)
+      case Print(s) => gen(s)
       case Goto(s) => gen(s)
       case Call(s) => gen(s)
       case Return => Set(ebx, edi, esi)
@@ -63,7 +63,7 @@ trait Liveness {
   case class InstuctionInOutSet(i:Instruction, in:Set[X], out:Set[X])
   def inout(f:Func): List[InstuctionInOutSet] = {
     val (head::rest) = inout((f.name :: f.body).map(InstuctionInOutSet(_, Set[X](), Set[X]())))
-    val newHead = head.copy(in = head.in - ebx - edi -esi)
+    val newHead = head.copy(in = head.in - ebx - edi - esi)
     newHead :: rest
   }
 

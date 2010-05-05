@@ -89,9 +89,9 @@ trait L1X86Generator extends L1Compiler.L1CodeGenerator{
       case r:Register => X86Inst("%" + r.name)
       case MemLoc(r, off) => X86Inst(off.n + "(" + genInst(r).head + ")")
 
-      case Assignment(cx:CXRegister, c@Comp(r:Register,op,s:S)) => {
+      case Assignment(cx:CXRegister, c@Comp(r:Register,op,x:X)) => {
         X86Inst(
-          tri("cmp", s, r),
+          tri("cmp", x, r),
           setInstruction(op) + " " + cx.low8,
           triple("movzbl", cx.low8, cx))
       }
@@ -107,7 +107,7 @@ trait L1X86Generator extends L1Compiler.L1CodeGenerator{
       case RightShift(r, s) => X86Inst(tri("sarl", s, r))
       case LeftShift(r, s) => X86Inst(tri("sall", s, r))
       case BitwiseAnd(r, s) => X86Inst(tri("andl", s, r))
-      case Comp(s1:S, _, s2:S) => X86Inst(tri("cmpl", s2, s1))
+      case Comp(s1:X, _, s2:X) => X86Inst(tri("cmpl", s2, s1))
 
       case Print(s) =>
         X86Inst(

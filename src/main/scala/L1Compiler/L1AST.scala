@@ -3,8 +3,15 @@ package L1Compiler
 object L1AST extends Instructions with Registers with Comps {
 
   object L1{ def apply(main: Func): L1 = L1(main, Nil) }
-  case class L1(main: Func, funs:List[Func])
-  case class Func(name: LabelDeclaration, body: List[Instruction])
+  case class L1(main: Func, funs:List[Func]){
+    def toCode = "(" + main.toCode(false) + "\n" + funs.map(_.toCode(true)).mkString("\n") + ")"
+  }
+  case class Func(name: LabelDeclaration, body: List[Instruction]){
+    def toCode(printLabel:Boolean=true) = {
+      if(printLabel) "(" + name.l.toCode + "\n" + body.map(_.toCode).mkString("\n") + ")"
+      else "(" + body.map(_.toCode).mkString("\n") + ")"
+    }
+  }
 
   case class Allocate(n:X, init:X) extends Instruction {
     def toCode: String = "(eax <- (allocate " + n.toCode + " " + init.toCode + "))"
@@ -40,7 +47,7 @@ object L1AST extends Instructions with Registers with Comps {
     def toCode: String = "(" + loc.toCode + " <- " + x.toCode + ")"
   }
   case class Print(x:X) extends Instruction {
-    def toCode: String = "(print " + x.toCode + ")"
+    def toCode: String = "(eax <- (print " + x.toCode + "))"
   }
   // TODO: check if interpreter allows (goto num) and (goto register)
   case class Goto(x:X) extends Instruction {

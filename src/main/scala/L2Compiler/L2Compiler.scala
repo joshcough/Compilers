@@ -13,10 +13,13 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
     def color(f:Func) = RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(f))).color
 
     def initialRewrite(f:Func) = {
-      val z1 = Assignment(Variable("z1"), ebx)
-      val z2 = Assignment(Variable("z2"), edi)
-      val z3 = Assignment(Variable("z3"), esi)
-      Func(f.name, z1 :: z1 :: z3 :: f.body)
+      val z1In = Assignment(Variable("__z1"), ebx)
+      val z2In = Assignment(Variable("__z2"), edi)
+      val z3In = Assignment(Variable("__z3"), esi)
+      val z1Out = Assignment(ebx, Variable("__z1"))
+      val z2Out = Assignment(edi, Variable("__z2"))
+      val z3Out = Assignment(esi, Variable("__z3"))
+      Func(f.name, List(z1In,z2In,z3In) ::: f.body ::: List(z1Out,z2Out,z3Out))
     }
 
     def colorCompletely(f: Func): (Func, RegisterColorGraph) = {
@@ -34,7 +37,10 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
     val ast = parseProgram(code)
     val funsAndColors = (ast.main :: ast.funs).map(f => colorCompletely(initialRewrite(f)))
     val elOneFunctions = funsAndColors.map {
-      case (func, colorGraph) => colorGraph.replaceVarsWithRegisters(func)
+      case (func, colorGraph) => {
+        //println("color graph: " + colorGraph)
+        colorGraph.replaceVarsWithRegisters(func)
+      }
     }
     L1(elOneFunctions.head, elOneFunctions.tail)
   }

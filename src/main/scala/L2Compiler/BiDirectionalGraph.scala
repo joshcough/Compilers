@@ -55,7 +55,11 @@ object RegisterColorGraph{
 import RegisterColorGraph._
 
 case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
-  def colorOf(x:X): Color = data.find(_._1._1 == x).get._1._2
+  def colorOf(x:X): Color = {
+//    println("data: " + data)
+//    println("x: " + x)
+    data.find(_._1._1 == x).get._1._2
+  }
   // inserts the new item as GRAY
   def connect(itemNotInGraph:X, itemInGraph:X): RegisterColorGraph = {
     RegisterColorGraph(data + ((itemInGraph -> GRAY) -> (itemInGraph -> colorOf(itemInGraph))))
@@ -93,28 +97,29 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
 
   // only exists to make the code shorter
   private def rep(i:Instruction): Instruction = replaceVarsWithRegisters(i)
-  private def rep(x:X): X = x match {
+  private def repX(x:X): X = x match {
     case v:Variable => colorOf(v).register
     case _ => x
   }
-  private def rep(loc:MemLoc): MemLoc = MemLoc(rep(loc.basePointer),loc.offset)
-  private def rep(c:Comp): Comp = Comp(rep(c.x1), c.op, rep(c.x2))
+  private def repLoc(loc:MemLoc): MemLoc = MemLoc(repX(loc.basePointer),loc.offset)
+  private def repComp(c:Comp): Comp = Comp(repX(c.x1), c.op, repX(c.x2))
 
   def replaceVarsWithRegisters(i:Instruction): Instruction = i match {
-    case Allocate(n, init) => Allocate(rep(n), rep(init))
-    case Assignment(s1, s2) => Assignment(rep(s1), rep(s2))
-    case Increment(s1, s2) => Increment(rep(s1), rep(s2))
-    case Decrement(s1, s2) => Decrement(rep(s1), rep(s2))
-    case Multiply(s1, s2) => Multiply(rep(s1), rep(s2))
-    case LeftShift(s1, s2) => LeftShift(rep(s1), rep(s2))
-    case RightShift(s1, s2) => RightShift(rep(s1), rep(s2))
-    case BitwiseAnd(s1, s2) => BitwiseAnd(rep(s1), rep(s2))
-    case MemRead(loc) => MemRead(rep(loc))
-    case MemWrite(loc, e) => MemWrite(rep(loc), rep(e))
-    case Print(s) => Print(rep(s))
-    case Goto(s) => Goto(rep(s))
-    case CJump(comp, l1, l2) => CJump(rep(comp), l1, l2)
-    case Call(s) => Call(rep(s))
+    case Allocate(n, init) => Allocate(repX(n), repX(init))
+    case Assignment(x1, x2:X) => Assignment(repX(x1), repX(x2))
+    case Assignment(x, i) => Assignment(repX(x), rep(i))
+    case Increment(s1, s2) => Increment(repX(s1), repX(s2))
+    case Decrement(s1, s2) => Decrement(repX(s1), repX(s2))
+    case Multiply(s1, s2) => Multiply(repX(s1), repX(s2))
+    case LeftShift(s1, s2) => LeftShift(repX(s1), repX(s2))
+    case RightShift(s1, s2) => RightShift(repX(s1), repX(s2))
+    case BitwiseAnd(s1, s2) => BitwiseAnd(repX(s1), repX(s2))
+    case MemRead(loc) => MemRead(repLoc(loc))
+    case MemWrite(loc, x) => MemWrite(repLoc(loc), repX(x))
+    case Print(x) => Print(repX(x))
+    case Goto(x) => Goto(repX(x))
+    case CJump(comp, l1, l2) => CJump(repComp(comp), l1, l2)
+    case Call(x) => Call(repX(x))
     case _ => i
   }
 }
