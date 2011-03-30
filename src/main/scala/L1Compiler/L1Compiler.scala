@@ -14,7 +14,7 @@ object Dir {
 
 import Dir._
 
-trait L1Compiler extends Reader with L1Parser with L1CodeGenerator {
+trait L1Compiler extends Reader with L1Parser with BackEnd {
 
   def compileFile(filename:String) {
     compileCodeAndWriteOutput(new File(filename).read, filename)
@@ -36,7 +36,7 @@ trait L1Compiler extends Reader with L1Parser with L1CodeGenerator {
 
 }
 
-trait L1CodeGenerator{
+trait BackEnd{
   def generateCode(ast:L1):String
 }
 

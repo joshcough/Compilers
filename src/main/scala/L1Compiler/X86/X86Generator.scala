@@ -13,7 +13,7 @@ object X86Inst {
   }
 }
 
-trait L1X86Generator extends L1Compiler.L1CodeGenerator{
+trait X86Generator extends L1Compiler.BackEnd {
 
   import X86Inst._
 

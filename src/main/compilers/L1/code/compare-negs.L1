@@ -11,5 +11,5 @@
   (eax <- (print esi)) ; shouldnt happen
   
   :end
-  (eax <- (print edi))
+  (eax <- (print edi)) ; should print -2 (since -3 is -2 encoded)
 ))

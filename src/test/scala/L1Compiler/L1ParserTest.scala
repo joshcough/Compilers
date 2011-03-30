@@ -126,7 +126,7 @@ class ParseOtherStuffTest extends L1ParserTest {
 }
 
 abstract class L1ParserTest extends org.scalatest.FunSuite{
-  val compiler = new L1Compiler with X86.L1X86Generator
+  val compiler = new L1Compiler with X86.X86Generator
   import compiler._
 
   def testParseSExpr(t: (Any, L1)){

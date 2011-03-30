@@ -4,14 +4,14 @@ import L1Compiler._
 import L1Compiler.FileHelper._
 import java.io.File
 
-class TestCompilerVsInterpreter extends L1X86Test{
-  Dir.testFiles.foreach(testCompilerVsInterpreter)
-}
-
-class GenFullProgramTest extends L1X86Test {
-  testCompileString("(((eax <- 5)(eax <- (print eax))))" -> "2")
-  testCompileString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
-}
+//class TestCompilerVsInterpreter extends L1X86Test{
+//  Dir.testFiles.foreach(testCompilerVsInterpreter)
+//}
+//
+//class GenFullProgramTest extends L1X86Test {
+//  testCompileString("(((eax <- 5)(eax <- (print eax))))" -> "2")
+//  testCompileString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
+//}
 
 class GenMathInstructionsTest extends L1X86Test {
   testInstructionGen("(eax += 7)" -> List("addl $7, %eax"))
@@ -74,7 +74,7 @@ class ComparisonInstructionsTest extends L1X86Test {
 
 trait L1X86Test extends org.scalatest.FunSuite{
 
-  val compiler = new L1Compiler with X86.L1X86Generator
+  val compiler = new L1Compiler with X86.X86Generator
   import compiler._
 
   def testInstructionGen(t: (String, List[String])): Unit = {

@@ -1,13 +1,13 @@
 ((
   (esi <- 2)
-  :0
+  :w
 
   (goto :wefowifwef_wefowfoiwejf_AOIOAOIDJOAI_93493sdfij23nfsdUH)
   :wefowifwef_wefowfoiwejf_AOIOAOIDJOAI_93493sdfij23nfsdUH
-  (goto :112345)
-  :112345
-  (goto :9)
-  :9
+  (goto :w112345)
+  :w112345
+  (goto :x9)
+  :x9
   (goto :_)
   :_
   (goto :__________________________________)
@@ -20,7 +20,7 @@
   :_______________AAA
   
   (esi -= 1)
-  (cjump esi = 0 :_A_A_A_A_A_A_A_A_ :0)
+  (cjump esi = 0 :_A_A_A_A_A_A_A_A_ :w)
   
   :_A_A_A_A_A_A_A_A_
   (eax <- 3)
