@@ -1,0 +1,3 @@
+#!/bin/sh
+
+mzscheme $(dirname $0)/run-tests.ss "$@"

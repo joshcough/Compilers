@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ $# -ne 0 ]
+then
+   echo "$0: unexpected command-line arguments: $@"
+   exit 1
+fi
+
+mred-text 4-norm-steps.ss

@@ -1,0 +1,68 @@
+This directory contains:
+
+- L1: a shell script that runs an L1 interpreter. Pass it the name of
+      a file containing an L1 program and get back the results.
+
+- L2: a shell script that runs an L2 interpreter. Pass it the name of
+      a file containing an L2 program and get back the results.
+
+- L3: a shell script that runs an L3 interpreter. Pass it the name of
+      a file containing an L3 program and get back the results.
+
+- L4: a shell script that runs an L4 interpreter. Pass it the name of
+      a file containing an L4 program and get back the results.
+
+- L5: a shell script that runs an L5 interpreter. Pass it the name of
+      a file containing an L5 program and get back the results.
+
+- L4-steps: a shell script that produces a graphical trace of the
+            A-normalization algorithm. The script reads an L3
+            expression (not an L3 program) from stdin. Example
+            usages:
+            $ echo '((a b) c)' | ./L4-steps
+            $ ./L4-steps
+            ((a b) c)
+            ^D
+            $ ./L4-steps < file_containing_L3_expr
+
+These scripts require that you have PLT Scheme v4.2.5 installed
+      and its bin directory on your path. If that is not the case,
+      then (once PLT v4.2.5 is installed), edit the script to point to
+      mzscheme in the bin directory. 
+
+      Pass the --help command line argument to see some options.
+
+- run-test-fests: a script that runs the tests from the Test Fests.
+  Command-line arguments determine which tests to run. For example,
+
+  ./run-test-fests --L1 your/code/L1 --L3 your/code/L3
+
+  runs just the L1 and L3 tests, using L1 compiler at path 
+  your/code/L1 and the L3 compiler at path your/code/L3. Supply
+  the --help flag to see the names of the other command-line
+  arguments.
+
+  If your compiler executables are shell scripts, be sure the scripts
+  begin with a #! line; otherwise, you'll get an error about exec
+  failing.
+
+- run.ss: a file that allows you to run the L1 and L2 interpreters
+          via DrScheme. Start up DrScheme, open the file, and call
+          L1-interp/file or L2-interp/file with whatever file you 
+          want to run in the interpreter.
+
+          Note that the command-line version has more options than
+          this does.
+
+- fib.L1: the first fib example from the lecture notes
+
+- fib-rec.L1 & fib-rec.L2: examples of an iterative version of fib in L1 and L2
+
+- fib.L3: a fib function written in L3.
+
+- fib.L4: a fib function written in L4.
+
+- compiled/: a directory containing bytecode that implements the
+             interpreters.
+
+- README: this file
