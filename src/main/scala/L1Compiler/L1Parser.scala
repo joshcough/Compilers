@@ -17,9 +17,6 @@ trait L1Parser extends Parser[L1] {
   }
 
   def parseInstruction(expr: Any): Instruction = expr match {
-    // TODO: had to put this here because of a serious compiler bug. investigate.
-    // (cjump s cmp s label label) ;; conditional jump
-    case 'cjump :: xs => parseCJump(expr)
     case s: Symbol => parseLabelOrRegister(s) match {
       case l:Label => LabelDeclaration(l)
       case r => r
@@ -39,10 +36,11 @@ trait L1Parser extends Parser[L1] {
       case '<<= => LeftShift(parseRegister(s1), parseNumOrRegister(s2))
       case '&= => BitwiseAnd(parseRegister(s1), parseNumOrRegister(s2))
     }
-
     case List('goto, s:Symbol) => Goto(parseLabelOrRegister(s))
     case List('call, s:Any) => Call(parseS(s))
     case List('return) => Return
+    // (cjump s cmp s label label) ;; conditional jump
+    case 'cjump :: _ => parseCJump(expr)
     case _ => error("unexpected token: " + expr)
   }
 
@@ -94,7 +92,7 @@ trait L1Parser extends Parser[L1] {
     case _ => error("bad cjump: " + exp)
   }
 
-  def parseAssignment(x: Any, s: Any) = {
+  def parseAssignment(x: Any, s: Any): Instruction = {
     (x, '<-, s) match {
       //(x <- s) ;; assign to a register
       case (x: Symbol, '<-, i: Int) => Assignment(parseRegister(x), Num(i))

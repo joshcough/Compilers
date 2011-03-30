@@ -39,7 +39,7 @@ trait L1X86Generator extends L1Compiler.L1CodeGenerator{
             X86Inst.dump(generateMain(ast.main) ::: ast.funs.flatMap(generateFunc)) +
             X86Inst.dump(footer)
   }
-  
+
   private def generateMain(main: Func):List[X86Inst] = {
     val footer:List[X86Inst] =
       X86Inst(
@@ -151,11 +151,11 @@ trait L1X86Generator extends L1Compiler.L1CodeGenerator{
         X86Inst(
           // magic reversal happens here.
           // LessThan ignored. had to pick one. see genCode(Comp...)
-          genInst(Comp(r,LessThan,n)).head, 
+          genInst(Comp(r,LessThan,n)).head,
           jumpInstruction,
           jump(l2))
       }
-      
+
       case CJump(cmp@Comp(s1,op,s2), l1, l2) => {
         val jumpInstruction = op match {
           case LessThan => jumpIfLess(l1)
@@ -180,6 +180,6 @@ trait L1X86Generator extends L1Compiler.L1CodeGenerator{
   private var labelCount = -1
   private def nextNewLabel = {
     labelCount+=1
-    Label("Generated_Label_" + labelCount) 
+    Label("Generated_Label_" + labelCount)
   }
 }

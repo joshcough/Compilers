@@ -27,7 +27,7 @@ object HW2 {
     val outSet = res.map(_.out).map(s => "(" + s.map(_.toCode).mkString(" ") + ")").mkString(" ")
     println("((in " + inSet + ") (out " + outSet + "))")
   }
-  
+
   // % spill f.L2f
   //(((mem ebp -4) <- 1)
   // (s_0 <- (mem ebp -4))

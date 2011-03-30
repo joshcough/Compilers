@@ -15,7 +15,7 @@ object Dir {
 import Dir._
 
 trait L1Compiler extends Reader with L1Parser with L1CodeGenerator {
-  
+
   def compileFile(filename:String) {
     compileCodeAndWriteOutput(new File(filename).read, filename)
   }
@@ -31,7 +31,7 @@ trait L1Compiler extends Reader with L1Parser with L1CodeGenerator {
     new File(outputAssemblyFile).write(compiledCode)
     runAndDieOneErrors("gcc -O2 -c -o ./runtime.o ./src/main/compilers/L1/runtime.c")
     runAndDieOneErrors("as -o " + outputOFile + " " + outputAssemblyFile)
-    runAndDieOneErrors("gcc -o ./a.out "+outputOFile+" runtime.o")    
+    runAndDieOneErrors("gcc -o ./a.out "+outputOFile+" runtime.o")
   }
 
 }

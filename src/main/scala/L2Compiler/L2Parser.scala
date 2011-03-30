@@ -20,9 +20,6 @@ trait L2Parser extends Parser[L2] {
   def parseInstructionList(xs: List[Any]) = xs map parseInstruction
 
   def parseInstruction(expr: Any): Instruction = expr match {
-    // TODO: had to put this here because of a serious compiler bug. investigate.
-    // (cjump s cmp s label label) ;; conditional jump
-    case 'cjump :: xs => parseCJump(expr)
     case s: Symbol => parseLabelOrX(s) match {
       case l:Label => LabelDeclaration(l)
       case r => r
@@ -46,6 +43,8 @@ trait L2Parser extends Parser[L2] {
     case List('goto, s:Symbol) => Goto(parseLabelOrX(s))
     case List('call, s:Any) => Call(parseS(s))
     case List('return) => Return
+    // (cjump s cmp s label label) ;; conditional jump
+    case 'cjump :: xs => parseCJump(expr)
     case _ => error("unexpected token: " + expr)
   }
 

@@ -23,5 +23,5 @@ object HW2TestResultsCreator{
       new File(spillResFile).write(runAndDieOneErrors("./spill " + "./test/" + f.getName))
       new File(livenessResFile).write(runAndDieOneErrors("./liveness " + "./test/" + f.getName))
     }
-  }  
+  }
 }
