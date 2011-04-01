@@ -1,0 +1,65 @@
+import java.util.Iterator;
+public class VarDecStat extends Statement {
+
+    Var var;
+    Expression exp;
+    Cls type;
+
+    VarDecStat( Var v, Expression e ){ 
+      var=v; 
+      exp=e; 
+      if(v instanceof Local) {
+        Local cl = (Local)v;
+        Locals ls = cl.getScope().getLocals();
+        for(Iterator it = ls.entrySet().iterator(); it.hasNext(); ) {
+          Local l = (Local)it.next();
+          if(l.getName().equals(cl.getName())) {
+            System.out.println("Multiple declaration of "+cl.getName());
+            System.exit(1);
+          }
+        }
+      }
+      else if(v instanceof Field){
+        Field cf = (Field)v;
+        Fields fs = cf.getScope().getFields();
+        for(Iterator it = fs.entrySet().iterator(); it.hasNext(); ) {
+          Field f = (Field)it.next();
+          if(f.getName().equals(cf.getName())) {
+            System.out.println("Multiple declaration of "+cf.getName());
+            System.exit(1);
+          }
+        } 
+      }
+    }
+    void setVar( Var v ){ var=v; }
+    void setExp( Expression e ){ exp=e; }
+    Var getVar(){ return var; }
+    Expression getExp(){ return exp; }
+
+    public String toString(){
+        String toString = "VarDec " + 
+            ((Local)var).toString();
+        if( exp!=null ) toString+= " = " + exp.toString();
+        return toString + "\n";
+    }
+        
+    void typeCheck() throws TypeCheckException{
+      type = var.getType();
+      exp.typeCheck();
+      ensureSameTypes( var, exp );
+    }
+    
+   void ensureSameTypes( Var v, Expression e ) throws TypeCheckException{
+       if( v.getType() != e.getType() ){
+           printError( v, e );
+           throw new TypeCheckException();
+       }
+    }
+
+    void printError( Var v, Expression e ){
+        System.out.println( "incompatable types: " + 
+                            v.getType().getName() + "," + 
+                            e.getType().getName() );
+    }
+}
+

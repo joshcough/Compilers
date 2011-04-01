@@ -1,0 +1,92 @@
+class foo
+
+  var foo: foo = this
+  var argle : static int = 1 + 2 - 4
+  var bargle : static final int = argle
+  var boolean : final bool = true
+  var varID2 : static final int = argle + 4
+  var varID3 : final static char = 'c'
+
+  op foo ( paramID1:foo,paramID2:int):foo{
+     return new foo();
+  } 
+
+
+  op fooOp (paramID1:foo,paramID2:int):int{
+    //fooOp( this, argle );
+    var gool : bool = boolean==boolean;
+    var f : foo = new foo();
+    var g : foo = new foo();
+    var fool : int = 2;
+    argle = 4 + 4;
+    foo = this;
+    //var boolean : static final int = argle.moo();    
+  }
+ 
+
+  op fooOp3 (paramID1:foo,paramID2:int):int{
+    //paramID2 = argle * 5 + argle / paramID2;
+    paramID2 = -6;
+  }   
+
+  op fooOp2(paramID1:bool):bool{ 
+    paramID1 = new foo() == new foo();
+    paramID1 = (1 < 39);    
+    return ! true;
+    var b: boolean =  2 >=  3  == ( 4 == 5 );
+    while ( true ) do
+        while( true ) do
+           return true;
+        end;
+    end;
+    if (true)
+      then
+        paramID1 = true;
+    elseif (true)
+     then
+       paramID1 = true;
+    else
+     var varID6 : static final bool = false;
+    end;
+  }   
+
+end 
+
+
+class foobar extends foo
+
+  var hoo: foo = new foobar()
+            
+  op fooOp2(paramID1:bool):int[]{ 
+        
+     //new foo();        
+
+     var hoo: foo = new foobar();
+     var goo: int = this.fooOp( new foo(), 1 );
+
+     //return 3;   
+
+     var ia : int[] = new int[6];
+
+     var i : int = ia[6];
+
+     var i2 : int = 6;
+
+     var ca : char[] = new char[6];
+
+     var c : char = ca[6];  
+
+     var ba : bool[] = new bool[6];
+
+     //var b : bool = foo[6];
+     //b = hoo[6];
+
+     ba[6] = true;
+
+     ba[6] = ba[5];
+
+     return ia;
+  }  
+
+end
+

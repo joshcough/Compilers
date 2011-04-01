@@ -1,0 +1,24 @@
+class foo
+
+  //var foo: static foo = this
+  var i: int = 6
+  var i2: static int = 6
+
+/*
+  op foo ( paramID1:foo,paramID2:int, paramID3:int[] ):foo{
+     var ia: int[] = new int[ 6 ];
+     new foo();
+     foo.foo( foo, 5, ia );
+     foo = this.foo( foo, 5, ia );
+     foo = null;
+     PRINT 6;
+  } 
+*/
+
+
+ op foo2 ( o:int ):void{
+     PRINT i;
+  } 
+
+end
+

@@ -1,0 +1,1 @@
+class TypeCheckException extends Exception{}

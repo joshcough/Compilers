@@ -1,0 +1,7 @@
+class foo extends foobar
+
+ var i : int = 2
+ var h : bool=false 
+ var j : foo=true
+
+end 

@@ -1,0 +1,798 @@
+options {
+  JAVA_UNICODE_ESCAPE = false;
+  DEBUG_PARSER = false; 
+}
+
+
+PARSER_BEGIN(MODLParser)
+
+
+public class MODLParser {
+
+  static CompilerSystem system = new CompilerSystem();
+  static Cls currentClass;
+  static Var currentVar;
+  static Method currentMethod;
+  static boolean inMethod;
+
+  static String fileName = "";  
+  public static void main(String args[]) { 
+   System.out.println();
+   MODLParser parser;
+    if (args.length == 0) {
+      //System.out.println("MODL Parser Version 1.0.0: Reading from standard input . . .");
+      parser = new MODLParser(System.in);
+    } else if (args.length == 1) {
+      fileName = args[0];
+      //System.out.println("MODL Parser Version 1.0.0:  Reading from file  . . .");
+      try {
+        parser = new MODLParser(new java.io.FileInputStream(args[0]));
+      } catch (java.io.FileNotFoundException e) {
+        System.out.println("MODL Parser Version 1.0.0:  File " + args[0] + " not found.");
+        return;
+      }
+    } else {
+      System.out.println("MODL Parser Version 1.0.0:  Usage is one of:");
+      System.out.println("         java MODLParser < inputfile");
+      System.out.println("OR");
+      System.out.println("         java MODLParser inputfile");
+      return;
+    }
+      try {
+        parser.CompilationUnit();
+        ErrorHandle.printExceptions();    
+        //System.out.println("Encountered "+ErrorHandle.errorCount+
+        //                   " error(s) during parse of "+ args[0]);
+        //System.out.println("parsed successfully.");
+      } catch (ParseException e) {
+      System.out.println("Encountered unknown errors during parse.");    
+  }
+ //System.out.println(system.toString());
+  try{
+      system.typeCheck();
+      if( CompilerSystem.getTypeCheckErrors() > 0 )
+        System.out.println( "\n" + CompilerSystem.getTypeCheckErrors() + " error(s).\n"); 
+      else system.genCode();
+  } catch( TypeCheckException tce ){}
+}
+}
+PARSER_END(MODLParser)
+
+SKIP : /* WHITE SPACE */
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+SPECIAL_TOKEN : /* COMMENTS */
+{
+  <SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+| <FORMAL_COMMENT: "/**" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+| <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | (~["*","/"] (~["*"])* "*"))* "/">
+}
+
+TOKEN : /* RESERVED WORDS AND LITERALS */
+{
+  < ANY: "Any" >
+| < BOOL: "bool" >
+| < CHAR: "char" >
+| < CHARLIT: "charLit" >
+| < CLASS: "class" >
+| < DO: "do" >
+| < ELSE: "else" >
+| < ELSEIF: "elseif" >
+| < EXTENDS: "extends" >
+| < END: "end" >
+| < FALSE: "false" >
+| < FINAL: "final" >
+| < IF: "if" >
+| < INT: "int" >
+| < INTLIT: "intLit" >
+| < LOCAL: "local" >
+| < MAIN: "main" >
+| < NEW: "new" >
+| < NULL: "null" >
+| < OP: "op" >
+| < PRINT: "PRINT" >
+| < RETURN: "return" >
+| < STATIC: "static" >
+| < THEN: "then" >
+| < THIS: "this" >
+| < TRUE: "true" >
+| < VAR: "var" >
+| < VOID: "void" >
+| < WHILE: "while" >
+}
+
+TOKEN : /* LITERALS */
+{
+  < INTEGER_LITERAL: ["0"-"9"](["0"-"9"])* >
+|
+< CHARACTER_LITERAL:
+      "'"
+      (   (~["'","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )
+      "'"
+  >
+|
+  < STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+  >
+}
+
+
+TOKEN : /* OPERATORS */
+{
+  < ASSIGN: "=" >
+| < GT: ">" >
+| < LT: "<" >
+| < EQ: "==" >
+| < LE: "<=" >
+| < GE: ">=" >
+| < NE: "!=" >
+| < OR: "|" >
+| < AND: "&" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < MULTIPLE: "*" >
+| < DIVIDE: "/" >
+| < MOD: "%" >
+| < NOT: "!" >
+}
+
+TOKEN : /* SEPARATORS */
+{
+  < COLON: ":" >
+| < DOT:   "." >
+| < COMMA: "," >
+| < SEMI:  ";" >
+| < LBRACKET: "{" >
+| < RBRACKET: "}" >
+}
+
+TOKEN : /* IDENTIFIERS */
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+
+| < #LETTER:
+      [ "a"-"z","A"-"Z","_" ]
+  >
+|
+  < #DIGIT:
+      [ "0"-"9" ]
+  >
+}
+
+
+/*****************************************
+ * THE MODL LANGUAGE GRAMMAR STARTS HERE *
+ *****************************************/
+
+/*
+ * Program structuring syntax follows.
+ */
+
+
+void CompilationUnit()  : {}
+{
+try {
+     ClassDeclaration()
+    (ClassDeclaration())*
+ <EOF>
+}
+catch (ParseException e) {
+ErrorHandle err = new ErrorHandle(e,CLASS);     
+ClassDeclaration();
+}
+}
+
+/*
+ * Declaration syntax follows.
+ */
+
+Cls ClassDeclaration()  : 
+{ Token name; Cls ext; Token extName;}
+{
+try {
+  {inMethod=false; currentMethod=null;}
+
+  "class"  name=<IDENTIFIER>
+   { 
+     Cls c = system.resolveClass( name.toString() );
+     if( c!=null ){ 
+        System.out.println("Class: " + name.toString() + " already exists" );
+        CompilerSystem.addTypeCheckError();
+        currentClass=new Cls( "errorClass" );
+        system.addClass( currentClass );
+     }
+     else{ 
+        currentClass=new Cls( name.toString() ); 
+     } 
+   }
+
+
+  [ "extends" extName=<IDENTIFIER> 
+      { 
+        ext = system.resolveClass( extName.toString() );
+        if( ext==null ){
+           System.out.println("cannot resolve class: " + extName );
+           CompilerSystem.addTypeCheckError();
+        }
+        else{ 
+          currentClass.setSuperClass( ext );
+          currentClass.setPointer( currentClass.getSuperClass().getPointer());
+        }
+      }
+  ]  
+
+  { 
+    if( currentClass.getSuperClass()==null ) {
+      currentClass.setSuperClass( new Cls( "java/lang/Object" ));
+      currentClass.setPointer( 2 );
+    }
+
+    system.addClass( currentClass );
+
+  }
+
+  ClassBodyDeclaration() 
+
+  "end" 
+}
+catch(ParseException e) {
+ErrorHandle err = new ErrorHandle(e,LBRACKET);
+Statements();
+}
+{ return currentClass;}
+}
+
+void ClassBodyDeclaration()  : {}
+{ 
+   ( Var() )*  
+   ( Op() )*    
+   Main()
+}
+
+Var Var()  : { Expression e=null; Token t;}
+{
+        
+  "var" t=<IDENTIFIER> ":" 
+  {
+   if( ! inMethod ){ 
+      currentVar = new Field( t.toString() );
+      ((Field)currentVar).setScope( currentClass ); 
+      currentClass.addField( (Field)currentVar );
+    }
+    else{ 
+      currentVar = new Local( t.toString() );
+      ((Local)currentVar).setScope( currentMethod );
+    }
+  }
+  QualType() [ "=" e=Expression() { currentVar.setExpression( e ); }]
+  { return currentVar; }
+}
+
+Method Op()  : 
+{ inMethod=true; 
+  Token t; 
+  Cls type; 
+  Statements ss; 
+  CodeBody cb;
+}
+{ 
+try {
+["local"] "op" t=<IDENTIFIER> 
+  { 
+    currentMethod = new Method( t.toString() ); 
+    currentMethod.setScope( currentClass );
+    currentClass.addMethod( currentMethod );    
+  }
+"(" [Params()] ")" ":" type=Type(){ currentMethod.setType( type ); } 
+"{" ss=Statements() "}" 
+ { 
+   currentMethod.setCodeBody( new CodeBody( ss, currentMethod )); 
+ }
+}
+catch (ParseException e) {
+ErrorHandle err = new ErrorHandle(e,RBRACKET);  
+}
+{ return currentMethod; }
+}
+
+
+Method Main() :
+{
+  inMethod=true; 
+  Token t; 
+  Cls type; 
+  Statements ss; 
+  CodeBody cb;
+}
+{
+ try { 
+  <MAIN> 
+  { 
+    currentMethod = new Method( "main" ); 
+    currentMethod.setScope( currentClass );
+    currentClass.addMethod( currentMethod );    
+  }
+{ currentMethod.setType( Cls.VOID ); } 
+"{" ss=Statements() "}" 
+ { 
+   currentMethod.setCodeBody( new CodeBody( ss, currentMethod )); 
+ }
+}
+catch (ParseException e) {
+ErrorHandle err = new ErrorHandle(e,RBRACKET);  
+}
+{ return currentMethod; } 
+}
+
+
+void QualType()  : {Cls c; String q;}
+{
+  ( q=UsageQual() { currentVar.addQualifier(q); } )* c=Type()
+   { 
+      currentVar.setType( c );
+   }
+}
+
+String UsageQual()  : {}
+{
+  "final" {return "final"; }
+  |
+  "static" { return "static"; }
+}
+
+
+Cls Type()  : { Cls c;}
+{
+  c=BaseType() 
+  [ "[" "]"  { return (Cls)Cls.typeToArrayMap.get( c ); } ] 
+  {return c;}
+}
+
+Cls BaseType()  : {Token t;}
+{
+  "bool"{return Cls.BOOL;}
+| "int" {return Cls.INT;}
+| "char" {return Cls.CHAR;}
+| "Any"{return Cls.ANY;}
+| "void"{return Cls.VOID;}
+| t=<IDENTIFIER> 
+  { 
+    Cls c = system.resolveClass( t.toString() );
+    return (c==null)?new Cls(t.toString()):c;
+    
+  }
+}
+
+
+void Params()  : {Param p;}
+{
+ p=Param()  {currentMethod.addParam( p ); } 
+ ("," p=Param() {currentMethod.addParam( p ); } )*
+}
+
+Param Param()  : {Param p; Token id; Cls type;}
+{
+ id=<IDENTIFIER> ":" type=Type()
+ {
+    p=new Param( id.toString() ); 
+    p.setType( type );
+    p.setScope( currentMethod );
+    return p;
+  }
+}
+
+Statements Statements() : { Statements ss=new Statements(); Statement s;}
+{
+  try {     
+   (s=Statement() {ss.add( s );} ";")*
+  }
+  catch (ParseException e) {
+    ErrorHandle err = new ErrorHandle(e,SEMI);     
+    Statements(); 
+  }
+  {return ss; }
+}
+
+Statement Statement()  : 
+{ Var v; Statement s; Expression e; Expression e2=null;}
+{
+    s=VarDecStatement() { return s; }
+
+  | e=Expression() ["=" e2=Expression()]
+    { 
+       if( e2==null ) return new ExpStat( e ); 
+       else return new AssignmentStat( e, e2 ); 
+    }
+  | s=IfStatement(){  return s; }
+
+  | s=WhileStatement(){ return s; }
+
+  | s=ReturnStatement(){ return s; }
+  
+  | s=PrintStatment() { return s; }
+}
+
+PrintStatement PrintStatment():
+{ 
+PrintStatement ps = new PrintStatement(); 
+Expression e = null;
+}
+{
+ <PRINT> e=Expression() { ps.setExp( e ); return ps; }
+}
+
+VarDecStat VarDecStatement():
+{ Var v; Expression e; VarDecStat as; }
+{
+  v=Var() { 
+    e=v.getExpression(); 
+    as = new VarDecStat( v, e );     
+    currentMethod.addLocal( (Local)currentVar );
+  }
+  { return as; }
+}
+
+IfStat IfStatement() :
+{ IfStat i=new IfStat(); ElseIfStat e; ElseIfStats es=new ElseIfStats();}
+{
+  IfPart(i)
+  (e=ElsIfPart() { es.add( e ); } )* { i.setElseIfStats( es ); }
+  [ElsePart(i)]
+  "end"
+  { return i; }
+}
+
+void IfPart( IfStat i ) :
+{ Expression e; Statements ss=new Statements(); }
+{ 
+  "if" "(" e=Expression() ")"
+  "then" ss=Statements()
+  { i.setCond(e); i.setTruePart(ss); }
+}
+
+ElseIfStat ElsIfPart() :
+{ ElseIfStat e=new ElseIfStat(); Expression exp; Statements ss=new Statements();}
+{
+  "elseif" "(" exp=Expression() ")"
+  "then" ss=Statements()
+  { e.setCond( exp ); e.setTruePart( ss ); return e; }
+}
+
+void ElsePart( IfStat i )  :
+{ Statements ss=new Statements(); }
+{
+  "else" ss=Statements()
+  { i.setFalsePart( ss ); }
+}
+
+
+WhileStat WhileStatement() :
+{ 
+  WhileStat willy=new WhileStat();
+  Statements ss = new Statements();
+  Expression e;
+}
+{
+  "while" e=Expression() 
+   "do" ss=Statements()
+   "end"
+  { willy.setCond( e ); willy.setBody( ss ); return willy;}
+}
+
+ReturnStat ReturnStatement() :
+{ ReturnStat rs = new ReturnStat(); Expression e=null;}
+{
+  "return" [e=Expression()]
+  { rs.setExp( e ); rs.setScope( currentMethod ); return rs; }
+}
+
+Expression Expression() : { Expression e=new Expression();}
+{ 
+try {
+ e = NotStatement()
+}
+catch(ParseException pe) {
+ErrorHandle err = new ErrorHandle(pe,SEMI);
+Statements();
+}
+{return e; }
+}
+
+
+Expression NotStatement() : { Not n=new Not(); Expression e=new Expression();}
+{ 
+ e=OrStatement() { return e; }  
+| 
+"!" e=OrStatement() { n.setExpression(e); return n; }
+}
+
+Expression  OrStatement() : { Expression left; Expression right=null; Or o = new Or(); }
+{
+left=AndStatement() { o.add( left ); } ( "|" right=AndStatement() { o.add( right ); } )*
+{ 
+  if( right==null ) return left;
+  else return o; 
+}
+}
+
+Expression AndStatement() : { Expression left; Expression right=null; And a = new And(); }
+{
+left=EqualsStatement() { a.add(left); } ( "&" right=EqualsStatement() {a.add(right); } )* 
+{
+  if( right==null ) return left;
+  else return a; 
+}
+}
+
+Expression EqualsStatement() : { Expression left; Expression right=null; Equals e = new Equals(); }
+{
+left=LessThenStatement() {e.add(left);} ( "==" right=LessThenStatement() {e.add(right); return e; } )* 
+{
+ if( right==null ) return left;
+  else return e; 
+}
+}
+
+Expression LessThenStatement() : { Expression left; Expression right=null; LessThen lt = new LessThen(); }
+{
+left=GreaterThenStatement() {lt.add(left);}( "<" right=GreaterThenStatement() {lt.add(right);})*
+{
+ if( right==null ) return left;
+  else return lt; 
+}
+}
+
+Expression GreaterThenStatement() : {  Expression left; Expression right=null; GreaterThen gt=new GreaterThen(); }
+{
+left=NotEqualStatement() {gt.add(left);}( ">" right=NotEqualStatement() {gt.add(right);})*
+{
+ if( right==null ) return left;
+  else return gt; 
+}
+}
+
+Expression NotEqualStatement() : {  Expression left; Expression right=null; NotEqual ne=new NotEqual(); }
+{
+left=GreaterThenEqual() {ne.add(left);}( "!=" right=GreaterThenEqual() {ne.add(right);})*
+{
+if( right==null ) return left;
+  else return ne; 
+}
+}
+
+Expression GreaterThenEqual() : {  Expression left; Expression right=null; GreaterThenEqual gte=new GreaterThenEqual();}
+{
+left=LessThenEqualStatement(){gte.add(left);} ( ">=" right=LessThenEqualStatement() {gte.add(right);})*
+{
+if( right==null ) return left;
+  else return gte; 
+}
+}
+
+Expression LessThenEqualStatement() : {  Expression left; Expression right=null; LessThenEqual lte=new LessThenEqual(); }
+{
+left=PlusStatement() {lte.add(left);}( "<=" right=PlusStatement() {lte.add(right);})* 
+{
+if( right==null ) return left;
+  else return lte; 
+}
+}
+
+Expression PlusStatement() : {  Expression left; Expression right=null; Plus p = new Plus();}
+{
+left=MinusStatement() {p.add(left);}( "+" right=MinusStatement() {p.add(right);})*
+{
+if( right==null ) return left;
+  else return p; 
+}
+}
+
+Expression MinusStatement() : {  Expression left; Expression right=null; Minus m=new Minus();}
+{
+left=MultiplyStatement(){m.add(left);} ( "-" right=MultiplyStatement() {m.add(right);})* 
+{
+if( right==null ) return left;
+  else return m;
+}
+}
+
+Expression MultiplyStatement() : {  Expression left; Expression right=null; Multiply m = new Multiply(); }
+{
+left=DivideStatement() {m.add(left);}( "*" right=DivideStatement() {m.add(right);})*
+{
+if( right==null ) return left;
+  else return m;
+}
+}
+
+Expression DivideStatement() : {  Expression left; Expression right=null; Divide d=new Divide();}
+{
+left=ModStatement() {d.add(left);}("/" right=ModStatement() {d.add(right);})*
+{
+if( right==null ) return left;
+  else return d;
+}
+}
+
+Expression ModStatement() : {  Expression left; Expression right=null; Mod m=new Mod();}
+{
+left=NegationStatement() {m.add(left);}("%" right=NegationStatement() {m.add(right);} )* 
+{ 
+if( right==null ) return left;
+  else return m;
+}
+}
+
+
+Expression NegationStatement()  : { 
+  Negation n=new Negation();
+  Expression e=new Expression();
+}
+{
+ e=BasicExp()      {return e; }
+| 
+ "-" BasicExp()  { n.setExpression(e); return n; }
+
+}
+
+Expression BasicExp()  : { Expression e=new Expression();ParenExpression pe;}
+{
+  "("e=Expression()")" { pe=new ParenExpression(); pe.setExpression(e); return pe; }
+ | e=ExpressionVars()  { return e; } 
+ | e=newTypeStatement(){return e; } // NewExpression ne = new New Expression(); 
+ | e=RefStatement()    {return e; } 
+}
+
+
+/*
+Expression RefStatement() : { RefStatement r;}
+{
+   "this"  
+       [ "." <IDENTIFIER>  "("   [ Expressions() ]   ")" ] 
+   { return r; }
+ | 
+    <IDENTIFIER> 
+       [ [ "[" Expression() "]" ] [ "."  <IDENTIFIER> ]   "("   [ Expressions() ]   ")"  ] 
+   { return r; }
+}
+*/
+
+
+
+Expression RefStatement() : 
+{ 
+  IDStatement ids; Token id; 
+  Token mid = null;
+  boolean variableMethod = false;
+  boolean array = false;
+  ExpressionList el= new ExpressionList();
+  Expression arrayExp = new Expression();
+  ArrayExpression ae=null;
+}
+{
+   "this"   
+       [ "." mid=<IDENTIFIER>  "("   [ el=Expressions() ]   ")"  
+                 { return new MethodStatement(  mid.toString(), 
+                                                null,
+                                                currentClass,
+                                                el );  }
+       ] 
+   { return new ThisStatement( currentClass ); }
+ | 
+    id=<IDENTIFIER> {ids = new IDStatement( id.toString(), currentClass, currentMethod ); }
+       [ 
+         [ 
+            "[" arrayExp=Expression() "]" 
+                { 
+                    ids.resolve(); 
+                    ae = new ArrayExpression( ids, arrayExp ); 
+                    array = true;  
+                    return ae;
+                }
+         ]
+         [    
+
+            "."  mid=<IDENTIFIER> {variableMethod=true;} ]  
+            "("   [ el=Expressions()  ]   ")"  
+            { if( variableMethod ) {
+                MethodStatement ms = new MethodStatement( mid.toString(), 
+                                            ids,
+                                            currentClass,
+                                            el );
+                return ms;
+              }
+              else{
+                  MethodStatement ms = new MethodStatement (  id.toString(), 
+                                                null,
+                                                currentClass,
+                                                el );  
+                   return ms; 
+              }
+           } 
+       ] 
+   { 
+     if( ae == null ){
+       ids.resolve(); 
+       if( ids.getVar() == null ){
+          Local l = new Local( ids.getName() );
+          l.setScope( currentMethod );
+          l.setType( Cls.ANY ); 
+          currentMethod.addLocal( l );
+          ids.setVar( l );       
+       }
+        return ids; 
+    } else return ae;      
+  }
+}
+
+
+
+Expression newTypeStatement()  : 
+{ 
+  Cls type;
+  Expression e=null;
+  NewStatement ns;
+}
+{
+ "new" type=BaseType() 
+    [ "(" ")" { return new NewStatement( type ); } ]
+ "[" [e=Expression()] "]" { ns=new NewStatement( type, e ); return ns; } 
+}
+
+
+Expression ExpressionVars() : { TerminalExpression te = new TerminalExpression(); Literal l;}
+{
+  "true" { te = new TerminalExpression("true"); return te;}
+| "false"{ te = new TerminalExpression("false"); return te;}
+| "null" { te = new TerminalExpression("null"); return te;}
+|  l=Literal() { 
+        if(l.isString()){
+          te = new TerminalExpression(l.getString()); return te;
+        }        
+        te = new TerminalExpression(l.getInt()); return te; 
+}
+}
+
+ExpressionList Expressions()  : { Expression e; ExpressionList el=new ExpressionList();}
+{
+try {
+  e=Expression() { el.add( e ); }
+  (","e=Expression() { el.add( e ); } )*
+}
+catch (ParseException pe) {
+ErrorHandle err = new ErrorHandle(pe,SEMI);     
+Statement();
+}
+{ return el; }
+}
+
+Literal Literal()  : { Token t; Literal l=new Literal(); }
+{
+  t=<INTEGER_LITERAL> { l=new IntLit( t.toString() ); } {return l; }
+|
+  t=<CHARACTER_LITERAL> { l=new CharLit( t.toString() ); } {return l; }
+}
+
+

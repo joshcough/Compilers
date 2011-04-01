@@ -1,0 +1,40 @@
+class Foo
+
+  //var foo: static foo = this
+  var i: static int = 6
+  var i2: static int = 7
+
+/*
+  op foo ( paramID1:foo,paramID2:int, paramID3:int[] ):foo{
+     var ia: int[] = new int[ 6 ];
+     new foo();
+     foo.foo( foo, 5, ia );
+     foo = this.foo( foo, 5, ia );
+     foo = null;
+     PRINT 6;
+  } 
+*/
+
+/*
+ op fooOp ( arg:int ):void{
+     PRINT arg;
+     return;
+  }  
+ */
+
+  main {
+    //PRINT (i * 7)-9;
+    return;
+    //var f: Foo = new Foo();
+    var ia : int[] = new int[10];
+    ia[0] = 4;
+    ia[9] = 7;
+    PRINT ia[1000];
+    //while true do PRINT 8; end;
+    //if( true ) then PRINT 99999; else PRINT 88888; end;
+    //f.fooOp( 10 );
+ }
+
+
+end
+

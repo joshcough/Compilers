@@ -1,0 +1,36 @@
+class foo
+
+  var argle : static final int = 12
+  var varID2 : static final int = argle
+  var varID3 : final static char = 'c'
+
+  op fooOp (paramID1:bool):int{
+    var gool: bool = new bool();
+    gool = new bool();
+    hrool = Gool.g();
+    var hrool: bool = new bool();
+  }  
+
+end 
+
+
+/*
+class foobar extends foo
+
+  var bargle : static final bool = false
+
+  op foobarOp (paramID1:bool):int{
+    argle = new bool();
+  }  
+
+end 
+
+class foobarext extends foobar
+
+  op foobarOpExt (paramID1:bool):int{
+    argle = new bool();
+    bargle = new bool();
+    var i: int = fooOp();
+  }  
+
+end */

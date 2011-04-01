@@ -1,0 +1,122 @@
+class foo
+
+var argle : static final void = true
+var varID2 : static final bool = false
+var varID3 : final static char = true
+
+op fooOp (paramID1:bool):int{
+
+/*
+a | b | h & j;
+
+
+refID[true].refIDD();
+
+var varID7 : static final int = (true | false);
+
+true | false;
+true & false | true;
+!-true;
+goo = bad;
+-true;
+false;
+
+
+3 > 2 > 1;
+*/
+
+//a > b > b.c();
+
+
+var gool: bool = new bool();
+gool = new bool();
+hrool = Gool.g();
+var hrool: bool = new bool();
+}  
+
+end 
+
+
+
+class foo extends foo
+
+/*
+var varID1 : static final void = true
+var varID2 : static final bool = false
+var varID3 : final static char = true
+*/
+
+op foobarOp (paramID1:bool):int{
+
+/*
+a | b | h & j;
+
+
+refID[true].refIDD();
+
+var varID7 : static final int = (true | false);
+
+true | false;
+true & false | true;
+!-true;
+goo = bad;
+-true;
+false;
+
+
+3 > 2 > 1;
+*/
+
+//a > b > b.c();
+
+
+
+argle = new bool();
+
+/*
+goo2 == foo2;
+goo3 <= foo3;
+goo4 >= foo4;
+goo5 < foo5;
+goo6-foo6;
+goo7+goo7;
+goo8*goo8;
+goo9%goo9;
+goo10/goo10;
+
+
+flkh + kd;
+this = !true;
+
+if (true)
+ then
+  while false do 
+
+   var varID4 : static final void = true;
+
+  end;
+elseif (true)
+ then
+  while true do 
+
+   var varID5 : static final void = false;
+
+  end;
+elseif (true)
+ then
+  while true do 
+
+   var varID5 : static final void = false;
+
+  end;
+else
+
+ var varID6 : static final void = false;
+
+end;
+
+return;
+*/
+}  
+
+end 
