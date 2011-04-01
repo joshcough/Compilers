@@ -2,8 +2,6 @@ package L1Compiler.Java
 
 object L1JavaRuntime {
 
-  // this allows us to put labels into them and other stuff...
-  // maybe.
   case class Register(var value:Any = new AnyRef){
     def clear(){ value = new AnyRef }
   }
@@ -46,6 +44,7 @@ object L1JavaRuntime {
     else if ((in & 1) == 1) (in >> 1).toString
     else {
       val ptr = (in >> 1)
+      // TODO check for int here.
       val size = heap(ptr).asInstanceOf[Int]
       "{s:" + size + ", " +
       (for (data <- (ptr + 1) until (ptr + 1 + size)) yield heap(data) match {

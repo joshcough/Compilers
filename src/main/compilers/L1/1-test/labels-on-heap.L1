@@ -1,0 +1,11 @@
+((
+  :w
+  (edi <- :w)
+  (eax <- (allocate 5 1))
+  ((mem eax 4) <- :w)
+  ((mem eax 8) <- edi)
+  (esi <- eax)
+  (eax <- (mem esi 8))
+  ; cant print the array because it contains labels!
+  ;(eax <- (print esi))
+))

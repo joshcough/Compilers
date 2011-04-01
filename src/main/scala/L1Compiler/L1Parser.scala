@@ -33,6 +33,8 @@ trait L1Parser extends Parser[L1] {
       case '-= => Decrement(parseRegister(s1), parseNumOrRegister(s2))
       case '*= => Multiply(parseRegister(s1), parseNumOrRegister(s2))
       case '>>= => RightShift(parseRegister(s1), parseNumOrRegister(s2))
+      // TODO (ebx <<= ecx) right side must be ecx
+      // and this converts to sall %cl, %ebx
       case '<<= => LeftShift(parseRegister(s1), parseNumOrRegister(s2))
       case '&= => BitwiseAnd(parseRegister(s1), parseNumOrRegister(s2))
     }
