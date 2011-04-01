@@ -1,4 +1,4 @@
-package L1Compiler.X86
+package L1Compiler.Java
 
 import L1Compiler.L1AST.{Instruction => L1Instruction, _}
 
@@ -10,6 +10,36 @@ object JVMInst {
   }.mkString
 }
 
+/**
+ *
+ Example output for Jasmin:
+
+.class public goo
+.super java/lang/Object
+
+; constructor
+.method public <init>()V
+  aload_0
+  invokenonvirtual java/lang/Object/<init>()V
+  return
+.end method
+
+.method public static main([Ljava/lang/String;)V
+  .limit stack 99
+  .limit locals 99
+  getstatic java/lang/System/out Ljava/io/PrintStream;
+  ldc "hi"
+  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
+  return
+.end method
+
+; class init
+.method public <clinit>()V
+  .limit stack 99
+  .limit locals 99
+  return
+.end method
+ */
 trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
   import JVMInst._
@@ -17,42 +47,42 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
   def generateCode(ast: L1): String = {
     val header: List[JVMInst] =
       JVMInst(
-        ".class public Foo",
-        ".super java/lang/Object")
-//        ".file	\"prog.c\"",
-//        ".text",
-//        ".globl go",
-//        ".type	go, @function",
-//        "go:",
-//        "pushl %ebx",
-//        "pushl %esi",
-//        "pushl %edi",
-//        "pushl %ebp",
-//        "movl	%esp, %ebp")
+        ".class public goo",
+        ".super java/lang/Object",
+        "; constructor",
+        ".method public <init>()V",
+        "  aload_0",
+        "  invokenonvirtual java/lang/Object/<init>()V",
+        "  return",
+        ".end method",
+        ".method public static main([Ljava/lang/String;)V",
+        "  .limit stack 99",
+        "  .limit locals 99")
     def footer =
       JVMInst(
-	      ".size	go, .-go",
-	      ".ident	\"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
-	      ".section	.note.GNU-stack,\"\",@progbits")
+        "  invokestatic L1Compiler/Java/L1JavaRuntime/printHeapView()V",
+        "  return",
+        ".end method",
+        "; class init",
+        ".method public <clinit>()V",
+        "  .limit stack 99",
+        "  .limit locals 99",
+        "  return",
+        ".end method")
     JVMInst.dump(header) +
             JVMInst.dump(generateMain(ast.main) ::: ast.funs.flatMap(generateFunc)) +
             JVMInst.dump(footer)
   }
 
+  // mov(eax, allocate(21, 5))
+
+
   private def generateMain(main: Func):List[JVMInst] = {
-    val footer:List[JVMInst] =
-      JVMInst(
-        "popl %ebp",
-        "popl %edi",
-        "popl %esi",
-        "popl %ebx",
-        "leave",
-        "ret")
-    main.body.flatMap(genInst) ::: footer
+    main.body.flatMap(genInst).map("  " + _)
   }
 
   private def generateFunc(f: Func):List[JVMInst] = {
-    genInst(f.name) ::: f.body.flatMap(genInst)
+    (genInst(f.name) ::: f.body.flatMap(genInst)).map("  " + _)
   }
 
   def genInst(inst: L1Instruction): List[JVMInst] = {
@@ -114,12 +144,22 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
           "call print",
           "addl $4, %esp")
 
-      case Allocate(s, n) =>
+      // mov(eax, allocate(21, 5))
+      case Allocate(s, n) => {
+        def getValue(x:X) = x match {
+          case Num(n) => n
+          case _ =>
+            // TODO: have to make call to runtime to get the value of the register.
+            // and then put it onto the stack
+            // instead of ldc (load constant)
+            error("implement me")
+        }
         JVMInst(
-          "pushl " + genInst(n).head,
-          "pushl " + genInst(s).head,
-          "call allocate", "addl $8, %esp")
-
+          "ldc " + getValue(s),
+          "ldc " + getValue(n),
+          "invokestatic L1Compiler/Java/L1JavaRuntime/allocate(II)I")
+      }
+        
       case Goto(s) => JVMInst(jump(s))
 
       case Call(s) => {

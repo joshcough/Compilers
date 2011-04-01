@@ -3,7 +3,7 @@ package L1Compiler.X86
 import L1Compiler.CommandRunner._
 import L1Compiler.{L1Compiler, Runner}
 
-object JavaByteCodeRunner extends Runner {
+object L1X86Runner extends Runner {
 
   def main(args:Array[String]){
     run(args(0))

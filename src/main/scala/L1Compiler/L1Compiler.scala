@@ -42,6 +42,7 @@ trait BackEnd{
 
 trait Runner{
   def run(filename:String): String
+  def runString(code:String): String = ""
 }
 
 object L1Interpreter extends Runner {

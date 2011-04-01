@@ -13,6 +13,7 @@ object L1JavaRuntime {
   var allocptr = 0
   var wordsAllocated = 0
   def heapView = heap.take(wordsAllocated).toList
+  def printHeapView = println(heapView)
 
   def allocate(fw_size: Int, fw_fill: Int): Int = {
     val size = fw_size >> 1

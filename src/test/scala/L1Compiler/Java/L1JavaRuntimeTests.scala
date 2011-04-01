@@ -45,9 +45,25 @@ class L1JavaRuntimeTests extends FunSuite {
 
   runtimeTest("read"){
     mov(eax, allocate(21, 5))
+    assert(heapView === List(10, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5))
     mov(eax, allocate(21, 7))
     val size = read(eax, 0).asInstanceOf[Int]
-    for(i <- 1 until size) assert(valueOf(read(eax, i * 4)) === "3")
+    for(i <- 1 to size) assert(valueOf(read(eax, i * 4)) === "3")
+  }
+
+  //def write(x:Register, n4:Int, s:Any)
+  runtimeTest("write"){
+    mov(eax, allocate(21, 5))
+    val size = read(eax, 0).asInstanceOf[Int]
+    for(i <- 1 to size) write(eax, i * 4, i)
+    assert(heapView === List(10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+  }
+
+  runtimeTest("it is possible to put a label on the heap"){
+    mov(eax, allocate(21, 5))
+    val size = read(eax, 0).asInstanceOf[Int]
+    for(i <- 1 to size) write(eax, i * 4, i)
+    assert(heapView === List(10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
   }
 
   runtimeTest("+="){
@@ -62,5 +78,4 @@ class L1JavaRuntimeTests extends FunSuite {
   }
 
   def valueOf(a:Any) = print(a).trim
-
 }
