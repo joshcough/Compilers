@@ -13,7 +13,7 @@ object L1X86Runner extends Runner {
     val compiler = new L1Compiler with X86Generator
     val outputAssemblyFile = originalFileName.dropRight(3) + ".S"
     val outputOFile = originalFileName.dropRight(3) + ".o"
-    new File(outputAssemblyFile).write(compiler.compile(code))
+    new File(outputAssemblyFile).write(compiler.compile(code, originalFileName))
     runAndDieOneErrors("gcc -O2 -c -o ./runtime.o ./src/main/compilers/L1/runtime.c")
     runAndDieOneErrors("as -o " + outputOFile + " " + outputAssemblyFile)
     runAndDieOneErrors("gcc -o ./a.out "+outputOFile+" runtime.o")

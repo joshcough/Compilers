@@ -17,7 +17,7 @@ trait X86Generator extends L1Compiler.BackEnd {
 
   import X86Inst._
 
-  def generateCode(ast: L1): String = {
+  def generateCode(ast: L1, originalFileName:String): String = {
     val header: List[X86Inst] =
       X86Inst(
         ".file	\"prog.c\"",

@@ -14,7 +14,7 @@ class L1JavaRuntimeTests extends FunSuite {
 
   def runtimeTest(name:String)(f: => Unit) = test(name){ newProgram(); f }
   def testPrint(i:Int, expected: Int) = runtimeTest("print " + (i -> expected)){
-    assert(valueOf(i) === expected.toString)
+    assert(makeString(i) === expected.toString)
   }
 
   runtimeTest("alloc"){
@@ -22,7 +22,7 @@ class L1JavaRuntimeTests extends FunSuite {
     // 21 is 10 endcoded
     allocate(21, 5)
     assert(heapView === List(10, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5))
-    assert(valueOf(0) === "{s:10, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}")
+    assert(makeString(0) === "{s:10, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}")
   }
 
   runtimeTest("alloc twice"){
@@ -30,17 +30,17 @@ class L1JavaRuntimeTests extends FunSuite {
     // 21 is 10 endcoded
     assert(allocate(21, 5) === 0)
     assert(allocate(21, 7) === 11)
-    assert(valueOf(0) === "{s:10, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}")
+    assert(makeString(0) === "{s:10, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2}")
     assert(heapView === List(10, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 10, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7))
-    assert(valueOf(22) === "{s:10, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3}")
+    assert(makeString(22) === "{s:10, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3}")
   }
 
   runtimeTest("registers"){
     mov(eax, 85)
     mov(ebx, ":rwer")
     mov(ebx, eax)
-    assert(valueOf(eax) === "42")
-    assert(valueOf(ebx) === "42")
+    assert(makeString(eax) === "42")
+    assert(makeString(ebx) === "42")
   }
 
   runtimeTest("read"){
@@ -48,7 +48,7 @@ class L1JavaRuntimeTests extends FunSuite {
     assert(heapView === List(10, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5))
     mov(eax, allocate(21, 7))
     val size = read(eax, 0).asInstanceOf[Int]
-    for(i <- 1 to size) assert(valueOf(read(eax, i * 4)) === "3")
+    for(i <- 1 to size) assert(makeString(read(eax, i * 4)) === "3")
   }
 
   //def write(x:Register, n4:Int, s:Any)
@@ -69,13 +69,12 @@ class L1JavaRuntimeTests extends FunSuite {
   runtimeTest("+="){
     mov(eax, 7)
     +=(eax, 2)
-    assert(valueOf(eax) === "4")
+    assert(makeString(eax) === "4")
     -=(eax, 4)
-    assert(valueOf(eax) === "2")
+    assert(makeString(eax) === "2")
     *=(eax, 3)
-    assert(valueOf(eax) === "7")
+    assert(makeString(eax) === "7")
     // TODO test &=
   }
 
-  def valueOf(a:Any) = print(a).trim
 }

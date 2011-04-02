@@ -44,10 +44,11 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
   import JVMInst._
 
-  def generateCode(ast: L1): String = {
+  def generateCode(ast: L1, originalFileName:String): String = {
+    val className = originalFileName.reverse.takeWhile(_!='/').dropWhile(_!='.').drop(1).reverse
     val header: List[JVMInst] =
       JVMInst(
-        ".class public goo",
+        ".class public " + className,
         ".super java/lang/Object",
         "; constructor",
         ".method public <init>()V",
@@ -138,11 +139,47 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
       case BitwiseAnd(r, s) => JVMInst(tri("andl", s, r))
       case Comp(s1:X, _, s2:X) => JVMInst(tri("cmpl", s2, s1))
 
-      case Print(s) =>
+      case Print(s) => {
+        def getValue(x:X) = x match {
+          case Num(n) => n
+          case _ =>
+            // TODO: have to make call to runtime to get the value of the register.
+            // and then put it onto the stack
+            // instead of ldc (load constant)
+            error("implement me")
+        }
+
+        /**
+  public void printInt()
+    print(BoxesRunTime.boxToInteger(7));
+  }
+  public void printObj() {
+    print(eax());
+  }
+
+  public void printInt();
+    Code:
+     0:   aload_0
+     1:   ldc_w   #323; //int 7
+     4:   invokestatic    #124; //Method scala/runtime/BoxesRunTime.boxToInteger:(I)Ljava/lang/Integer;
+     7:   invokevirtual   #325; //Method print:(Ljava/lang/Object;)Ljava/lang/String;
+     10:  pop
+     11:  return
+
+  public void printObj();
+    Code:
+     0:   aload_0
+     1:   aload_0
+     2:   invokevirtual   #328; //Method eax:()LL1Compiler/Java/L1JavaRuntime$Register;
+     5:   invokevirtual   #325; //Method print:(Ljava/lang/Object;)Ljava/lang/String;
+     8:   pop
+     9:   return
+         */
         JVMInst(
-          "pushl " + genInst(s).head,
-          "call print",
-          "addl $4, %esp")
+          "ldc " + getValue(s),
+          "invokestatic scala/runtime/BoxesRunTime/boxToInteger(I)Ljava/lang/Integer;",
+          "invokestatic L1Compiler/Java/L1JavaRuntime/print(Ljava/lang/Object;)V")
+      }
 
       // mov(eax, allocate(21, 5))
       case Allocate(s, n) => {
@@ -159,7 +196,7 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
           "ldc " + getValue(n),
           "invokestatic L1Compiler/Java/L1JavaRuntime/allocate(II)I")
       }
-        
+
       case Goto(s) => JVMInst(jump(s))
 
       case Call(s) => {

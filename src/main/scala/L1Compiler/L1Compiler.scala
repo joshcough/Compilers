@@ -15,11 +15,11 @@ object Dir {
 import Dir._
 
 trait L1Compiler extends Reader with L1Parser with BackEnd {
-  def compile(code:String): String = generateCode(parse(read(code)))
+  def compile(code:String, unitName:String): String = generateCode(parse(read(code)), unitName)
 }
 
 trait BackEnd{
-  def generateCode(ast:L1):String
+  def generateCode(ast:L1, originalFileName:String):String
 }
 
 trait Runner{

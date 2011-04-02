@@ -34,13 +34,26 @@ object L1JavaRuntime {
     }
   }
 
-  def print(a: Any): String = a match {
-    case i:Int => printContent(i) + "\n"
-    case Register(v) => print(v)
-    case _ => error("don't know how to print: " + a)
+  def print(a: Any) {
+    //println("in print")
+    println(makeString(a)+ "\n")
+    eax.value = 0
+    // TODO: maybe kill any other registers that the interpreter kills.
+    // but...see what it really puts in there. it doesnt really put in zero
+    // it makes them undefined.
   }
 
-  def printContent(in: Int, depth: Int=0): String = {
+  def makeString(a: Any): String = {
+    //println("inside makeString")
+    a match {
+      case i:Int => makeString(i, 0)
+      case Register(v) => makeString(v)
+      case _ => error("don't know how to print: " + a)
+    }
+  }
+
+  def makeString(in: Int, depth: Int=0): String = {
+    //println("in: " + in + " depth: " + depth)
     if (depth >= 4) "..."
     else if ((in & 1) == 1) (in >> 1).toString
     else {
@@ -49,7 +62,7 @@ object L1JavaRuntime {
       val size = heap(ptr).asInstanceOf[Int]
       "{s:" + size + ", " +
       (for (data <- (ptr + 1) until (ptr + 1 + size)) yield heap(data) match {
-        case i: Int => printContent(i, depth + 1)
+        case i: Int => makeString(i, depth + 1)
         case a => error("don't know how to print: " + a)
       }).mkString(", ") + "}"
     }
@@ -101,5 +114,14 @@ object L1JavaRuntime {
       }
       case _ => error("can't add this to a register: " + s)
     }
+  }
+
+  def printInt(){
+    print(7)
+  }
+
+
+  def printObj(){
+    print(eax)
   }
 }
