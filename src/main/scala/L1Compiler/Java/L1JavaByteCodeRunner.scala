@@ -4,13 +4,9 @@ import L1Compiler.{L1Compiler, Runner}
 
 object L1JavaByteCodeRunner extends Runner {
 
-  def main(args:Array[String]){
-    run(args(0))
-  }
+  def main(args:Array[String]){ runFile(args(0)) }
 
-  def run(filename:String) = error("implement me")
-
-  override def runString(code:String) = {
+  def run(code:String, originalFileName:String): String = {
     val compiler = new L1Compiler with JavaByteCodeGenerator
     compiler.compile(code)
   }

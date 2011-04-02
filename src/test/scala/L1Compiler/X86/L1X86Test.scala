@@ -87,12 +87,12 @@ trait L1X86Test extends org.scalatest.FunSuite{
   def testCompileString(t: (String, String)) { testCompile(t._1, t._1, t._2) }
   private def testCompile(testName: String, code: String, expectedResults: String): Unit = {
     test(testName + " => " + expectedResults){
-      assert(X86.L1X86Runner.compileAndRunCode(code) === expectedResults)
+      assert(X86.L1X86Runner.test(code) === expectedResults)
     }
   }
 
   def testCompilerVsInterpreter(filename: String) {
     val fullPath = Dir.L1File("code/" + filename)
-    test(filename){ assert(X86.L1X86Runner.run(fullPath) === L1Interpreter.run(fullPath)) }
+    test(filename){ assert(X86.L1X86Runner.runFile(fullPath) === L1Interpreter.runFile(fullPath)) }
   }
 }

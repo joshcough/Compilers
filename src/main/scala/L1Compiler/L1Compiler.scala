@@ -15,25 +15,7 @@ object Dir {
 import Dir._
 
 trait L1Compiler extends Reader with L1Parser with BackEnd {
-
-  def compileFile(filename:String) {
-    compileCodeAndWriteOutput(new File(filename).read, filename)
-  }
-
-  // just return the assembly code result
   def compile(code:String): String = generateCode(parse(read(code)))
-
-  def compileCodeAndWriteOutput(code:String, originalL1Filename:String){
-    val compiledCode = compile(code)
-    //compiledCode.split("\n").zipWithIndex.foreach{ case (c,i) => println(i + ":\t" + c) }
-    val outputAssemblyFile = originalL1Filename.dropRight(3) + ".S"
-    val outputOFile = originalL1Filename.dropRight(3) + ".o"
-    new File(outputAssemblyFile).write(compiledCode)
-    runAndDieOneErrors("gcc -O2 -c -o ./runtime.o ./src/main/compilers/L1/runtime.c")
-    runAndDieOneErrors("as -o " + outputOFile + " " + outputAssemblyFile)
-    runAndDieOneErrors("gcc -o ./a.out "+outputOFile+" runtime.o")
-  }
-
 }
 
 trait BackEnd{
@@ -41,16 +23,16 @@ trait BackEnd{
 }
 
 trait Runner{
-  def run(filename:String): String
-  def runString(code:String): String = ""
+  def runFile(filename:String): String = run(new File(filename).read, filename)
+  def run(code:String, originalFileName:String): String
+  def test(code:String) = run(code, "Test.L1")
 }
 
 object L1Interpreter extends Runner {
-  def run(filename:String) = {
-    val codeFile = new File(filename).getAbsolutePath
-    val (out, err) = CommandRunner(L1File("L1") + " " + codeFile)
+  def run(code:String, originalFileName:String): String = {
+    val (out, err) = CommandRunner(L1File("L1") + " " + new File(originalFileName).getAbsolutePath)
     if(err != "Welcome to L1, v7") error("interpreter died with the following errors:\n" + err)
-    val resultFile = new File(filename.dropRight(3) + ".res")
+    val resultFile = new File(originalFileName.dropRight(3) + ".res")
     resultFile.write(out)
     out
   }
