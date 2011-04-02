@@ -1,5 +1,5 @@
 package L2Compiler
-
+/**
 import L2AST._
 import L1Compiler.L1AST._
 
@@ -16,3 +16,4 @@ class ParseCJumpTest extends L2CompilerTest {
   testParseInstruction("(cjump 2 <= efx :true :false)" ->
           CJump(Comp(Num(2), LessThanOrEqualTo, Variable("efx")), Label("true"), Label("false")))
 }
+**/

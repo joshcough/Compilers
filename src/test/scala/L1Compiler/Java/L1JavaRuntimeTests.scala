@@ -77,4 +77,9 @@ class L1JavaRuntimeTests extends FunSuite {
     // TODO test &=
   }
 
+  runtimeTest("register equality"){
+    assert(eax === eax)
+    assert(eax != ebx)
+  }
+
 }

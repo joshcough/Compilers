@@ -1,33 +1,55 @@
+ p ::= ((i ...) 
+        (label i ...) 
+        ...)
+
+A 'p' is a sequence of functions, the first of which is unnamed (ie
+has no initial label). That one is the (body of the) main function for
+the program. Each function's body is just a series of
+instructions. Here are the instructions:
+
 i ::= (x <- s)            ;; assign to a register
     | (x <- (mem x n4))   ;; read from memory @ x+n4
     | ((mem x n4) <- s)   ;; update memory @ x+n4
 
-    | (x += s)            ;; increment x by s
-    | (x -= s)            ;; decrement x by s
-    | (x *= s)            ;; multiply x by x
+    | (x aop= s)          ;; update x with an arith op and s.
+    | (x sop= sx)         ;; update x with a shifting op and sx.
+    | (x sop= num)        ;; update x with a shifting op and num.
     | (cx <- s cmp s)     ;; save result of a comparison
 
     | label               ;; target of a jump
-    | (goto s)            ;; unconditional jump
+    | (goto label)        ;; unconditional jump
     | (cjump s cmp s label label) ;; conditional jump
-
+     
     | (call s)            ;; call a function [see below]
-    | (return)            ;; return from a function
-
-    ;; two calls into the runtime system, one to print a value:
+    | (tail-call s)       ;; tail call a function [see below]
+    | (return)            ;; return from a function 
+     
+    ;; three calls into the runtime system, one to print a value:
+    ;; (which returns the encoded version of 0)
     | (eax <- (print s))
-    ;; and one to allocate & initialize some space
+    ;; one to allocate & initialize some space
     | (eax <- (allocate s s))
+    ;; one to signal a runtime error on array dereference and 
+    ;; terminate the program.
+    | (eax <- (array-error s s))
 
 And a few helper non-terminals:
 
 s     ::= x | num | label
 x     ::= cx | esi | edi | ebp | esp
 cx    ::= eax | ecx | edx | ebx
+sx    ::= ecx
+aop=  ::= += | -= | *= | &=
+sop=  ::= <<= | >>=
 cmp   ::= < | <= | =
 label ::= sequence of alpha-numeric characters or underscore,
-          but starting with a colon, ie matching this regexp:
-          #rx"^:[a-zA-Z0-9_]$"
+          but starting with a colon and a non-digit, i.e.,
+          matching this regexp: #rx"^:[a-zA-Z_][a-zA-Z_0-9]*$"
 num   ::= number between (inclusive) -2^31 and (2^31)-1
 n4    ::= number between (inclusive) -2^31 and (2^31)-1
           that is divisble by 4
+
+  
+  ;; eax, edx, and ecx are the argument registers (in that order)
+  ;; esi, and edi are callee / function save
+  ;; eax, edx, ecx, and ebx caller / application save

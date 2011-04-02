@@ -2,7 +2,7 @@ package L2Compiler
 
 import L2AST._
 import L1Compiler.L1AST._
-
+/**
 trait Spill {
   
   def spill(spillVar:Variable, stackOffset: Int, spillPrefix:String, ins: List[Instruction]): List[Instruction] = {
@@ -261,4 +261,4 @@ trait Spill {
     liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.
             find(_.x.isInstanceOf[Variable]).map(_.x.asInstanceOf[Variable])
   }
-}
+}**/

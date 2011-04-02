@@ -1,5 +1,5 @@
 package L2Compiler
-
+/**
 import RegisterColorGraph._
 import L1Compiler.L1AST._
 import L2AST._
@@ -367,4 +367,4 @@ class LivenessTest extends L2CompilerTest {
 """
     assert(chooseSpillVar(liveRanges(inout(code))) === Some(Variable("z2")))
   }
-}
+}**/

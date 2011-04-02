@@ -51,12 +51,12 @@ trait L1Parser extends Parser[L1] {
     case s: Symbol => parseLabelOrRegister(s)
   }
 
-  def parseNumOrRegister(exp:Any): X = exp match {
+  def parseNumOrRegister(exp:Any): S = exp match {
     case n: Int => Num(n)
     case s: Symbol => parseRegister(s)
   }
 
-  def parseLabelOrRegister(s: Symbol): X = {
+  def parseLabelOrRegister(s: Symbol): S = {
     if (s.toString.startsWith("':")) parseLabel(s.toString) else parseRegister(s)
   }
 

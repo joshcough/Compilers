@@ -58,9 +58,9 @@ trait X86Generator extends L1Compiler.BackEnd {
 
   def genInst(inst: L1Instruction): List[X86Inst] = {
 
-    def jump(x:X) = x match {
+    def jump(s:S) = s match {
       case Label(name) => "jmp L1_" + name
-      case _ => "jmp *" + genInst(x).head
+      case _ => "jmp *" + genInst(s).head
     }
 
     def jumpIfLess(l: Label) = "jl L1_" + l.l

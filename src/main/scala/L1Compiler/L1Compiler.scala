@@ -3,7 +3,6 @@ package L1Compiler
 import java.io.File
 import reader.Reader
 import L1AST._
-import CommandRunner._
 import FileHelper._
 
 object Dir {

@@ -1,5 +1,5 @@
 package L2Compiler
-
+/**
 import L2AST._
 import L1Compiler.L1AST._
 
@@ -129,3 +129,4 @@ class SpillTests extends L2CompilerTest {
   testSpill("((cjump y < y :l1 :l2))",
     CJump(Comp(Variable("y"),LessThan,Variable("y")),Label("l1"),Label("l2")))
 }
+**/

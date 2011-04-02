@@ -5,7 +5,7 @@ object L2AST {
   object L2{ def apply(main: Func): L2 = L2(main, Nil) }
   case class L2(main: Func, funs:List[Func])
 
-  case class Variable(val name: String) extends X {
+  case class Variable(val name: String) extends S {
     override def toString = "Variable(\"" + name + "\")"
     def toCode: String = name
   }

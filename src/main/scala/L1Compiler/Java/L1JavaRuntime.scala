@@ -1,5 +1,7 @@
 package L1Compiler.Java
 
+import collection.mutable.ListBuffer
+
 object L1JavaRuntime {
 
   case class Register(var value:Any = new AnyRef){
@@ -34,9 +36,11 @@ object L1JavaRuntime {
     }
   }
 
+  val printBuffer = new ListBuffer[String]()
+
   def print(a: Any) {
-    //println("in print")
-    println(makeString(a)+ "\n")
+    printBuffer += makeString(a)
+    //println(makeString(a))
     eax.value = 0
     // TODO: maybe kill any other registers that the interpreter kills.
     // but...see what it really puts in there. it doesnt really put in zero
@@ -74,6 +78,7 @@ object L1JavaRuntime {
     wordsAllocated = 0
     for(i <- 0 until HEAP_SIZE) heap(i) = 0
     registers.foreach(_.clear())
+    printBuffer.clear()
   }
 
   /**

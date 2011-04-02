@@ -1,5 +1,5 @@
 package L2Compiler
-
+/**
 object BiDirectionalGraph{
   def apply[T](conns:(T,T)*): BiDirectionalGraph[T] = {
     new BiDirectionalGraph[T](Set()) ++ conns.toList
@@ -102,7 +102,7 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
     case _ => x
   }
   private def repLoc(loc:MemLoc): MemLoc = MemLoc(repX(loc.basePointer),loc.offset)
-  private def repComp(c:Comp): Comp = Comp(repX(c.x1), c.op, repX(c.x2))
+  private def repComp(c:Comp): Comp = Comp(repX(c.s1), c.op, repX(c.s2))
 
   def replaceVarsWithRegisters(i:Instruction): Instruction = i match {
     case Allocate(n, init) => Allocate(repX(n), repX(init))
@@ -123,3 +123,4 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
     case _ => i
   }
 }
+ **/

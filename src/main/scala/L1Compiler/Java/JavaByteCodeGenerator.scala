@@ -61,7 +61,6 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
         "  .limit locals 99")
     def footer =
       JVMInst(
-        "  invokestatic L1Compiler/Java/L1JavaRuntime/printHeapView()V",
         "  return",
         ".end method",
         "; class init",
@@ -75,9 +74,6 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
             JVMInst.dump(footer)
   }
 
-  // mov(eax, allocate(21, 5))
-
-
   private def generateMain(main: Func):List[JVMInst] = {
     main.body.flatMap(genInst).map("  " + _)
   }
@@ -88,9 +84,9 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
   def genInst(inst: L1Instruction): List[JVMInst] = {
 
-    def jump(x:X) = x match {
+    def jump(s:S) = s match {
       case Label(name) => "jmp L1_" + name
-      case _ => "jmp *" + genInst(x).head
+      case _ => "jmp *" + genInst(s).head
     }
 
     def jumpIfLess(l: Label) = "jl L1_" + l.l
@@ -140,15 +136,6 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
       case Comp(s1:X, _, s2:X) => JVMInst(tri("cmpl", s2, s1))
 
       case Print(s) => {
-        def getValue(x:X) = x match {
-          case Num(n) => n
-          case _ =>
-            // TODO: have to make call to runtime to get the value of the register.
-            // and then put it onto the stack
-            // instead of ldc (load constant)
-            error("implement me")
-        }
-
         /**
   public void printInt()
     print(BoxesRunTime.boxToInteger(7));
@@ -176,24 +163,16 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
      9:   return
          */
         JVMInst(
-          "ldc " + getValue(s),
+          loadOntoStack(s),
           "invokestatic scala/runtime/BoxesRunTime/boxToInteger(I)Ljava/lang/Integer;",
           "invokestatic L1Compiler/Java/L1JavaRuntime/print(Ljava/lang/Object;)V")
       }
 
       // mov(eax, allocate(21, 5))
       case Allocate(s, n) => {
-        def getValue(x:X) = x match {
-          case Num(n) => n
-          case _ =>
-            // TODO: have to make call to runtime to get the value of the register.
-            // and then put it onto the stack
-            // instead of ldc (load constant)
-            error("implement me")
-        }
         JVMInst(
-          "ldc " + getValue(s),
-          "ldc " + getValue(n),
+          loadOntoStack(s),
+          loadOntoStack(n),
           "invokestatic L1Compiler/Java/L1JavaRuntime/allocate(II)I")
       }
 
@@ -252,6 +231,15 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
     }
   }
 
+  def loadOntoStack(s: S) = s match {
+    case Num(n) => "ldc " + n
+    case _ =>
+    // TODO: have to make call to runtime to get the value of the register.
+    // and then put it onto the stack
+    // instead of ldc (load constant)
+      error("implement me")
+  }
+
   // figure out a better way to do this crap:
   private var labelCount = -1
   private def nextNewLabel = {
@@ -259,3 +247,13 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
     Label("Generated_Label_" + labelCount)
   }
 }
+/**
+ def getValue(x:X) = x match {
+          case Num(n) => n
+          case _ =>
+            // TODO: have to make call to runtime to get the value of the register.
+            // and then put it onto the stack
+            // instead of ldc (load constant)
+            error("implement me")
+        }
+ **/

@@ -10,7 +10,7 @@ case class LiveRange(x:X, range:Int)
 trait Liveness {
 
   def gen(i:Instruction): Set[X] = {
-    def g(i: Instruction, s2: X) = gen(i) union gen(s2)
+    def g(i: Instruction, s2: S) = gen(i) union gen(s2)
     i match {
       case Num(_) => Set()
       case Label(_) => Set()

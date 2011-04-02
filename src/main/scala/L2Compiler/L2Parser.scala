@@ -3,7 +3,7 @@ package L2Compiler
 import reader._
 import L2AST._
 import L1Compiler.L1AST._
-
+/**
 trait L2Parser extends Parser[L2] {
 
   def parse(exp:Any): L2 = exp match {
@@ -53,12 +53,12 @@ trait L2Parser extends Parser[L2] {
     case s: Symbol => parseLabelOrX(s)
   }
 
-  def parseNumOrX(exp:Any): X = exp match {
+  def parseNumOrX(exp:Any): S = exp match {
     case n: Int => Num(n)
     case s: Symbol => parseX(s)
   }
 
-  def parseLabelOrX(s: Symbol): X = {
+  def parseLabelOrX(s: Symbol): S = {
     if (s.toString.startsWith("':")) parseLabel(s.toString) else parseX(s)
   }
 
@@ -119,3 +119,4 @@ trait L2Parser extends Parser[L2] {
     }
   }
 }
+ **/

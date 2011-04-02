@@ -4,7 +4,7 @@ import L1Compiler.L1AST._
 import L2Compiler.L2AST._
 import L1Compiler.FileHelper._
 import java.io.File
-
+/**
 //((x <- 1) (eax += x)) x -4 s
 object HW2 {
 
@@ -41,3 +41,4 @@ object HW2 {
     println("(" + newProgram.map(_.toCode).mkString("\n") + ")")
   }
 }
+ **/
