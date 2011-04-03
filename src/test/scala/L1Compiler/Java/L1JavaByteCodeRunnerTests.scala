@@ -6,11 +6,11 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
   
   val runner = L1JavaByteCodeRunner
 
-  test("simple print"){
+  jvmTest("simple print"){
     assert(runner.test("""(((eax <- (print 5))))""") === "2")
   }
 
-  test("print twice"){
+  jvmTest("print twice"){
     assert(runner.test(
       """
       ((
@@ -19,7 +19,7 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
       ))""") === "2\n2")
   }
 
-  test("allocate and then print"){
+  jvmTest("allocate and then print"){
     assert(
       runner.test(
       """
@@ -30,7 +30,7 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
       """) === "2")
   }
 
-  test("put number in register"){
+  jvmTest("put number in register"){
     assert(runner.test(
       """
       ((
@@ -39,7 +39,7 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
       ))""") === "3")
   }
 
-  test("mov register to register"){
+  jvmTest("mov register to register"){
     assert(runner.test(
       """
       ((
@@ -49,4 +49,24 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
       ))""") === "4")
   }
 
+  jvmTest("mov to register from memory"){
+    assert(runner.test(
+      """
+      ((
+        (eax <- (allocate 5 5))
+        (esi <- (mem eax 4))
+        (eax <- (print eax))
+        (eax <- (print esi))
+      ))""") === "{s:2, 2, 2}\n2")
+  }
+
+  def jvmTest(name:String)(f: => Unit) {
+    test(name){
+      try f
+      catch { case e =>
+        println("heap for '" + name + "': " + L1JavaRuntime.heapView)
+        throw e
+      }
+    }
+  }
 }

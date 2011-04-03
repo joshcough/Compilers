@@ -84,17 +84,30 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
   def genInst(inst: L1Instruction): List[JVMInst] = {
 
+    def invokeMov =
+      "invokestatic L1Compiler/Java/L1JavaRuntime/mov(LL1Compiler/Java/JavaRuntimeRegister;Ljava/lang/Object;)V"
+
+    def invokeRead =
+      "invokestatic L1Compiler/Java/L1JavaRuntime/read(LL1Compiler/Java/JavaRuntimeRegister;I)Ljava/lang/Object;"
+
     inst match {
-//      case LabelDeclaration(l) => JVMInst(declare(l))
 
       // several assignment cases.
       case Assignment(r:Register, s:S) =>
         JVMInst(
-          "invokestatic L1Compiler/Java/L1JavaRuntime/" + r.name + "()LL1Compiler/Java/JavaRuntimeRegister;\n" +
-           loadOntoStackAsObject(s),
-          "invokestatic L1Compiler/Java/L1JavaRuntime/mov(LL1Compiler/Java/JavaRuntimeRegister;Ljava/lang/Object;)V")
+          loadRegisterOntoStack(r),
+          loadValueOntoStackAsObject(s),
+          invokeMov)
 
-//      case Assignment(r:Register, MemRead(loc)) => JVMInst(tri("movl", loc, r))
+      case Assignment(r:Register, MemRead(MemLoc(base, off))) => {
+        JVMInst(
+          loadRegisterOntoStack(r),
+          loadRegisterOntoStack(base),
+          loadValueOntoStackAsInt(off),
+          invokeRead,
+          invokeMov
+        )
+      }
 //      // cmp assignments have to be with CXRegisters on LHS
 //      /**
 //          (eax <- ebx < ecx)
@@ -132,7 +145,7 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
       // cx has to be eax here or it wouldnt get through parsing
       case Assignment(cx:CXRegister, Print(s)) => {
         JVMInst(
-          loadOntoStackAsObject(s),
+          loadValueOntoStackAsObject(s),
           "invokestatic L1Compiler/Java/L1JavaRuntime/print(Ljava/lang/Object;)V")
       }
       // cx has to be eax here or it wouldnt get through parsing
@@ -140,13 +153,15 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
         JVMInst(
           // TODO: put the result of the last instruction here into eax.
           // or maybe the allocate function can do it automatically. whatever.
-          loadOntoStackAsInt(s),
-          loadOntoStackAsInt(n),
+          loadValueOntoStackAsInt(s),
+          loadValueOntoStackAsInt(n),
           "invokestatic L1Compiler/Java/L1JavaRuntime/allocate(II)I")
       }
 
       case Assignment(l, r) => error("bad assignment statement: " + inst)
+
 //
+//      case LabelDeclaration(l) => JVMInst(declare(l))
 //      case MemWrite(loc, s) => JVMInst(tri("movl", s, loc))
 //      case Increment(r, s) => JVMInst(tri("addl", s, r))
 //      case Decrement(r, s) => JVMInst(tri("subl", s, r))
@@ -218,7 +233,7 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
     Label("Generated_Label_" + labelCount)
   }
 
-  def loadOntoStackAsInt(s: S) = s match {
+  def loadValueOntoStackAsInt(s: S) = s match {
     case Num(n) => "ldc " + n
     case Label(name) => error("what do i do here?")
     case r:Register =>
@@ -226,12 +241,17 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
       "invokevirtual L1Compiler/Java/JavaRuntimeRegister/getIntValue()I"
   }
 
-  def loadOntoStackAsObject(s: S) = s match {
+  def loadValueOntoStackAsObject(s: S) = s match {
     case Num(n) => "ldc " + n + "\n" +
       "invokestatic scala/runtime/BoxesRunTime/boxToInteger(I)Ljava/lang/Integer;"
     case Label(name) => error("what do i do here?")
     case r:Register =>
       "invokestatic L1Compiler/Java/L1JavaRuntime/" + r.name + "()LL1Compiler/Java/JavaRuntimeRegister;\n" +
       "invokevirtual L1Compiler/Java/JavaRuntimeRegister/value()Ljava/lang/Object;"
+  }
+
+  // puts the register directly on the stack. not its value
+  def loadRegisterOntoStack(r: Register) = {
+    "invokestatic L1Compiler/Java/L1JavaRuntime/" + r.name + "()LL1Compiler/Java/JavaRuntimeRegister;"
   }
 }

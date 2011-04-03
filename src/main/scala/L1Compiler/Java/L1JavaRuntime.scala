@@ -2,8 +2,10 @@ package L1Compiler.Java
 
 import collection.mutable.ListBuffer
 
-case class JavaRuntimeRegister(var value: Any = new AnyRef) {
-  def clear() { value = new AnyRef }
+case object Undefined
+
+case class JavaRuntimeRegister(var value: Any = Undefined) {
+  def clear() { value = Undefined }
   def getIntValue: Int = value match {
     case i:Int => i
     case _ => error("value is not an int: " + value)
@@ -35,6 +37,9 @@ object L1JavaRuntime {
       if (wordsAllocated < HEAP_SIZE) {
         heap(ret) = size
         for (i <- (ret + 1) to (ret + 1 + size)) heap(i) = fw_fill
+        // TODO: consider if this is a hack.
+        // TODO: consider if we should clobber the other caller save registers.
+        eax.value = ret
         ret
       }
       else error("out of memory")
@@ -126,14 +131,5 @@ object L1JavaRuntime {
       }
       case _ => error("can't add this to a register: " + s)
     }
-  }
-
-  def printInt(){
-    print(7)
-  }
-
-
-  def printObj(){
-    print(eax)
   }
 }
