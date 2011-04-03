@@ -52,74 +52,95 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
     (genInst(f.name) ::: f.body.flatMap(genInst)).map("  " + _)
   }
 
-  def genInst(inst: L1Instruction): List[JVMInst] = {
+  def genInst(inst: L1Instruction): List[JVMInst] = inst match {
 
-     inst match {
+    case Assignment(r:Register, s:S) =>
+      JVMInst(
+        loadRegisterOntoStack(r),
+        loadValueOntoStackAsObject(s),
+        invokeMov)
 
-      // several assignment cases.
-      case Assignment(r:Register, s:S) =>
-        JVMInst(
-          loadRegisterOntoStack(r),
-          loadValueOntoStackAsObject(s),
-          invokeMov)
+    case Assignment(r:Register, MemRead(MemLoc(base, off))) => {
+      JVMInst(
+        loadRegisterOntoStack(r),
+        loadRegisterOntoStack(base),
+        loadValueOntoStackAsInt(off),
+        invokeRead,
+        invokeMov
+      )
+    }
 
-      case Assignment(r:Register, MemRead(MemLoc(base, off))) => {
-        JVMInst(
-          loadRegisterOntoStack(r),
-          loadRegisterOntoStack(base),
-          loadValueOntoStackAsInt(off),
-          invokeRead,
-          invokeMov
-        )
-      }
+    case Assignment(cx:CXRegister, c@Comp(left:S,op,right:S)) => {
+      val trueLabel = nextNewLabel()
+      val finishLabel = nextNewLabel()
+      JVMInst(
+        ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
+        ";;; assignment to comparison ;;;",
+        ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
+        "; load the register to store 0 or 1",
+        loadRegisterOntoStack(cx),
+        "; load ints to compare",
+        loadValueOntoStackAsInt(left),
+        loadValueOntoStackAsInt(right),
+        "; compare them",
+        comparisonInstruction(op) + " L1_" + trueLabel.name,
+        "; put 0 on stack",
+        loadValueOntoStackAsObject(Num(0)),
+        "goto L1_" + finishLabel.name,
+        declare(trueLabel),
+        "; put 1 on stack",
+        loadValueOntoStackAsObject(Num(1)),
+        declare(finishLabel),
+        "; store",
+        invokeMov,
+        ";;; end assignment to comparison ;;;")
+    }
 
-      case Assignment(cx:CXRegister, c@Comp(left:S,op,right:S)) => {
-        val trueLabel = nextNewLabel()
-        val finishLabel = nextNewLabel()
-        JVMInst(
-          ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
-          ";;; assignment to comparison ;;;",
-          ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
-          "; load the register to store 0 or 1",
-          loadRegisterOntoStack(cx),
-          "; load ints to compare",
-          loadValueOntoStackAsInt(left),
-          loadValueOntoStackAsInt(right),
-          "; compare them",
-          comparisonInstruction(op) + " L1_" + trueLabel.name,
-          "; put 0 on stack",
-          loadValueOntoStackAsObject(Num(0)),
-          "goto L1_" + finishLabel.name,
-          declare(trueLabel),
-          "; put 1 on stack",
-          loadValueOntoStackAsObject(Num(1)),
-          declare(finishLabel),
-          "; store",
-          invokeMov,
-          ";;;;end assignment to comparison;;;;")
-      }
+    // cx has to be eax here or it wouldnt get through parsing
+    case Assignment(cx:CXRegister, Print(s)) => {
+      JVMInst(
+        loadValueOntoStackAsObject(s),
+        "invokestatic L1Compiler/Java/L1JavaRuntime/print(Ljava/lang/Object;)V")
+    }
+    // cx has to be eax here or it wouldnt get through parsing
+    case Assignment(cx:CXRegister, Allocate(s, n)) => {
+      JVMInst(
+        // TODO: put the result of the last instruction here into eax.
+        // or maybe the allocate function can do it automatically. whatever.
+        loadValueOntoStackAsInt(s),
+        loadValueOntoStackAsInt(n),
+        "invokestatic L1Compiler/Java/L1JavaRuntime/allocate(II)I")
+    }
 
-      // cx has to be eax here or it wouldnt get through parsing
-      case Assignment(cx:CXRegister, Print(s)) => {
-        JVMInst(
-          loadValueOntoStackAsObject(s),
-          "invokestatic L1Compiler/Java/L1JavaRuntime/print(Ljava/lang/Object;)V")
-      }
-      // cx has to be eax here or it wouldnt get through parsing
-      case Assignment(cx:CXRegister, Allocate(s, n)) => {
-        JVMInst(
-          // TODO: put the result of the last instruction here into eax.
-          // or maybe the allocate function can do it automatically. whatever.
-          loadValueOntoStackAsInt(s),
-          loadValueOntoStackAsInt(n),
-          "invokestatic L1Compiler/Java/L1JavaRuntime/allocate(II)I")
-      }
+    // i dont think this can happen, the parse shouldnt allow it.
+    case Assignment(l, r) => error("bad assignment statement: " + inst)
 
-      case Assignment(l, r) => error("bad assignment statement: " + inst)
+    case LabelDeclaration(l:Label) => JVMInst(declare(l))
 
-      case LabelDeclaration(l:Label) => JVMInst(declare(l))
+    /////////// cjump //////////
 
-//      case MemWrite(loc, s) => JVMInst(tri("movl", s, loc))
+    // special case for two numbers
+    case CJump(Comp(n1:Num, op, n2:Num), trueLabel, falseLabel) => {
+      if(op(n1.n, n2.n)) JVMInst("goto " + trueLabel.name) else JVMInst("goto " + falseLabel.name)
+    }
+    case CJump(cmp@Comp(left,op,right), trueLabel, falseLabel) => {
+      JVMInst(
+        ";;;;;;;;;;;;;",
+        ";;; cjump ;;;",
+        ";;;;;;;;;;;;;",
+        "; load ints to compare",
+        loadValueOntoStackAsInt(left),
+        loadValueOntoStackAsInt(right),
+        "; compare them",
+        comparisonInstruction(op) + " L1_" + trueLabel.name,
+        "goto L1_" + falseLabel.name,
+        ";;;; end cjump ;;;;")
+    }
+
+    case MemWrite(loc, s) => {
+      JVMInst(tri("movl", s, loc))
+    }
+
 //      case Increment(r, s) => JVMInst(tri("addl", s, r))
 //      case Decrement(r, s) => JVMInst(tri("subl", s, r))
 //      case Multiply(r, s) => JVMInst(tri("imull", s, r))
@@ -140,47 +161,13 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 //          declare(label))
 //      }
 //
-//      /////////// cjump //////////
-//
-//      // special case for two numbers
-//      case CJump(Comp(n1:Num, op, n2:Num), l1, l2) => {
-//        if(op(n1.n, n2.n)) JVMInst(jump(l1)) else JVMInst(jump(l2))
-//      }
-//
-//      // (cjump 11 < ebx :true :false) // special case. destination jmust be a register.
-//      case CJump(Comp(n:Num, op, r:Register), l1, l2) => {
-//        val jumpInstruction = op match {
-//          case LessThan => jumpIfGreater(l1)
-//          case LessThanOrEqualTo => jumpIfGreaterOrEqual(l1)
-//          case EqualTo => jumpIfEqual(l1)
-//        }
-//        JVMInst(
-//          // magic reversal happens here.
-//          tri("cmpl", n, r),
-//          jumpInstruction,
-//          jump(l2))
-//      }
-//
-//      case CJump(cmp@Comp(s1,op,s2), l1, l2) => {
-//        val jumpInstruction = op match {
-//          case LessThan => jumpIfLess(l1)
-//          case LessThanOrEqualTo => jumpIfLessThanOrEqual(l1)
-//          case EqualTo => jumpIfEqual(l1)
-//        }
-//        JVMInst(
-//          tri("cmpl", s2, s1),
-//          jumpInstruction,
-//          jump(l2))
-//      }
-//
 //      case Return =>
 //        JVMInst(
 //          "movl %ebp, %esp",
 //          "popl %ebp",
 //          "ret")
 
-      case _ => error("implement me: " + inst)
-    }
+    case _ => error("implement me: " + inst)
   }
 
   def loadValueOntoStackAsInt(s: S) = s match {

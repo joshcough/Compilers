@@ -75,6 +75,31 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
       ))""") === "0")
   }
 
+  jvmTest("cjump on registers"){
+    assert(runner.test(
+      """
+      ((
+        (ecx <- 6)
+        (edx <- 5)
+        (cjump ecx < edx :keep_going :done)
+        :keep_going
+        (eax <- (print 9999999))
+        :done
+        (esi <- ecx)
+        (edi <- edx)
+        (eax <- (print edx))
+        (ebx <- edi < esi)
+        (eax <- (print ebx))
+        (ebx <- edi <= esi)
+        (eax <- (print ebx))
+        (ebx <- esi < edi)
+        (cjump ebx <= 0 :terminate :aint_gonna_happen)
+        :aint_gonna_happen
+        :terminate
+        (eax <- (print 85))
+      ))""") === "2\n0\n0\n42")
+  }
+  
   def jvmTest(name:String)(f: => Unit) {
     test(name){
       try f
