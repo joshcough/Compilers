@@ -69,14 +69,14 @@ class ParseAssignmentsTest extends L1ParserTest {
   testParseInstruction("((mem ebx 4) <- esi)" -> MemWrite(MemLoc(ebx, Num(4)), esi))
 
   // print
-  testParseInstruction("(eax <- (print eax))" -> Print(eax))
-  testParseInstruction("(eax <- (print ebx))" -> Print(ebx))
+  testParseInstruction("(eax <- (print eax))" -> Assignment(eax, Print(eax)))
+  testParseInstruction("(eax <- (print ebx))" -> Assignment(eax, Print(ebx)))
   // TODO: figure out if this is even legal
-  testParseInstruction("(eax <- (print 7))" -> Print(Num(7)))
+  testParseInstruction("(eax <- (print 7))" -> Assignment(eax, Print(Num(7))))
 
   // allocate
-  testParseInstruction("(eax <- (allocate eax 1))" -> Allocate(eax, Num(1)))
-  testParseInstruction("(eax <- (allocate ebx 1))" -> Allocate(ebx, Num(1)))
+  testParseInstruction("(eax <- (allocate eax 1))" -> Assignment(eax, Allocate(eax, Num(1))))
+  testParseInstruction("(eax <- (allocate ebx 1))" -> Assignment(eax, Allocate(ebx, Num(1))))
   testParseInstructionError("(eax <- (allocate eex 1))" -> "eex is an invalid register")
 
   // cmp

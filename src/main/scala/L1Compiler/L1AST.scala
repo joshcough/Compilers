@@ -13,39 +13,40 @@ object L1AST {
     }
   }
 
+  sealed trait AssignmentRHS { def toCode:String }
+
   // TODO: this is not an entire instruction
   // because its the right hand side of an assignment
-  case class Allocate(n:S, init:S) extends Instruction {
-    def toCode: String = "(eax <- (allocate " + n.toCode + " " + init.toCode + "))"
+  case class Allocate(n:S, init:S) extends AssignmentRHS {
+    def toCode: String = "(allocate " + n.toCode + " " + init.toCode + ")"
   }
-  // s:Instruction here because it could be an S, or a MemRead
-  case class Assignment(x:X, s:Instruction) extends Instruction {
-    def toCode: String = "(" + x.toCode + " <- " + s.toCode + ")"
+  case class Assignment(r:Register, rhs:AssignmentRHS) extends Instruction {
+    def toCode: String = "(" + r.toCode + " <- " + rhs.toCode + ")"
   }
-  case class Increment(x:X, s:S) extends Instruction {
-    def toCode: String = "(" + x.toCode + " += " + s.toCode + ")"
+  case class Increment(r:Register, s:S) extends Instruction {
+    def toCode: String = "(" + r.toCode + " += " + s.toCode + ")"
   }
-  case class Decrement(x:X, s:S) extends Instruction {
-    def toCode: String = "(" + x.toCode + " -= " + s.toCode + ")"
+  case class Decrement(r:Register, s:S) extends Instruction {
+    def toCode: String = "(" + r.toCode + " -= " + s.toCode + ")"
   }
-  case class Multiply(x:X, s:S) extends Instruction {
-    def toCode: String = "(" + x.toCode + " *= " + s.toCode + ")"
+  case class Multiply(r:Register, s:S) extends Instruction {
+    def toCode: String = "(" + r.toCode + " *= " + s.toCode + ")"
   }
-  case class LeftShift(x:X, s:S) extends Instruction {
-    def toCode: String = "(" + x.toCode + " <<= " + s.toCode + ")"
+  case class LeftShift(r:Register, s:S) extends Instruction {
+    def toCode: String = "(" + r.toCode + " <<= " + s.toCode + ")"
   }
-  case class RightShift(x:X, s:S) extends Instruction {
-    def toCode: String = "(" + s.toCode + " >>= " + x.toCode + ")"
+  case class RightShift(r:Register, s:S) extends Instruction {
+    def toCode: String = "(" + s.toCode + " >>= " + r.toCode + ")"
   }
-  case class BitwiseAnd(x:X, s:S) extends Instruction {
-    def toCode: String = "(" + x.toCode + " &= " + s.toCode + ")"
+  case class BitwiseAnd(r:Register, s:S) extends Instruction {
+    def toCode: String = "(" + r.toCode + " &= " + s.toCode + ")"
   }
   // TODO: this is not an entire instruction
-  case class MemLoc(basePointer: X, offset: Num) extends Instruction {
+  case class MemLoc(basePointer:Register, offset: Num) extends Instruction {
     def toCode: String = "(mem " + basePointer.toCode + " " + offset.toCode + ")"
   }
   // TODO: this is not an entire instruction
-  case class MemRead(loc: MemLoc) extends Instruction {
+  case class MemRead(loc: MemLoc) extends AssignmentRHS {
     def toCode: String = loc.toCode
   }
   case class MemWrite(loc: MemLoc, s:S) extends Instruction {
@@ -53,8 +54,8 @@ object L1AST {
   }
   // TODO: this is not an entire instruction
   // because its the right hand side of an assignment
-  case class Print(s:S) extends Instruction {
-    def toCode: String = "(eax <- (print " + s.toCode + "))"
+  case class Print(s:S) extends AssignmentRHS {
+    def toCode: String = "(print " + s.toCode + ")"
   }
   // TODO: check if interpreter allows (goto num) and (goto register)
   case class Goto(s:S) extends Instruction {
@@ -70,11 +71,10 @@ object L1AST {
     def toCode: String = "(return)"
   }
 
-  trait Instruction{
+  sealed trait Instruction{
     def toCode: String
   }
-  trait S extends Instruction
-  trait X extends S
+  sealed trait S extends Instruction with AssignmentRHS
   case class Num(n: Int) extends S {
     def toCode: String = n.toString
   }
@@ -86,7 +86,7 @@ object L1AST {
     def toCode: String = l.toCode
   }
 
-  trait Register extends X {
+  sealed trait Register extends S {
     val name: String
     override def toString = name
     def toCode: String = name
@@ -124,7 +124,7 @@ object L1AST {
 
   // TODO: this is DEFINITELY not an instruction
   // its only part of two different instructions
-  case class Comp(s1:S, op: CompOp, s2:S) extends Instruction {
+  case class Comp(s1:S, op: CompOp, s2:S) extends AssignmentRHS {
     def toCode: String = s1.toCode + " " + op.op + " " + s2.toCode
   }
   sealed abstract case class CompOp(op: String){

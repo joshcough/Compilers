@@ -108,10 +108,11 @@ trait L1Parser extends Parser[L1] {
       // ;; two calls into the runtime system, one to print a value:
       //(eax <- (print s))
       // TODO: figure out if this is even legal (print 8)
-      case ('eax, '<-, List('print, s)) => Print(parseNumOrRegister(s))
+      case ('eax, '<-, List('print, s)) => Assignment(eax, Print(parseNumOrRegister(s)))
       // ;; and one to allocate & initialize some space
       // (eax <- (allocate s s))
-      case ('eax, '<-, List('allocate, s1, s2)) => Allocate(parseNumOrRegister(s1), parseNumOrRegister(s2))
+      case ('eax, '<-, List('allocate, s1, s2)) =>
+        Assignment(eax, Allocate(parseNumOrRegister(s1), parseNumOrRegister(s2)))
       //(cx <- s cmp s)
       case (cx:Symbol, '<-, (s1: Any, cmp: Symbol, s2: Any)) =>
         Assignment(parseCxRegister(cx), parseComp(s1, cmp, s2))

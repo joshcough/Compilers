@@ -1,11 +1,10 @@
 package L2Compiler
-
+/**
 import java.io.File
 import reader.Reader
 import L2AST._
 import L1Compiler.L1AST._
 import L1Compiler.FileHelper._
-/**
 trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   def parseProgram(s:String) = parse(read(s))
   def compileFile(filename:String) = compile(new File(filename).read)

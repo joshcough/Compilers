@@ -2,12 +2,13 @@ package L1Compiler.Java
 
 import collection.mutable.ListBuffer
 
+case class JavaRuntimeRegister(var value: Any = new AnyRef) {
+  def clear() { value = new AnyRef }
+}
+
 object L1JavaRuntime {
 
-  case class Register(var value:Any = new AnyRef){
-    def clear(){ value = new AnyRef }
-  }
-  var eax, ebx, ecx, edx, esi, ebp, esp = new Register
+  var eax, ebx, ecx, edx, esi, ebp, esp = new JavaRuntimeRegister
   val registers = List(eax, ebx, ecx, edx, esi, ebp, esp)
 
   val HEAP_SIZE = 1048576  // one megabyte
@@ -51,7 +52,7 @@ object L1JavaRuntime {
     //println("inside makeString")
     a match {
       case i:Int => makeString(i, 0)
-      case Register(v) => makeString(v)
+      case JavaRuntimeRegister(v) => makeString(v)
       case _ => error("don't know how to print: " + a)
     }
   }
@@ -86,19 +87,19 @@ object L1JavaRuntime {
     | (x <- (mem x n4))   ;; read from memory @ x+n4
     | ((mem x n4) <- s)   ;; update memory @ x+n4
    */
-  def mov(dest:Register, value:Any) = value match {
-    case Register(v) => dest.value = v
+  def mov(dest:JavaRuntimeRegister, value:Any) = value match {
+    case JavaRuntimeRegister(v) => dest.value = v
     case _ => dest.value = value.asInstanceOf[AnyRef]
   }
 
   //(mem x n4))   ;; read from memory @ x+n4
-  def read(x:Register, n4:Int): Any = x.value match {
+  def read(x:JavaRuntimeRegister, n4:Int): Any = x.value match {
     case i if i.isInstanceOf[Int] => heap(i.asInstanceOf[Int] + n4 / 4)
     case bad => error("cant read from bad memory address: " + bad)
   }
 
   //((mem x n4) <- s)   ;; update memory @ x+n4
-  def write(x:Register, n4:Int, s:Any): Unit = x.value match {
+  def write(x:JavaRuntimeRegister, n4:Int, s:Any): Unit = x.value match {
     case i if i.isInstanceOf[Int] => heap(i.asInstanceOf[Int] + n4 / 4) = s
     case bad => error("cant write to bad memory address: " + bad)
   }
@@ -106,12 +107,12 @@ object L1JavaRuntime {
   //(x aop= s)
   // s ::= x | num | label
   //aop=  ::= += | -= | *= | &=
-  def +=(x:Register, s:Any) { aop(x, s)("add", _ + _) }
-  def -=(x:Register, s:Any) { aop(x, s)("minus", _ - _) }
-  def *=(x:Register, s:Any) { aop(x, s)("times", _ * _) }
-  def &=(x:Register, s:Any) { aop(x, s)("and", _ & _) }
+  def +=(x:JavaRuntimeRegister, s:Any) { aop(x, s)("add", _ + _) }
+  def -=(x:JavaRuntimeRegister, s:Any) { aop(x, s)("minus", _ - _) }
+  def *=(x:JavaRuntimeRegister, s:Any) { aop(x, s)("times", _ * _) }
+  def &=(x:JavaRuntimeRegister, s:Any) { aop(x, s)("and", _ & _) }
 
-  def aop(x:Register, s:Any)(name:String, f: (Int, Int) => Int) {
+  def aop(x:JavaRuntimeRegister, s:Any)(name:String, f: (Int, Int) => Int) {
     s match {
       case i: Int => x.value match {
         case v if v.isInstanceOf[Int] => x.value = f(v.asInstanceOf[Int], i).asInstanceOf[AnyRef]

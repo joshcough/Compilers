@@ -1,5 +1,5 @@
 package L2Compiler
-
+/*
 import L2AST._
 import L1Compiler.L1AST._
 
@@ -105,4 +105,4 @@ trait Liveness {
     for(x <- variablesAndRegisters.toList) yield liveRanges(x, inSets.map(_.toList))
   }
 }
-
+*/

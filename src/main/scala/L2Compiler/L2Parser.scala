@@ -1,9 +1,9 @@
 package L2Compiler
+/**
 
 import reader._
 import L2AST._
 import L1Compiler.L1AST._
-/**
 trait L2Parser extends Parser[L2] {
 
   def parse(exp:Any): L2 = exp match {

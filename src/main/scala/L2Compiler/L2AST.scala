@@ -1,5 +1,6 @@
 package L2Compiler
 
+/**
 object L2AST {
   import L1Compiler.L1AST._
   object L2{ def apply(main: Func): L2 = L2(main, Nil) }
@@ -10,3 +11,4 @@ object L2AST {
     def toCode: String = name
   }
 }
+ */

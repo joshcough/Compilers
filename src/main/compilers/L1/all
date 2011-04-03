@@ -11,6 +11,7 @@
 ../interpreters/L1 ./1-test/fun-with-arrays.L1 > ./1-test/fun-with-arrays.res
 ../interpreters/L1 ./1-test/gotos.L1 > ./1-test/gotos.res
 ../interpreters/L1 ./1-test/labels-fun.L1 > ./1-test/labels-fun.res
+../interpreters/L1 ./1-test/more-compares.L1 > ./1-test/more-compares.res
 ../interpreters/L1 ./1-test/more-compares-with-numbers.L1 > ./1-test/more-compares-with-numbers.res
 ../interpreters/L1 ./1-test/neg.L1 > ./1-test/neg.res
 ../interpreters/L1 ./1-test/print-eax.L1 > ./1-test/print-eax.res

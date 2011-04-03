@@ -77,7 +77,7 @@ trait X86Generator extends L1Compiler.BackEnd {
       case EqualTo => "sete"
     }
 
-    def tri(theOp:String, s1:L1Instruction, s2:L1Instruction): String = triple(theOp,genInst(s1).head,s2)
+    def tri(theOp:String, s1:L1Instruction, s2:L1Instruction) = triple(theOp,genInst(s1).head,s2)
     def triple(theOp:String, s1:String, s2:L1Instruction): String = {
       theOp + " " + s1 + ", " + genInst(s2).head
     }
@@ -89,37 +89,66 @@ trait X86Generator extends L1Compiler.BackEnd {
       case r:Register => X86Inst("%" + r.name)
       case MemLoc(r, off) => X86Inst(off.n + "(" + genInst(r).head + ")")
 
-      case Assignment(cx:CXRegister, c@Comp(r:Register,op,x:X)) => {
+      // several assignment cases.
+      case Assignment(r:Register, s:S) => X86Inst(tri("movl", s, r))
+      case Assignment(r:Register, MemRead(loc)) => X86Inst(tri("movl", loc, r))
+      // cmp assignments have to be with CXRegisters on LHS
+      /**
+          (eax <- ebx < ecx)
+          Here we need another trick; the x86 instruction set only let us
+          update the lowest 8 bits with the result of a condition code. So,
+          we do that, and then fill out the rest of the bits with zeros with
+          a separate instruction:
+
+          cmp %ecx, %ebx
+          setl %al
+          movzbl %al, %eax
+       */
+      // TODO: these 3 cases are the same basically...see if they can be cleaned up
+      case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Register)) => {
         X86Inst(
-          tri("cmp", x, r),
+          tri("cmp", right, left),
+          setInstruction(op) + " " + cx.low8,
+          triple("movzbl", cx.low8, cx))
+      }
+      case Assignment(cx:CXRegister, c@Comp(left:Num,op,right:Register)) => {
+        X86Inst(
+          tri("cmp", right, left),
+          setInstruction(op) + " " + cx.low8,
+          triple("movzbl", cx.low8, cx))
+      }
+      case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Num)) => {
+        X86Inst(
+          tri("cmp", right, left),
           setInstruction(op) + " " + cx.low8,
           triple("movzbl", cx.low8, cx))
       }
       case Assignment(cx:CXRegister, c@Comp(n1:Num,op,n2:Num)) =>
         X86Inst(triple("movl", "$" + (if(op(n1.n, n2.n)) 1 else 0), cx))
-      case Assignment(r1, s) => X86Inst(tri("movl", s, r1))
+
+      // cx must be eax here.
+      case Assignment(cx:CXRegister, Print(s)) =>
+        X86Inst(
+          "pushl " + genInst(s).head,
+          "call print",
+          "addl $4, %esp")
+      // cx must be eax here.
+      case Assignment(cx:CXRegister, Allocate(s, n)) =>
+        X86Inst(
+          "pushl " + genInst(n).head,
+          "pushl " + genInst(s).head,
+          "call allocate", "addl $8, %esp")
+
+      case Assignment(l, r) => error("bad assignment statement: " + inst)
+
 
       case MemWrite(loc, s) => X86Inst(tri("movl", s, loc))
-      case MemRead(loc) => genInst(loc)
       case Increment(r, s) => X86Inst(tri("addl", s, r))
       case Decrement(r, s) => X86Inst(tri("subl", s, r))
       case Multiply(r, s) => X86Inst(tri("imull", s, r))
       case RightShift(r, s) => X86Inst(tri("sarl", s, r))
       case LeftShift(r, s) => X86Inst(tri("sall", s, r))
       case BitwiseAnd(r, s) => X86Inst(tri("andl", s, r))
-      case Comp(s1:X, _, s2:X) => X86Inst(tri("cmpl", s2, s1))
-
-      case Print(s) =>
-        X86Inst(
-          "pushl " + genInst(s).head,
-          "call print",
-          "addl $4, %esp")
-
-      case Allocate(s, n) =>
-        X86Inst(
-          "pushl " + genInst(n).head,
-          "pushl " + genInst(s).head,
-          "call allocate", "addl $8, %esp")
 
       case Goto(s) => X86Inst(jump(s))
 
@@ -141,7 +170,7 @@ trait X86Generator extends L1Compiler.BackEnd {
         if(op(n1.n, n2.n)) X86Inst(jump(l1)) else X86Inst(jump(l2))
       }
 
-      // (cjump 11 < ebx :true :false) // special case. destination just be a register.
+      // (cjump 11 < ebx :true :false) // special case. destination jmust be a register.
       case CJump(Comp(n:Num, op, r:Register), l1, l2) => {
         val jumpInstruction = op match {
           case LessThan => jumpIfGreater(l1)
@@ -150,8 +179,7 @@ trait X86Generator extends L1Compiler.BackEnd {
         }
         X86Inst(
           // magic reversal happens here.
-          // LessThan ignored. had to pick one. see genCode(Comp...)
-          genInst(Comp(r,LessThan,n)).head,
+          tri("cmpl", n, r),
           jumpInstruction,
           jump(l2))
       }
@@ -163,7 +191,7 @@ trait X86Generator extends L1Compiler.BackEnd {
           case EqualTo => jumpIfEqual(l1)
         }
         X86Inst(
-          genInst(cmp).head,
+          tri("cmpl", s2, s1),
           jumpInstruction,
           jump(l2))
       }
