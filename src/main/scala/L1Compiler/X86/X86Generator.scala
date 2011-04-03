@@ -88,14 +88,13 @@ trait X86Generator extends L1Compiler.BackEnd {
       case EqualTo => "sete"
     }
 
-    def tri(theOp:String, s1:S, s2:S) = triple(theOp,gen(s1),gen(s2))
     def triple(theOp:String, s1:String, s2:String): String = theOp + " " + s1 + ", " + s2
 
     inst match {
       case LabelDeclaration(l) => X86Inst(declare(l))
 
       // several assignment cases.
-      case Assignment(r:Register, s:S) => X86Inst(tri("movl", s, r))
+      case Assignment(r:Register, s:S) => X86Inst(triple("movl", gen(s), gen(r)))
       case Assignment(r:Register, MemRead(loc)) => X86Inst(triple("movl", gen(loc), gen(r)))
       // cmp assignments have to be with CXRegisters on LHS
       /**
@@ -112,19 +111,19 @@ trait X86Generator extends L1Compiler.BackEnd {
       // TODO: these 3 cases are the same basically...see if they can be cleaned up
       case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Register)) => {
         X86Inst(
-          tri("cmp", right, left),
+          triple("cmp", gen(right), gen(left)),
           setInstruction(op) + " " + cx.low8,
           triple("movzbl", cx.low8, gen(cx)))
       }
       case Assignment(cx:CXRegister, c@Comp(left:Num,op,right:Register)) => {
         X86Inst(
-          tri("cmp", right, left),
+          triple("cmp", gen(right), gen(left)),
           setInstruction(op) + " " + cx.low8,
           triple("movzbl", cx.low8, gen(cx)))
       }
       case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Num)) => {
         X86Inst(
-          tri("cmp", right, left),
+          triple("cmp", gen(right), gen(left)),
           setInstruction(op) + " " + cx.low8,
           triple("movzbl", cx.low8, gen(cx)))
       }
@@ -148,12 +147,12 @@ trait X86Generator extends L1Compiler.BackEnd {
 
 
       case MemWrite(loc, s) => X86Inst(triple("movl", gen(s), gen(loc)))
-      case Increment(r, s) => X86Inst(tri("addl", s, r))
-      case Decrement(r, s) => X86Inst(tri("subl", s, r))
-      case Multiply(r, s) => X86Inst(tri("imull", s, r))
-      case RightShift(r, s) => X86Inst(tri("sarl", s, r))
-      case LeftShift(r, s) => X86Inst(tri("sall", s, r))
-      case BitwiseAnd(r, s) => X86Inst(tri("andl", s, r))
+      case Increment(r, s) => X86Inst(triple("addl", gen(s), gen(r)))
+      case Decrement(r, s) => X86Inst(triple("subl", gen(s), gen(r)))
+      case Multiply(r, s) => X86Inst(triple("imull", gen(s), gen(r)))
+      case RightShift(r, s) => X86Inst(triple("sarl", gen(s), gen(r)))
+      case LeftShift(r, s) => X86Inst(triple("sall", gen(s), gen(r)))
+      case BitwiseAnd(r, s) => X86Inst(triple("andl", gen(s), gen(r)))
 
       case Goto(s) => X86Inst(jump(s))
 
@@ -184,7 +183,7 @@ trait X86Generator extends L1Compiler.BackEnd {
         }
         X86Inst(
           // magic reversal happens here.
-          tri("cmpl", n, r),
+          triple("cmpl", gen(n), gen(r)),
           jumpInstruction,
           jump(l2))
       }
@@ -196,7 +195,7 @@ trait X86Generator extends L1Compiler.BackEnd {
           case EqualTo => jumpIfEqual(l1)
         }
         X86Inst(
-          tri("cmpl", s2, s1),
+          triple("cmpl", gen(s2), gen(s1)),
           jumpInstruction,
           jump(l2))
       }
