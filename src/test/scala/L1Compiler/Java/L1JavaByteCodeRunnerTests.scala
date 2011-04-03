@@ -99,6 +99,18 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
         (eax <- (print 85))
       ))""") === "2\n0\n0\n42")
   }
+
+  jvmTest("mem write"){
+    assert(
+      runner.test(
+      """
+      ((
+        (eax <- (allocate 5 5))
+        ((mem eax 4) <- 7)
+        (eax <- (print eax))
+      ))
+      """) === "{s:2, 3, 2}")
+  }
   
   def jvmTest(name:String)(f: => Unit) {
     test(name){

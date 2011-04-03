@@ -137,8 +137,32 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
         ";;;; end cjump ;;;;")
     }
 
-    case MemWrite(loc, s) => {
-      JVMInst(tri("movl", s, loc))
+    /**
+     *   //((mem x n4) <- s)   ;; update memory @ x+n4
+  def write(x:JavaRuntimeRegister, n4:Int, s:Any): Unit = x.value match {
+    case i if i.isInstanceOf[Int] => heap(i.asInstanceOf[Int] + n4 / 4) = s
+    case bad => error("cant write to bad memory address: " + bad)
+  }
+
+
+    case Assignment(r:Register, MemRead(MemLoc(base, off))) => {
+      JVMInst(
+        loadRegisterOntoStack(r),
+        loadRegisterOntoStack(base),
+        loadValueOntoStackAsInt(off),
+        invokeRead,
+        invokeMov
+      )
+
+     */
+
+    case MemWrite(MemLoc(base, offset), s) => {
+      JVMInst(
+        loadRegisterOntoStack(base),
+        loadValueOntoStackAsInt(offset),
+        loadValueOntoStackAsObject(s),
+        invokeWrite
+      )
     }
 
 //      case Increment(r, s) => JVMInst(tri("addl", s, r))
@@ -198,6 +222,9 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
   def invokeRead =
     "invokestatic L1Compiler/Java/L1JavaRuntime/read(LL1Compiler/Java/JavaRuntimeRegister;I)Ljava/lang/Object;"
+
+  def invokeWrite =
+    "invokestatic L1Compiler/Java/L1JavaRuntime/write(LL1Compiler/Java/JavaRuntimeRegister;ILjava/lang/Object;)V"
 
   def comparisonInstruction(op: CompOp) = op match {
     case LessThan => "if_icmplt"
