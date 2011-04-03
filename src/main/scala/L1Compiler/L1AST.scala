@@ -1,6 +1,6 @@
 package L1Compiler
 
-object L1AST extends Instructions with Registers with Comps {
+object L1AST {
 
   object L1{ def apply(main: Func): L1 = L1(main, Nil) }
   case class L1(main: Func, funs:List[Func]){
@@ -13,6 +13,8 @@ object L1AST extends Instructions with Registers with Comps {
     }
   }
 
+  // TODO: this is not an entire instruction
+  // because its the right hand side of an assignment
   case class Allocate(n:S, init:S) extends Instruction {
     def toCode: String = "(eax <- (allocate " + n.toCode + " " + init.toCode + "))"
   }
@@ -38,15 +40,19 @@ object L1AST extends Instructions with Registers with Comps {
   case class BitwiseAnd(x:X, s:S) extends Instruction {
     def toCode: String = "(" + x.toCode + " &= " + s.toCode + ")"
   }
+  // TODO: this is not an entire instruction
   case class MemLoc(basePointer: X, offset: Num) extends Instruction {
     def toCode: String = "(mem " + basePointer.toCode + " " + offset.toCode + ")"
   }
+  // TODO: this is not an entire instruction
   case class MemRead(loc: MemLoc) extends Instruction {
     def toCode: String = loc.toCode
   }
   case class MemWrite(loc: MemLoc, s:S) extends Instruction {
     def toCode: String = "(" + loc.toCode + " <- " + s.toCode + ")"
   }
+  // TODO: this is not an entire instruction
+  // because its the right hand side of an assignment
   case class Print(s:S) extends Instruction {
     def toCode: String = "(eax <- (print " + s.toCode + "))"
   }
@@ -63,9 +69,7 @@ object L1AST extends Instructions with Registers with Comps {
   case object Return extends Instruction {
     def toCode: String = "(return)"
   }
-}
 
-trait Instructions {
   trait Instruction{
     def toCode: String
   }
@@ -81,10 +85,9 @@ trait Instructions {
   case class LabelDeclaration(l: Label) extends Instruction {
     def toCode: String = l.toCode
   }
-}
 
-trait Registers extends Instructions {
-  abstract class Register(val name: String) extends X {
+  trait Register extends X {
+    val name: String
     override def toString = name
     def toCode: String = name
   }
@@ -97,7 +100,7 @@ trait Registers extends Instructions {
       case _ => None
     }
   }
-  sealed abstract case class XRegister(x: String) extends Register(x)
+  sealed abstract case class XRegister(name: String) extends Register
   object esi extends XRegister("esi")
   object edi extends XRegister("edi")
   object ebp extends XRegister("ebp")
@@ -111,16 +114,16 @@ trait Registers extends Instructions {
       case _ => None
     }
   }
-  sealed abstract case class CXRegister(cx: String) extends Register(cx){
-    def low8 = "%" + cx(1) + "l"
+  sealed abstract case class CXRegister(name: String) extends Register{
+    def low8 = "%" + name(1) + "l"
   }
   object eax extends CXRegister("eax")
   object ecx extends CXRegister("ecx")
   object edx extends CXRegister("edx")
   object ebx extends CXRegister("ebx")
-}
 
-trait Comps extends Instructions{
+  // TODO: this is DEFINITELY not an instruction
+  // its only part of two different instructions
   case class Comp(s1:S, op: CompOp, s2:S) extends Instruction {
     def toCode: String = s1.toCode + " " + op.op + " " + s2.toCode
   }
