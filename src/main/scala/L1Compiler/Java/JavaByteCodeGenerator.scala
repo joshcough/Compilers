@@ -82,41 +82,10 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
     (genInst(f.name) ::: f.body.flatMap(genInst)).map("  " + _)
   }
 
-//  def gen(s:S): List[JVMInst] = {
-//  }
-  
   def genInst(inst: L1Instruction): List[JVMInst] = {
 
-//    def jump(s:S) = s match {
-//      case Label(name) => "jmp L1_" + name
-//      case _ => "jmp *" + genInst(s).head
-//    }
-//
-//    def jumpIfLess(l: Label) = "jl L1_" + l.l
-//    def jumpIfLessThanOrEqual(l: Label) = "jle L1_" + l.l
-//    def jumpIfGreater(l: Label) = "jg L1_" + l.l
-//    def jumpIfGreaterOrEqual(l: Label) = "jge L1_" + l.l
-//    def jumpIfEqual(l: Label) = "je L1_" + l.l
-//
-//    def declare(l: Label) = "L1_" + l.l + ":"
-//
-//    def setInstruction(op: CompOp) = op match {
-//      case LessThan => "setl"
-//      case LessThanOrEqualTo => "setle"
-//      case EqualTo => "sete"
-//    }
-//
-//    def tri(theOp:String, s1:L1Instruction, s2:L1Instruction) = triple(theOp,genInst(s1).head,s2)
-//    def triple(theOp:String, s1:String, s2:L1Instruction): String = {
-//      theOp + " " + s1 + ", " + genInst(s2).head
-//    }
-
     inst match {
-//      case Num(n) => JVMInst("$" + n)
-//      case Label(l) => JVMInst("$L1_" + l)
 //      case LabelDeclaration(l) => JVMInst(declare(l))
-//      case r:Register => JVMInst("%" + r.name)
-//      case MemLoc(r, off) => JVMInst(off.n + "(" + genInst(r).head + ")")
 
       // several assignment cases.
       case Assignment(r:Register, s:S) =>
@@ -177,7 +146,6 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
       }
 
       case Assignment(l, r) => error("bad assignment statement: " + inst)
-//
 //
 //      case MemWrite(loc, s) => JVMInst(tri("movl", s, loc))
 //      case Increment(r, s) => JVMInst(tri("addl", s, r))
