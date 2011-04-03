@@ -137,25 +137,6 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
         ";;;; end cjump ;;;;")
     }
 
-    /**
-     *   //((mem x n4) <- s)   ;; update memory @ x+n4
-  def write(x:JavaRuntimeRegister, n4:Int, s:Any): Unit = x.value match {
-    case i if i.isInstanceOf[Int] => heap(i.asInstanceOf[Int] + n4 / 4) = s
-    case bad => error("cant write to bad memory address: " + bad)
-  }
-
-
-    case Assignment(r:Register, MemRead(MemLoc(base, off))) => {
-      JVMInst(
-        loadRegisterOntoStack(r),
-        loadRegisterOntoStack(base),
-        loadValueOntoStackAsInt(off),
-        invokeRead,
-        invokeMov
-      )
-
-     */
-
     case MemWrite(MemLoc(base, offset), s) => {
       JVMInst(
         loadRegisterOntoStack(base),
@@ -190,7 +171,6 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 //          "movl %ebp, %esp",
 //          "popl %ebp",
 //          "ret")
-
     case _ => error("implement me: " + inst)
   }
 
