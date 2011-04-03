@@ -15,8 +15,6 @@ object L1AST {
 
   sealed trait AssignmentRHS { def toCode:String }
 
-  // TODO: this is not an entire instruction
-  // because its the right hand side of an assignment
   case class Allocate(n:S, init:S) extends AssignmentRHS {
     def toCode: String = "(allocate " + n.toCode + " " + init.toCode + ")"
   }
@@ -41,19 +39,15 @@ object L1AST {
   case class BitwiseAnd(r:Register, s:S) extends Instruction {
     def toCode: String = "(" + r.toCode + " &= " + s.toCode + ")"
   }
-  // TODO: this is not an entire instruction
-  case class MemLoc(basePointer:Register, offset: Num) extends Instruction {
+  case class MemLoc(basePointer:Register, offset: Num) {
     def toCode: String = "(mem " + basePointer.toCode + " " + offset.toCode + ")"
   }
-  // TODO: this is not an entire instruction
   case class MemRead(loc: MemLoc) extends AssignmentRHS {
     def toCode: String = loc.toCode
   }
   case class MemWrite(loc: MemLoc, s:S) extends Instruction {
     def toCode: String = "(" + loc.toCode + " <- " + s.toCode + ")"
   }
-  // TODO: this is not an entire instruction
-  // because its the right hand side of an assignment
   case class Print(s:S) extends AssignmentRHS {
     def toCode: String = "(print " + s.toCode + ")"
   }
@@ -74,7 +68,7 @@ object L1AST {
   sealed trait Instruction{
     def toCode: String
   }
-  sealed trait S extends Instruction with AssignmentRHS
+  sealed trait S extends AssignmentRHS
   case class Num(n: Int) extends S {
     def toCode: String = n.toString
   }

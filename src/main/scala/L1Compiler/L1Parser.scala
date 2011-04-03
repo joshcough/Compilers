@@ -19,11 +19,11 @@ trait L1Parser extends Parser[L1] {
   def parseInstruction(expr: Any): Instruction = expr match {
     case s: Symbol => parseLabelOrRegister(s) match {
       case l:Label => LabelDeclaration(l)
-      case r => r
+      // a register by itself is not an instruction. it lives inside of instructions.
+      case r => error("not an instuction: " + r)
     }
-    // num   ::= number between (inclusive) -2^31 and (2^31)-1
-    // TODO: check range
-    case n: Int => Num(n)
+    // a number by itself is not an instruction. it lives inside of instructions.
+    case n: Int => error("not an instuction: " + n)
     case List(x: Any, '<-, s: Any) => parseAssignment(x, s)
     // TODO: maybe just call this directly instead of going through parseAssignment
     case List(x: Any, '<-, s1: Any, cmp: Symbol, s2:Any) => parseAssignment(x, (s1, cmp, s2))
@@ -47,6 +47,8 @@ trait L1Parser extends Parser[L1] {
   }
 
   def parseS(exp:Any) = exp match {
+    // num   ::= number between (inclusive) -2^31 and (2^31)-1
+    // TODO: check range
     case n: Int => Num(n)
     case s: Symbol => parseLabelOrRegister(s)
   }

@@ -4,6 +4,10 @@ import collection.mutable.ListBuffer
 
 case class JavaRuntimeRegister(var value: Any = new AnyRef) {
   def clear() { value = new AnyRef }
+  def getIntValue: Int = value match {
+    case i:Int => i
+    case _ => error("value is not an int: " + value)
+  }
 }
 
 object L1JavaRuntime {
@@ -87,9 +91,11 @@ object L1JavaRuntime {
     | (x <- (mem x n4))   ;; read from memory @ x+n4
     | ((mem x n4) <- s)   ;; update memory @ x+n4
    */
-  def mov(dest:JavaRuntimeRegister, value:Any) = value match {
-    case JavaRuntimeRegister(v) => dest.value = v
-    case _ => dest.value = value.asInstanceOf[AnyRef]
+  def mov(dest:JavaRuntimeRegister, value:Any){
+    value match {
+      case JavaRuntimeRegister(v) => dest.value = v
+      case _ => dest.value = value.asInstanceOf[AnyRef]
+    }
   }
 
   //(mem x n4))   ;; read from memory @ x+n4

@@ -56,11 +56,22 @@ trait X86Generator extends L1Compiler.BackEnd {
     genInst(f.name) ::: f.body.flatMap(genInst)
   }
 
+
+  def gen(s:S): X86Inst = {
+    s match {
+      case Num(n) => "$" + n
+      case Label(l) => "$L1_" + l
+      case r:Register => "%" + r.name
+    }
+  }
+
+  def gen(loc:MemLoc): X86Inst = loc.offset.n + "(" + gen(loc.basePointer) + ")"
+
   def genInst(inst: L1Instruction): List[X86Inst] = {
 
     def jump(s:S) = s match {
       case Label(name) => "jmp L1_" + name
-      case _ => "jmp *" + genInst(s).head
+      case _ => "jmp *" + gen(s)
     }
 
     def jumpIfLess(l: Label) = "jl L1_" + l.l
@@ -77,21 +88,15 @@ trait X86Generator extends L1Compiler.BackEnd {
       case EqualTo => "sete"
     }
 
-    def tri(theOp:String, s1:L1Instruction, s2:L1Instruction) = triple(theOp,genInst(s1).head,s2)
-    def triple(theOp:String, s1:String, s2:L1Instruction): String = {
-      theOp + " " + s1 + ", " + genInst(s2).head
-    }
+    def tri(theOp:String, s1:S, s2:S) = triple(theOp,gen(s1),gen(s2))
+    def triple(theOp:String, s1:String, s2:String): String = theOp + " " + s1 + ", " + s2
 
     inst match {
-      case Num(n) => X86Inst("$" + n)
-      case Label(l) => X86Inst("$L1_" + l)
       case LabelDeclaration(l) => X86Inst(declare(l))
-      case r:Register => X86Inst("%" + r.name)
-      case MemLoc(r, off) => X86Inst(off.n + "(" + genInst(r).head + ")")
 
       // several assignment cases.
       case Assignment(r:Register, s:S) => X86Inst(tri("movl", s, r))
-      case Assignment(r:Register, MemRead(loc)) => X86Inst(tri("movl", loc, r))
+      case Assignment(r:Register, MemRead(loc)) => X86Inst(triple("movl", gen(loc), gen(r)))
       // cmp assignments have to be with CXRegisters on LHS
       /**
           (eax <- ebx < ecx)
@@ -109,40 +114,40 @@ trait X86Generator extends L1Compiler.BackEnd {
         X86Inst(
           tri("cmp", right, left),
           setInstruction(op) + " " + cx.low8,
-          triple("movzbl", cx.low8, cx))
+          triple("movzbl", cx.low8, gen(cx)))
       }
       case Assignment(cx:CXRegister, c@Comp(left:Num,op,right:Register)) => {
         X86Inst(
           tri("cmp", right, left),
           setInstruction(op) + " " + cx.low8,
-          triple("movzbl", cx.low8, cx))
+          triple("movzbl", cx.low8, gen(cx)))
       }
       case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Num)) => {
         X86Inst(
           tri("cmp", right, left),
           setInstruction(op) + " " + cx.low8,
-          triple("movzbl", cx.low8, cx))
+          triple("movzbl", cx.low8, gen(cx)))
       }
       case Assignment(cx:CXRegister, c@Comp(n1:Num,op,n2:Num)) =>
-        X86Inst(triple("movl", "$" + (if(op(n1.n, n2.n)) 1 else 0), cx))
+        X86Inst(triple("movl", "$" + (if(op(n1.n, n2.n)) 1 else 0), gen(cx)))
 
       // cx must be eax here.
       case Assignment(cx:CXRegister, Print(s)) =>
         X86Inst(
-          "pushl " + genInst(s).head,
+          "pushl " + gen(s),
           "call print",
           "addl $4, %esp")
       // cx must be eax here.
       case Assignment(cx:CXRegister, Allocate(s, n)) =>
         X86Inst(
-          "pushl " + genInst(n).head,
-          "pushl " + genInst(s).head,
+          "pushl " + gen(n),
+          "pushl " + gen(s),
           "call allocate", "addl $8, %esp")
 
       case Assignment(l, r) => error("bad assignment statement: " + inst)
 
 
-      case MemWrite(loc, s) => X86Inst(tri("movl", s, loc))
+      case MemWrite(loc, s) => X86Inst(triple("movl", gen(s), gen(loc)))
       case Increment(r, s) => X86Inst(tri("addl", s, r))
       case Decrement(r, s) => X86Inst(tri("subl", s, r))
       case Multiply(r, s) => X86Inst(tri("imull", s, r))
@@ -154,9 +159,9 @@ trait X86Generator extends L1Compiler.BackEnd {
 
       case Call(s) => {
         val label = nextNewLabel
-        val jmp = s match { case Label(name) => name; case _ => genInst(s) }
+        val jmp = s match { case Label(name) => name; case _ => gen(s) }
         X86Inst(
-          "pushl " + genInst(label).head,
+          "pushl " + gen(label),
           "pushl %ebp",
           "movl %esp, %ebp",
           jump(s),

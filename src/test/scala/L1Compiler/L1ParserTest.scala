@@ -38,16 +38,16 @@ class ParseProgramsTest extends L1ParserTest{
 }
 
 class ParsePrimitivesTest extends L1ParserTest {
-  testParseInstruction("eax" -> eax)
-  testParseInstruction("ebx" -> ebx)
-  testParseInstruction("ecx" -> ecx)
-  testParseInstruction("edx" -> edx)
-  testParseInstruction("esi" -> esi)
-  testParseInstruction("edi" -> edi)
-  testParseInstruction("ebp" -> ebp)
-  testParseInstruction("esp" -> esp)
+  testParseS("eax" -> eax)
+  testParseS("ebx" -> ebx)
+  testParseS("ecx" -> ecx)
+  testParseS("edx" -> edx)
+  testParseS("esi" -> esi)
+  testParseS("edi" -> edi)
+  testParseS("ebp" -> ebp)
+  testParseS("esp" -> esp)
   testParseInstruction(":hey" -> LabelDeclaration(Label("hey")))
-  testParseInstruction("1" -> Num(1))
+  testParseS("1" -> Num(1))
   testParseInstructionError("eex" -> "eex is an invalid register")
 }
 
@@ -139,6 +139,10 @@ abstract class L1ParserTest extends org.scalatest.FunSuite{
 
   def testParseInstruction(t: (String, Instruction)): Unit = {
     test(t._1 + " => " + t._2){ assert(parseInstruction(read(t._1)) === t._2) }
+  }
+
+  def testParseS(t: (String, S)): Unit = {
+    test(t._1 + " => " + t._2){ assert(parseS(read(t._1)) === t._2) }
   }
 
   def testParseInstructionError(t: (String, String)): Unit  = {
