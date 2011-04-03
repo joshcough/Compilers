@@ -10,36 +10,6 @@ object JVMInst {
   }.mkString
 }
 
-/**
- *
- Example output for Jasmin:
-
-.class public goo
-.super java/lang/Object
-
-; constructor
-.method public <init>()V
-  aload_0
-  invokenonvirtual java/lang/Object/<init>()V
-  return
-.end method
-
-.method public static main([Ljava/lang/String;)V
-  .limit stack 99
-  .limit locals 99
-  getstatic java/lang/System/out Ljava/io/PrintStream;
-  ldc "hi"
-  invokevirtual java/io/PrintStream/println(Ljava/lang/String;)V
-  return
-.end method
-
-; class init
-.method public <clinit>()V
-  .limit stack 99
-  .limit locals 99
-  return
-.end method
- */
 trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
   import JVMInst._
@@ -84,13 +54,7 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
   def genInst(inst: L1Instruction): List[JVMInst] = {
 
-    def invokeMov =
-      "invokestatic L1Compiler/Java/L1JavaRuntime/mov(LL1Compiler/Java/JavaRuntimeRegister;Ljava/lang/Object;)V"
-
-    def invokeRead =
-      "invokestatic L1Compiler/Java/L1JavaRuntime/read(LL1Compiler/Java/JavaRuntimeRegister;I)Ljava/lang/Object;"
-
-    inst match {
+     inst match {
 
       // several assignment cases.
       case Assignment(r:Register, s:S) =>
@@ -108,39 +72,32 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
           invokeMov
         )
       }
-//      // cmp assignments have to be with CXRegisters on LHS
-//      /**
-//          (eax <- ebx < ecx)
-//          Here we need another trick; the x86 instruction set only let us
-//          update the lowest 8 bits with the result of a condition code. So,
-//          we do that, and then fill out the rest of the bits with zeros with
-//          a separate instruction:
-//
-//          cmp %ecx, %ebx
-//          setl %al
-//          movzbl %al, %eax
-//       */
-//      // TODO: these 3 cases are the same basically...see if they can be cleaned up
-//      case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Register)) => {
-//        JVMInst(
-//          tri("cmp", right, left),
-//          setInstruction(op) + " " + cx.low8,
-//          triple("movzbl", cx.low8, cx))
-//      }
-//      case Assignment(cx:CXRegister, c@Comp(left:Num,op,right:Register)) => {
-//        JVMInst(
-//          tri("cmp", right, left),
-//          setInstruction(op) + " " + cx.low8,
-//          triple("movzbl", cx.low8, cx))
-//      }
-//      case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Num)) => {
-//        JVMInst(
-//          tri("cmp", right, left),
-//          setInstruction(op) + " " + cx.low8,
-//          triple("movzbl", cx.low8, cx))
-//      }
-//      case Assignment(cx:CXRegister, c@Comp(n1:Num,op,n2:Num)) =>
-//        JVMInst(triple("movl", "$" + (if(op(n1.n, n2.n)) 1 else 0), cx))
+
+      case Assignment(cx:CXRegister, c@Comp(left:S,op,right:S)) => {
+        val trueLabel = nextNewLabel()
+        val finishLabel = nextNewLabel()
+        JVMInst(
+          ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
+          ";;; assignment to comparison ;;;",
+          ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;",
+          "; load the register to store 0 or 1",
+          loadRegisterOntoStack(cx),
+          "; load ints to compare",
+          loadValueOntoStackAsInt(left),
+          loadValueOntoStackAsInt(right),
+          "; compare them",
+          comparisonInstruction(op) + " L1_" + trueLabel.name,
+          "; put 0 on stack",
+          loadValueOntoStackAsObject(Num(0)),
+          "goto L1_" + finishLabel.name,
+          declare(trueLabel),
+          "; put 1 on stack",
+          loadValueOntoStackAsObject(Num(1)),
+          declare(finishLabel),
+          "; store",
+          invokeMov,
+          ";;;;end assignment to comparison;;;;")
+      }
 
       // cx has to be eax here or it wouldnt get through parsing
       case Assignment(cx:CXRegister, Print(s)) => {
@@ -160,8 +117,8 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
       case Assignment(l, r) => error("bad assignment statement: " + inst)
 
-//
-//      case LabelDeclaration(l) => JVMInst(declare(l))
+      case LabelDeclaration(l:Label) => JVMInst(declare(l))
+
 //      case MemWrite(loc, s) => JVMInst(tri("movl", s, loc))
 //      case Increment(r, s) => JVMInst(tri("addl", s, r))
 //      case Decrement(r, s) => JVMInst(tri("subl", s, r))
@@ -226,18 +183,11 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
     }
   }
 
-  // TODO: figure out a better way to do this crap:
-  private var labelCount = -1
-  private def nextNewLabel = {
-    labelCount+=1
-    Label("Generated_Label_" + labelCount)
-  }
-
   def loadValueOntoStackAsInt(s: S) = s match {
     case Num(n) => "ldc " + n
     case Label(name) => error("what do i do here?")
     case r:Register =>
-      "invokestatic L1Compiler/Java/L1JavaRuntime/" + r.name + "()LL1Compiler/Java/JavaRuntimeRegister;\n" +
+      loadRegisterOntoStack(r) + "\n" +
       "invokevirtual L1Compiler/Java/JavaRuntimeRegister/getIntValue()I"
   }
 
@@ -246,12 +196,28 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
       "invokestatic scala/runtime/BoxesRunTime/boxToInteger(I)Ljava/lang/Integer;"
     case Label(name) => error("what do i do here?")
     case r:Register =>
-      "invokestatic L1Compiler/Java/L1JavaRuntime/" + r.name + "()LL1Compiler/Java/JavaRuntimeRegister;\n" +
+      loadRegisterOntoStack(r) + "\n" +
       "invokevirtual L1Compiler/Java/JavaRuntimeRegister/value()Ljava/lang/Object;"
   }
 
-  // puts the register directly on the stack. not its value
-  def loadRegisterOntoStack(r: Register) = {
+  // puts the register directly on the stack. not its value.
+  def loadRegisterOntoStack(r: Register) =
     "invokestatic L1Compiler/Java/L1JavaRuntime/" + r.name + "()LL1Compiler/Java/JavaRuntimeRegister;"
+
+  def declare(l: Label) = "L1_" + l.name + ":"
+
+  def invokeMov =
+    "invokestatic L1Compiler/Java/L1JavaRuntime/mov(LL1Compiler/Java/JavaRuntimeRegister;Ljava/lang/Object;)V"
+
+  def invokeRead =
+    "invokestatic L1Compiler/Java/L1JavaRuntime/read(LL1Compiler/Java/JavaRuntimeRegister;I)Ljava/lang/Object;"
+
+  def comparisonInstruction(op: CompOp) = op match {
+    case LessThan => "if_icmplt"
+    case LessThanOrEqualTo => "if_icmple"
+    case EqualTo => "if_icmpeq"
   }
+
+  private val labels = Iterator.from(0)
+  private def nextNewLabel() = Label("Generated_Label_" + labels.next())
 }

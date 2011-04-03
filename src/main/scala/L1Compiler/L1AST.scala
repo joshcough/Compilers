@@ -72,9 +72,9 @@ object L1AST {
   case class Num(n: Int) extends S {
     def toCode: String = n.toString
   }
-  case class Label(l: String) extends S {
-    override def toString = "Label(\"" + l + "\")"
-    def toCode: String = ":" + l
+  case class Label(name: String) extends S {
+    override def toString = "Label(\"" + name + "\")"
+    def toCode: String = ":" + name
   }
   case class LabelDeclaration(l: Label) extends Instruction {
     def toCode: String = l.toCode

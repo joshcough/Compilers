@@ -4,18 +4,19 @@ import collection.mutable.ListBuffer
 
 case object Undefined
 
-case class JavaRuntimeRegister(var value: Any = Undefined) {
+case class JavaRuntimeRegister(name: String) {
+  var value: Any = Undefined
   def clear() { value = Undefined }
   def getIntValue: Int = value match {
     case i:Int => i
-    case _ => error("value is not an int: " + value)
+    case _ => error("register value is not an int: " + value)
   }
 }
 
 object L1JavaRuntime {
 
-  var eax, ebx, ecx, edx, esi, ebp, esp = new JavaRuntimeRegister
-  val registers = List(eax, ebx, ecx, edx, esi, ebp, esp)
+  val registers@List(eax, ebx, ecx, edx, esi, edi, ebp, esp): List[JavaRuntimeRegister] =
+    List("eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp").map(new JavaRuntimeRegister(_))
 
   val HEAP_SIZE = 1048576  // one megabyte
   val heap = new Array[Any](HEAP_SIZE)
@@ -61,7 +62,7 @@ object L1JavaRuntime {
     //println("inside makeString")
     a match {
       case i:Int => makeString(i, 0)
-      case JavaRuntimeRegister(v) => makeString(v)
+      case r:JavaRuntimeRegister => makeString(r.value)
       case _ => error("don't know how to print: " + a)
     }
   }
@@ -98,7 +99,7 @@ object L1JavaRuntime {
    */
   def mov(dest:JavaRuntimeRegister, value:Any){
     value match {
-      case JavaRuntimeRegister(v) => dest.value = v
+      case r:JavaRuntimeRegister => dest.value = r.value
       case _ => dest.value = value.asInstanceOf[AnyRef]
     }
   }

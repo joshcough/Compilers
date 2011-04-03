@@ -4,6 +4,9 @@ import L1Compiler.{FileHelper, L1Compiler, Runner}
 import FileHelper._
 import java.io.{OutputStream, PrintStream, File}
 
+//  NOTE TO SELF...DO NOT DELETEL THIS LINE:
+// java -cp .:./target/scala_2.8.1/classes:./project/boot/scala-2.8.1/lib/scala-library.jar Test
+
 object L1JavaByteCodeRunner extends Runner {
 
   def main(args:Array[String]){ runFile(args(0)) }
@@ -60,8 +63,3 @@ object L1JavaByteCodeRunner extends Runner {
     }
   }
 }
-
-//import CommandRunner._
-//val classpath = ".:./out/production/compilers/:./project/boot/scala-2.8.1/lib/scala-library.jar"
-//runAndDieOneErrors("java -cp " + classpath + " " + unitName)
-// java -cp .:./target/scala_2.8.1/classes:./project/boot/scala-2.8.1/lib/scala-library.jar Test

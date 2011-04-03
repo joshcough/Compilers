@@ -74,13 +74,13 @@ trait X86Generator extends L1Compiler.BackEnd {
       case _ => "jmp *" + gen(s)
     }
 
-    def jumpIfLess(l: Label) = "jl L1_" + l.l
-    def jumpIfLessThanOrEqual(l: Label) = "jle L1_" + l.l
-    def jumpIfGreater(l: Label) = "jg L1_" + l.l
-    def jumpIfGreaterOrEqual(l: Label) = "jge L1_" + l.l
-    def jumpIfEqual(l: Label) = "je L1_" + l.l
+    def jumpIfLess(l: Label) = "jl L1_" + l.name
+    def jumpIfLessThanOrEqual(l: Label) = "jle L1_" + l.name
+    def jumpIfGreater(l: Label) = "jg L1_" + l.name
+    def jumpIfGreaterOrEqual(l: Label) = "jge L1_" + l.name
+    def jumpIfEqual(l: Label) = "je L1_" + l.name
 
-    def declare(l: Label) = "L1_" + l.l + ":"
+    def declare(l: Label) = "L1_" + l.name + ":"
 
     def setInstruction(op: CompOp) = op match {
       case LessThan => "setl"

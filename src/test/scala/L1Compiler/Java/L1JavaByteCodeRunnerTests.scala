@@ -60,6 +60,21 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
       ))""") === "{s:2, 2, 2}\n2")
   }
 
+  jvmTest("label declaration (without use)"){
+    assert(runner.test("((:my_label))") === "")
+  }
+
+  jvmTest("assignment with comparison"){
+    assert(runner.test(
+      """
+      ((
+        (esi <- 7)
+        (edi <- 8)
+        (eax <- esi < edi) ;; puts a 1 in eax.
+        (eax <- (print eax)) ;; 1 is printed as 0 because of our number encoding scheme.
+      ))""") === "0")
+  }
+
   def jvmTest(name:String)(f: => Unit) {
     test(name){
       try f
