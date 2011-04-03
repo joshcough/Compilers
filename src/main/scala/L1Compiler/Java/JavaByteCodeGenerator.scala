@@ -146,6 +146,10 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
       )
     }
 
+    case Increment(r, s) => aop(r, s, "iadd")
+    case Decrement(r, s) => aop(r, s, "isub")
+    case Multiply(r, s) => aop(r, s, "imul")
+
 //      case Increment(r, s) => JVMInst(tri("addl", s, r))
 //      case Decrement(r, s) => JVMInst(tri("subl", s, r))
 //      case Multiply(r, s) => JVMInst(tri("imull", s, r))
@@ -189,6 +193,17 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
     case r:Register =>
       loadRegisterOntoStack(r) + "\n" +
       "invokevirtual L1Compiler/Java/JavaRuntimeRegister/value()Ljava/lang/Object;"
+  }
+
+  def aop(r:Register, s:S, opName:String) = {
+    JVMInst(
+        loadRegisterOntoStack(r),
+        loadValueOntoStackAsInt(r),
+        loadValueOntoStackAsInt(s),
+        opName,
+        "invokestatic scala/runtime/BoxesRunTime/boxToInteger(I)Ljava/lang/Integer;",
+        invokeMov
+      )
   }
 
   // puts the register directly on the stack. not its value.

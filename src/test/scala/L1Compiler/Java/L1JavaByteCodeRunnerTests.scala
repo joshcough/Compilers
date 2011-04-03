@@ -111,7 +111,70 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
       ))
       """) === "{s:2, 3, 2}")
   }
-  
+
+  jvmTest("increment"){
+    assert(runner.test(
+      """
+      ((
+        (ebx <- 7)
+        (ebx += 2)
+        (eax <- (print ebx))
+      ))""") === "4")
+  }
+
+  jvmTest("increment by register"){
+    assert(runner.test(
+      """
+      ((
+        (ebx <- 7)
+        (ebx += ebx)
+        (ebx += 1)
+        (eax <- (print ebx))
+      ))""") === "7")
+  }
+
+  jvmTest("decrement"){
+    assert(runner.test(
+      """
+      ((
+        (ebx <- 7)
+        (ebx -= 2)
+        (eax <- (print ebx))
+      ))""") === "2")
+  }
+
+  jvmTest("decrement by register"){
+    assert(runner.test(
+      """
+      ((
+        (ebx <- 7)
+        (ebx -= ebx)
+        (ebx += 1)
+        (eax <- (print ebx))
+      ))""") === "0")
+  }
+
+  jvmTest("multiply"){
+    assert(runner.test(
+      """
+      ((
+        (ebx <- 7)
+        (ebx *= 2)
+        (ebx += 1)
+        (eax <- (print ebx))
+      ))""") === "7")
+  }
+
+  jvmTest("multiply by register"){
+    assert(runner.test(
+      """
+      ((
+        (ebx <- 7)
+        (ebx *= ebx)
+        (eax <- (print ebx))
+      ))""") === "24")
+  }
+
   def jvmTest(name:String)(f: => Unit) {
     test(name){
       try f
