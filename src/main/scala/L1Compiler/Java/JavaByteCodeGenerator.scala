@@ -149,14 +149,10 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
     case Increment(r, s) => aop(r, s, "iadd")
     case Decrement(r, s) => aop(r, s, "isub")
     case Multiply(r, s) => aop(r, s, "imul")
+    case RightShift(r, s) => aop(r, s, "ishr")
+    case LeftShift(r, s) => aop(r, s, "ishl")
+    case BitwiseAnd(r, s) => aop(r, s, "iand")
 
-//      case Increment(r, s) => JVMInst(tri("addl", s, r))
-//      case Decrement(r, s) => JVMInst(tri("subl", s, r))
-//      case Multiply(r, s) => JVMInst(tri("imull", s, r))
-//      case RightShift(r, s) => JVMInst(tri("sarl", s, r))
-//      case LeftShift(r, s) => JVMInst(tri("sall", s, r))
-//      case BitwiseAnd(r, s) => JVMInst(tri("andl", s, r))
-//
 //      case Goto(s) => JVMInst(jump(s))
 //
 //      case Call(s) => {

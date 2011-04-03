@@ -175,13 +175,54 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
       ))""") === "24")
   }
 
+  jvmTest("shifts"){
+    assert(runner.test(
+    """
+    ((
+     (eax <- 7) ; 111
+     (eax >>= 1) ; 011
+     (eax <- (print eax)) ; prints 1
+
+     (eax <- 15) ; 1111
+     (eax >>= 2) ;; 0011
+     (eax <- (print eax)) ; prints 1
+
+     (eax <- 3) ; 0011
+     (eax <<= 1) ; 0110
+     (eax += 1) ; 0111
+     (eax <- (print eax)) ; prints 3
+
+     (eax <- 3) ; 0011
+     (eax <<= 2) ; 1100
+     (eax += 3) ; 1111
+     (eax <- (print eax)) ; prints 7
+
+     (eax <- 3) ; 0011
+     (eax &= 1) ; 0011 & 0001 -> 0001
+     (eax <- (print eax)) ; prints 0
+
+     (eax <- 27) ; 11011 &
+     (eax &= 13) ; 01101 -> 01001 -> 9 -> 4
+     (eax <- (print eax)) ; prints 4
+
+     (eax <- 27)
+     (ebx <- 13)
+     (eax &= ebx) ; 01101 -> 01001 -> 9 -> 4
+     (eax <- (print eax)) ; prints 4
+    ))""" ) === "1\n1\n3\n7\n0\n4\n4")
+  }
+
   def jvmTest(name:String)(f: => Unit) {
     test(name){
       try f
       catch { case e =>
-        println("heap for '" + name + "': " + L1JavaRuntime.heapView)
+        println("debug info for '" + name + "':\n" + L1JavaRuntime.debugView)
         throw e
       }
     }
   }
 }
+
+/**
+
+ **/

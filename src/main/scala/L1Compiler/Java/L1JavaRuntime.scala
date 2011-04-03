@@ -11,6 +11,7 @@ case class JavaRuntimeRegister(name: String) {
     case i:Int => i
     case _ => error("register value is not an int: " + value)
   }
+  def debug = "(" + name + "->" + value + ")"
 }
 
 object L1JavaRuntime {
@@ -22,6 +23,10 @@ object L1JavaRuntime {
   val heap = new Array[Any](HEAP_SIZE)
   var allocptr = 0
   var wordsAllocated = 0
+  def debugView = {
+    "Heap: [" + heapView.mkString(",") + "]\n" +
+    "Registers: \n\t" + registers.map(_.debug).mkString("\n\t")
+  }
   def heapView = heap.take(wordsAllocated).toList
   def printHeapView = println(heapView)
 
