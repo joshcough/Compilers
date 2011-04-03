@@ -3,9 +3,13 @@ out/
 project/boot/
 project/build/target/
 target/
-src/main/compilers/L1/code/*.S
+src/main/compilers/L1/1-test/*.S
+src/main/compilers/L1/1-test/*.res
 .idea/workspace.xml
 a.out
 runtime.o
 test.S
+test2.S
 test.o
+test.j
+test.class
