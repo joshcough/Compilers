@@ -88,6 +88,12 @@ trait X86Generator extends L1Compiler.BackEnd {
       case EqualTo => "sete"
     }
 
+    def reverseSetInstruction(op: CompOp) = op match {
+      case LessThan => "setg"
+      case LessThanOrEqualTo => "setge"
+      case EqualTo => "sete"
+    }
+
     def triple(theOp:String, s1:String, s2:String): String = theOp + " " + s1 + ", " + s2
 
     inst match {
@@ -117,8 +123,9 @@ trait X86Generator extends L1Compiler.BackEnd {
       }
       case Assignment(cx:CXRegister, c@Comp(left:Num,op,right:Register)) => {
         X86Inst(
-          triple("cmp", gen(right), gen(left)),
-          setInstruction(op) + " " + cx.low8,
+          triple("cmp", gen(left), gen(right)),
+          // magic reverse happens here!
+          reverseSetInstruction(op) + " " + cx.low8,
           triple("movzbl", cx.low8, gen(cx)))
       }
       case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Num)) => {
@@ -182,7 +189,7 @@ trait X86Generator extends L1Compiler.BackEnd {
         if(op(n1.n, n2.n)) X86Inst(jump(l1)) else X86Inst(jump(l2))
       }
 
-      // (cjump 11 < ebx :true :false) // special case. destination jmust be a register.
+      // (cjump 11 < ebx :true :false) // special case. destination must be a register.
       case CJump(Comp(n:Num, op, r:Register), l1, l2) => {
         val jumpInstruction = op match {
           case LessThan => jumpIfGreater(l1)

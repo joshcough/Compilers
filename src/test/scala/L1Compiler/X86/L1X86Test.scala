@@ -4,14 +4,15 @@ import L1Compiler._
 import L1Compiler.FileHelper._
 import java.io.File
 
-//class TestCompilerVsInterpreter extends L1X86Test{
-//  Dir.testFiles.foreach(testCompilerVsInterpreter)
-//}
-//
-//class GenFullProgramTest extends L1X86Test {
-//  testCompileString("(((eax <- 5)(eax <- (print eax))))" -> "2")
-//  testCompileString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
-//}
+class TestCompilerVsInterpreter extends L1X86Test{
+  Dir.testFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
+  Dir.testFiles.foreach(testCompilerVsInterpreter)
+}
+
+class GenFullProgramTest extends L1X86Test {
+  testCompileString("(((eax <- 5)(eax <- (print eax))))" -> "2")
+  testCompileString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
+}
 
 class GenMathInstructionsTest extends L1X86Test {
   testInstructionGen("(eax += 7)" -> List("addl $7, %eax"))
@@ -92,7 +93,7 @@ trait L1X86Test extends org.scalatest.FunSuite{
   }
 
   def testCompilerVsInterpreter(filename: String) {
-    val fullPath = Dir.L1File("code/" + filename)
+    val fullPath = Dir.L1File("1-test/" + filename)
     test(filename){ assert(X86.L1X86Runner.runFile(fullPath) === L1Interpreter.runFile(fullPath)) }
   }
 }

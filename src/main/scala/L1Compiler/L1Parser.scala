@@ -107,7 +107,7 @@ trait L1Parser extends Parser[L1] {
         Assignment(parseRegister(x1), MemRead(MemLoc(parseRegister(x2), Num(n4))))
       // | ((mem x n4) <- s)   ;; update memory @ x+n4
       case (List('mem, x:Symbol, n4:Int), '<-, x2) =>
-        MemWrite(MemLoc(parseRegister(x), Num(n4)), parseNumOrRegister(x2))
+        MemWrite(MemLoc(parseRegister(x), Num(n4)), parseS(x2))
       // ;; two calls into the runtime system, one to print a value:
       //(eax <- (print s))
       // TODO: figure out if this is even legal (print 8)
