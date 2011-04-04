@@ -5,7 +5,7 @@ import L1Compiler.FileHelper._
 import java.io.File
 
 class TestCompilerVsInterpreter extends L1X86Test{
-  Dir.testFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
+  //Dir.testFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
   Dir.testFiles.foreach(testCompilerVsInterpreter)
 }
 
