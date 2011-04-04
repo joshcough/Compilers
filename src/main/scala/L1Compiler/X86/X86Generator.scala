@@ -141,10 +141,17 @@ trait X86Generator extends L1Compiler.BackEnd {
         X86Inst(
           "pushl " + gen(n),
           "pushl " + gen(s),
-          "call allocate", "addl $8, %esp")
+          "call allocate",
+          "addl $8, %esp")
+      // cx must be eax here.
+      case Assignment(cx:CXRegister, ArrayError(s, n)) =>
+        X86Inst(
+          "pushl " + gen(n),
+          "pushl " + gen(s),
+          "call print_error",
+          "addl $8, %esp")
 
       case Assignment(l, r) => error("bad assignment statement: " + inst)
-
 
       case MemWrite(loc, s) => X86Inst(triple("movl", gen(s), gen(loc)))
       case Increment(r, s) => X86Inst(triple("addl", gen(s), gen(r)))
@@ -158,7 +165,6 @@ trait X86Generator extends L1Compiler.BackEnd {
 
       case Call(s) => {
         val label = nextNewLabel
-        val jmp = s match { case Label(name) => name; case _ => gen(s) }
         X86Inst(
           "pushl " + gen(label),
           "pushl %ebp",
@@ -166,6 +172,8 @@ trait X86Generator extends L1Compiler.BackEnd {
           jump(s),
           declare(label))
       }
+
+      case TailCall(s) => X86Inst("movl %ebp, %esp", jump(s))
 
       /////////// cjump //////////
 

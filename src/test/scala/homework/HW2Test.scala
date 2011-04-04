@@ -71,7 +71,7 @@ class HW2Test extends HWBaseTest[WAE, Int](HW2Interpreter){
 
   // trivial cases
   testBindingIds("7", Nil)
-  testBindingIds("'a", Nil)
+  testBindingIds("a", Nil)
   
   // simple add tests - no binding ids at all, because no with expressions
   testBindingIds("(+ 7 8)", Nil)

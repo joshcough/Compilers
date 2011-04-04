@@ -67,6 +67,12 @@ void* allocate(int fw_size, void *fw_fill) {
   }
 }
 
+int print_error(int* array, int fw_x) {
+  printf("attempted to use position %i in an array that only has %i positions\n",
+		 fw_x>>1, *array);
+  exit(-1);
+}
+
 int main() {
   heap=(void*)malloc(HEAP_SIZE*sizeof(void*));
   if (!heap) {

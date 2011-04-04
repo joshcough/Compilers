@@ -61,8 +61,14 @@ object L1AST {
   case class Call(s:S) extends Instruction {
     def toCode: String = "(call " + s.toCode + ")"
   }
+  case class TailCall(s:S) extends Instruction {
+    def toCode: String = "(call " + s.toCode + ")"
+  }
   case object Return extends Instruction {
     def toCode: String = "(return)"
+  }
+  case class ArrayError(s1:S, s2:S) extends AssignmentRHS {
+    def toCode: String = "(array-error " + s1.toCode + " " + s2.toCode + ")"
   }
 
   sealed trait Instruction{

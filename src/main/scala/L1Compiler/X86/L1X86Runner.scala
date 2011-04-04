@@ -7,9 +7,11 @@ import FileHelper._
 
 object L1X86Runner extends Runner {
 
-  def main(args:Array[String]){ runFile(args(0)) }
+  def main(args:Array[String]){
+    compileForRun(new File(args(0)).read, args(0))
+  }
 
-  def run(code:String, originalFileName:String): String = {
+  def compileForRun(code:String, originalFileName:String): String = {
     val compiler = new L1Compiler with X86Generator
     val outputAssemblyFile = originalFileName.dropRight(3) + ".S"
     val outputOFile = originalFileName.dropRight(3) + ".o"
@@ -17,6 +19,10 @@ object L1X86Runner extends Runner {
     runAndDieOneErrors("gcc -O2 -c -o ./runtime.o ./src/main/compilers/L1/runtime.c")
     runAndDieOneErrors("as -o " + outputOFile + " " + outputAssemblyFile)
     runAndDieOneErrors("gcc -o ./a.out "+outputOFile+" runtime.o")
+  }
+
+  def run(code:String, originalFileName:String): String = {
+    compileForRun(code, originalFileName)
     runAndDieOneErrors("./a.out")
   }
 }

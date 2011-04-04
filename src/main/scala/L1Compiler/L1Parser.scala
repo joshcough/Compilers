@@ -40,6 +40,7 @@ trait L1Parser extends Parser[L1] {
     }
     case List('goto, s:Symbol) => Goto(parseLabelOrRegister(s))
     case List('call, s:Any) => Call(parseS(s))
+    case List(Symbol("tail-call"), s:Any) => TailCall(parseS(s))
     case List('return) => Return
     // (cjump s cmp s label label) ;; conditional jump
     case 'cjump :: _ => parseCJump(expr)
@@ -115,6 +116,8 @@ trait L1Parser extends Parser[L1] {
       // (eax <- (allocate s s))
       case ('eax, '<-, List('allocate, s1, s2)) =>
         Assignment(eax, Allocate(parseNumOrRegister(s1), parseNumOrRegister(s2)))
+      case ('eax, '<-, List(Symbol("array-error"), s1, s2)) =>
+        Assignment(eax, ArrayError(parseNumOrRegister(s1), parseNumOrRegister(s2)))
       //(cx <- s cmp s)
       case (cx:Symbol, '<-, (s1: Any, cmp: Symbol, s2: Any)) =>
         Assignment(parseCxRegister(cx), parseComp(s1, cmp, s2))
