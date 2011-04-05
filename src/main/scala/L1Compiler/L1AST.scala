@@ -3,93 +3,41 @@ package L1Compiler
 object L1AST {
 
   object L1{ def apply(main: Func): L1 = L1(main, Nil) }
-  case class L1(main: Func, funs:List[Func]){
-    def toCode = "(" + main.toCode(false) + "\n" + funs.map(_.toCode(true)).mkString("\n") + ")"
-  }
-  case class Func(name: LabelDeclaration, body: List[Instruction]){
-    def toCode(printLabel:Boolean=true) = {
-      if(printLabel) "(" + name.l.toCode + "\n" + body.map(_.toCode).mkString("\n") + ")"
-      else "(" + body.map(_.toCode).mkString("\n") + ")"
-    }
-  }
+  case class L1(main: Func, funs:List[Func])
+  case class Func(name: LabelDeclaration, body: List[Instruction])
 
-  sealed trait AssignmentRHS { def toCode:String }
+  sealed trait Instruction
+  sealed trait AssignmentRHS
 
-  case class Allocate(n:S, init:S) extends AssignmentRHS {
-    def toCode: String = "(allocate " + n.toCode + " " + init.toCode + ")"
-  }
-  case class Assignment(r:Register, rhs:AssignmentRHS) extends Instruction {
-    def toCode: String = "(" + r.toCode + " <- " + rhs.toCode + ")"
-  }
-  case class Increment(r:Register, s:S) extends Instruction {
-    def toCode: String = "(" + r.toCode + " += " + s.toCode + ")"
-  }
-  case class Decrement(r:Register, s:S) extends Instruction {
-    def toCode: String = "(" + r.toCode + " -= " + s.toCode + ")"
-  }
-  case class Multiply(r:Register, s:S) extends Instruction {
-    def toCode: String = "(" + r.toCode + " *= " + s.toCode + ")"
-  }
-  case class LeftShift(r:Register, s:S) extends Instruction {
-    def toCode: String = "(" + r.toCode + " <<= " + s.toCode + ")"
-  }
-  case class RightShift(r:Register, s:S) extends Instruction {
-    def toCode: String = "(" + s.toCode + " >>= " + r.toCode + ")"
-  }
-  case class BitwiseAnd(r:Register, s:S) extends Instruction {
-    def toCode: String = "(" + r.toCode + " &= " + s.toCode + ")"
-  }
-  case class MemLoc(basePointer:Register, offset: Num) {
-    def toCode: String = "(mem " + basePointer.toCode + " " + offset.toCode + ")"
-  }
-  case class MemRead(loc: MemLoc) extends AssignmentRHS {
-    def toCode: String = loc.toCode
-  }
-  case class MemWrite(loc: MemLoc, s:S) extends Instruction {
-    def toCode: String = "(" + loc.toCode + " <- " + s.toCode + ")"
-  }
-  case class Print(s:S) extends AssignmentRHS {
-    def toCode: String = "(print " + s.toCode + ")"
-  }
-  // TODO: check if interpreter allows (goto num) and (goto register)
-  case class Goto(s:S) extends Instruction {
-    def toCode: String = "(goto " + s.toCode + ")"
-  }
-  case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction {
-    def toCode: String = "(cjump " + comp.toCode + " " + l1.toCode  + " " + l2.toCode + ")"
-  }
-  case class Call(s:S) extends Instruction {
-    def toCode: String = "(call " + s.toCode + ")"
-  }
-  case class TailCall(s:S) extends Instruction {
-    def toCode: String = "(call " + s.toCode + ")"
-  }
-  case object Return extends Instruction {
-    def toCode: String = "(return)"
-  }
-  case class ArrayError(s1:S, s2:S) extends AssignmentRHS {
-    def toCode: String = "(array-error " + s1.toCode + " " + s2.toCode + ")"
-  }
+  case class Allocate(n:S, init:S) extends AssignmentRHS
+  case class Assignment(r:Register, rhs:AssignmentRHS) extends Instruction
+  case class Increment(r:Register, s:S) extends Instruction
+  case class Decrement(r:Register, s:S) extends Instruction
+  case class Multiply(r:Register, s:S) extends Instruction
+  case class LeftShift(r:Register, s:S) extends Instruction
+  case class RightShift(r:Register, s:S) extends Instruction
+  case class BitwiseAnd(r:Register, s:S) extends Instruction
+  case class MemLoc(basePointer:Register, offset: Num)
+  case class MemRead(loc: MemLoc) extends AssignmentRHS
+  case class MemWrite(loc: MemLoc, s:S) extends Instruction
+  case class Print(s:S) extends AssignmentRHS
+  case class Goto(s:S) extends Instruction
+  case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction
+  case class Call(s:S) extends Instruction
+  case class TailCall(s:S) extends Instruction
+  case object Return extends Instruction
+  case class ArrayError(s1:S, s2:S) extends AssignmentRHS
 
-  sealed trait Instruction{
-    def toCode: String
-  }
   sealed trait S extends AssignmentRHS
-  case class Num(n: Int) extends S {
-    def toCode: String = n.toString
-  }
+  case class Num(n: Int) extends S
   case class Label(name: String) extends S {
     override def toString = "Label(\"" + name + "\")"
-    def toCode: String = ":" + name
   }
-  case class LabelDeclaration(l: Label) extends Instruction {
-    def toCode: String = l.toCode
-  }
+  case class LabelDeclaration(l: Label) extends Instruction
 
   sealed trait Register extends S {
     val name: String
     override def toString = name
-    def toCode: String = name
   }
   object XRegister {
     def apply(s: Symbol): Option[XRegister] = s match {
@@ -114,7 +62,7 @@ object L1AST {
       case _ => None
     }
   }
-  sealed abstract case class CXRegister(name: String) extends Register{
+  sealed abstract case class CXRegister(name: String) extends Register {
     def low8 = "%" + name(1) + "l"
   }
   object eax extends CXRegister("eax")
@@ -124,9 +72,7 @@ object L1AST {
 
   // TODO: this is DEFINITELY not an instruction
   // its only part of two different instructions
-  case class Comp(s1:S, op: CompOp, s2:S) extends AssignmentRHS {
-    def toCode: String = s1.toCode + " " + op.op + " " + s2.toCode
-  }
+  case class Comp(s1:S, op: CompOp, s2:S) extends AssignmentRHS
   sealed abstract case class CompOp(op: String){
     def apply(x:Int, y:Int): Boolean
   }
@@ -141,5 +87,37 @@ object L1AST {
   object EqualTo extends CompOp("="){
     override def toString = "EqualTo"
     def apply(x:Int, y:Int) = x == y
+  }
+
+  def toCode(a:AnyRef): String = a match {
+    case L1(main, funcs) => "(" + toCode(main, false) + "\n" + funcs.map(toCode(_, true)).mkString("\n") + ")"
+    case Allocate(n:S, init:S) => "(allocate " + toCode(n) + " " + toCode(init) + ")"
+    case Assignment(r:Register, rhs:AssignmentRHS) => "(" + toCode(r) + " <- " + toCode(rhs) + ")"
+    case Increment(r:Register, s:S) => "(" + toCode(r) + " += " + toCode(s) + ")"
+    case Decrement(r:Register, s:S) => "(" + toCode(r) + " -= " + toCode(s) + ")"
+    case Multiply(r:Register, s:S) => "(" + toCode(r) + " *= " + toCode(s) + ")"
+    case LeftShift(r:Register, s:S) => "(" + toCode(r) + " <<= " + toCode(s) + ")"
+    case RightShift(r:Register, s:S) => "(" + toCode(s) + " >>= " + toCode(r) + ")"
+    case BitwiseAnd(r:Register, s:S) => "(" + toCode(r) + " &= " + toCode(s) + ")"
+    case MemLoc(basePointer:Register, offset: Num) => "(mem " + toCode(basePointer) + " " + toCode(offset) + ")"
+    case MemRead(loc: MemLoc) => toCode(loc)
+    case MemWrite(loc: MemLoc, s:S) => "(" + toCode(loc) + " <- " + toCode(s) + ")"
+    case Print(s:S) => "(print " + toCode(s) + ")"
+    case Goto(s:S) => "(goto " + toCode(s) + ")"
+    case CJump(comp:Comp, l1: Label, l2: Label) => "(cjump " + toCode(comp) + " " + toCode(l1)  + " " + toCode(l2) + ")"
+    case Call(s:S) => "(call " + toCode(s) + ")"
+    case TailCall(s:S) => "(call " + toCode(s) + ")"
+    case Return => "(return)"
+    case ArrayError(s1:S, s2:S) => "(array-error " + toCode(s1) + " " + toCode(s2) + ")"
+    case Comp(s1:S, op: CompOp, s2:S) => toCode(s1) + " " + op.op + " " + toCode(s2)
+    case Num(n) => n.toString
+    case Label(name: String) => ":" + name
+    case LabelDeclaration(l: Label) => toCode(l)
+    case r:Register => r.name
+  }
+
+  def toCode(f: Func, printLabel: Boolean = true): String = {
+    val body = f.body.map(toCode).mkString("\n")
+    if (printLabel) "(" + toCode(f.name.l) + "\n" + body + ")" else "(" + body + ")"
   }
 }
