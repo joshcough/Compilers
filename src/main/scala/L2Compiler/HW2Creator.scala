@@ -3,16 +3,6 @@ package L2Compiler
 import L1Compiler.FileHelper._
 import java.io.File
 
-object HW2Creator {
-  def main(args:Array[String]){
-    var count = 0
-    for(test <- new File("./spilltests.txt").read.split("\n")){
-      new File("./test/test" + count + ".L2f").write(test + " x -4 s_")
-      count += 1
-    }
-  }
-}
-
 import L1Compiler.CommandRunner._
 
 object HW2TestResultsCreator{
