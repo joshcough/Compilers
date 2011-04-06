@@ -25,6 +25,8 @@ trait X86Generator extends L1Compiler.BackEnd {
         ".globl go",
         ".type	go, @function",
         "go:",
+        "pushl %ebp",
+        "movl %esp, %ebp",
         "pushl %ebx",
         "pushl %esi",
         "pushl %edi",
