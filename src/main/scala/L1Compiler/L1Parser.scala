@@ -32,19 +32,19 @@ trait L1Parser extends Parser[L1] {
       case '+= => Increment(parseRegister(s1), parseNumOrRegister(s2))
       case '-= => Decrement(parseRegister(s1), parseNumOrRegister(s2))
       case '*= => Multiply(parseRegister(s1), parseNumOrRegister(s2))
-      case '>>= => RightShift(parseRegister(s1), parseNumOrRegister(s2))
+      case '&= => BitwiseAnd(parseRegister(s1), parseNumOrRegister(s2))
       // TODO (ebx <<= ecx) right side must be ecx
       // and this converts to sall %cl, %ebx
-      case '<<= => LeftShift(parseRegister(s1), parseNumOrRegister(s2))
-      case '&= => BitwiseAnd(parseRegister(s1), parseNumOrRegister(s2))
+      case '>>= => RightShift(parseRegister(s1), parseNumOrEcx(s2))
+      case '<<= => LeftShift(parseRegister(s1), parseNumOrEcx(s2))
     }
     case List('goto, s:Symbol) => Goto(parseLabelOrRegister(s))
-    case List('call, s:Any) => Call(parseS(s))
-    case List(Symbol("tail-call"), s:Any) => TailCall(parseS(s))
+    case List('call, s:Symbol) => Call(parseLabelOrRegister(s))
+    case List(Symbol("tail-call"), s:Symbol) => TailCall(parseLabelOrRegister(s))
     case List('return) => Return
     // (cjump s cmp s label label) ;; conditional jump
     case 'cjump :: _ => parseCJump(expr)
-    case _ => error("unexpected token: " + expr)
+    case _ => error("not an instuction: " + expr)
   }
 
   def parseS(exp:Any) = exp match {
@@ -57,6 +57,12 @@ trait L1Parser extends Parser[L1] {
   def parseNumOrRegister(exp:Any): S = exp match {
     case n: Int => Num(n)
     case s: Symbol => parseRegister(s)
+  }
+
+  def parseNumOrEcx(exp:Any): S = exp match {
+    case n: Int => Num(n)
+    case 'eax => ecx
+    case _ => error("expected number or ecx but got: " + exp)
   }
 
   def parseLabelOrRegister(s: Symbol): S = {

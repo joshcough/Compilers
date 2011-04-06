@@ -1,7 +1,5 @@
 package L2Compiler
-/**
 import RegisterColorGraph._
-import L1Compiler.L1AST._
 import L2AST._
 
 class LivenessTest extends L2CompilerTest {
@@ -25,16 +23,16 @@ class LivenessTest extends L2CompilerTest {
 
   test("test from lecture notes") {
     val code = """
- (((x2 <- edx)
- (x2 *= x2)
- (2x2 <- x2)
- (2x2 *= 2)
- (3x <- edx)
- (3x *= 3)
- (eax <- 2x2)
- (eax += 3x)
- (eax += 4)
- (return)))
+(((x2 <- edx)
+(x2 *= x2)
+(2x2 <- x2)
+(2x2 *= 2)
+(3x <- edx)
+(3x *= 3)
+(eax <- 2x2)
+(eax += 3x)
+(eax += 4)
+(return)))
 """
     assert(inout(code) ===
     List(
@@ -99,14 +97,14 @@ class LivenessTest extends L2CompilerTest {
   }
 
   test("call"){
- val code = """
+val code = """
 (((in <- edx)
- (call :g)
- (edx <- in)
- (g-ans <- eax)
- (call :h)
- (eax += g-ans)
- (return)))"""
+(call :g)
+(edx <- in)
+(g-ans <- eax)
+(call :h)
+(eax += g-ans)
+(return)))"""
     assert(inout(code) === List(
       // :f
       // (edx)                   (ebx edi edx esi)
@@ -152,19 +150,19 @@ class LivenessTest extends L2CompilerTest {
 
   test("more"){
     val code = """
- (((z1 <- ebx)
- (z2 <- edi)
- (z3 <- esi)
- (in <- edx)
- (call :g)
- (edx <- in)
- (g-ans <- eax)
- (call :h)
- (eax += g-ans)
- (ebx <- z1)
- (edi <- z2)
- (esi <- z3)
- (return)))
+(((z1 <- ebx)
+(z2 <- edi)
+(z3 <- esi)
+(in <- edx)
+(call :g)
+(edx <- in)
+(g-ans <- eax)
+(call :h)
+(eax += g-ans)
+(ebx <- z1)
+(edi <- z2)
+(esi <- z3)
+(return)))
 """
     assert(inout(code) === List(
       // :main
@@ -241,16 +239,16 @@ class LivenessTest extends L2CompilerTest {
 
   test("interference 1"){
     val code = """
- (((x2 <- edx)
- (x2 *= x2)
- (2x2 <- x2)
- (2x2 *= 2)
- (3x <- edx)
- (3x *= 3)
- (eax <- 2x2)
- (eax += 3x)
- (eax += 4)
- (return)))
+(((x2 <- edx)
+(x2 *= x2)
+(2x2 <- x2)
+(2x2 *= 2)
+(3x <- edx)
+(3x *= 3)
+(eax <- 2x2)
+(eax += 3x)
+(eax += 4)
+(return)))
 """
     assert(interferingVariables(code) ===
             Set((Variable("3x"),Variable("2x2")), (Variable("2x2"),Variable("3x"))))
@@ -258,19 +256,19 @@ class LivenessTest extends L2CompilerTest {
 
   test("interference 2"){
         val code = """
- (((z1 <- ebx)
- (z2 <- edi)
- (z3 <- esi)
- (in <- edx)
- (call :g)
- (edx <- in)
- (g-ans <- eax)
- (call :h)
- (eax += g-ans)
- (ebx <- z1)
- (edi <- z2)
- (esi <- z3)
- (return)))
+(((z1 <- ebx)
+(z2 <- edi)
+(z3 <- esi)
+(in <- edx)
+(call :g)
+(edx <- in)
+(g-ans <- eax)
+(call :h)
+(eax += g-ans)
+(ebx <- z1)
+(edi <- z2)
+(esi <- z3)
+(return)))
 """
     val interference = interferingVariables(code)
     val expected = Set((Variable("z1"),Variable("z2")), (Variable("z2"),Variable("z1")),
@@ -288,16 +286,16 @@ class LivenessTest extends L2CompilerTest {
 
   test("legit graph coloring"){
     val code = """
- (((x2 <- edx)
- (x2 *= x2)
- (2x2 <- x2)
- (2x2 *= 2)
- (3x <- edx)
- (3x *= 3)
- (eax <- 2x2)
- (eax += 3x)
- (eax += 4)
- (return)))
+(((x2 <- edx)
+(x2 *= x2)
+(2x2 <- x2)
+(2x2 *= 2)
+(3x <- edx)
+(3x *= 3)
+(eax <- 2x2)
+(eax += 3x)
+(eax += 4)
+(return)))
 """
     // this must be colorable.
     val coloredGraph = attemptToColor(code).get
@@ -322,19 +320,19 @@ class LivenessTest extends L2CompilerTest {
 
   test("some live ranges"){
     val code = """
- (((z1 <- ebx)
- (z2 <- edi)
- (z3 <- esi)
- (in <- edx)
- (call :g)
- (edx <- in)
- (g-ans <- eax)
- (call :h)
- (eax += g-ans)
- (ebx <- z1)
- (edi <- z2)
- (esi <- z3)
- (return)))
+(((z1 <- ebx)
+(z2 <- edi)
+(z3 <- esi)
+(in <- edx)
+(call :g)
+(edx <- in)
+(g-ans <- eax)
+(call :h)
+(eax += g-ans)
+(ebx <- z1)
+(edi <- z2)
+(esi <- z3)
+(return)))
 """
     assert(liveRanges(inout(code)) === List(
       List(LiveRange(Variable("z2"),9)),
@@ -351,20 +349,20 @@ class LivenessTest extends L2CompilerTest {
 
   test("choose spill variable"){
     val code = """
- (((z1 <- ebx)
- (z2 <- edi)
- (z3 <- esi)
- (in <- edx)
- (call :g)
- (edx <- in)
- (g-ans <- eax)
- (call :h)
- (eax += g-ans)
- (ebx <- z1)
- (edi <- z2)
- (esi <- z3)
- (return)))
+(((z1 <- ebx)
+(z2 <- edi)
+(z3 <- esi)
+(in <- edx)
+(call :g)
+(edx <- in)
+(g-ans <- eax)
+(call :h)
+(eax += g-ans)
+(ebx <- z1)
+(edi <- z2)
+(esi <- z3)
+(return)))
 """
     assert(chooseSpillVar(liveRanges(inout(code))) === Some(Variable("z2")))
   }
-}**/
+}

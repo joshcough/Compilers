@@ -5,10 +5,11 @@ object L1AST {
   object L1{ def apply(main: Func): L1 = L1(main, Nil) }
   case class L1(main: Func, funs:List[Func])
   case class Func(name: LabelDeclaration, body: List[Instruction])
-  case class MemLoc(basePointer:Register, offset: Num)
+  trait ASTNode
+  case class MemLoc(basePointer:Register, offset: Num) extends ASTNode
 
   // the main instructions
-  sealed trait Instruction
+  sealed trait Instruction extends ASTNode
   case class Assignment(r:Register, rhs:AssignmentRHS) extends Instruction
   case class Increment(r:Register, s:S) extends Instruction
   case class Decrement(r:Register, s:S) extends Instruction
@@ -25,7 +26,7 @@ object L1AST {
   case object Return extends Instruction
 
   // assignment right hand sides
-  sealed trait AssignmentRHS
+  sealed trait AssignmentRHS extends ASTNode
   case class Allocate(n:S, init:S) extends AssignmentRHS
   case class Print(s:S) extends AssignmentRHS
   case class ArrayError(s1:S, s2:S) extends AssignmentRHS
@@ -50,7 +51,7 @@ object L1AST {
   }
 
   // s's (registers, numbers, labels)
-  sealed trait S extends AssignmentRHS
+  trait S extends AssignmentRHS
   case class Num(n: Int) extends S
   case class Label(name: String) extends S {
     override def toString = "Label(\"" + name + "\")"
@@ -99,12 +100,12 @@ object L1Printer {
     case L1(main, funcs) => "(" + toCode(main, false) + "\n" + funcs.map(toCode(_, true)).mkString("\n") + ")"
     case Allocate(n:S, init:S) => "(allocate " + toCode(n) + " " + toCode(init) + ")"
     case Assignment(r:Register, rhs:AssignmentRHS) => "(" + toCode(r) + " <- " + toCode(rhs) + ")"
-    case Increment(r:Register, s:S) => "(" + toCode(r) + " += " + toCode(s) + ")"
-    case Decrement(r:Register, s:S) => "(" + toCode(r) + " -= " + toCode(s) + ")"
-    case Multiply(r:Register, s:S) => "(" + toCode(r) + " *= " + toCode(s) + ")"
-    case LeftShift(r:Register, s:S) => "(" + toCode(r) + " <<= " + toCode(s) + ")"
-    case RightShift(r:Register, s:S) => "(" + toCode(s) + " >>= " + toCode(r) + ")"
+    case Increment(r:Register, s:S)  => "(" + toCode(r) + " += " + toCode(s) + ")"
+    case Decrement(r:Register, s:S)  => "(" + toCode(r) + " -= " + toCode(s) + ")"
+    case Multiply(r:Register, s:S)   => "(" + toCode(r) + " *= " + toCode(s) + ")"
     case BitwiseAnd(r:Register, s:S) => "(" + toCode(r) + " &= " + toCode(s) + ")"
+    case LeftShift(r:Register, s:S)  => "(" + toCode(r) + " <<= " + toCode(s) + ")"
+    case RightShift(r:Register, s:S) => "(" + toCode(r) + " >>= " + toCode(s) + ")"
     case MemLoc(basePointer:Register, offset: Num) => "(mem " + toCode(basePointer) + " " + toCode(offset) + ")"
     case MemRead(loc: MemLoc) => toCode(loc)
     case MemWrite(loc: MemLoc, s:S) => "(" + toCode(loc) + " <- " + toCode(s) + ")"
@@ -112,7 +113,7 @@ object L1Printer {
     case Goto(s:S) => "(goto " + toCode(s) + ")"
     case CJump(comp:Comp, l1: Label, l2: Label) => "(cjump " + toCode(comp) + " " + toCode(l1)  + " " + toCode(l2) + ")"
     case Call(s:S) => "(call " + toCode(s) + ")"
-    case TailCall(s:S) => "(call " + toCode(s) + ")"
+    case TailCall(s:S) => "(tail-call " + toCode(s) + ")"
     case Return => "(return)"
     case ArrayError(s1:S, s2:S) => "(array-error " + toCode(s1) + " " + toCode(s2) + ")"
     case Comp(s1:S, op: CompOp, s2:S) => toCode(s1) + " " + op.op + " " + toCode(s2)

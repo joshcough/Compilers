@@ -6,12 +6,12 @@ import java.io.File
 
 class TestCompilerVsInterpreter extends L1X86Test{
   //Dir.testFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
-  Dir.testFiles.foreach(testCompilerVsInterpreter)
+  //Dir.testFiles.foreach(testCompilerVsInterpreter)
 }
 
 class GenFullProgramTest extends L1X86Test {
-  testCompileString("(((eax <- 5)(eax <- (print eax))))" -> "2")
-  testCompileString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
+//  testCompileString("(((eax <- 5)(eax <- (print eax))))" -> "2")
+//  testCompileString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
 }
 
 class GenMathInstructionsTest extends L1X86Test {

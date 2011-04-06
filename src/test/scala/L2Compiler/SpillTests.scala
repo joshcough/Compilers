@@ -1,7 +1,6 @@
 package L2Compiler
-/**
+
 import L2AST._
-import L1Compiler.L1AST._
 
 class SpillTests extends L2CompilerTest {
 
@@ -79,7 +78,7 @@ class SpillTests extends L2CompilerTest {
 
   testSpill("((eax <- (print x)))",
     Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
-    Print(Variable("s_0")))
+    Assignment(eax, Print(Variable("s_0"))))
   testSpill("((goto x))",
     Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
     Goto(Variable("s_0")))
@@ -101,21 +100,21 @@ class SpillTests extends L2CompilerTest {
 
   testSpill("((eax <- (allocate x x)))",
     Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
-    Allocate(Variable("s_0"),Variable("s_0")))
+    Assignment(eax, Allocate(Variable("s_0"),Variable("s_0"))))
   testSpill("((eax <- (allocate x y)))",
     Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
-    Allocate(Variable("s_0"),Variable("y")))
+    Assignment(eax, Allocate(Variable("s_0"),Variable("y"))))
   testSpill("((eax <- (allocate y x)))",
     Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
-    Allocate(Variable("y"),Variable("s_0")))
+    Assignment(eax, Allocate(Variable("y"),Variable("s_0"))))
   testSpill("((eax <- (allocate y y)))",
-    Allocate(Variable("y"),Variable("y")))
+    Assignment(eax, Allocate(Variable("y"),Variable("y"))))
 
   testSpill("((eax <- (allocate x x))(eax <- (allocate x x)))",
     Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
-    Allocate(Variable("s_0"),Variable("s_0")),
+    Assignment(eax, Allocate(Variable("s_0"),Variable("s_0"))),
     Assignment(Variable("s_1"),MemRead(MemLoc(ebp,Num(-4)))),
-    Allocate(Variable("s_1"),Variable("s_1")))
+    Assignment(eax, Allocate(Variable("s_1"),Variable("s_1"))))
 
   testSpill("((cjump x < x :l1 :l2))",
     Assignment(Variable("s_0"),MemRead(MemLoc(ebp,Num(-4)))),
@@ -129,4 +128,3 @@ class SpillTests extends L2CompilerTest {
   testSpill("((cjump y < y :l1 :l2))",
     CJump(Comp(Variable("y"),LessThan,Variable("y")),Label("l1"),Label("l2")))
 }
-**/

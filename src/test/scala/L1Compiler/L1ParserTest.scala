@@ -122,7 +122,7 @@ class ParseOtherStuffTest extends L1ParserTest {
   testParseInstruction("(call :func)" -> Call(Label("func")))
   testParseInstruction("(call eax)" -> Call(eax))
   testParseInstruction("(return)" -> Return)
-  testParseInstructionError("(goto 7)" -> "unexpected token: List('goto, 7)")
+  testParseInstructionError("(goto 7)" -> "not an instuction: List('goto, 7)")
 }
 
 abstract class L1ParserTest extends org.scalatest.FunSuite{

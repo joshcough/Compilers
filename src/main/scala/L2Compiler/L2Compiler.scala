@@ -1,14 +1,14 @@
 package L2Compiler
-/**
+
 import java.io.File
 import reader.Reader
 import L2AST._
-import L1Compiler.L1AST._
 import L1Compiler.FileHelper._
+
 trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   def parseProgram(s:String) = parse(read(s))
   def compileFile(filename:String) = compile(new File(filename).read)
-  def compile(code: String): L1 = {
+  def compile(code: String): L2 = {
     def color(f:Func) = RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(f))).color
 
     def initialRewrite(f:Func) = {
@@ -41,12 +41,12 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
         colorGraph.replaceVarsWithRegisters(func)
       }
     }
-    L1(elOneFunctions.head, elOneFunctions.tail)
+    L2(elOneFunctions.head, elOneFunctions.tail)
   }
 
 
   // these are testing entry points...
-  def parseInstructionListThing(s:String): List[Instruction] = parseInstructionList(read(s).asInstanceOf[List[Any]])
+  def parseInstructionListThing(s:String): List[Instruction] = parseInstructionListThing(read(s).asInstanceOf[List[Any]])
   def parseInstructionListThing(a:List[Any]): List[Instruction] = parseInstructionList(a)
   def inout(code:String):List[InstuctionInOutSet] = inout(parse(read(code)).main)
   def interferingVariables(code:String) = buildInterferenceSet(inout(code)).filter{
@@ -58,4 +58,3 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   def spill(code:String):List[Instruction] = spill(Variable("x"), -4, "s_", parseInstructionListThing(code))
 
 }
-**/

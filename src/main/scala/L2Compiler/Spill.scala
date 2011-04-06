@@ -1,10 +1,9 @@
 package L2Compiler
-/**
 
 import L2AST._
-import L1Compiler.L1AST._
+
 trait Spill {
-  
+
   def spill(spillVar:Variable, stackOffset: Int, spillPrefix:String, ins: List[Instruction]): List[Instruction] = {
     //////////////////////////////////////////////////////////
     // Helper functions
@@ -16,11 +15,11 @@ trait Spill {
       newVarCount += 1
       Variable(spillPrefix + newVarCount)
     }
-    def biop(x:X, s:X, default: Instruction, f: (X,X) => Instruction): List[Instruction] = {
+    def biop(x:X, s:S, default: Instruction, f: (X,S) => Instruction): List[Instruction] = {
       // (x += x)
       if(x == s && x == spillVar) {
         val newVar0 = newVar()
-        List(Assignment(newVar0, memLoc),
+        List(Assignment(newVar0, MemRead(memLoc)),
             f(newVar0, newVar0),
             MemWrite(memLoc, newVar0))
       }
@@ -38,12 +37,89 @@ trait Spill {
       }
       else List(default)
     }
-    //////////////////////////////////////////////////////////
-    // The meat!
-    //////////////////////////////////////////////////////////
+
+    ///////////////////////// spill /////////////////////////////////
     def spill(i:Instruction): List[Instruction] = i match {
-      ///////////// Assignments //////////////////
-      case ass@Assignment(v1:Variable, v2:Variable) => {
+      case ass:Assignment => spillAssignment(ass)
+
+      ///////////// Biop //////////////////
+      case mul@Multiply(x:X, s:S) => biop(x,s,mul,Multiply(_,_))
+      case inc@Increment(x:X, s:S) => biop(x,s,inc,Increment(_,_))
+      case dec@Decrement(x:X, s:S) => biop(x,s,dec,Decrement(_,_))
+      case bwa@BitwiseAnd(x:X, s:S) => biop(x,s,bwa,BitwiseAnd(_,_))
+      case ls@LeftShift(x:X, s:S) => biop(x,s,ls,LeftShift(_,_))
+      case rs@RightShift(x:X, s:S) => biop(x,s,rs,RightShift(_,_))
+
+      case mw@MemWrite(loc@MemLoc(base, off), s) => {
+        // ((mem x 4) <- x)
+        // (s_0 <- (mem ebp stackOffset))
+        // ((mem s_0 4) <- s_0)
+        if(base == spillVar && s == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), newVar0))
+        }
+        // ((mem x 4) <- y)
+        // (s_0 <- (mem ebp stackOffset))
+        // ((mem s_0 4) <- y)
+        else if(base == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), s))
+        }
+        // ((mem y 4) <- x)
+        // (s_0 <- (mem ebp stackOffset))
+        // ((mem y 4) <- s_0)
+        else if(s == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), s))
+        }
+        else List(mw)
+      }
+      case cj@CJump(Comp(s1, op, s2), l1, l2) => {
+        // (cjump x < x :l1 :l2)
+        if(s1 == spillVar && s2 == spillVar) {
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar), CJump(Comp(newVar0, op, newVar0), l1, l2))
+        }
+        // (cjump x < y  :l1 :l2)
+        else if(s1 == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar), CJump(Comp(newVar0, op, s2), l1, l2))
+        }
+        // (cjump y < x :l1 :l2)
+        else if(s2 == spillVar){
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar), CJump(Comp(s1, op, newVar0), l1, l2))
+        }
+        else List(cj)
+      }
+      case c@Call(s) => {
+        if(s==spillVar) {
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),Call(newVar0))
+        }
+        else List(c)
+      }
+      case tc@TailCall(s) => {
+        if(s==spillVar) {
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),TailCall(newVar0))
+        }
+        else List(tc)
+      }
+      case g@Goto(s) => {
+        if(s==spillVar) {
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar),Goto(newVar0))
+        }
+        else List(g)
+      }
+      case ld:LabelDeclaration => List(ld)
+      case Return => List(Return)
+    }
+
+    ///////////// Spill for Assignments //////////////////
+    def spillAssignment(ass:Assignment): List[Instruction] = ass match {
+      case Assignment(v1:Variable, v2:Variable) => {
         // if we have x <- x, just leave it...handle it in L1 compiler. dumb.
         if(v1 == v2) List(ass)
         // x <- y where x is spillVar
@@ -53,10 +129,15 @@ trait Spill {
         // y <- z
         else List(ass)
       }
-      case ass@Assignment(r:Register, v2:Variable) => {
+      case Assignment(r:Register, v2:Variable) => {
         if( v2 == spillVar ) List(Assignment(r, readSpillVar)) else List(ass)
       }
-      case ass@Assignment(v1, read@MemRead(MemLoc(v2:Variable, off))) => {
+      case Assignment(v:Variable, s:S) => {
+        if(v == spillVar) List(MemWrite(memLoc, s)) else List(ass)
+      }
+      case Assignment(r1:Register, r2:Register) => List(ass)
+
+      case Assignment(v1, read@MemRead(MemLoc(v2, off))) => {
         if(v1 == v2 && v1 == spillVar) {
           // funny case, x <- (mem x n) where x is spill var
           // (s_0 <- (mem ebp stackOffset))
@@ -88,7 +169,7 @@ trait Spill {
         }
         else List(ass)
       }
-      case ass@Assignment(v, comp@Comp(x1, op, x2)) => {
+      case Assignment(v, comp@Comp(x1, op, x2)) => {
         if( v == spillVar ){
           // (x <- x < x) ... wtf
           // (s_0 <- (mem ebp stackOffset))
@@ -162,97 +243,57 @@ trait Spill {
           else List(ass)
         }
       }
-      // finally, instruction must be x <- register or x <- constant
-      // if v is not spillVar, we just end up returning the entire thing. 
-      case ass@Assignment(v:Variable, s:X) if(v == spillVar) =>
-        List(MemWrite(memLoc, s))
 
-      ///////////// Biop //////////////////
-      case mul@Multiply(x:X, s:X) => biop(x,s,mul,Multiply(_,_))
-      case inc@Increment(x:X, s:X) => biop(x,s,inc,Increment(_,_))
-      case dec@Decrement(x:X, s:X) => biop(x,s,dec,Decrement(_,_))
-      case ls@LeftShift(x:X, s:X) => biop(x,s,ls,LeftShift(_,_))
-      case rs@RightShift(x:X, s:X) => biop(x,s,rs,RightShift(_,_))
-      case bwa@BitwiseAnd(x:X, s:X) => biop(x,s,bwa,BitwiseAnd(_,_))
+      // (eax <- (print s))
+      case Assignment(eax, Print(s:S)) => {
+        if(s == spillVar) {
+          val newVar0 = newVar()
+          List(Assignment(newVar0, readSpillVar), Assignment(eax, Print(newVar0)))
+        } else List(ass)
+      }
 
-      // (eax <- (print x))
-      case Print(s:X) if s == spillVar => {
-        val newVar0 = newVar()
-        List(Assignment(newVar0, readSpillVar),Print(newVar0))
-      }
-      case Goto(s:X) if s == spillVar => {
-        val newVar0 = newVar()
-        List(Assignment(newVar0, readSpillVar),Goto(newVar0))
-      }
-      case Call(s:X) if s == spillVar => {
-        val newVar0 = newVar()
-        List(Assignment(newVar0, readSpillVar),Call(newVar0))
-      }
-      case mw@MemWrite(loc@MemLoc(base, off), s) => {
-        // ((mem x 4) <- x)
-        // (s_0 <- (mem ebp stackOffset))
-        // ((mem s_0 4) <- s_0)
-        if(base == spillVar && s == spillVar){
-          val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), newVar0))
-        }
-        // ((mem x 4) <- y)
-        // (s_0 <- (mem ebp stackOffset))
-        // ((mem s_0 4) <- y)
-        else if(base == spillVar){
-          val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), s))
-        }
-        // ((mem y 4) <- x)
-        // (s_0 <- (mem ebp stackOffset))
-        // ((mem y 4) <- s_0)
-        else if(s == spillVar){
-          val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), s))
-        }
-        else List(mw)
-      }
-      case a@Allocate(n, init) => {
+      case Assignment(eax, Allocate(n, init)) => {
         //(eax <- (allocate x x))
         if(n == spillVar && init == spillVar){
           val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar),Allocate(newVar0, newVar0))
+          List(Assignment(newVar0, readSpillVar), Assignment(eax, Allocate(newVar0, newVar0)))
         }
         //(eax <- (allocate x i))
         else if(n == spillVar){
           val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar),Allocate(newVar0, init))
+          List(Assignment(newVar0, readSpillVar), Assignment(eax, Allocate(newVar0, init)))
         }
         //(eax <- (allocate n x))
         else if(init == spillVar){
           val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar),Allocate(n, newVar0))
+          List(Assignment(newVar0, readSpillVar), Assignment(eax, Allocate(n, newVar0)))
         }
-        else List(a)
+        else List(ass)
       }
-      case cj@CJump(Comp(s1, op, s2), l1, l2) => {
-        // (cjump x < x :l1 :l2)
-        if(s1 == spillVar && s2 == spillVar) {
+
+      case Assignment(eax, ArrayError(a, n)) => {
+        //(eax <- (allocate x x))
+        if(a == spillVar && n == spillVar){
           val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar), CJump(Comp(newVar0, op, newVar0), l1, l2))
+          List(Assignment(newVar0, readSpillVar), Assignment(eax, Allocate(newVar0, newVar0)))
         }
-        // (cjump x < y  :l1 :l2)
-        else if(s1 == spillVar){
+        //(eax <- (allocate x i))
+        else if(a == spillVar){
           val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar), CJump(Comp(newVar0, op, s2), l1, l2))
+          List(Assignment(newVar0, readSpillVar), Assignment(eax, Allocate(newVar0, n)))
         }
-        // (cjump y < x :l1 :l2)
-        else if(s2 == spillVar){
+        //(eax <- (allocate n x))
+        else if(n == spillVar){
           val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar), CJump(Comp(s1, op, newVar0), l1, l2))
+          List(Assignment(newVar0, readSpillVar), Assignment(eax, Allocate(a, newVar0)))
         }
-        else List(cj)
+        else List(ass)
       }
-      case _ => List(i)
     }
+
     ins.flatMap(spill)
   }
-  
+
   def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
     def maxRange(ranges:List[LiveRange]): Option[LiveRange] = ranges match {
       case Nil => None
@@ -261,4 +302,4 @@ trait Spill {
     liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.
             find(_.x.isInstanceOf[Variable]).map(_.x.asInstanceOf[Variable])
   }
-}**/
+}

@@ -1,8 +1,7 @@
 package L2Compiler
-/**
+
 import org.scalatest.FunSuite
 import L2AST._
-import L1Compiler.L1AST._
 import RegisterColorGraph._
 
 class BiDirectionalGraphTests extends FunSuite {
@@ -55,49 +54,52 @@ class BiDirectionalGraphTests extends FunSuite {
 
 
   test("simple color graph"){
-    val g = BiDirectionalGraph((eax, GRAY) -> (ebx -> GRAY))
-    assert(g.contains((eax, GRAY) -> (ebx -> GRAY)))
-    assert(g.contains((ebx, GRAY) -> (eax -> GRAY)))
+    val g = BiDirectionalGraph(new ColoredNode(eax, GRAY) -> (ebx -> GRAY))
+    assert(g.contains(new ColoredNode(eax, GRAY) -> (ebx -> GRAY)))
+    assert(g.contains(new ColoredNode(ebx, GRAY) -> new ColoredNode(eax, GRAY)))
   }
 
   test("replace in simple color graph"){
-    val g = BiDirectionalGraph[(X, Color)]((eax, GRAY) -> (ebx -> GRAY)).replace((eax,GRAY), (eax, GREEN))
+    val g = BiDirectionalGraph[(X, Color)](new ColoredNode(eax, GRAY) -> (ebx -> GRAY)).replace((eax,GRAY), (eax, GREEN))
     assert(g.contains((eax, GREEN) -> (ebx -> GRAY)))
-    assert(g.contains((ebx, GRAY) -> (eax -> GREEN)))
+    assert(g.contains(new ColoredNode(ebx, GRAY) -> (eax -> GREEN)))
   }
 
   test("color simple color graph"){
-    val g = RegisterColorGraph(BiDirectionalGraph((eax, GRAY) -> (ebx -> GRAY))).color.get
-    assert(g.data.contains((eax, RED) -> (ebx -> GREEN)))
-    assert(g.data.contains((ebx, GREEN) -> (eax -> RED)))
+    val g = RegisterColorGraph(
+      BiDirectionalGraph(new ColoredNode(eax, GRAY) -> new ColoredNode(ebx, GRAY))).color.get
+    assert(g.data.contains(new ColoredNode(eax, RED) -> new ColoredNode(ebx, GREEN)))
+    assert(g.data.contains(new ColoredNode(ebx, GREEN) -> new ColoredNode(eax, RED)))
   }
 
   test("color simple color graph 2"){
     // adding one more node, but the node is only connected to eax, and
     // so it can also get green
     val g = RegisterColorGraph(
-      BiDirectionalGraph((eax, GRAY) -> (ebx -> GRAY), (eax, GRAY) -> (ecx -> GRAY))).color.get
-    assert(g.data.contains((eax, RED) -> (ebx -> GREEN)))
-    assert(g.data.contains((ebx, GREEN) -> (eax -> RED)))
-    assert(g.data.contains((eax, RED) -> (ecx -> GREEN)))
-    assert(g.data.contains((ecx, GREEN) -> (eax -> RED)))
+      BiDirectionalGraph(
+        new ColoredNode(eax, GRAY) -> new ColoredNode(ebx, GRAY),
+        new ColoredNode(eax, GRAY) -> new ColoredNode(ecx, GRAY))).color.get
+    assert(g.data.contains(new ColoredNode(eax, RED)   -> new ColoredNode(ebx, GREEN)))
+    assert(g.data.contains(new ColoredNode(ebx, GREEN) -> new ColoredNode(eax, RED)))
+    assert(g.data.contains(new ColoredNode(eax, RED)   -> new ColoredNode(ecx, GREEN)))
+    assert(g.data.contains(new ColoredNode(ecx, GREEN) -> new ColoredNode(eax, RED)))
 
     // but as soon as you attach ebx to ecx, the graph must have 3 colors
     val g2 = RegisterColorGraph(BiDirectionalGraph(
-      (eax, GRAY) -> (ebx -> GRAY),
-      (eax, GRAY) -> (ecx -> GRAY),
-      (ebx, GRAY) -> (ecx -> GRAY))).color.get
+      new ColoredNode(eax, GRAY) -> new ColoredNode(ebx, GRAY),
+      new ColoredNode(eax, GRAY) -> new ColoredNode(ecx, GRAY),
+      new ColoredNode(ebx, GRAY) -> new ColoredNode(ecx, GRAY))).color.get
 
-    assert(g2.data.contains((eax, BLUE) -> (ebx -> RED)))
-    assert(g2.data.contains((eax, BLUE) -> (ecx -> GREEN)))
-    assert(g2.data.contains((ecx, GREEN) -> (eax -> BLUE)))
-    assert(g2.data.contains((ebx, RED) -> (ecx -> GREEN)))
-    assert(g2.data.contains((ecx, GREEN) -> (ebx -> RED)))
+    assert(g2.data.contains(new ColoredNode(eax, BLUE)  -> new ColoredNode(ebx, RED)))
+    assert(g2.data.contains(new ColoredNode(eax, BLUE)  -> new ColoredNode(ecx, GREEN)))
+    assert(g2.data.contains(new ColoredNode(ecx, GREEN) -> new ColoredNode(eax, BLUE)))
+    assert(g2.data.contains(new ColoredNode(ebx, RED)   -> new ColoredNode(ecx, GREEN)))
+    assert(g2.data.contains(new ColoredNode(ecx, GREEN) -> new ColoredNode(ebx, RED)))
   }
 
   test("base register color graph"){
     val g = RegisterColorGraph.base
-    assert(g.data.contains((eax, RED) -> (esi -> MAGENTA)))
-    assert(g.data.contains((esi -> MAGENTA) -> (eax, RED)))
+    assert(g.data.contains(new ColoredNode(eax, RED) -> new ColoredNode(esi, MAGENTA)))
+    assert(g.data.contains(new ColoredNode(esi, MAGENTA) -> new ColoredNode(eax, RED)))
   }
-}**/
+}
