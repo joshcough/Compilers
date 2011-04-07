@@ -15,8 +15,8 @@ trait Spill {
     ///////////// Spill for Assignments //////////////////
     def spillAssignment(ass:Assignment): List[Instruction] = ass match {
       case Assignment(v1:Variable, v2:Variable) => {
-        // if we have x <- x, just leave it...handle it in L1 compiler. dumb.
-        if(v1 == v2) List(ass)
+        // if we have x <- x, just remove it.
+        if(v1 == v2) List()
         // x <- y where x is spillVar
         else if( v1 == spillVar ) List(MemWrite(memLoc, v2))
         // y <- x where x is spillVar

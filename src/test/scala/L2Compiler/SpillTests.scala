@@ -13,10 +13,10 @@ class SpillTests extends L2CompilerTest {
   val count = Iterator.from(0)
 
   // assignments
-  testSpill("((x <- x))", "((x <- x))") // TODO: ask robby if this is still a special case.
+  testSpill("((x <- x))", "()")
   testSpill("((x <- y))", "(((mem ebp -4) <- y))")
   testSpill("((y <- x))", "((y <- (mem ebp -4)))")
-  testSpill("((y <- y))", "((y <- y))")
+  testSpill("((y <- y))", "()")
 
   testSpill("((x <- 1))", "(((mem ebp -4) <- 1))")
   testSpill("((x <- eax))", "(((mem ebp -4) <- eax))")
