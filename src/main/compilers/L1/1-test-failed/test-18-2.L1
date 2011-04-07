@@ -1,0 +1,16 @@
+;; #18 multiple allocations, array-errors
+(((ebx <- 25)
+  (eax <- (allocate ebx 1))
+  (esi <- eax)
+  (edi <- 25)
+  (eax <- (allocate edi 1))
+  (cjump edi < 28 :_1 :_2)
+  :_1
+  (eax <- (array-error eax 1))
+  (goto :_3)
+  :_2
+  (eax <- (array-error 1 eax))
+  (goto :_3)
+  :_3))
+
+
