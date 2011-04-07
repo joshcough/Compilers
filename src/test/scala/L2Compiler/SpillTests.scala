@@ -94,6 +94,8 @@ class SpillTests extends L2CompilerTest {
   testSpill("(:x)", "(:x)")
   testSpill("(:y)", "(:y)")
 
+  new java.io.File("./spill-test").mkdir()
+
   def testSpill(code:String, expected: String) = {
     def doSpill(code: String) = {
       val newProgramList =
@@ -108,11 +110,11 @@ class SpillTests extends L2CompilerTest {
       import java.io.File
       import L1Compiler.FileHelper._
       val index = count.next()
-      val f = new File("./test/test" + index + ".L2f")
+      val f = new File("./spill-test/test" + index + ".L2f")
       // write the test
       f.write(code + " x -4 s_")
       // write the expected result
-      val spillResFile = new File("./test/test" + index + ".sres")
+      val spillResFile = new File("./spill-test/test" + index + ".sres")
       spillResFile.write(doSpill(code))
     }
   }
