@@ -2,14 +2,14 @@ package L1Compiler
 
 object L1AST {
 
+  trait L1ASTNode
   object L1{ def apply(main: Func): L1 = L1(main, Nil) }
-  case class L1(main: Func, funs:List[Func])
-  case class Func(name: LabelDeclaration, body: List[Instruction])
-  trait ASTNode
-  case class MemLoc(basePointer:Register, offset: Num) extends ASTNode
+  case class L1(main: Func, funs:List[Func]) extends L1ASTNode
+  case class Func(name: LabelDeclaration, body: List[Instruction]) extends L1ASTNode
+  case class MemLoc(basePointer:Register, offset: Num) extends L1ASTNode
 
   // the main instructions
-  sealed trait Instruction extends ASTNode
+  sealed trait Instruction extends L1ASTNode
   case class Assignment(r:Register, rhs:AssignmentRHS) extends Instruction
   case class Increment(r:Register, s:S) extends Instruction
   case class Decrement(r:Register, s:S) extends Instruction
@@ -26,7 +26,7 @@ object L1AST {
   case object Return extends Instruction
 
   // assignment right hand sides
-  sealed trait AssignmentRHS extends ASTNode
+  sealed trait AssignmentRHS extends L1ASTNode
   case class Allocate(n:S, init:S) extends AssignmentRHS
   case class Print(s:S) extends AssignmentRHS
   case class ArrayError(s1:S, s2:S) extends AssignmentRHS
@@ -96,7 +96,7 @@ object L1AST {
 
 object L1Printer {
   import L1AST._
-  def toCode(a:AnyRef): String = a match {
+  def toCode(a:L1ASTNode): String = a match {
     case L1(main, funcs) => "(" + toCode(main, false) + "\n" + funcs.map(toCode(_, true)).mkString("\n") + ")"
     case Allocate(n:S, init:S) => "(allocate " + toCode(n) + " " + toCode(init) + ")"
     case Assignment(r:Register, rhs:AssignmentRHS) => "(" + toCode(r) + " <- " + toCode(rhs) + ")"

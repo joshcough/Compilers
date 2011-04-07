@@ -1,7 +1,7 @@
 # make temp dir to do work in
-rm -rf tmp
-mkdir tmp
-cd tmp
+rm -rf build
+mkdir build
+cd build
 
 # clone the project
 git clone git@github.com:joshcough/Interpreters.git
@@ -24,4 +24,4 @@ tar cfvz ../compilers-hw1.tar.gz *
 
 # done
 echo "done. now run:"
-echo "scp ./tmp/compilers-hw1.tar.gz jdc974@tlab-18.cs.northwestern.edu:./spring2011/"
+echo "scp ./build/compilers-hw1.tar.gz jdc974@tlab-18.cs.northwestern.edu:./spring2011/"
