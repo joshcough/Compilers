@@ -39,6 +39,11 @@ class ReaderTest extends FunSuite with MustMatchers {
   :aint_gonna_happen
   :terminate)""", List(Symbol(":aint_gonna_happen"), Symbol(":terminate")))
 
+  testRead(""";;10
+(((eax <- 19)
+  (eax <- (print eax))))""", List(List(List('eax, '<-, 19), List('eax, '<-, List('print, 'eax)))))
+
+
   // helper functions
   def read(s:String) = new Reader{}.read(s)
   case class Error(message:String)

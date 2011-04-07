@@ -1,17 +1,58 @@
 package L1Compiler.X86
 
 import L1Compiler._
-import L1Compiler.FileHelper._
-import java.io.File
 
 class TestCompilerVsInterpreter extends L1X86Test{
+  import L1Compiler.FileHelper._
   //Dir.testFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
   //Dir.testFiles.foreach(testCompilerVsInterpreter)
 }
 
-class GenFullProgramTest extends L1X86Test {
-//  testCompileString("(((eax <- 5)(eax <- (print eax))))" -> "2")
-//  testCompileString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
+class RunFullProgramTest extends L1X86Test {
+//  testCompileAndRunString("(((eax <- 5)(eax <- (print eax))))" -> "2")
+//  testCompileAndRunString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
+}
+
+class CompileFullProgramTest extends L1X86Test {
+  testCompileString(""";;10
+(((eax <- 19) (eax <- (print eax))))""" -> """movl $19, %eax
+pushl %eax
+call print
+addl $4, %esp""")
+
+  testCompileString(""";;10
+(((eax <- 18) (eax += 1) (eax <- (print eax))))""" -> """movl $18, %eax
+addl $1, %eax
+pushl %eax
+call print
+addl $4, %esp""")
+
+  testCompileString("""(((esi <- 3) (eax <- (allocate esi 3)) (eax <- (array-error eax 3))))""" -> "hi")
+
+  testCompileString("(((eax <- -2147483648) (eax -= 2) (eax <- (print eax))))" -> "hi")
+  testCompileString("(((eax <- -2147483648) (eax -= 3) (eax <- (print eax))))" -> "hi")
+  testCompileString("(((eax <- (allocate 5 1)) (eax <- (array-error eax 17))))" -> "hi")
+  // robbys test 79
+  testCompileString("(((eax <- (allocate 7 1)) (eax <- (array-error eax 19)) (eax <- (print 3))))" -> "hi")
+  // robbys test 80  ... are they exactly the same? ask him why
+  //testCompileString("(((eax <- (allocate 7 1)) (eax <- (array-error eax 19)) (eax <- (print 3))))" -> "hi")
+
+  testCompileString("(((eax <- (allocate 3 1)) (eax <- (array-error eax 5)) (eax <- (print eax))))" -> "hi")
+
+  testCompileString(""";; #18 multiple allocations, array-errors
+(((ebx <- 25)
+  (eax <- (allocate ebx 1))
+  (esi <- eax)
+  (edi <- 25)
+  (eax <- (allocate edi 1))
+  (cjump edi < 28 :_1 :_2)
+  :_1
+  (eax <- (array-error eax 1))
+  (goto :_3)
+  :_2
+  (eax <- (array-error 1 eax))
+  (goto :_3)
+  :_3))""" -> "hi")
 }
 
 class GenMathInstructionsTest extends L1X86Test {
@@ -84,9 +125,19 @@ trait L1X86Test extends org.scalatest.FunSuite{
     }
   }
 
-  def testCompileFile(t: (String, String)) { testCompile(t._1, new File(t._1).read, t._2) }
+  //import java.io.File
+  //def testCompileFile(t: (String, String)) { testCompile(t._1, new File(t._1).read, t._2) }
   def testCompileString(t: (String, String)) { testCompile(t._1, t._1, t._2) }
   private def testCompile(testName: String, code: String, expectedResults: String): Unit = {
+    test(testName + " => " + expectedResults){
+      val ast = compiler.parse(compiler.read(code))
+      assert(ast.main.body.flatMap(compiler.genInst).mkString("\n") === expectedResults)
+    }
+  }
+
+
+  def testCompileAndRunString(t: (String, String)) { testCompileAndRun(t._1, t._1, t._2) }
+  private def testCompileAndRun(testName: String, code: String, expectedResults: String): Unit = {
     test(testName + " => " + expectedResults){
       assert(X86.L1X86Runner.test(code) === expectedResults)
     }

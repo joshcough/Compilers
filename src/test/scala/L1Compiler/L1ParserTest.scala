@@ -35,6 +35,13 @@ class ParseProgramsTest extends L1ParserTest{
              List(LabelDeclaration(Label("aint_gonna_happen")),
                   LabelDeclaration(Label("terminate")))))
   )
+
+  testParse(""";;10
+(((eax <- 19)
+  (eax <- (print eax))))""" ->
+          L1(Func(LabelDeclaration(Label("main")),
+            List(Assignment(eax,Num(19)), Assignment(eax,Print(eax)))))
+  )
 }
 
 class ParsePrimitivesTest extends L1ParserTest {
