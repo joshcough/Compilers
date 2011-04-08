@@ -15,7 +15,6 @@ case class LiveRange(x:X, range:Int)
   add edges between a and the registers edi and esi,
   ensuring a ends up in eax, ecx, edx, ebx, or spilled
  */
-
 trait Liveness {
 
   val callerSave = Set[X](eax, ebx, ecx, edx)
@@ -82,13 +81,70 @@ trait Liveness {
     }
   }
 
-  def inout(f:Func, stopAfterNSteps:Option[Int]=None): List[InstructionInOutSet] = {
-    new InOutHelper(f).inout(stopAfterNSteps)
+  type Index = Int
+  case class InstructionInOutSet(index: Index, inst:Instruction, in:Set[X], out:Set[X]){
+    override def toString = "(" + toCode(inst) + " " + toCode(in) + " " + toCode(out) + ")"
   }
-  
+
+  def inoutFinalResult(f:Func): List[InstructionInOutSet] = inout(f).last
+
+  def inout(f:Func): List[List[InstructionInOutSet]] = {
+    class InOutHelper(f:Func) {
+      // TODO: consider just putting the label dec in the body
+      def instructions: List[Instruction] = f.name :: f.body
+
+      def succIndeces(n:Index): Set[Index] = instructions(n) match {
+        case Return => Set()
+        case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l1))
+        case _ => Set(n+1)
+      }
+
+      def findLabelDecIndex(label:Label):Index = {
+        val index = f.body.indexOf(LabelDeclaration(label))
+        if(index == -1) error("no such label: " + label.name) else index
+      }
+
+      def inout: List[List[InstructionInOutSet]] = {
+        // start out with empty in and out sets for all instructions
+        val emptyStartSet = (f.name :: f.body).zipWithIndex.map {
+          case (inst, index) => InstructionInOutSet(index, inst, Set[X](), Set[X]())
+        }
+        // then fill them in until we reach the fixed point.
+        inout(List(emptyStartSet))
+      }
+
+      /**
+       * in(n) = gen(n-th-inst) ∪ (out (n) - kill(n-th-inst))
+       * out(n) = ∪{in(m) | m ∈ succ(n)}
+       */
+      // does the next round of moving things up the in/out chains.
+      // recurs until the result is the same as what we've got so far.
+      private def inout(acc:List[List[InstructionInOutSet]]): List[List[InstructionInOutSet]] = {
+
+        val current = acc.last
+
+        // in and out functions
+        def in(i:InstructionInOutSet): Set[X] = gen(i.inst) union (i.out -- kill(i.inst))
+        def out(i:InstructionInOutSet): Set[X] = {
+          val indices = succIndeces(i.index)
+          if(indices.isEmpty) Set() else indices.map(current(_).in).reduceLeft(_ union _)
+        }
+
+        // build the next result
+        val nextStep: List[InstructionInOutSet] = current.foldRight(List[InstructionInOutSet]()){
+          case (i, c) => InstructionInOutSet(i.index, i.inst, in(i), out(i)) :: c
+        }
+
+        // if we've reached the fixed point, we can stop. otherwise continue.
+        if(nextStep == current) acc else inout(acc :+ nextStep)
+      }
+    }
+    new InOutHelper(f).inout
+  }
+
   /**
-   * TODO - not yet using the kill set as part of interference!
-   * TODO cx <- instructions
+   * TODO: - not yet using the kill set as part of interference!
+   * TODO: cx <- instructions
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): Set[(X,X)] = {
     val ins = iioss.map(_.in)
@@ -111,68 +167,22 @@ trait Liveness {
     val inSets = iioss.map(_.in)
     val variablesAndRegisters = inSets.foldLeft(Set[X]()){ case (acc, s) => acc union s}
     for(x <- variablesAndRegisters.toList) yield liveRanges(x, inSets.map(_.toList))
-  }
-
-  type Index = Int
-  case class InstructionInOutSet(index: Index, inst:Instruction, in:Set[X], out:Set[X]){
-    override def toString = "(" + toCode(inst) + " " + toCode(in) + " " + toCode(out) + ")"
-  }
-
-  class InOutHelper(f:Func) {
-
-    // TODO: consider just putting the label dec in the body
-    def instructions: List[Instruction] = f.name :: f.body
-
-    def succIndeces(n:Index): Set[Index] = instructions(n) match {
-      case Return => Set()
-      case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l1))
-      case _ => Set(n+1)
-    }
-
-    def findLabelDecIndex(label:Label):Index = {
-      val index = f.body.indexOf(LabelDeclaration(label))
-      if(index == -1) error("no such label: " + label.name) else index
-    }
-
-    def inout(stopAfterNSteps:Option[Int]=None): List[InstructionInOutSet] = {
-      // start out with empty in and out sets for all instructions
-      val empty = (f.name :: f.body).zipWithIndex.map {
-        case (inst, index) => InstructionInOutSet(index, inst, Set[X](), Set[X]())
-      }
-      // then fill them in until we reach the fixed point.
-      inout(empty, 0, stopAfterNSteps)
-      //val (head::rest) = inout(empty, 0, stopAfterNSteps)
-      //val newHead: InstructionInOutSet = head.copy(in = head.in - edi - esi)
-      //newHead :: rest
-      //head :: rest
-    }
-
-    /**
-     * in(n) = gen(n-th-inst) ∪ (out (n) - kill(n-th-inst))
-     * out(n) = ∪{in(m) | m ∈ succ(n)}
-     */
-    // does the next round of moving things up the in/out chains.
-    // recurs until the result is the same as what we've got so far.
-    private def inout(acc:List[InstructionInOutSet], currentStep: Int, stopAfterNSteps:Option[Int]): List[InstructionInOutSet] = {
-      def in(i:InstructionInOutSet): Set[X] = gen(i.inst) union (i.out -- kill(i.inst))
-      def out(i:InstructionInOutSet): Set[X] = {
-        val indices = succIndeces(i.index)
-        if(indices.isEmpty) Set() else indices.map(acc(_).in).reduceLeft(_ union _)
-      }
-
-      val next = acc.foldRight((List[InstructionInOutSet](), Set[X]())){
-        case (iios, (acc, lastIn)) => {
-          val newIn = in(iios)
-          val newOut = out(iios)
-          //println(iios + ", " + toCode(newIn) + ", " + toCode(newOut))
-          (InstructionInOutSet(iios.index, iios.inst, newIn, newOut) :: acc, newIn)
-        }
-      }._1
-      stopAfterNSteps match {
-        case Some(n) if(n==currentStep+1) => next
-        case _ => if(next == acc) acc else inout(next, currentStep + 1, stopAfterNSteps)
-      }
-    }
-  }
+  }  
 }
 
+
+// this was in the inout function:
+//val (head::rest) = inout(empty, 0, stopAfterNSteps)
+//val newHead: InstructionInOutSet = head.copy(in = head.in - edi - esi)
+//newHead :: rest
+//head :: rest
+
+
+//      val next = acc.foldRight((List[InstructionInOutSet](), Set[X]())){
+//        case (iios, (acc, lastIn)) => {
+//          val newIn = in(iios)
+//          val newOut = out(iios)
+//          //println(iios + ", " + toCode(newIn) + ", " + toCode(newOut))
+//          (InstructionInOutSet(iios.index, iios.inst, newIn, newOut) :: acc, newIn)
+//        }
+//      }._1

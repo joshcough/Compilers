@@ -92,12 +92,12 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite{
       assert(ex.getMessage === t._2)
     }
   }
-
-  def testCompile(t:(String, String)): Unit = {
-    test(t._1){
-      val out = L2Printer.toCode(compile(t._1)).trim
-      println(out)
-      assert(out === t._2.trim)
-    }
-  }
+//
+//  def testCompile(t:(String, String)): Unit = {
+//    test(t._1){
+//      val out = L2Printer.toCode(compile(t._1)).trim
+//      println(out)
+//      assert(out === t._2.trim)
+//    }
+//  }
 }

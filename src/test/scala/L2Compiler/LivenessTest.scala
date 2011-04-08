@@ -6,65 +6,65 @@ class LivenessTest extends L2CompilerTest {
 
   import compiler._
 
-//  test("test first big example from lecture notes") {
-//    val code = """
-//      |(:f
-//      |(x2 <- eax)
-//      |(x2 *= x2)
-//      |(2x2 <- x2)
-//      |(2x2 *= 2)
-//      |(3x <- eax)
-//      |(3x *= 3)
-//      |(eax <- 2x2)
-//      |(eax += 3x)
-//      |(eax += 4)
-//      |(return))"""
-//
-//    val expectedAfter1Step = """
-//      |(:f () ())
-//      |((x2 <- eax) (eax) ())
-//      |((x2 *= x2) (x2) ())
-//      |((2x2 <- x2) (x2) ())
-//      |((2x2 *= 2) (2x2) ())
-//      |((3x <- eax) (eax) ())
-//      |((3x *= 3) (3x) ())
-//      |((eax <- 2x2) (2x2) ())
-//      |((eax += 3x) (3x eax) ())
-//      |((eax += 4) (eax) ())
-//      |((return) (eax edi esi) ())"""
-//
-//    livenessTest(code, expectedAfter1Step, steps=Just(1))
-//
-//    val expectedAfter2Steps = """
-//      |(:f () (eax))
-//      |((x2 <- eax) (eax) (x2))
-//      |((x2 *= x2) (x2) (x2))
-//      |((2x2 <- x2) (x2) (2x2))
-//      |((2x2 *= 2) (2x2) (eax))
-//      |((3x <- eax) (eax) (3x))
-//      |((3x *= 3) (3x) (2x2))
-//      |((eax <- 2x2) (2x2) (3x eax))
-//      |((eax += 3x) (3x eax) (eax))
-//      |((eax += 4) (eax) (eax edi esi))
-//      |((return) (eax edi esi) ())"""
-//
-//    livenessTest(code, expectedAfter2Steps, steps=Just(2))
-//
-//    val expectedAtEnd = """
-//      |(:f (eax edi esi) (eax edi esi))
-//      |((x2 <- eax) (eax edi esi) (eax edi esi x2))
-//      |((x2 *= x2) (eax edi esi x2) (eax edi esi x2))
-//      |((2x2 <- x2) (eax edi esi x2) (2x2 eax edi esi))
-//      |((2x2 *= 2) (2x2 eax edi esi) (2x2 eax edi esi))
-//      |((3x <- eax) (2x2 eax edi esi) (2x2 3x edi esi))
-//      |((3x *= 3) (2x2 3x edi esi) (2x2 3x edi esi))
-//      |((eax <- 2x2) (2x2 3x edi esi) (3x eax edi esi))
-//      |((eax += 3x) (3x eax edi esi) (eax edi esi))
-//      |((eax += 4) (eax edi esi) (eax edi esi))
-//      |((return) (eax edi esi) ())"""
-//
-//    livenessTest(code, expectedAtEnd, steps=All)
-//  }
+  test("test first big example from lecture notes") {
+    val code = """
+      |(:f
+      |(x2 <- eax)
+      |(x2 *= x2)
+      |(2x2 <- x2)
+      |(2x2 *= 2)
+      |(3x <- eax)
+      |(3x *= 3)
+      |(eax <- 2x2)
+      |(eax += 3x)
+      |(eax += 4)
+      |(return))"""
+
+    val expectedAfter1Step = """
+      |(:f () ())
+      |((x2 <- eax) (eax) ())
+      |((x2 *= x2) (x2) ())
+      |((2x2 <- x2) (x2) ())
+      |((2x2 *= 2) (2x2) ())
+      |((3x <- eax) (eax) ())
+      |((3x *= 3) (3x) ())
+      |((eax <- 2x2) (2x2) ())
+      |((eax += 3x) (3x eax) ())
+      |((eax += 4) (eax) ())
+      |((return) (eax edi esi) ())"""
+
+    livenessTest(code, expectedAfter1Step, step=Just(1))
+
+    val expectedAfter2Steps = """
+      |(:f () (eax))
+      |((x2 <- eax) (eax) (x2))
+      |((x2 *= x2) (x2) (x2))
+      |((2x2 <- x2) (x2) (2x2))
+      |((2x2 *= 2) (2x2) (eax))
+      |((3x <- eax) (eax) (3x))
+      |((3x *= 3) (3x) (2x2))
+      |((eax <- 2x2) (2x2) (3x eax))
+      |((eax += 3x) (3x eax) (eax))
+      |((eax += 4) (eax) (eax edi esi))
+      |((return) (eax edi esi) ())"""
+
+    livenessTest(code, expectedAfter2Steps, step=Just(2))
+
+    val expectedAtEnd = """
+      |(:f (eax edi esi) (eax edi esi))
+      |((x2 <- eax) (eax edi esi) (eax edi esi x2))
+      |((x2 *= x2) (eax edi esi x2) (eax edi esi x2))
+      |((2x2 <- x2) (eax edi esi x2) (2x2 eax edi esi))
+      |((2x2 *= 2) (2x2 eax edi esi) (2x2 eax edi esi))
+      |((3x <- eax) (2x2 eax edi esi) (2x2 3x edi esi))
+      |((3x *= 3) (2x2 3x edi esi) (2x2 3x edi esi))
+      |((eax <- 2x2) (2x2 3x edi esi) (3x eax edi esi))
+      |((eax += 3x) (3x eax edi esi) (eax edi esi))
+      |((eax += 4) (eax edi esi) (eax edi esi))
+      |((return) (eax edi esi) ())"""
+
+    livenessTest(code, expectedAtEnd, step=End)
+  }
 
   test("test call example from lecture notes") {
     val code = """
@@ -93,7 +93,7 @@ class LivenessTest extends L2CompilerTest {
       |((eax += y5) (eax y5) ())
       |((return) (eax edi esi) ())"""
 
-    livenessTest(code, expectedAfter1Step, steps=Just(1))
+    livenessTest(code, expectedAfter1Step, step=Just(1))
 
     val expectedAfter2Steps = """
       |(:f () (eax))
@@ -107,7 +107,7 @@ class LivenessTest extends L2CompilerTest {
       |((eax += y5) (eax y5) (eax edi esi))
       |((return) (eax edi esi) ())"""
 
-    livenessTest(code, expectedAfter2Steps, steps=Just(2))
+    livenessTest(code, expectedAfter2Steps, step=Just(2))
 
     val expectedAtEnd = """
       |(:f (eax ecx edi edx esi) (eax ecx edi edx esi))
@@ -121,13 +121,13 @@ class LivenessTest extends L2CompilerTest {
       |((eax += y5) (eax edi esi y5) (eax edi esi))
       |((return) (eax edi esi) ())"""
 
-    livenessTest(code, expectedAtEnd, steps=All)
+    livenessTest(code, expectedAtEnd, step=End)
   }
 
-  def All = None // sort of hacky, but whatever.
+  def End = None // sort of hacky, but whatever.
   def Just(i:Int) = Some(i)
-  def livenessTest(code:String, expected:String, steps: Option[Int] = None) = {
-    val actual = inoutForTesting(code.stripMargin.trim, stopAfterNSteps=steps)
+  def livenessTest(code:String, expected:String, step: Option[Int] = None) = {
+    val actual = inoutForTesting(code.stripMargin.trim, step=step)
     if(actual.stripMargin.trim != expected.stripMargin.trim){
       println("failure!")
       println("code:\n" + code.stripMargin.trim)
@@ -422,70 +422,4 @@ class LivenessTest extends L2CompilerTest {
 //    assert(chooseSpillVar(liveRanges(inout(code))) === Some(Variable("z2")))
 //  }
 
-
-
 }
-
-
-
-
-/**
-     val expected = List(
-      //1: :main (eax edi esi) (eax edi esi)
-      InstuctionInOutSet(
-        LabelDeclaration(Label("main")),
-          Set(eax, edi, esi),
-          Set(eax, edi, esi)),
-
-      // 2: (x2 <- eax) (eax edi esi) (eax edi esi x2)
-      InstuctionInOutSet(
-        Assignment(Variable("x2"),eax),
-          Set(eax, edi, esi),
-          Set(eax, edi, esi, Variable("x2"))),
-
-      // 3: (x2 *= x2) (eax edi esi x2) (eax edi esi x2)
-      InstuctionInOutSet(
-        Multiply(Variable("x2"),Variable("x2")),
-          Set(eax, edi, esi, Variable("x2")),
-          Set(eax, edi, esi, Variable("x2"))),
-
-      // 4: (2x2 <- x2) (eax edi esi x2) (2x2 eax edi esi)
-      InstuctionInOutSet(Assignment(Variable("2x2"),Variable("x2")),
-        Set(eax, edi, esi, Variable("x2")),
-        Set(Variable("2x2"), eax, edi, esi)),
-
-      // 5: (2x2 *= 2) (2x2 eax edi esi) (2x2 eax edi esi)
-      InstuctionInOutSet(Multiply(Variable("2x2"),Num(2)),
-        Set(Variable("2x2"), eax, edi, esi),
-        Set(Variable("2x2"), eax, edi, esi)),
-
-      // 6: (3x <- eax) (2x2 eax edi esi) (2x2 3x edi esi)
-      InstuctionInOutSet(Assignment(Variable("3x"),edx),
-        Set(Variable("2x2"), eax, edi, esi),
-        Set(Variable("2x2"), Variable("3x"), edi, esi)),
-
-      // 7: (3x *= 3) (2x2 3x edi esi) (2x2 3x edi esi)
-      InstuctionInOutSet(Multiply(Variable("3x"),Num(3)),
-        Set(Variable("2x2"), Variable("3x"), edi, esi),
-        Set(Variable("2x2"), Variable("3x"), edi, esi)),
-
-      // 8: (eax <- 2x2) (2x2 3x edi esi) (3x eax edi esi)
-      InstuctionInOutSet(Assignment(eax,Variable("2x2")),
-        Set(Variable("2x2"), Variable("3x"), edi, esi),
-        Set(Variable("3x"), eax, edi, esi)),
-
-      // 9: (eax += 3x) (3x eax edi esi) (eax edi esi)
-      InstuctionInOutSet(Increment(eax,Variable("3x")),
-        Set(Variable("3x"), eax, edi, esi),
-        Set(eax, edi, esi)),
-
-      // 10: (eax += 4) (eax edi esi) (eax edi esi)
-      InstuctionInOutSet(Increment(eax,Num(4)),
-        Set(eax, edi, esi),
-        Set(eax, edi, esi)),
-
-      // 11: (return) (eax edi esi) ()
-      InstuctionInOutSet(Return,
-        Set(eax, edi, esi),Set()))
-
-    println(expected.mkString("\n"))**/
