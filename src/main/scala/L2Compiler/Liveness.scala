@@ -5,16 +5,6 @@ import L2Printer._
 
 case class LiveRange(x:X, range:Int)
 
-/**
-  TODO:
-  Constrained arithmetic operators
-  Add interference edges to disallow the illegal registers
-  when building the interference graph, before starting the
-  coloring.
-  E.g., if you have this instruction (a <- y < x) then
-  add edges between a and the registers edi and esi,
-  ensuring a ends up in eax, ecx, edx, ebx, or spilled
- */
 trait Liveness {
 
   val callerSave = Set[X](eax, ebx, ecx, edx)
@@ -86,15 +76,21 @@ trait Liveness {
     override def toString = "(" + toCode(inst) + " " + toCode(in) + " " + toCode(out) + ")"
   }
 
+  // just gets the last inout result. (the most important one)
   def inoutFinalResult(f:Func): List[InstructionInOutSet] = inout(f).last
 
+  // builds up a giant list of all the intermediate inout results
+  // robby starts out with a function, and empty in and out sets for each instruction
+  // that is the first result in the list return here
+  // then there is a result for each slide all the way down to the last slide
+  // when things are finally complete (we've reached the fixed point)
   def inout(f:Func): List[List[InstructionInOutSet]] = {
     class InOutHelper(f:Func) {
       // TODO: consider just putting the label dec in the body
       def instructions: List[Instruction] = f.name :: f.body
 
       def succIndeces(n:Index): Set[Index] = instructions(n) match {
-        case Return => Set()
+        case Return|TailCall(_) => Set()
         case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l1))
         case _ => Set(n+1)
       }
@@ -143,8 +139,16 @@ trait Liveness {
   }
 
   /**
-   * TODO: - not yet using the kill set as part of interference!
-   * TODO: cx <- instructions
+    TODO: - not yet using the kill set as part of interference!
+    TODO: cx <- instructions
+    TODO:
+    Constrained arithmetic operators
+    Add interference edges to disallow the illegal registers
+    when building the interference graph, before starting the
+    coloring.
+    E.g., if you have this instruction (a <- y < x) then
+    add edges between a and the registers edi and esi,
+    ensuring a ends up in eax, ecx, edx, ebx, or spilled
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): Set[(X,X)] = {
     val ins = iioss.map(_.in)
@@ -176,7 +180,6 @@ trait Liveness {
 //val newHead: InstructionInOutSet = head.copy(in = head.in - edi - esi)
 //newHead :: rest
 //head :: rest
-
 
 //      val next = acc.foldRight((List[InstructionInOutSet](), Set[X]())){
 //        case (iios, (acc, lastIn)) => {

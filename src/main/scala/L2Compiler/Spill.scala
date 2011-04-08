@@ -187,8 +187,8 @@ trait Spill {
       }
     }
 
-    ///////////// Aop //////////////////
-    def spillAop(x:X, s:S, default: Instruction, f: (X,S) => Instruction): List[Instruction] = {
+    ///////////// Spill for Math Ops //////////////////
+    def spillMathOp(x:X, s:S, default: Instruction, f: (X,S) => Instruction): List[Instruction] = {
       // (x += x)
       if(x == s && x == spillVar) {
         val newVar0 = newVar()
@@ -216,13 +216,13 @@ trait Spill {
 
       case ass:Assignment => spillAssignment(ass)
 
-      ///////////// Aop //////////////////
-      case mul@Multiply(x:X, s:S) => spillAop(x,s,mul,Multiply(_,_))
-      case inc@Increment(x:X, s:S) => spillAop(x,s,inc,Increment(_,_))
-      case dec@Decrement(x:X, s:S) => spillAop(x,s,dec,Decrement(_,_))
-      case bwa@BitwiseAnd(x:X, s:S) => spillAop(x,s,bwa,BitwiseAnd(_,_))
-      case ls@LeftShift(x:X, s:S) => spillAop(x,s,ls,LeftShift(_,_))
-      case rs@RightShift(x:X, s:S) => spillAop(x,s,rs,RightShift(_,_))
+      ///////////// MathOp //////////////////
+      case mul@Multiply(x:X, s:S) => spillMathOp(x,s,mul,Multiply(_,_))
+      case inc@Increment(x:X, s:S) => spillMathOp(x,s,inc,Increment(_,_))
+      case dec@Decrement(x:X, s:S) => spillMathOp(x,s,dec,Decrement(_,_))
+      case bwa@BitwiseAnd(x:X, s:S) => spillMathOp(x,s,bwa,BitwiseAnd(_,_))
+      case ls@LeftShift(x:X, s:S) => spillMathOp(x,s,ls,LeftShift(_,_))
+      case rs@RightShift(x:X, s:S) => spillMathOp(x,s,rs,RightShift(_,_))
 
       case mw@MemWrite(loc@MemLoc(base, off), s) => {
         // ((mem x 4) <- x)
@@ -294,6 +294,8 @@ trait Spill {
     ins.flatMap(spill)
   }
 
+  // TODO: this should probably go into the Compiler class itself
+  // so that Spill doesn't need access to LiveRange
   def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
     def maxRange(ranges:List[LiveRange]): Option[LiveRange] = ranges match {
       case Nil => None
