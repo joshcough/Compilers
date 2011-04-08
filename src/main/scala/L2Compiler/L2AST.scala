@@ -133,4 +133,8 @@ object L2Printer {
     val body = f.body.map(toCode).mkString("\n")
     if (printLabel) "(" + toCode(f.name.l) + "\n" + body + ")" else "(" + body + ")"
   }
+
+  // TODO: be very careful using this
+  // make sorting more explicit
+  def toCode(is:Iterable[L2ASTNode]): String = is.map(toCode).toList.sorted.mkString("(", " ", ")")
 }

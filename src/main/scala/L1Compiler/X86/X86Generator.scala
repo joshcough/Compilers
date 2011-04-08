@@ -5,12 +5,9 @@ import L1Compiler.L1AST.{Instruction => L1Instruction, _}
 object X86Inst {
   type X86Inst = String
   def apply(is: X86Inst*) = List(is: _*)
-  def dump(insts: List[X86Inst]) = {
-    insts.map {
-      i =>
-        (if (i.endsWith(":") || i.startsWith(".globl")) i else "\t" + i) + "\n"
-    }.mkString
-  }
+  def dump(insts: List[X86Inst]) = insts.map { i =>
+    (if (i.endsWith(":") || i.startsWith(".globl")) i else "\t" + i) + "\n"
+  }.mkString
 }
 
 trait X86Generator extends L1Compiler.BackEnd {
@@ -38,8 +35,8 @@ trait X86Generator extends L1Compiler.BackEnd {
 	      ".ident	\"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
 	      ".section	.note.GNU-stack,\"\",@progbits")
     X86Inst.dump(header) +
-            X86Inst.dump(generateMain(ast.main) ::: ast.funs.flatMap(generateFunc)) +
-            X86Inst.dump(footer)
+      X86Inst.dump(generateMain(ast.main) ::: ast.funs.flatMap(generateFunc)) +
+      X86Inst.dump(footer)
   }
 
   private def generateMain(main: Func):List[X86Inst] = {
@@ -54,17 +51,12 @@ trait X86Generator extends L1Compiler.BackEnd {
     main.body.flatMap(genInst) ::: footer
   }
 
-  private def generateFunc(f: Func):List[X86Inst] = {
-    genInst(f.name) ::: f.body.flatMap(genInst)
-  }
+  private def generateFunc(f: Func):List[X86Inst] = genInst(f.name) ::: f.body.flatMap(genInst)
 
-
-  def gen(s:S): X86Inst = {
-    s match {
-      case Num(n) => "$" + n
-      case Label(l) => "$L1_" + l
-      case r:Register => "%" + r.name
-    }
+  def gen(s:S): X86Inst = s match {
+    case Num(n) => "$" + n
+    case Label(l) => "$L1_" + l
+    case r:Register => "%" + r.name
   }
 
   def gen(loc:MemLoc): X86Inst = loc.offset.n + "(" + gen(loc.basePointer) + ")"
@@ -87,12 +79,6 @@ trait X86Generator extends L1Compiler.BackEnd {
     def setInstruction(op: CompOp) = op match {
       case LessThan => "setl"
       case LessThanOrEqualTo => "setle"
-      case EqualTo => "sete"
-    }
-
-    def reverseSetInstruction(op: CompOp) = op match {
-      case LessThan => "setg"
-      case LessThanOrEqualTo => "setge"
       case EqualTo => "sete"
     }
 
@@ -124,10 +110,15 @@ trait X86Generator extends L1Compiler.BackEnd {
           triple("movzbl", cx.low8, gen(cx)))
       }
       case Assignment(cx:CXRegister, c@Comp(left:Num,op,right:Register)) => {
+        def reverseCmpInstruction(op: CompOp) = op match {
+          case LessThan => "setg"
+          case LessThanOrEqualTo => "setge"
+          case EqualTo => "sete"
+        }
         X86Inst(
           triple("cmp", gen(left), gen(right)),
           // magic reverse happens here!
-          reverseSetInstruction(op) + " " + cx.low8,
+          reverseCmpInstruction(op) + " " + cx.low8,
           triple("movzbl", cx.low8, gen(cx)))
       }
       case Assignment(cx:CXRegister, c@Comp(left:Register,op,right:Num)) => {
@@ -225,10 +216,6 @@ trait X86Generator extends L1Compiler.BackEnd {
     }
   }
 
-  // figure out a better way to do this crap:
-  private var labelCount = -1
-  private def nextNewLabel = {
-    labelCount+=1
-    Label("Generated_Label_" + labelCount)
-  }
+  private val labels = Iterator.from(0)
+  private def nextNewLabel() = Label("Generated_Label_" + labels.next())
 }

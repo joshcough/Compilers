@@ -51,14 +51,16 @@ class SpillTests extends L2CompilerTest {
   testSpill("((eax <- (allocate x y)))", "((s_0 <- (mem ebp -4)) (eax <- (allocate s_0 y)))")
   testSpill("((eax <- (allocate y x)))", "((s_0 <- (mem ebp -4)) (eax <- (allocate y s_0)))")
   testSpill("((eax <- (allocate y y)))", "((eax <- (allocate y y)))")
-  testSpill("((eax <- (allocate x x))(eax <- (allocate x x)))", "((s_0 <- (mem ebp -4)) (eax <- (allocate s_0 s_0)) (s_1 <- (mem ebp -4)) (eax <- (allocate s_1 s_1)))")
+  testSpill("((eax <- (allocate x x))(eax <- (allocate x x)))",
+    "((s_0 <- (mem ebp -4)) (eax <- (allocate s_0 s_0)) (s_1 <- (mem ebp -4)) (eax <- (allocate s_1 s_1)))")
 
   // assignement from allocate
   testSpill("((eax <- (array-error x x)))", "((s_0 <- (mem ebp -4)) (eax <- (array-error s_0 s_0)))")
   testSpill("((eax <- (array-error x y)))", "((s_0 <- (mem ebp -4)) (eax <- (array-error s_0 y)))")
   testSpill("((eax <- (array-error y x)))", "((s_0 <- (mem ebp -4)) (eax <- (array-error y s_0)))")
   testSpill("((eax <- (array-error y y)))", "((eax <- (array-error y y)))")
-  testSpill("((eax <- (array-error x x)) (eax <- (array-error x x)))", "((s_0 <- (mem ebp -4)) (eax <- (array-error s_0 s_0)) (s_1 <- (mem ebp -4)) (eax <- (array-error s_1 s_1)))")
+  testSpill("((eax <- (array-error x x)) (eax <- (array-error x x)))",
+    "((s_0 <- (mem ebp -4)) (eax <- (array-error s_0 s_0)) (s_1 <- (mem ebp -4)) (eax <- (array-error s_1 s_1)))")
 
   // aop
   testSpill("((x += x))", "((s_0 <- (mem ebp -4)) (s_0 += s_0) ((mem ebp -4) <- s_0))")

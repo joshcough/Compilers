@@ -100,8 +100,8 @@ class ParseMathTest extends L1ParserTest {
   testParseInstruction("(eax -= ebx)" -> Decrement(eax, ebx))
   testParseInstruction("(ebx *= eax)" -> Multiply(ebx, eax))
 
-  testParseInstruction("(ebx >>= eax)" -> RightShift(ebx, eax))
-  testParseInstruction("(ecx <<= eax)" -> LeftShift(ecx, eax))
+  testParseInstruction("(ebx >>= ecx)" -> RightShift(ebx, ecx))
+  testParseInstruction("(ecx <<= ecx)" -> LeftShift(ecx, ecx))
   testParseInstruction("(edx &= eax)" -> BitwiseAnd(edx, eax))
 
   testParseInstruction("(ebx >>= 7)" -> RightShift(ebx, Num(7)))

@@ -9,6 +9,8 @@ class ReaderTest extends FunSuite with MustMatchers {
   testRead("0", 0)
   testRead("1", 1)
   testRead("-1", -1)
+  testRead("2147483647", 2147483647)
+  testRead("-2147483648", -2147483648)
   testRead("'g'", 'g')
   testRead("'1'", '1')  // this is the character 1, not the number
   testRead("2x2", Symbol("2x2"))

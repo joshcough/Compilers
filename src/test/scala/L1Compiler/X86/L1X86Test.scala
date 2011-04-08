@@ -27,17 +27,66 @@ pushl %eax
 call print
 addl $4, %esp""")
 
-  testCompileString("""(((esi <- 3) (eax <- (allocate esi 3)) (eax <- (array-error eax 3))))""" -> "hi")
+  testCompileString("""(((esi <- 3) (eax <- (allocate esi 3)) (eax <- (array-error eax 3))))""" ->
+    """movl $3, %esi
+pushl $3
+pushl %esi
+call allocate
+addl $8, %esp
+pushl $3
+pushl %eax
+call print_error
+addl $8, %esp""")
 
-  testCompileString("(((eax <- -2147483648) (eax -= 2) (eax <- (print eax))))" -> "hi")
-  testCompileString("(((eax <- -2147483648) (eax -= 3) (eax <- (print eax))))" -> "hi")
-  testCompileString("(((eax <- (allocate 5 1)) (eax <- (array-error eax 17))))" -> "hi")
-  // robbys test 79
-  testCompileString("(((eax <- (allocate 7 1)) (eax <- (array-error eax 19)) (eax <- (print 3))))" -> "hi")
-  // robbys test 80  ... are they exactly the same? ask him why
-  //testCompileString("(((eax <- (allocate 7 1)) (eax <- (array-error eax 19)) (eax <- (print 3))))" -> "hi")
+  testCompileString("(((eax <- -2147483648) (eax -= 2) (eax <- (print eax))))" ->
+    """movl $-2147483648, %eax
+subl $2, %eax
+pushl %eax
+call print
+addl $4, %esp""")
+  
+  testCompileString("(((eax <- -2147483648) (eax -= 3) (eax <- (print eax))))" ->
+    """movl $-2147483648, %eax
+subl $3, %eax
+pushl %eax
+call print
+addl $4, %esp""")
+  
+  testCompileString("(((eax <- (allocate 5 1)) (eax <- (array-error eax 17))))" ->
+    """pushl $1
+pushl $5
+call allocate
+addl $8, %esp
+pushl $17
+pushl %eax
+call print_error
+addl $8, %esp""")
 
-  testCompileString("(((eax <- (allocate 3 1)) (eax <- (array-error eax 5)) (eax <- (print eax))))" -> "hi")
+  testCompileString("(((eax <- (allocate 7 1)) (eax <- (array-error eax 19)) (eax <- (print 3))))" ->
+    """pushl $1
+pushl $7
+call allocate
+addl $8, %esp
+pushl $19
+pushl %eax
+call print_error
+addl $8, %esp
+pushl $3
+call print
+addl $4, %esp""")
+
+  testCompileString("(((eax <- (allocate 3 1)) (eax <- (array-error eax 5)) (eax <- (print eax))))" ->
+    """pushl $1
+pushl $3
+call allocate
+addl $8, %esp
+pushl $5
+pushl %eax
+call print_error
+addl $8, %esp
+pushl %eax
+call print
+addl $4, %esp""")
 
   testCompileString(""";; #18 multiple allocations, array-errors
 (((ebx <- 25)
@@ -52,7 +101,33 @@ addl $4, %esp""")
   :_2
   (eax <- (array-error 1 eax))
   (goto :_3)
-  :_3))""" -> "hi")
+  :_3))""" -> """movl $25, %ebx
+pushl $1
+pushl %ebx
+call allocate
+addl $8, %esp
+movl %eax, %esi
+movl $25, %edi
+pushl $1
+pushl %edi
+call allocate
+addl $8, %esp
+cmpl $28, %edi
+jl L1__1
+jmp L1__2
+L1__1:
+pushl $1
+pushl %eax
+call print_error
+addl $8, %esp
+jmp L1__3
+L1__2:
+pushl %eax
+pushl $1
+call print_error
+addl $8, %esp
+jmp L1__3
+L1__3:""")
 }
 
 class GenMathInstructionsTest extends L1X86Test {
