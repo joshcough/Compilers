@@ -61,7 +61,7 @@ trait L1Parser extends Parser[L1] {
 
   def parseNumOrEcx(exp:Any): S = exp match {
     case n: Int => Num(n)
-    case 'eax => ecx
+    case 'ecx => ecx
     case _ => error("expected number or ecx but got: " + exp)
   }
 

@@ -7,7 +7,7 @@ trait L2Parser extends Parser[L2] {
 
   def parse(exp:Any): L2 = exp match {
     case (main:List[_]) :: funcs => L2(parseMain(main), funcs map parseFunction)
-    case _ => error("bad L2 program")
+    case _ => error("bad L2 program: " + exp)
   }
 
   def parseMain(exp: List[Any]) = Func(LabelDeclaration(Label("main")), exp map parseInstruction)
@@ -79,6 +79,7 @@ trait L2Parser extends Parser[L2] {
 
   def parseCxRegisterOrVar(s: Symbol): X = CXRegister(s).getOrElse(Variable(s.toString.drop(1)))
 
+  // TODO: isnt there an ecx only case in here somewhere? look at L1Parser
   def parseComp(s1: Any, cmp: Symbol, s2: Any): Comp = {
     Comp(parseNumOrRegisterOrVar(s1), parseCompOp(cmp),parseNumOrRegisterOrVar(s2))
   }

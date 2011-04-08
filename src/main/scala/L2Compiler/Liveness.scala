@@ -1,22 +1,31 @@
 package L2Compiler
 
 import L2AST._
+import L2Printer._
 
 case class LiveRange(x:X, range:Int)
-
-// TODO: ebx is a caller save register now.
-// ebx, esi, and edi are callee / function save
-// eax, edx, and ecx are caller / application save / arguments (in that order)
 
 // i have to write a real succ function. most succs are the instruction that follows
 // but cjump is diferent. succ(n) returns a set of instructions, not a single instruction.
 // this is because cjump has two succs.
 
-// TODO: better really double check all these against the slides...
+/**
+  TODO:
+  Constrained arithmetic operators
+  Add interference edges to disallow the illegal registers
+  when building the interference graph, before starting the
+  coloring.
+  E.g., if you have this instruction (a <- y < x) then
+  add edges between a and the registers edi and esi,
+  ensuring a ends up in eax, ecx, edx, ebx, or spilled
+ */
 
 trait Liveness {
 
-  val callerSave = Set(eax, ebx, ecx, edx)
+  val callerSave = Set[X](eax, ebx, ecx, edx)
+  val calleeSave = Set[X](edi, esi)
+  val arguments = Set[X](eax, edx, ecx)
+  val result = Set[X](eax)
 
   def gen(i:Instruction): Set[X] = {
     def gen(rhs:AssignmentRHS): Set[X] = rhs match {
@@ -41,9 +50,9 @@ trait Liveness {
       case CJump(comp, l1, l2) => gen(comp)
       case MemWrite(MemLoc(bp, _), s) => Set(bp) union gen(s)
       case Goto(s) => gen(s)
-      case Call(s) => gen(s)
-      case TailCall(s) => gen(s) union Set(edi, esi)
-      case Return => Set(eax, edi, esi) // TODO: i think eax needs to be in here...(the slides say result and callee save)
+      case Call(s) => gen(s) union arguments
+      case TailCall(s) => gen(s) union arguments union calleeSave
+      case Return => result union calleeSave
       case LabelDeclaration(_) => Set()
     }
   }
@@ -60,8 +69,7 @@ trait Liveness {
       case l:Label => Set()
     }
     i match {
-      case Assignment(x:Register, _) => Set(x)
-      case Assignment(_, _) => Set()
+      case Assignment(x:X, _) => Set(x)
       case Increment(x, _) => Set(x)
       case Decrement(x, _) => Set(x)
       case Multiply(x, _) => Set(x)
@@ -71,33 +79,46 @@ trait Liveness {
       case MemWrite(_, _) => Set()
       case Goto(s) => Set()
       case CJump(comp, l1, l2) => Set()
-      case Call(s) => Set(eax, ebx, ecx, edx)
-      case TailCall(s) => Set(eax, ebx, ecx, edx) // this is an educated guess
+      case Call(s) => callerSave union result
+      case TailCall(s) => Set()
       case Return => Set()
       case LabelDeclaration(_) => Set()
     }
+  }
+
+  case class InstuctionInOutSet(i:Instruction, in:Set[X], out:Set[X]){
+    override def toString = "(" + toCode(i) + " " + toCode(in) + " " + toCode(out) + ")"
+  }
+
+  def inout(f:Func, stopAfterNSteps:Option[Int]=None): List[InstuctionInOutSet] = {
+    // start out with empty in and out sets for all instructions
+    val empty = (f.name :: f.body).map(InstuctionInOutSet(_, Set[X](), Set[X]()))
+    // then fill them in until we reach the fixed point.
+    val (head::rest): List[InstuctionInOutSet] = inout(empty, 0, stopAfterNSteps)
+    //val newHead: InstuctionInOutSet = head.copy(in = head.in - edi - esi)
+    //newHead :: rest
+    head :: rest
   }
 
   /**
    * in(n) = gen(n-th-inst) ∪ (out (n) - kill(n-th-inst))
    * out(n) = ∪{in(m) | m ∈ succ(n)}
    */
-  case class InstuctionInOutSet(i:Instruction, in:Set[X], out:Set[X])
-  def inout(f:Func): List[InstuctionInOutSet] = {
-    val (head::rest) = inout((f.name :: f.body).map(InstuctionInOutSet(_, Set[X](), Set[X]())))
-    val newHead = head.copy(in = head.in - ebx - edi - esi)
-    newHead :: rest
-  }
-
-  private def inout(acc:List[InstuctionInOutSet]): List[InstuctionInOutSet] = {
+  // does the next round of moving things up the in/out chains.
+  // recurs until the result is the same as what we've got so far.
+  private def inout(acc:List[InstuctionInOutSet], currentStep: Int, stopAfterNSteps:Option[Int]): List[InstuctionInOutSet] = {
     def in(iios:InstuctionInOutSet) = gen(iios.i) union (iios.out -- kill(iios.i))
     val next = acc.foldRight((List[InstuctionInOutSet](), Set[X]())){
       case (iios, (acc, lastIn)) => {
         val newIn = in(iios)
+        //println(iios + ", " + toCode(newIn) + ", " + toCode(lastIn))
         (InstuctionInOutSet(iios.i, newIn, lastIn) :: acc, newIn)
       }
     }._1
-    if(next == acc) acc else inout(next)
+    stopAfterNSteps match {
+      case Some(n) if(n==currentStep+1) => next
+      case _ => if(next == acc) acc else inout(next, currentStep + 1, stopAfterNSteps)
+    }
   }
 
   /**
