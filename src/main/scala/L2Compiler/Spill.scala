@@ -294,14 +294,14 @@ trait Spill {
     ins.flatMap(spill)
   }
 
-  // TODO: this should probably go into the Compiler class itself
-  // so that Spill doesn't need access to LiveRange
-  def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
-    def maxRange(ranges:List[LiveRange]): Option[LiveRange] = ranges match {
-      case Nil => None
-      case _ => Some(ranges.sortWith(_.range > _.range).head)
-    }
-    liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.
-            find(_.x.isInstanceOf[Variable]).map(_.x.asInstanceOf[Variable])
-  }
+//  // TODO: this should probably go into the Compiler class itself
+//  // so that Spill doesn't need access to LiveRange
+//  def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
+//    def maxRange(ranges:List[LiveRange]): Option[LiveRange] = ranges match {
+//      case Nil => None
+//      case _ => Some(ranges.sortWith(_.range > _.range).head)
+//    }
+//    liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.
+//            find(_.x.isInstanceOf[Variable]).map(_.x.asInstanceOf[Variable])
+//  }
 }

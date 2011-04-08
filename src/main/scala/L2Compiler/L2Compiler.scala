@@ -57,14 +57,19 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   // these are testing entry points...
   def parseListOfInstructions(s:String): List[Instruction] = parseListOfInstructions(read(s).asInstanceOf[List[Any]])
   def parseListOfInstructions(a:List[Any]): List[Instruction] = parseInstructionList(a)
-  def inoutForTesting(code:String, step:Option[Int]=None):String = {
+  def inoutForTesting(code:String, step:Option[Int]=None):List[InstructionInOutSet] = {
     val result = inout(parseFunction(read(code)))
-    step.map(result(_)).getOrElse(result.last).mkString("\n")
+    step.map(result(_)).getOrElse(result.last)
   }
-//  def interferingVariables(code:String) = buildInterferenceSet(inout(code, None)).filter{
-//    case (x:Variable,y:Variable) => true
-//    case _ => false
-//  }
+
+  // TODO: variables Registers can interfere.
+  // see http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture05.pdf p19
+  // basically, if they are alive at the same time...they interfere.
+  // hmm...better read moreabout this. see page 18 also
+  def interferingVariables(code:String) = buildInterferenceSet(inoutForTesting(code, None)).filter{
+    case (x:Variable,y:Variable) => true
+    case _ => false
+  }
 //  def attemptToColor(code:String) =
 //    RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(code, None))).color
   def spill(code:String):List[Instruction] = spill(Variable("x"), -4, "s_", parseListOfInstructions(code))

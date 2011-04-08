@@ -124,10 +124,22 @@ class LivenessTest extends L2CompilerTest {
     livenessTest(code, expectedAtEnd, step=End)
   }
 
+  test("from homework"){
+    // should result in: ((in (eax) (eax x)) (out (eax x) ()))
+    val code = "(:f (x <- 1) (eax += x) (return))"
+    val expectedAtEnd = """
+      |(:f (eax edi esi) (eax edi esi))
+      |((x <- 1) (eax edi esi) (eax edi esi x))
+      |((eax += x) (eax edi esi x) (eax edi esi))
+      |((return) (eax edi esi) ())"""
+    livenessTest(code, expectedAtEnd, step=End)
+  }
+
+
   def End = None // sort of hacky, but whatever.
   def Just(i:Int) = Some(i)
   def livenessTest(code:String, expected:String, step: Option[Int] = None) = {
-    val actual = inoutForTesting(code.stripMargin.trim, step=step)
+    val actual = inoutForTesting(code.stripMargin.trim, step=step).mkString("\n")
     if(actual.stripMargin.trim != expected.stripMargin.trim){
       println("failure!")
       println("code:\n" + code.stripMargin.trim)
@@ -137,178 +149,23 @@ class LivenessTest extends L2CompilerTest {
     assert(actual.stripMargin.trim === expected.stripMargin.trim)
   }
 
-//  test("from homework"){
-//    // should result in:
-//    // ((in (eax) (eax x)) (out (eax x) ()))
-//    val code = "((x <- 1) (eax += x)) x -4 s"
-//    assert(inout(code) === List(
-//      InstuctionInOutSet(
-//        Assignment(Variable("x"),Num(1)),
-//          Set(eax),
-//          Set(eax, Variable("x"))),
-//      InstuctionInOutSet(
-//        Increment(eax,Variable("x")),
-//          Set(eax, Variable("x")),
-//          Set())))
-//  }
+  test("interference 1"){
+    val code = """
+      |(:f
+      |(x2 <- eax)
+      |(x2 *= x2)
+      |(2x2 <- x2)
+      |(2x2 *= 2)
+      |(3x <- eax)
+      |(3x *= 3)
+      |(eax <- 2x2)
+      |(eax += 3x)
+      |(eax += 4)
+      |(return))""".stripMargin.trim
 
-//  test("call"){
-//val code = """
-//(((in <- edx)
-//(call :g)
-//(edx <- in)
-//(g-ans <- eax)
-//(call :h)
-//(eax += g-ans)
-//(return)))"""
-//    assert(inout(code) === List(
-//      // :f
-//      // (edx)                   (ebx edi edx esi)
-//      InstuctionInOutSet(LabelDeclaration(Label("main")),
-//        Set(edx),
-//        Set(edx, edi, esi, ebx)),
-//      // (in <- edx)
-//      // (ebx edi edx esi)       (ebx edi esi in)
-//      InstuctionInOutSet(Assignment(Variable("in"),edx),
-//        Set(edx, edi, esi, ebx),
-//        Set(Variable("in"), edi, esi, ebx)),
-//      // (call :g)
-//      // (ebx edi esi in)        (eax ebx edi esi in)
-//      InstuctionInOutSet(Call(Label("g")),
-//        Set(Variable("in"), edi, esi, ebx),
-//        Set(eax, Variable("in"), edi, esi, ebx)),
-//      //  (edx <- in)
-//      //  (eax ebx edi esi in)    (eax ebx edi esi)
-//      InstuctionInOutSet(Assignment(edx,Variable("in")),
-//        Set(eax, Variable("in"), edi, esi, ebx),
-//        Set(eax, ebx, edi, esi)),
-//      // (g-ans <- eax)
-//      // (eax ebx edi esi)       (ebx edi esi g-ans)
-//      InstuctionInOutSet(Assignment(Variable("g-ans"),eax),
-//        Set(eax, ebx, edi, esi),
-//        Set(ebx, edi, esi, Variable("g-ans"))),
-//      // (call :h)
-//      // (ebx edi esi g-ans)     (eax ebx edi esi g-ans)
-//      InstuctionInOutSet(Call(Label("h")),
-//        Set(ebx, edi, esi, Variable("g-ans")),
-//        Set(ebx, eax, edi, esi, Variable("g-ans"))),
-//      // (eax += g-ans)
-//      // (eax ebx edi esi g-ans) (ebx edi esi)
-//      InstuctionInOutSet(Increment(eax,Variable("g-ans")),
-//        Set(ebx, eax, edi, esi, Variable("g-ans")),
-//        Set(ebx, edi, esi)),
-//      // (return)
-//      // (ebx edi esi)           ()
-//      InstuctionInOutSet(Return,
-//        Set(ebx, edi, esi),
-//        Set())))
-//  }
-//
-//  test("more"){
-//    val code = """
-//(((z1 <- ebx)
-//(z2 <- edi)
-//(z3 <- esi)
-//(in <- edx)
-//(call :g)
-//(edx <- in)
-//(g-ans <- eax)
-//(call :h)
-//(eax += g-ans)
-//(ebx <- z1)
-//(edi <- z2)
-//(esi <- z3)
-//(return)))
-//"""
-//    assert(inout(code) === List(
-//      // :main
-//      //    (edx)                (ebx edi edx esi)
-//      InstuctionInOutSet(LabelDeclaration(Label("main")),
-//        Set(edx),
-//        Set(ebx, edi, esi, edx)),
-//      // (z1 <- ebx)
-//      //    (ebx edi edx esi)    (edi edx esi z1)
-//      InstuctionInOutSet(Assignment(Variable("z1"),ebx),
-//        Set(ebx, edi, esi, edx),
-//        Set(edi, esi, edx, Variable("z1"))),
-//      // (z2 <- edi)
-//      //    (edi edx esi z1)     (edx esi z1 z2)
-//      InstuctionInOutSet(Assignment(Variable("z2"),edi),
-//        Set(edi, esi, edx, Variable("z1")),
-//        Set(esi, edx, Variable("z1"), Variable("z2"))),
-//      // (z3 <- esi)
-//      //    (edx esi z1 z2)      (edx z1 z2 z3)
-//      InstuctionInOutSet(Assignment(Variable("z3"),esi),
-//        Set(esi, edx, Variable("z1"), Variable("z2")),
-//        Set(edx, Variable("z2"), Variable("z1"), Variable("z3"))),
-//      // (in <- edx)
-//      //    (edx z1 z2 z3)       (in z1 z2 z3)
-//      InstuctionInOutSet(Assignment(Variable("in"),edx),
-//        Set(edx, Variable("z2"), Variable("z1"), Variable("z3")),
-//        Set(Variable("z2"), Variable("z1"), Variable("in"), Variable("z3"))),
-//      // (call :g)
-//      //    (in z1 z2 z3)        (eax in z1 z2 z3)
-//      InstuctionInOutSet(Call(Label("g")),
-//        Set(Variable("z2"), Variable("z1"), Variable("in"), Variable("z3")),
-//        Set(Variable("z2"), eax, Variable("z1"), Variable("in"), Variable("z3"))),
-//      // (edx <- in)
-//      //    (eax in z1 z2 z3)    (eax z1 z2 z3)
-//      InstuctionInOutSet(Assignment(edx,Variable("in")),
-//        Set(Variable("z2"), eax, Variable("z1"), Variable("in"), Variable("z3")),
-//        Set(eax, Variable("z2"), Variable("z1"), Variable("z3"))),
-//      // (g-ans <- eax)
-//      //    (eax z1 z2 z3)       (g-ans z1 z2 z3)
-//      InstuctionInOutSet(Assignment(Variable("g-ans"),eax),
-//        Set(eax, Variable("z2"), Variable("z1"), Variable("z3")),
-//        Set(Variable("z2"), Variable("z1"), Variable("z3"), Variable("g-ans"))),
-//      // (call :h)
-//      //    (g-ans z1 z2 z3)     (eax g-ans z1 z2 z3)
-//      InstuctionInOutSet(Call(Label("h")),
-//        Set(Variable("z2"), Variable("z1"), Variable("z3"), Variable("g-ans")),
-//        Set(Variable("z2"), eax, Variable("z1"), Variable("z3"), Variable("g-ans"))),
-//      // (eax += g-ans)
-//      //    (eax g-ans z1 z2 z3) (z1 z2 z3)
-//      InstuctionInOutSet(Increment(eax,Variable("g-ans")),
-//        Set(Variable("z2"), eax, Variable("z1"), Variable("z3"), Variable("g-ans")),
-//      // (ebx <- z1)
-//      //    (z1 z2 z3)           (ebx z2 z3)
-//        Set(Variable("z1"), Variable("z2"), Variable("z3"))),
-//      InstuctionInOutSet(Assignment(ebx,Variable("z1")),
-//        Set(Variable("z1"), Variable("z2"), Variable("z3")),
-//        Set(Variable("z2"), Variable("z3"), ebx)),
-//      // (edi <- z2)
-//      //    (ebx z2 z3)          (ebx edi z3)
-//      InstuctionInOutSet(Assignment(edi,Variable("z2")),
-//        Set(Variable("z2"), Variable("z3"), ebx),
-//        Set(Variable("z3"), ebx, edi)),
-//      // (esi <- z3)
-//      //    (ebx edi z3)         (ebx edi esi)
-//      InstuctionInOutSet(Assignment(esi,Variable("z3")),
-//        Set(Variable("z3"), ebx, edi),
-//        Set(ebx, edi, esi)),
-//      // (return)
-//      //    (ebx edi esi)        ()
-//      InstuctionInOutSet(Return,
-//        Set(ebx, edi, esi),
-//        Set())))
-//  }
-//
-//  test("interference 1"){
-//    val code = """
-//(((x2 <- edx)
-//(x2 *= x2)
-//(2x2 <- x2)
-//(2x2 *= 2)
-//(3x <- edx)
-//(3x *= 3)
-//(eax <- 2x2)
-//(eax += 3x)
-//(eax += 4)
-//(return)))
-//"""
-//    assert(interferingVariables(code) ===
-//            Set((Variable("3x"),Variable("2x2")), (Variable("2x2"),Variable("3x"))))
-//  }
+    assert(interferingVariables(code) ===
+            Set((Variable("3x"),Variable("2x2")), (Variable("2x2"),Variable("3x"))))
+  }
 //
 //  test("interference 2"){
 //        val code = """
@@ -374,35 +231,89 @@ class LivenessTest extends L2CompilerTest {
 //  }
 //
 //
-//  test("some live ranges"){
-//    val code = """
-//(((z1 <- ebx)
-//(z2 <- edi)
-//(z3 <- esi)
-//(in <- edx)
-//(call :g)
-//(edx <- in)
-//(g-ans <- eax)
-//(call :h)
-//(eax += g-ans)
-//(ebx <- z1)
-//(edi <- z2)
-//(esi <- z3)
-//(return)))
-//"""
-//    assert(liveRanges(inout(code)) === List(
-//      List(LiveRange(Variable("z2"),9)),
-//      List(LiveRange(eax,2), LiveRange(eax,1)),
-//      List(LiveRange(Variable("in"),2)),
-//      List(LiveRange(edi,2), LiveRange(edi,2)),
-//      List(LiveRange(edx,5)),
-//      List(LiveRange(esi,3), LiveRange(esi,1)),
-//      List(LiveRange(Variable("g-ans"),2)),
-//      List(LiveRange(Variable("z1"),9)),
-//      List(LiveRange(Variable("z3"),9)),
-//      List(LiveRange(ebx,1), LiveRange(ebx,3))))
-//  }
-//
+  test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p24)"){
+    val code = """
+      |;; f(x) = let y = g(x)
+      |;; in h(y+x) + y*5
+      |(:f
+      |(x <- eax) ;; save our argument
+      |(call :g) ;; call g with our argument
+      |(y <- eax) ;; save g's result in y
+      |(eax += x) ;; compute h's arg
+      |(call :h) ;; call h
+      |(y5 <- y) ;; compute y*5 in y5, i
+      |(y5 *= 5) ;; compute y*5 in y5, ii
+      |(eax += y5) ;; add h's res to y*5
+      |(return)) ;; and we're done""".stripMargin.trim
+    
+    assert(LiveRange.print(liveRanges(inoutForTesting(code))) === """
+      |((eax 10)
+      |(y5 2)
+      |(edi 10)
+      |(edx 6)
+      |(esi 10)
+      |(ecx 6)
+      |(x 3)
+      |(y 3))""".stripMargin.trim)
+  }
+
+  test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p73)"){
+    val code = """
+      |(:f
+      |((mem ebp -8) <- eax)
+      |(call :g)
+      |((mem ebp -4) <- eax)
+      |(sx0 <- (mem ebp -8))
+      |(eax += sx0)
+      |(call :h)
+      |(y5 <- (mem ebp -4))
+      |(y5 *= 5)
+      |(eax += y5)
+      |(return))""".stripMargin.trim
+
+    assert(LiveRange.print(liveRanges(inoutForTesting(code))) === """
+      |((eax 11)
+      |(y5 2)
+      |(edi 11)
+      |(edx 7)
+      |(esi 11)
+      |(ecx 7)
+      |(ebp 8)
+      |(sx0 1))""".stripMargin.trim)
+  }
+
+  test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p95)"){
+    val code = """
+      |(::f
+      |(z1 <- edi)
+      |(z2 <- esi)
+      |(x <- eax)
+      |(call :g)
+      |(y <- eax)
+      |(eax += x)
+      |(call :h)
+      |(y5 <- y)
+      |(y5 *= 5)
+      |(eax += y5)
+      |(edi <- z1)
+      |(esi <- z2)
+      |(return))""".stripMargin.trim
+
+    assert(LiveRange.print(liveRanges(inoutForTesting(code))) === """
+      |((z2 10)
+      |(eax 14)
+      |(y5 2)
+      |(edi 2) (edi 2)
+      |(edx 8)
+      |(esi 3) (esi 1)
+      |(ecx 8)
+      |(x 3)
+      |(y 3)
+      |(z1 10))""".stripMargin.trim)
+  }
+
+
+
 //  test("choose spill variable"){
 //    val code = """
 //(((z1 <- ebx)

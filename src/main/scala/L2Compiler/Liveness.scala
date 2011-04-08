@@ -3,8 +3,6 @@ package L2Compiler
 import L2AST._
 import L2Printer._
 
-case class LiveRange(x:X, range:Int)
-
 trait Liveness {
 
   val callerSave = Set[X](eax, ebx, ecx, edx)
@@ -156,6 +154,14 @@ trait Liveness {
     val in_interference = ins.flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
     val out_interference = ins.flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
     in_interference ++ out_interference
+  }
+
+  object LiveRange {
+    def print(ranges:List[List[LiveRange]]) = ranges.map(_.mkString(" ")).mkString("(", "\n", ")")
+  }
+
+  case class LiveRange(x:X, range:Int){
+    override def toString = "(" + toCode(x) + " " + range + ")"
   }
 
   def liveRanges(iioss: List[InstructionInOutSet]): List[List[LiveRange]] = {
