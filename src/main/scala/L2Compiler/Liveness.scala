@@ -94,10 +94,11 @@ trait Liveness {
     // start out with empty in and out sets for all instructions
     val empty = (f.name :: f.body).map(InstuctionInOutSet(_, Set[X](), Set[X]()))
     // then fill them in until we reach the fixed point.
-    val (head::rest): List[InstuctionInOutSet] = inout(empty, 0, stopAfterNSteps)
+    inout(empty, 0, stopAfterNSteps)
+    //val (head::rest) = inout(empty, 0, stopAfterNSteps)
     //val newHead: InstuctionInOutSet = head.copy(in = head.in - edi - esi)
     //newHead :: rest
-    head :: rest
+    //head :: rest
   }
 
   /**

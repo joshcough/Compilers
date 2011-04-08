@@ -55,16 +55,16 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
 
 
   // these are testing entry points...
-  def parseInstructionListThing(s:String): List[Instruction] = parseInstructionListThing(read(s).asInstanceOf[List[Any]])
-  def parseInstructionListThing(a:List[Any]): List[Instruction] = parseInstructionList(a)
+  def parseListOfInstructions(s:String): List[Instruction] = parseListOfInstructions(read(s).asInstanceOf[List[Any]])
+  def parseListOfInstructions(a:List[Any]): List[Instruction] = parseInstructionList(a)
   def inoutForTesting(code:String, stopAfterNSteps:Option[Int]=None):String = //List[InstuctionInOutSet] =
-    inout(parse(read(code)).main, stopAfterNSteps).mkString("\n")
+    inout(parseFunction(read(code)), stopAfterNSteps).mkString("\n")
 //  def interferingVariables(code:String) = buildInterferenceSet(inout(code, None)).filter{
 //    case (x:Variable,y:Variable) => true
 //    case _ => false
 //  }
 //  def attemptToColor(code:String) =
 //    RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(code, None))).color
-  def spill(code:String):List[Instruction] = spill(Variable("x"), -4, "s_", parseInstructionListThing(code))
+  def spill(code:String):List[Instruction] = spill(Variable("x"), -4, "s_", parseListOfInstructions(code))
 
 }

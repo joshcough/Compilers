@@ -101,7 +101,7 @@ class SpillTests extends L2CompilerTest {
   def testSpill(code:String, expected: String) = {
     def doSpill(code: String) = {
       val newProgramList =
-        compiler.spill(Variable("x"), -4, "s_", compiler.parseInstructionListThing(code))
+        compiler.spill(Variable("x"), -4, "s_", compiler.parseListOfInstructions(code))
       newProgramList.map(L2Printer.toCode).mkString("(", " ", ")")
     }
 

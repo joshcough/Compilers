@@ -36,7 +36,7 @@ object HW2 {
     val List(varToSpill, offset, prefix) = read("(" + rest.toList.mkString.trim + ")").asInstanceOf[List[Any]]
     var newProgram = compiler.spill(
       Variable(varToSpill.toString.drop(1)), offset.toString.toInt,
-      prefix.toString.drop(1), parseInstructionListThing(program.asInstanceOf[List[Any]]))
+      prefix.toString.drop(1), parseListOfInstructions(program.asInstanceOf[List[Any]]))
     println("(" + newProgram.map(_.toCode).mkString("\n") + ")")
   }
 }

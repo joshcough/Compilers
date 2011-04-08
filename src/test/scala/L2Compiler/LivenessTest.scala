@@ -6,9 +6,10 @@ class LivenessTest extends L2CompilerTest {
 
   import compiler._
 
-  test("test from lecture notes") {
+  test("test first big example from lecture notes") {
     val code = """
-      |(((x2 <- eax)
+      |(:f
+      |(x2 <- eax)
       |(x2 *= x2)
       |(2x2 <- x2)
       |(2x2 *= 2)
@@ -17,10 +18,10 @@ class LivenessTest extends L2CompilerTest {
       |(eax <- 2x2)
       |(eax += 3x)
       |(eax += 4)
-      |(return)))""".stripMargin.trim
+      |(return))"""
 
     val expectedAfter1Step = """
-      |(:main () (eax))
+      |(:f () (eax))
       |((x2 <- eax) (eax) (x2))
       |((x2 *= x2) (x2) (x2))
       |((2x2 <- x2) (x2) (2x2))
@@ -32,12 +33,10 @@ class LivenessTest extends L2CompilerTest {
       |((eax += 4) (eax) (eax edi esi))
       |((return) (eax edi esi) ())"""
 
-    val actualAfter1Step = inoutForTesting(code, stopAfterNSteps=Some(1))
-
-    livenessTest(code, actualAfter1Step, expectedAfter1Step)
+    livenessTest(code, expectedAfter1Step, steps=Just(1))
 
     val expectedAtEnd = """
-      |(:main (eax edi esi) (eax edi esi))
+      |(:f (eax edi esi) (eax edi esi))
       |((x2 <- eax) (eax edi esi) (eax edi esi x2))
       |((x2 *= x2) (eax edi esi x2) (eax edi esi x2))
       |((2x2 <- x2) (eax edi esi x2) (2x2 eax edi esi))
@@ -49,21 +48,65 @@ class LivenessTest extends L2CompilerTest {
       |((eax += 4) (eax edi esi) (eax edi esi))
       |((return) (eax edi esi) ())"""
 
-    val actualAtEnd = inoutForTesting(code, stopAfterNSteps=None)
-
-    livenessTest(code, actualAtEnd, expectedAtEnd)
+    livenessTest(code, expectedAtEnd, steps=All)
   }
 
-  def livenessTest(code:String, actual: String, expected:String) = {
+  test("test call example from lecture notes") {
+    val code = """
+      |;; f(x) = let y = g(x)
+      |;; in h(y+x) + y*5
+      |(:f
+      |(x <- eax) ;; save our argument
+      |(call :g) ;; call g with our argument
+      |(y <- eax) ;; save g's result in y
+      |(eax += x) ;; compute h's arg
+      |(call :h) ;; call h
+      |(y5 <- y) ;; compute y*5 in y5, i
+      |(y5 *= 5) ;; compute y*5 in y5, ii
+      |(eax += y5) ;; add h's res to y*5
+      |(return)) ;; and we're done"""
+
+    val expectedAfter1Step = """
+      |(:f () (eax))
+      |((x <- eax) (eax) (eax ecx edx))
+      |((call :g) (eax ecx edx) (eax))
+      |((y <- eax) (eax) (eax x))
+      |((eax += x) (eax x) (eax ecx edx))
+      |((call :h) (eax ecx edx) (y))
+      |((y5 <- y) (y) (y5))
+      |((y5 *= 5) (y5) (eax y5))
+      |((eax += y5) (eax y5) (eax edi esi))
+      |((return) (eax edi esi) ())"""
+
+    livenessTest(code, expectedAfter1Step, steps=Just(1))
+
+    val expectedAtEnd = """
+      |(:f (eax ecx edi edx esi) (eax ecx edi edx esi))
+      |((x <- eax) (eax ecx edi edx esi) (eax ecx edi edx esi x))
+      |((call :g) (eax ecx edi edx esi x) (eax ecx edi edx esi x))
+      |((y <- eax) (eax ecx edi edx esi x) (eax ecx edi edx esi x y))
+      |((eax += x) (eax ecx edi edx esi x y) (eax ecx edi edx esi y))
+      |((call :h) (eax ecx edi edx esi y) (eax edi esi y))
+      |((y5 <- y) (eax edi esi y) (eax edi esi y5))
+      |((y5 *= 5) (eax edi esi y5) (eax edi esi y5))
+      |((eax += y5) (eax edi esi y5) (eax edi esi))
+      |((return) (eax edi esi) ())"""
+
+    livenessTest(code, expectedAtEnd, steps=All)
+  }
+
+  def All = None // sort of hacky, but whatever.
+  def Just(i:Int) = Some(i)
+  def livenessTest(code:String, expected:String, steps: Option[Int] = None) = {
+    val actual = inoutForTesting(code.stripMargin.trim, stopAfterNSteps=steps)
     if(actual.stripMargin.trim != expected.stripMargin.trim){
       println("failure!")
-      println("code:\n" + code)
+      println("code:\n" + code.stripMargin.trim)
       println("actual:\n" + actual.stripMargin.trim)
       println("expected:\n" + expected.stripMargin.trim)
     }
     assert(actual.stripMargin.trim === expected.stripMargin.trim)
   }
-
 
 //  test("from homework"){
 //    // should result in:
