@@ -1,4 +1,3 @@
 #!/bin/bash
 
-#java -cp "lib/compiler.jar:lib/scala-library.jar" L1Compiler.X86.L1X86Runner "$@"
-java -cp "project/boot/scala-2.8.0.Beta1/lib/scala-library.jar:./out/production/compilers" L2Compiler.HW2 spill "$@"
+java -cp "lib/compiler.jar:lib/scala-library.jar" L2Compiler.Spill "$@"

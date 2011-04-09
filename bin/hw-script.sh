@@ -27,5 +27,5 @@ tar cfvz ../compilers.tar.gz *
 echo "done creating compilers.tar.gz. now run:"
 echo "scp ./build/compilers.tar.gz jdc974@tlab-18.cs.northwestern.edu:./spring2011/"
 
-tar cfvz spill-test.tar.gz spill-test
+tar cfvz ../spill-test.tar.gz spill-test
 echo "done creating ./build/spill-test.tar.gz."
