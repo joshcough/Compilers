@@ -107,6 +107,10 @@ class SpillTests extends L2CompilerTest {
     test(code){
       val actual = doSpill(code)
       assert(actual === expected)
+
+      val spillMainResult = SpillMain.spill(code + " x -4 s_")
+      assert(spillMainResult === expected)
+
       // write out the tests files and results.
       import java.io.File
       import io.FileHelper._

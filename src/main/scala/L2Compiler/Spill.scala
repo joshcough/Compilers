@@ -2,24 +2,30 @@ package L2Compiler
 
 import L2AST._
 
-object Spill {
+object SpillMain {
   val compiler = new L2Compiler{}
   import compiler._
   import io.FileHelper._
 
-  def main(args:Array[String]){ spill(new java.io.File(args(0)).read) }
+  def main(args:Array[String]){
+    println(spill(new java.io.File(args(0)).read))
+  }
   
   // % spill f.L2f
   //(((mem ebp -4) <- 1)
   // (s_0 <- (mem ebp -4))
   // (eax += s_0))
-  def spill(input:String){
+  def spill(input:String) = {
+    // this is an example input: ((x <- x)) x -4 s_
+    // read the program part first, and then deal with the rest.
     val (program, rest) = readWithRest(input)
+    // the test has these three things that we read.
     val List(varToSpill, offset, prefix) = read("(" + rest.toList.mkString.trim + ")").asInstanceOf[List[Any]]
+    // after we have the program and the other arguments
     val newProgram = compiler.spill(
       Variable(varToSpill.toString.drop(1)), offset.toString.toInt,
       prefix.toString.drop(1), parseListOfInstructions(program.asInstanceOf[List[Any]]))
-    println("(" + newProgram.map(L2Printer.toCode).mkString("\n") + ")")
+      newProgram.map(L2Printer.toCode).mkString("(", " ", ")")
   }
 }
 
