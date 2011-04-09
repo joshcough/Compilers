@@ -3,7 +3,7 @@ package L1Compiler.X86
 import L1Compiler._
 
 class TestCompilerVsInterpreter extends L1X86Test{
-  import L1Compiler.FileHelper._
+  import io.FileHelper._
   //Dir.testFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
   //Dir.testFiles.foreach(testCompilerVsInterpreter)
 }

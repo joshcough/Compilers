@@ -109,7 +109,7 @@ class SpillTests extends L2CompilerTest {
       assert(actual === expected)
       // write out the tests files and results.
       import java.io.File
-      import L1Compiler.FileHelper._
+      import io.FileHelper._
       val index = count.next()
       val f = new File("./spill-test/test" + index + ".L2f")
       // write the test

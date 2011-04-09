@@ -1,9 +1,10 @@
 package L1Compiler.X86
 
-import L1Compiler.CommandRunner._
+import L1Compiler.{L1Compiler, Runner}
 import java.io.File
-import L1Compiler.{FileHelper, L1Compiler, Runner}
-import FileHelper._
+import io.FileHelper
+import io.FileHelper._
+import io.CommandRunner._
 
 object L1X86Runner extends Runner {
 

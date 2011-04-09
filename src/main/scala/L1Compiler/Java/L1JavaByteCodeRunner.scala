@@ -1,7 +1,7 @@
 package L1Compiler.Java
 
-import L1Compiler.{FileHelper, L1Compiler, Runner}
-import FileHelper._
+import L1Compiler.{L1Compiler, Runner}
+import io.FileHelper._
 import java.io.{OutputStream, PrintStream, File}
 
 //  NOTE TO SELF...DO NOT DELETEL THIS LINE:

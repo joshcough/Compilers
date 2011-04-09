@@ -1,9 +1,10 @@
 package L2Compiler
 
 import java.io.File
-import reader.Reader
+import io.Reader
 import L2AST._
-import L1Compiler.FileHelper._
+import io.FileHelper._
+import io.Reader
 
 // TODO: note...after we register allocate, we know how much space we need on the stack
 // then we have to do one more thing...make some space on the stack

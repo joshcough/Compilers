@@ -1,9 +1,9 @@
 package L1Compiler
 
 import java.io.File
-import reader.Reader
 import L1AST._
-import FileHelper._
+import io.{CommandRunner, Reader}
+import io.FileHelper._
 
 object Dir {
   val L1 = "./src/main/compilers/L1/"

@@ -2,6 +2,27 @@ package L2Compiler
 
 import L2AST._
 
+object Spill {
+  val compiler = new L2Compiler{}
+  import compiler._
+  import io.FileHelper._
+
+  def main(args:Array[String]){ spill(new java.io.File(args(0)).read) }
+  
+  // % spill f.L2f
+  //(((mem ebp -4) <- 1)
+  // (s_0 <- (mem ebp -4))
+  // (eax += s_0))
+  def spill(input:String){
+    val (program, rest) = readWithRest(input)
+    val List(varToSpill, offset, prefix) = read("(" + rest.toList.mkString.trim + ")").asInstanceOf[List[Any]]
+    val newProgram = compiler.spill(
+      Variable(varToSpill.toString.drop(1)), offset.toString.toInt,
+      prefix.toString.drop(1), parseListOfInstructions(program.asInstanceOf[List[Any]]))
+    println("(" + newProgram.map(L2Printer.toCode).mkString("\n") + ")")
+  }
+}
+
 trait Spill {
 
   def spill(spillVar:Variable, stackOffset: Int, spillPrefix:String, ins: List[Instruction]): List[Instruction] = {

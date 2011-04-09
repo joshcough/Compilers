@@ -1,9 +1,8 @@
 package L1Compiler
 
-import reader._
 import L1AST._
 
-trait L1Parser extends Parser[L1] {
+trait L1Parser {
 
   def parse(exp:Any): L1 = exp match {
     case (main:List[_]) :: funcs => L1(parseMain(main), funcs map parseFunction)

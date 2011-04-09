@@ -136,5 +136,6 @@ object L2Printer {
 
   // TODO: be very careful using this
   // make sorting more explicit
+  // currently called from InstructionInOutSet.toString.
   def toCode(is:Iterable[L2ASTNode]): String = is.map(toCode).toList.sorted.mkString("(", " ", ")")
 }

@@ -1,4 +1,4 @@
-package L1Compiler
+package io
 
 import java.io.{BufferedReader, InputStreamReader}
 
@@ -18,17 +18,4 @@ object CommandRunner {
     val (out, err) = CommandRunner(cmd)
     if(err != "") error("[" + cmd + "] died with the following errors:\n" + err) else out
   }
-}
-
-import java.io._
-class FileHelper(file : File) {
-  def write(text : String) : Unit = {
-    val fw = new FileWriter(file)
-    try{ fw.write(text) }
-    finally{ fw.close }
-  }
-  def read: String = scala.io.Source.fromFile(file).getLines().mkString("\n")
-}
-object FileHelper{
-  implicit def file2helper(file : File) = new FileHelper(file)
 }

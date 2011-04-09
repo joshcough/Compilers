@@ -2,6 +2,7 @@ package reader
 
 import org.scalatest.FunSuite
 import org.scalatest.matchers.MustMatchers
+import io.Reader
 
 class ReaderTest extends FunSuite with MustMatchers {
 

@@ -1,12 +1,4 @@
-package reader
-
-trait Interpreter[E,V] {
-  def eval(exp: E): V
-}
-
-trait Parser[E] {
-  def parse(exp: Any): E
-}
+package io
 
 trait Reader {
 
