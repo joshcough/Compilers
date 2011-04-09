@@ -144,7 +144,6 @@ class RegisterAssigmentInstructionsTest extends L1X86Test {
 class JmpInstructionsTest extends L1X86Test {
   testInstructionGen("(eax <- :some_label)" -> List("movl $L1_some_label, %eax"))
   testInstructionGen("(goto :some_label)" -> List("jmp L1_some_label"))
-  testInstructionGen("(goto eax)" -> List("jmp *%eax"))
 }
 
 class ComparisonInstructionsTest extends L1X86Test {

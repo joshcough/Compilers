@@ -16,7 +16,7 @@ trait Spill {
     def spillAssignment(ass:Assignment): List[Instruction] = ass match {
       case Assignment(v1:Variable, v2:Variable) => {
         // if we have x <- x, just remove it.
-        if(v1 == v2) List()
+        if(v1 == spillVar && v1 == v2) List()
         // x <- y where x is spillVar
         else if( v1 == spillVar ) List(MemWrite(memLoc, v2))
         // y <- x where x is spillVar
@@ -39,10 +39,9 @@ trait Spill {
           // (s_1 <- (mem s_0 off)
           // ((mem ebp stackOffset) <- s_1)
           val newVar0 = newVar()
-          val newVar1 = newVar()
           List(Assignment(newVar0, readSpillVar),
-              Assignment(newVar1, MemRead(MemLoc(newVar0, off))),
-              MemWrite(memLoc, newVar1))
+              Assignment(newVar0, MemRead(MemLoc(newVar0, off))),
+              MemWrite(memLoc, newVar0))
         }
         else if(v1 == spillVar) {
           // x <- (mem y n)
@@ -56,9 +55,7 @@ trait Spill {
           // y <- (mem x n)
           // (s_0 <- (mem ebp stackOffset))
           // (y <- (mem s_0 n)
-          // TODO what number to use for new var?
           val newVar0 = newVar()
-          val newVar1 = newVar()
           List(Assignment(newVar0, readSpillVar),
               Assignment(v1, MemRead(MemLoc(newVar0, off))))
         }
@@ -73,10 +70,9 @@ trait Spill {
           // ((mem ebp stackOffset) <- s_1)
           if(x1 == spillVar && x2 == spillVar){
             val newVar0 = newVar()
-            val newVar1 = newVar()
             List(Assignment(newVar0, readSpillVar),
-                Assignment(newVar1, Comp(newVar0, op, newVar0)),
-                MemWrite(memLoc, newVar1))
+                Assignment(newVar0, Comp(newVar0, op, newVar0)),
+                MemWrite(memLoc, newVar0))
           }
           // (x <- x < y)
           // (s_0 <- (mem ebp stackOffset))
@@ -84,10 +80,9 @@ trait Spill {
           // ((mem ebp stackOffset) <- s_1)
           else if(x1 == spillVar){
             val newVar0 = newVar()
-            val newVar1 = newVar()
             List(Assignment(newVar0, readSpillVar),
-                Assignment(newVar1, Comp(newVar0, op, x2)),
-                MemWrite(memLoc, newVar1))
+                Assignment(newVar0, Comp(newVar0, op, x2)),
+                MemWrite(memLoc, newVar0))
           }
           // (x <- y < x)
           // (s_0 <- (mem ebp stackOffset))
@@ -95,19 +90,17 @@ trait Spill {
           // ((mem ebp stackOffset) <- s_1)
           else if(x2 == spillVar){
             val newVar0 = newVar()
-            val newVar1 = newVar()
             List(Assignment(newVar0, readSpillVar),
-                Assignment(newVar1, Comp(x1, op, newVar0)),
-                MemWrite(memLoc, newVar1))
+                Assignment(newVar0, Comp(x1, op, newVar0)),
+                MemWrite(memLoc, newVar0))
           }
           // (x <- y < z)
           // (s_0 <- y < z)
           // ((mem ebp stackOffset) <- s_0)
           else {
             val newVar0 = newVar()
-            val newVar1 = newVar()
             List(Assignment(newVar0, Comp(x1, op, x2)),
-                MemWrite(memLoc, newVar1))
+                MemWrite(memLoc, newVar0))
           }
         }
         // else v is not the spill var...
@@ -244,7 +237,7 @@ trait Spill {
         // ((mem y 4) <- s_0)
         else if(s == spillVar){
           val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(newVar0, off), s))
+          List(Assignment(newVar0, readSpillVar),MemWrite(MemLoc(base, off), newVar0))
         }
         else List(mw)
       }
@@ -293,15 +286,4 @@ trait Spill {
     // finally, call spill for each instruction.
     ins.flatMap(spill)
   }
-
-//  // TODO: this should probably go into the Compiler class itself
-//  // so that Spill doesn't need access to LiveRange
-//  def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
-//    def maxRange(ranges:List[LiveRange]): Option[LiveRange] = ranges match {
-//      case Nil => None
-//      case _ => Some(ranges.sortWith(_.range > _.range).head)
-//    }
-//    liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.
-//            find(_.x.isInstanceOf[Variable]).map(_.x.asInstanceOf[Variable])
-//  }
 }

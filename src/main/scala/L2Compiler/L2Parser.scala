@@ -35,11 +35,10 @@ trait L2Parser extends Parser[L2] {
       case '*= => Multiply(parseX(s1), parseNumOrRegisterOrVar(s2))
       case '&= => BitwiseAnd(parseX(s1), parseNumOrRegisterOrVar(s2))
       // TODO (ebx <<= ecx) right side must be ecx
-      // and this converts to sall %cl, %ebx
-      case '>>= => RightShift(parseX(s1), parseNumOrRegisterOrVar(s2))
-      case '<<= => LeftShift(parseX(s1), parseNumOrRegisterOrVar(s2))
+      case '>>= => RightShift(parseX(s1), parseNumOrVarOrEcx(s2))
+      case '<<= => LeftShift(parseX(s1), parseNumOrVarOrEcx(s2))
     }
-    case List('goto, s:Symbol) => Goto(parseLabelOrRegisterOrVar(s))
+    case List('goto, s:Symbol) => Goto(parseLabel(s.toString))
     case List('call, s:Symbol) => Call(parseLabelOrRegisterOrVar(s))
     case List(Symbol("tail-call"), s:Symbol) => TailCall(parseLabelOrRegisterOrVar(s))
     case List('return) => Return
@@ -58,6 +57,13 @@ trait L2Parser extends Parser[L2] {
   def parseNumOrRegisterOrVar(exp:Any): S = exp match {
     case n: Int => Num(n)
     case s: Symbol => parseX(s)
+  }
+
+  def parseNumOrVarOrEcx(exp:Any): S = parseNumOrRegisterOrVar(exp) match {
+    case n:Num => n
+    case v:Variable => v
+    case e if e == ecx => e
+    case _ => error("expected number, variable, or ecx. got: " + exp)
   }
 
   def parseLabelOrRegisterOrVar(s: Symbol): S = {

@@ -16,7 +16,7 @@ class SpillTests extends L2CompilerTest {
   testSpill("((x <- x))", "()")
   testSpill("((x <- y))", "(((mem ebp -4) <- y))")
   testSpill("((y <- x))", "((y <- (mem ebp -4)))")
-  testSpill("((y <- y))", "()")
+  testSpill("((y <- y))", "((y <- y))")
 
   testSpill("((x <- 1))", "(((mem ebp -4) <- 1))")
   testSpill("((x <- eax))", "(((mem ebp -4) <- eax))")
@@ -26,21 +26,21 @@ class SpillTests extends L2CompilerTest {
   testSpill("((eax <- y))", "((eax <- y))")
 
   // assignment from memory
-  testSpill("((x <- (mem x 4)))", "((s_0 <- (mem ebp -4)) (s_1 <- (mem s_0 4)) ((mem ebp -4) <- s_1))")
+  testSpill("((x <- (mem x 4)))", "((s_0 <- (mem ebp -4)) (s_0 <- (mem s_0 4)) ((mem ebp -4) <- s_0))")
   testSpill("((x <- (mem y 4)))", "((s_0 <- (mem y 4)) ((mem ebp -4) <- s_0))")
   testSpill("((y <- (mem x 4)))", "((s_0 <- (mem ebp -4)) (y <- (mem s_0 4)))")
   testSpill("((y <- (mem y 4)))", "((y <- (mem y 4)))")
 
   // assignment from cmp
-  testSpill("((x <- x < x))", "((s_0 <- (mem ebp -4)) (s_1 <- s_0 < s_0) ((mem ebp -4) <- s_1))")
-  testSpill("((x <- x < y))", "((s_0 <- (mem ebp -4)) (s_1 <- s_0 < y) ((mem ebp -4) <- s_1))")
-  testSpill("((x <- y < x))", "((s_0 <- (mem ebp -4)) (s_1 <- y < s_0) ((mem ebp -4) <- s_1))")
-  testSpill("((x <- y < z))", "((s_0 <- y < z) ((mem ebp -4) <- s_1))")
+  testSpill("((x <- x < x))", "((s_0 <- (mem ebp -4)) (s_0 <- s_0 < s_0) ((mem ebp -4) <- s_0))")
+  testSpill("((x <- x < y))", "((s_0 <- (mem ebp -4)) (s_0 <- s_0 < y) ((mem ebp -4) <- s_0))")
+  testSpill("((x <- y < x))", "((s_0 <- (mem ebp -4)) (s_0 <- y < s_0) ((mem ebp -4) <- s_0))")
+  testSpill("((x <- y < z))", "((s_0 <- y < z) ((mem ebp -4) <- s_0))")
   testSpill("((y <- x < x))", "((s_0 <- (mem ebp -4)) (y <- s_0 < s_0))")
   testSpill("((y <- x < z))", "((s_0 <- (mem ebp -4)) (y <- s_0 < z))")
   testSpill("((y <- z < x))", "((s_0 <- (mem ebp -4)) (y <- z < s_0))")
   testSpill("((y <- z1 < z2))", "((y <- z1 < z2))")
-  testSpill("((x <- eax < ebx)))", "((s_0 <- eax < ebx) ((mem ebp -4) <- s_1))")
+  testSpill("((x <- eax < ebx))", "((s_0 <- eax < ebx) ((mem ebp -4) <- s_0))")
 
   // assignment from print
   testSpill("((eax <- (print x)))", "((s_0 <- (mem ebp -4)) (eax <- (print s_0)))")
@@ -74,7 +74,7 @@ class SpillTests extends L2CompilerTest {
   // mem write
   testSpill("(((mem x 4) <- x))", "((s_0 <- (mem ebp -4)) ((mem s_0 4) <- s_0))")
   testSpill("(((mem x 4) <- y))", "((s_0 <- (mem ebp -4)) ((mem s_0 4) <- y))")
-  testSpill("(((mem y 4) <- x))", "((s_0 <- (mem ebp -4)) ((mem s_0 4) <- x))")
+  testSpill("(((mem y 4) <- x))", "((s_0 <- (mem ebp -4)) ((mem y 4) <- s_0))")
   testSpill("(((mem y 4) <- z))", "(((mem y 4) <- z))")
 
   // cjump
@@ -88,8 +88,7 @@ class SpillTests extends L2CompilerTest {
   testSpill("((call y))", "((call y))")
   testSpill("((tail-call x))", "((s_0 <- (mem ebp -4)) (tail-call s_0))")
   testSpill("((tail-call y))", "((tail-call y))")
-  testSpill("((goto x))", "((s_0 <- (mem ebp -4)) (goto s_0))")
-  testSpill("((goto y))", "((goto y))")
+  testSpill("((goto :goo))", "((goto :goo))")
 
   // label dec, return
   testSpill("((return))", "((return))")
@@ -121,4 +120,3 @@ class SpillTests extends L2CompilerTest {
     }
   }
 }
-

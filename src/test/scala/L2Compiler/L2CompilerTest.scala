@@ -13,15 +13,12 @@ import L2AST._
       val z3Out = Assignment(esi, Variable("z3"))
 */
 class L2CompilerTests extends L2CompilerTest {
-//
+
 //  import compiler._
 //
 //  test("liveness for: (((x <- 7)(eax <- (print x))))") {
 //    val code = "(((x <- 7)(eax <- (print x))))"
-//    assert(inout(code) === List(
-//      InstuctionInOutSet(LabelDeclaration(Label("main")),Set(),Set()),
-//      InstuctionInOutSet(Assignment(Variable("x"),Num(7)),Set(),Set(Variable("x"))),
-//      InstuctionInOutSet(Assignment(eax, Print(Variable("x"))),Set(Variable("x")),Set())))
+//    assert(inoutForTesting(code) === "")
 //  }
 //
 //  testCompile("(((x <- 7)(eax <- (print x))))" -> """

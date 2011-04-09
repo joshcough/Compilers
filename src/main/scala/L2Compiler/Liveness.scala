@@ -147,12 +147,17 @@ trait Liveness {
     E.g., if you have this instruction (a <- y < x) then
     add edges between a and the registers edi and esi,
     ensuring a ends up in eax, ecx, edx, ebx, or spilled
+
+    Build interference graph from the liveness information
+      • Two variable live at the same time interfere with each other
+      • Killed variables interferes with all live variables at that
+        point, unless it is a (x <- y) instruction (in which
+        case it is fine if x and y share a register)
+      • All real registers interfere with each other
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): Set[(X,X)] = {
-    val ins = iioss.map(_.in)
-    val outs = iioss.map(_.out)
-    val in_interference = ins.flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
-    val out_interference = ins.flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
+    val in_interference = iioss.map(_.in).flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
+    val out_interference = iioss.map(_.out).flatMap{ s => for(x <- s; y <- s; if(x!=y)) yield (x,y) }.toSet
     in_interference ++ out_interference
   }
 

@@ -124,7 +124,6 @@ class ParseCJumpTest extends L1ParserTest {
 }
 
 class ParseOtherStuffTest extends L1ParserTest {
-  testParseInstruction("(goto ebx)" -> Goto(ebx))
   testParseInstruction("(goto :label)" -> Goto(Label("label")))
   testParseInstruction("(call :func)" -> Call(Label("func")))
   testParseInstruction("(call eax)" -> Call(eax))

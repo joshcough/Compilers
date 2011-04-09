@@ -13,46 +13,54 @@ import L1Compiler.FileHelper._
 // ((mem ebp -4) <- esi)
 // ((mem ebp -8) <- edi)
 // see page 119 in http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf
-
 trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   def parseProgram(s:String) = parse(read(s))
-//  def compileFile(filename:String) = compile(new File(filename).read)
-//  def compile(code: String): L2 = {
-//    def color(f:Func) = RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(f))).color
-//
-//    def initialRewrite(f:Func) = {
-//      val z1In = Assignment(Variable("__z1"), ebx) // TODO: this one probably has to be removed
-//      val z2In = Assignment(Variable("__z2"), edi)
-//      val z3In = Assignment(Variable("__z3"), esi)
-//      val z1Out = Assignment(ebx, Variable("__z1"))  // TODO: this one probably has to be removed
-//      val z2Out = Assignment(edi, Variable("__z2"))
-//      val z3Out = Assignment(esi, Variable("__z3"))
-//      Func(f.name, List(z1In,z2In,z3In) ::: f.body ::: List(z1Out,z2Out,z3Out))
-//    }
-//
-//    def colorCompletely(f: Func): (Func, RegisterColorGraph) = {
-//      def colorCompletely(f: Func, offset: Int): (Func, RegisterColorGraph) = {
-//        color(f) match {
-//          case Some(coloring) => (f, coloring)
-//          case None => {
-//            colorCompletely(Func(f.name,
-//              spill(chooseSpillVar(liveRanges(inout(f))).get, offset, "spilled_var_", f.body)), offset - 4)
-//          }
-//        }
-//      }
-//      colorCompletely(f, -4)
-//    }
-//    val ast = parseProgram(code)
-//    val funsAndColors = (ast.main :: ast.funs).map(f => colorCompletely(initialRewrite(f)))
-//    val elOneFunctions = funsAndColors.map {
-//      case (func, colorGraph) => {
-//        //println("color graph: " + colorGraph)
-//        colorGraph.replaceVarsWithRegisters(func)
-//      }
-//    }
-//    L2(elOneFunctions.head, elOneFunctions.tail)
-//  }
+  def compileFile(filename:String) = compile(new File(filename).read)
+  def compile(code: String): L2 = {
+    def color(f:Func) = {
+      val interference = buildInterferenceSet(inoutFinalResult(f))
+      RegisterColorGraph.base.addInterference(interference).color
+    }
 
+    def initialRewrite(f:Func) = {
+      val z1In = Assignment(Variable("__z1"), edi)
+      val z2In = Assignment(Variable("__z2"), esi)
+      val z1Out = Assignment(edi, Variable("__z1"))
+      val z2Out = Assignment(esi, Variable("__z2"))
+      Func(f.name, List(z1In,z2In) ::: f.body ::: List(z1Out,z2Out))
+    }
+
+    def colorCompletely(f: Func): (Func, RegisterColorGraph) = {
+      def colorCompletely(f: Func, offset: Int): (Func, RegisterColorGraph) = {
+        color(f) match {
+          case Some(coloring) => (f, coloring)
+          case None => {
+            colorCompletely(Func(f.name,
+              spill(chooseSpillVar(liveRanges(inoutFinalResult(f))).get, offset, "spilled_var_", f.body)), offset - 4)
+          }
+        }
+      }
+      colorCompletely(f, -4)
+    }
+    val ast = parseProgram(code)
+    val funsAndColors = (ast.main :: ast.funs).map(f => colorCompletely(initialRewrite(f)))
+    val l1OneFunctions = funsAndColors.map {
+      case (func, colorGraph) => {
+        //println("color graph: " + colorGraph)
+        colorGraph.replaceVarsWithRegisters(func)
+      }
+    }
+    L2(l1OneFunctions.head, l1OneFunctions.tail)
+  }
+
+  def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
+    def maxRange(ranges:List[LiveRange]): Option[LiveRange] = ranges match {
+      case Nil => None
+      case _ => Some(ranges.sortWith(_.range > _.range).head)
+    }
+    liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.
+            find(_.x.isInstanceOf[Variable]).map(_.x.asInstanceOf[Variable])
+  }
 
   // these are testing entry points...
   def parseListOfInstructions(s:String): List[Instruction] = parseListOfInstructions(read(s).asInstanceOf[List[Any]])

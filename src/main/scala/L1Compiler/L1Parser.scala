@@ -38,7 +38,7 @@ trait L1Parser extends Parser[L1] {
       case '>>= => RightShift(parseRegister(s1), parseNumOrEcx(s2))
       case '<<= => LeftShift(parseRegister(s1), parseNumOrEcx(s2))
     }
-    case List('goto, s:Symbol) => Goto(parseLabelOrRegister(s))
+    case List('goto, s:Symbol) => Goto(parseLabel(s.toString))
     case List('call, s:Symbol) => Call(parseLabelOrRegister(s))
     case List(Symbol("tail-call"), s:Symbol) => TailCall(parseLabelOrRegister(s))
     case List('return) => Return
@@ -72,7 +72,7 @@ trait L1Parser extends Parser[L1] {
   // label ::= sequence of alpha-numeric characters or underscore,
   // but starting with a colon, ie matching this regexp:
   // #rx"^:[a-zA-Z0-9_]$"
-  def parseLabel(s: String) = {
+  def parseLabel(s: String): Label = {
     val chop = s.toString.drop(1) // remove the ' from ':label
     // TODO: put some legit error checking here...
     Label(s.drop(2)) // remove the ' and : from ':label.
