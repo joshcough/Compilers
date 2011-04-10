@@ -1,86 +1,9 @@
-1-test/fetscher/1-test/test18.L1
-1-test/hill/1-test/test18.L1
 1-test/mcgough+nussbaum/1-test/1.L1
 1-test/mcgough+nussbaum/1-test/2.L1
-1-test/robby/1-test/53.L1
-1-test/robby/1-test/54.L1 
-1-test/robby/1-test/78.L1 
-1-test/robby/1-test/79.L1 
-1-test/robby/1-test/80.L1 
-1-test/trestian/1-test/14.L1
 
-1) Testing 1-test/fetscher/1-test/test18.L1 ............................... failed (executable returned non-zero status)
-
-2) Testing 1-test/hill/1-test/test18.L1 ................................... failed (executable returned non-zero status)
-
-3) Testing 1-test/mcgough+nussbaum/1-test/1.L1 ............................ failed (wrong output)
+Testing 1-test/mcgough+nussbaum/1-test/1.L1 ............................ failed (wrong output)
 Actual: "9"
 Expected: "10"
-
-4) Testing 1-test/mcgough+nussbaum/1-test/2.L1 ............................ failed (wrong output)
+Testing 1-test/mcgough+nussbaum/1-test/2.L1 ............................ failed (wrong output)
 Actual: "9"
 Expected: "10"
-
-5) Testing 1-test/robby/1-test/53.L1 ...................................... failed (compiler returned non-zero status)
-stderr:
-Exception in thread "main" java.lang.NumberFormatException: For input string: "2147483648"
-	at java.lang.NumberFormatException.forInputString(NumberFormatException.java:48)
-	at java.lang.Integer.parseInt(Integer.java:465)
-	at java.lang.Integer.parseInt(Integer.java:499)
-	at scala.collection.immutable.StringLike$class.toInt(StringLike.scala:208)
-	at scala.collection.immutable.StringOps.toInt(StringOps.scala:31)
-	at reader.Reader$class.readNumOrMaybeSymbol$1(Interpreter.scala:42)
-	at reader.Reader$class.readWithRest(Interpreter.scala:73)
-	at L1Compiler.X86.L1X86Runner$$anon$1.readWithRest(L1X86Runner.scala:15)
-	at reader.Reader$class.readList$1(Interpreter.scala:26)
-	at reader.Reader$class.readWithRest(Interpreter.scala:63)
-	at L1Compiler.X86.L1X86Runner$$anon$1.readWithRest(L1X86Runner.scala:15)
-	at reader.Reader$class.readList$1(Interpreter.scala:26)
-	at reader.Reader$class.readWithRest(Interpreter.scala:63)
-	at L1Compiler.X86.L1X86Runner$$anon$1.readWithRest(L1X86Runner.scala:15)
-	at reader.Reader$class.readList$1(Interpreter.scala:26)
-	at reader.Reader$class.readWithRest(Interpreter.scala:63)
-	at L1Compiler.X86.L1X86Runner$$anon$1.readWithRest(L1X86Runner.scala:15)
-	at reader.Reader$class.read(Interpreter.scala:16)
-	at L1Compiler.X86.L1X86Runner$$anon$1.read(L1X86Runner.scala:15)
-	at reader.Reader$class.read(Interpreter.scala:13)
-	at L1Compiler.X86.L1X86Runner$$anon$1.read(L1X86Runner.scala:15)
-	at L1Compiler.L1Compiler$class.compile(L1Compiler.scala:17)
-	at L1Compiler.X86.L1X86Runner$$anon$1.compile(L1X86Runner.scala:15)
-	at L1Compiler.X86.L1X86Runner$.compileForRun(L1X86Runner.scala:18)
-	at L1Compiler.X86.L1X86Runner$.main(L1X86Runner.scala:11)
-	at L1Compiler.X86.L1X86Runner.main(L1X86Runner.scala)
-6) Testing 1-test/robby/1-test/54.L1 ...................................... failed (compiler returned non-zero status)
-stderr:
-Exception in thread "main" java.lang.NumberFormatException: For input string: "2147483648"
-	at java.lang.NumberFormatException.forInputString(NumberFormatException.java:48)
-	at java.lang.Integer.parseInt(Integer.java:465)
-	at java.lang.Integer.parseInt(Integer.java:499)
-	at scala.collection.immutable.StringLike$class.toInt(StringLike.scala:208)
-	at scala.collection.immutable.StringOps.toInt(StringOps.scala:31)
-	at reader.Reader$class.readNumOrMaybeSymbol$1(Interpreter.scala:42)
-	at reader.Reader$class.readWithRest(Interpreter.scala:73)
-	at L1Compiler.X86.L1X86Runner$$anon$1.readWithRest(L1X86Runner.scala:15)
-	at reader.Reader$class.readList$1(Interpreter.scala:26)
-	at reader.Reader$class.readWithRest(Interpreter.scala:63)
-	at L1Compiler.X86.L1X86Runner$$anon$1.readWithRest(L1X86Runner.scala:15)
-	at reader.Reader$class.readList$1(Interpreter.scala:26)
-	at reader.Reader$class.readWithRest(Interpreter.scala:63)
-	at L1Compiler.X86.L1X86Runner$$anon$1.readWithRest(L1X86Runner.scala:15)
-	at reader.Reader$class.readList$1(Interpreter.scala:26)
-	at reader.Reader$class.readWithRest(Interpreter.scala:63)
-	at L1Compiler.X86.L1X86Runner$$anon$1.readWithRest(L1X86Runner.scala:15)
-	at reader.Reader$class.read(Interpreter.scala:16)
-	at L1Compiler.X86.L1X86Runner$$anon$1.read(L1X86Runner.scala:15)
-	at reader.Reader$class.read(Interpreter.scala:13)
-	at L1Compiler.X86.L1X86Runner$$anon$1.read(L1X86Runner.scala:15)
-	at L1Compiler.L1Compiler$class.compile(L1Compiler.scala:17)
-	at L1Compiler.X86.L1X86Runner$$anon$1.compile(L1X86Runner.scala:15)
-	at L1Compiler.X86.L1X86Runner$.compileForRun(L1X86Runner.scala:18)
-	at L1Compiler.X86.L1X86Runner$.main(L1X86Runner.scala:11)
-	at L1Compiler.X86.L1X86Runner.main(L1X86Runner.scala)
-
-7) Testing 1-test/robby/1-test/78.L1 ...................................... failed (executable returned non-zero status)
-8) Testing 1-test/robby/1-test/79.L1 ...................................... failed (executable returned non-zero status)
-9) Testing 1-test/robby/1-test/80.L1 ...................................... failed (executable returned non-zero status)
-10) Testing 1-test/trestian/1-test/14.L1 ................................... failed (executable returned non-zero status)
