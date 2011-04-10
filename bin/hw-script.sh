@@ -8,9 +8,9 @@ git clone git://github.com/joshcough/Interpreters.git
 cd Interpreters
 
 #build the code
-sbt update
-sbt test
-sbt package
+./bin/sbt update
+./bin/sbt test
+./bin/sbt package
 
 # move a few things into place
 cp target/scala_2.8.1/compilers_2.8.1-0.1.jar ./lib/compiler.jar
