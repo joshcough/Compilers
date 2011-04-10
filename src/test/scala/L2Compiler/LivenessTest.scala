@@ -147,7 +147,16 @@ class LivenessTest extends L2CompilerTest {
       println("expected:\n" + expected.stripMargin.trim)
     }
     assert(actual.stripMargin.trim === expected.stripMargin.trim)
+
+
+    // here is where i would print things 
   }
+}
+
+class InterferenceTest extends L2CompilerTest {
+
+  import compiler._
+
 
   test("interference 1"){
     val code = """
@@ -284,7 +293,7 @@ class LivenessTest extends L2CompilerTest {
 
   test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p95)"){
     val code = """
-      |(::f
+      |(:f
       |(z1 <- edi)
       |(z2 <- esi)
       |(x <- eax)

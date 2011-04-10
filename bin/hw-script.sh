@@ -4,7 +4,7 @@ mkdir build
 cd build
 
 # clone the project
-git clone git@github.com:joshcough/Interpreters.git
+git clone git://github.com/joshcough/Interpreters.git
 cd Interpreters
 
 #build the code
@@ -25,7 +25,7 @@ tar cfvz ../compilers.tar.gz *
 
 # done creating compilers.tar.gz
 echo "done creating compilers.tar.gz. now run:"
-echo "scp ./build/compilers.tar.gz jdc974@tlab-18.cs.northwestern.edu:./spring2011/"
+echo "scp ./build/compilers.tar.gz jdc974@tlab-18.cs.northwestern.edu:./"
 
 tar cfvz ../spill-test.tar.gz spill-test
 echo "done creating ./build/spill-test.tar.gz."
