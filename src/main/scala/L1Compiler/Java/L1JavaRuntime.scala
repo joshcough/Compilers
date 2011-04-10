@@ -16,7 +16,7 @@ case class JavaRuntimeRegister(name: String) {
 
 object L1JavaRuntime {
 
-  val registers@List(eax, ebx, ecx, edx, esi, edi, ebp, esp): List[JavaRuntimeRegister] =
+  val registers@List(eax, ebx, ecx, edx, esi, edi, ebp, esp) =
     List("eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp").map(new JavaRuntimeRegister(_))
 
   val HEAP_SIZE = 1048576  // one megabyte
