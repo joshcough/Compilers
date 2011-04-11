@@ -10,8 +10,6 @@ import L2AST._
  */
 class SpillTests extends L2CompilerTest {
 
-  val count = Iterator.from(0)
-
   // assignments
   testSpill("((x <- x))", "()")
   testSpill("((x <- y))", "(((mem ebp -4) <- y))")
@@ -96,6 +94,7 @@ class SpillTests extends L2CompilerTest {
   testSpill("(:y)", "(:y)")
 
   new java.io.File("./spill-test").mkdir()
+  val count = Iterator.from(0)
 
   def testSpill(code:String, expected: String) = {
     def doSpill(code: String) = {
@@ -115,12 +114,10 @@ class SpillTests extends L2CompilerTest {
       import java.io.File
       import io.FileHelper._
       val index = count.next()
-      val f = new File("./spill-test/test" + index + ".L2f")
       // write the test
-      f.write(code + " x -4 s_")
+      new File("./spill-test/test" + index + ".L2f").write(code + " x -4 s_")
       // write the expected result
-      val spillResFile = new File("./spill-test/test" + index + ".sres")
-      spillResFile.write(doSpill(code))
+      new File("./spill-test/test" + index + ".sres").write(doSpill(code))
     }
   }
 }

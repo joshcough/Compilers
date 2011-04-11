@@ -1,7 +1,7 @@
 package L1Compiler.Java
 
 import org.scalatest.FunSuite
-
+/*
 class L1JavaByteCodeRunnerTests extends FunSuite{
   
   val runner = L1JavaByteCodeRunner
@@ -222,7 +222,4 @@ class L1JavaByteCodeRunnerTests extends FunSuite{
     }
   }
 }
-
-/**
-
  **/

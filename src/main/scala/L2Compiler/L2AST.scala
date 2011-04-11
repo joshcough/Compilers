@@ -6,7 +6,7 @@ object L2AST {
 
   object L2{ def apply(main: Func): L2 = L2(main, Nil) }
   case class L2(main: Func, funs:List[Func]) extends L2ASTNode
-  case class Func(name: LabelDeclaration, body: List[Instruction]) extends L2ASTNode
+  case class Func(body: List[Instruction]) extends L2ASTNode
   case class MemLoc(basePointer:X, offset: Num) extends L2ASTNode
   sealed trait X extends S with L2ASTNode // the S here is kinda funny, but leaving it.
 
@@ -103,7 +103,8 @@ object L2AST {
 object L2Printer {
   import L2AST._
   def toCode(a:L2ASTNode): String = a match {
-    case L2(main, funcs) => "(" + toCode(main, false) + "\n" + funcs.map(toCode(_, true)).mkString("\n") + ")"
+    case L2(main, funcs) => (main :: funcs).map(toCode).mkString("(", "\n", ")")
+    case f:Func => f.body.map(toCode).mkString("(", "\n", ")")
     case Allocate(n:S, init:S) => "(allocate " + toCode(n) + " " + toCode(init) + ")"
     case Assignment(x:X, rhs:AssignmentRHS) => "(" + toCode(x) + " <- " + toCode(rhs) + ")"
     case Increment(x:X, s:S)  => "(" + toCode(x) + " += " +  toCode(s) + ")"
@@ -129,13 +130,6 @@ object L2Printer {
     case r:Register => r.name
     case v:Variable => v.name
   }
-  def toCode(f: Func, printLabel: Boolean = true): String = {
-    val body = f.body.map(toCode).mkString("\n")
-    if (printLabel) "(" + toCode(f.name.l) + "\n" + body + ")" else "(" + body + ")"
-  }
 
-  // TODO: be very careful using this
-  // make sorting more explicit
-  // currently called from InstructionInOutSet.toString.
-  def toCode(is:Iterable[L2ASTNode]): String = is.map(toCode).toList.sorted.mkString("(", " ", ")")
+  def toCodeSorted(is:Iterable[L2ASTNode]): String = is.map(toCode).toList.sorted.mkString("(", " ", ")")
 }

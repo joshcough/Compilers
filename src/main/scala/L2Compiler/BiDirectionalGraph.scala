@@ -91,7 +91,7 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
     }
   }
 
-  def replaceVarsWithRegisters(f:Func): Func = Func(f.name, f.body.map(replaceVarsWithRegisters))
+  def replaceVarsWithRegisters(f:Func): Func = Func(f.body.map(replaceVarsWithRegisters))
 
   private def getRegister(x:X): Register = x match {
     case v:Variable => colorOf(v).register

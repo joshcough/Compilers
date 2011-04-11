@@ -1,7 +1,0 @@
-;label ::= sequence of alpha-numeric characters or underscore,
-;          but starting with a colon, ie matching this regexp:
-;          #rx"^:[a-zA-Z0-9_]$"
-
-((
-  :0w
-))

@@ -5,7 +5,7 @@ object L1AST {
   trait L1ASTNode
   object L1{ def apply(main: Func): L1 = L1(main, Nil) }
   case class L1(main: Func, funs:List[Func]) extends L1ASTNode
-  case class Func(name: LabelDeclaration, body: List[Instruction]) extends L1ASTNode
+  case class Func(body: List[Instruction]) extends L1ASTNode
   case class MemLoc(basePointer:Register, offset: Num) extends L1ASTNode
 
   // the main instructions
@@ -97,7 +97,8 @@ object L1AST {
 object L1Printer {
   import L1AST._
   def toCode(a:L1ASTNode): String = a match {
-    case L1(main, funcs) => "(" + toCode(main, false) + "\n" + funcs.map(toCode(_, true)).mkString("\n") + ")"
+    case L1(main, funcs) => (main :: funcs).map(toCode).mkString("(", "\n", ")")
+    case f:Func => f.body.map(toCode).mkString("(", "\n", ")")
     case Allocate(n:S, init:S) => "(allocate " + toCode(n) + " " + toCode(init) + ")"
     case Assignment(r:Register, rhs:AssignmentRHS) => "(" + toCode(r) + " <- " + toCode(rhs) + ")"
     case Increment(r:Register, s:S)  => "(" + toCode(r) + " += " + toCode(s) + ")"
@@ -121,9 +122,5 @@ object L1Printer {
     case Label(name: String) => ":" + name
     case LabelDeclaration(l: Label) => toCode(l)
     case r:Register => r.name
-  }
-  def toCode(f: Func, printLabel: Boolean = true): String = {
-    val body = f.body.map(toCode).mkString("\n")
-    if (printLabel) "(" + toCode(f.name.l) + "\n" + body + ")" else "(" + body + ")"
   }
 }

@@ -3,6 +3,20 @@ package L2Compiler
 import L2AST._
 import L2Printer._
 
+object LivenessMain {
+  import io.FileHelper._
+  import java.io.File
+
+  val compiler = new L2Compiler{}
+  import compiler._
+
+  def main(args:Array[String]){ println(liveness(new File(args(1)).read)) }
+
+  //  % liveness f.L2f
+  //  ((in (eax) (eax x)) (out (eax x) ()))
+  def liveness(code:String) = InstructionInOutSet.hwView(inoutForTesting(code))
+}
+
 trait Liveness {
 
   val callerSave = Set[X](eax, ebx, ecx, edx)
@@ -69,38 +83,33 @@ trait Liveness {
     }
   }
 
-  type Index = Int
-  case class InstructionInOutSet(index: Index, inst:Instruction, in:Set[X], out:Set[X]){
-    override def toString = "(" + toCode(inst) + " " + toCode(in) + " " + toCode(out) + ")"
-  }
-
   // just gets the last inout result. (the most important one)
-  def inoutFinalResult(f:Func): List[InstructionInOutSet] = inout(f).last
+  def inoutFinalResult(f:Func): List[InstructionInOutSet] = inout(f.body).last
 
   // builds up a giant list of all the intermediate inout results
   // robby starts out with a function, and empty in and out sets for each instruction
   // that is the first result in the list return here
   // then there is a result for each slide all the way down to the last slide
   // when things are finally complete (we've reached the fixed point)
-  def inout(f:Func): List[List[InstructionInOutSet]] = {
-    class InOutHelper(f:Func) {
-      // TODO: consider just putting the label dec in the body
-      def instructions: List[Instruction] = f.name :: f.body
-
-      def succIndeces(n:Index): Set[Index] = instructions(n) match {
+  def inout(instructions:List[Instruction]): List[List[InstructionInOutSet]] = {
+    class InOutHelper {
+      def succIndeces(n:Int): Set[Int] = instructions(n) match {
         case Return|TailCall(_) => Set()
         case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l1))
-        case _ => Set(n+1)
+        // we have to test that there is something after this instruction
+        // in case the last instruction is something other than return or cjump
+        case _ if(instructions.isDefinedAt(n+1)) => Set(n+1)
+        case _ => Set()
       }
 
-      def findLabelDecIndex(label:Label):Index = {
-        val index = f.body.indexOf(LabelDeclaration(label))
+      def findLabelDecIndex(label:Label):Int = {
+        val index = instructions.indexOf(LabelDeclaration(label))
         if(index == -1) error("no such label: " + label.name) else index
       }
 
       def inout: List[List[InstructionInOutSet]] = {
         // start out with empty in and out sets for all instructions
-        val emptyStartSet = (f.name :: f.body).zipWithIndex.map {
+        val emptyStartSet = instructions.zipWithIndex.map {
           case (inst, index) => InstructionInOutSet(index, inst, Set[X](), Set[X]())
         }
         // then fill them in until we reach the fixed point.
@@ -133,7 +142,7 @@ trait Liveness {
         if(nextStep == current) acc else inout(acc :+ nextStep)
       }
     }
-    new InOutHelper(f).inout
+    new InOutHelper().inout
   }
 
   /**
@@ -182,9 +191,20 @@ trait Liveness {
     val inSets = iioss.map(_.in)
     val variablesAndRegisters = inSets.foldLeft(Set[X]()){ case (acc, s) => acc union s}
     for(x <- variablesAndRegisters.toList) yield liveRanges(x, inSets.map(_.toList))
-  }  
+  }
 }
 
+object InstructionInOutSet {
+  def hwView(inouts: List[InstructionInOutSet]) = {
+    val inSet = inouts.map(_.in).map(toCodeSorted).mkString(" ")
+    val outSet = inouts.map(_.out).map(toCodeSorted).mkString(" ")
+    "((in " + inSet + ") (out " + outSet + "))"
+  }
+}
+
+case class InstructionInOutSet(index: Int, inst:Instruction, in:Set[X], out:Set[X]){
+  override def toString = "(" + toCode(inst) + " " + toCodeSorted(in) + " " + toCodeSorted(out) + ")"
+}
 
 // this was in the inout function:
 //val (head::rest) = inout(empty, 0, stopAfterNSteps)

@@ -9,9 +9,9 @@ trait L2Parser {
     case _ => error("bad L2 program: " + exp)
   }
 
-  def parseMain(exp: List[Any]) = Func(LabelDeclaration(Label("main")), exp map parseInstruction)
+  def parseMain(exp: List[Any]) = Func(LabelDeclaration(Label("main")) :: (exp map parseInstruction))
   def parseFunction(exp: Any): Func = exp match {
-    case (l:Symbol) :: xs => Func(LabelDeclaration(parseLabel(l.toString)), xs map parseInstruction)
+    case (l:Symbol) :: xs => Func(LabelDeclaration(parseLabel(l.toString)) :: (xs map parseInstruction))
     case _ => error("bad function: " + exp)
   }
 

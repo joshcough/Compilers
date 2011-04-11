@@ -1,9 +1,0 @@
-1-test/mcgough+nussbaum/1-test/1.L1
-1-test/mcgough+nussbaum/1-test/2.L1
-
-Testing 1-test/mcgough+nussbaum/1-test/1.L1 ............................ failed (wrong output)
-Actual: "9"
-Expected: "10"
-Testing 1-test/mcgough+nussbaum/1-test/2.L1 ............................ failed (wrong output)
-Actual: "9"
-Expected: "10"

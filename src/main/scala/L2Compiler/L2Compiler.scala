@@ -28,7 +28,7 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
       val z2In = Assignment(Variable("__z2"), esi)
       val z1Out = Assignment(edi, Variable("__z1"))
       val z2Out = Assignment(esi, Variable("__z2"))
-      Func(f.name, List(z1In,z2In) ::: f.body ::: List(z1Out,z2Out))
+      Func(f.body.head :: List(z1In,z2In) ::: f.body.drop(1) ::: List(z1Out,z2Out))
     }
 
     def colorCompletely(f: Func): (Func, RegisterColorGraph) = {
@@ -36,8 +36,8 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
         color(f) match {
           case Some(coloring) => (f, coloring)
           case None => {
-            colorCompletely(Func(f.name,
-              spill(chooseSpillVar(liveRanges(inoutFinalResult(f))).get, offset, "spilled_var_", f.body)), offset - 4)
+            colorCompletely(Func(spill(
+              chooseSpillVar(liveRanges(inoutFinalResult(f))).get, offset, "spilled_var_", f.body)), offset - 4)
           }
         }
       }
@@ -67,7 +67,7 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   def parseListOfInstructions(s:String): List[Instruction] = parseListOfInstructions(read(s).asInstanceOf[List[Any]])
   def parseListOfInstructions(a:List[Any]): List[Instruction] = parseInstructionList(a)
   def inoutForTesting(code:String, step:Option[Int]=None):List[InstructionInOutSet] = {
-    val result = inout(parseFunction(read(code)))
+    val result = inout(parseListOfInstructions(code))
     step.map(result(_)).getOrElse(result.last)
   }
 

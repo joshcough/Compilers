@@ -1,5 +1,5 @@
 package L1Compiler.Java
-
+/*
 import L1Compiler.{L1Compiler, Runner}
 import io.FileHelper._
 import java.io.{OutputStream, PrintStream, File}
@@ -62,4 +62,4 @@ object L1JavaByteCodeRunner extends Runner {
       }
     }
   }
-}
+}*/

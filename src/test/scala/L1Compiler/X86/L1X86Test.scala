@@ -8,12 +8,7 @@ class TestCompilerVsInterpreter extends L1X86Test{
   //Dir.testFiles.foreach(testCompilerVsInterpreter)
 }
 
-class RunFullProgramTest extends L1X86Test {
-//  testCompileAndRunString("(((eax <- 5)(eax <- (print eax))))" -> "2")
-//  testCompileAndRunString("(((eax <- (allocate 3 3))(eax <- (print eax))))" -> "{s:1, 1}")
-}
-
-class CompileFullProgramTest extends L1X86Test {
+class CompileInstructionListTest extends L1X86Test {
   testCompileString(""";;10
 (((eax <- 19) (eax <- (print eax))))""" -> """movl $19, %eax
 pushl %eax
@@ -205,7 +200,7 @@ trait L1X86Test extends org.scalatest.FunSuite{
   private def testCompile(testName: String, code: String, expectedResults: String): Unit = {
     test(testName + " => " + expectedResults){
       val ast = compiler.parse(compiler.read(code))
-      assert(ast.main.body.flatMap(compiler.genInst).mkString("\n") === expectedResults)
+      assert(ast.main.body.drop(1).flatMap(compiler.genInst).mkString("\n") === expectedResults)
     }
   }
 

@@ -48,10 +48,10 @@ trait X86Generator extends L1Compiler.BackEnd {
         "popl %ebx",
         "leave",
         "ret")
-    main.body.flatMap(genInst) ::: footer
+    main.body.drop(1).flatMap(genInst) ::: footer
   }
 
-  private def generateFunc(f: Func):List[X86Inst] = genInst(f.name) ::: f.body.flatMap(genInst)
+  private def generateFunc(f: Func):List[X86Inst] = f.body.flatMap(genInst)
 
   def gen(s:S): X86Inst = s match {
     case Num(n) => "$" + n

@@ -4,34 +4,34 @@ import L1AST._
 
 class ParseProgramsTest extends L1ParserTest{
   testParse("(((eax <- 7)))" ->
-          L1(Func(LabelDeclaration(Label("main")),
+          L1(Func(LabelDeclaration(Label("main")) ::
              List(Assignment(eax, Num(7)))))
   )
 
   testParse("(((eax <- 7) (ebx <- 8)))" ->
-          L1(Func(LabelDeclaration(Label("main")),
+          L1(Func(LabelDeclaration(Label("main")) ::
              List(Assignment(eax, Num(7)),
                Assignment(ebx, Num(8)))))
   )
 
   testParse("(((eax <- 7)) (:fun2 (ecx <- 8)))" ->
-          L1(Func(LabelDeclaration(Label("main")),
+          L1(Func(LabelDeclaration(Label("main")) ::
              List(Assignment(eax, Num(7)))),
-            List(Func(LabelDeclaration(Label("fun2")),
+            List(Func(LabelDeclaration(Label("fun2")) ::
              List(Assignment(ecx, Num(8))))))
   )
 
   testParse("(((eax <- 7)) (:fun2 (ecx <- 8)) (:fun3 (edx <- 10)))" ->
-          L1(Func(LabelDeclaration(Label("main")),
+          L1(Func(LabelDeclaration(Label("main")) ::
              List(Assignment(eax, Num(7)))),
             List(
-              Func(LabelDeclaration(Label("fun2")), List(Assignment(ecx, Num(8)))),
-              Func(LabelDeclaration(Label("fun3")), List(Assignment(edx, Num(10))))))
+              Func(LabelDeclaration(Label("fun2")) :: List(Assignment(ecx, Num(8)))),
+              Func(LabelDeclaration(Label("fun3")) :: List(Assignment(edx, Num(10))))))
   )
   testParse("""((
   :aint_gonna_happen
   :terminate))""" ->
-          L1(Func(LabelDeclaration(Label("main")),
+          L1(Func(LabelDeclaration(Label("main")) ::
              List(LabelDeclaration(Label("aint_gonna_happen")),
                   LabelDeclaration(Label("terminate")))))
   )
@@ -39,7 +39,7 @@ class ParseProgramsTest extends L1ParserTest{
   testParse(""";;10
 (((eax <- 19)
   (eax <- (print eax))))""" ->
-          L1(Func(LabelDeclaration(Label("main")),
+          L1(Func(LabelDeclaration(Label("main")) ::
             List(Assignment(eax,Num(19)), Assignment(eax,Print(eax)))))
   )
 }
