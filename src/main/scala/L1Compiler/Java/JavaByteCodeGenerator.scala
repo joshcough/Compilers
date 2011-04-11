@@ -1,5 +1,5 @@
 package L1Compiler.Java
-
+/*
 import L1Compiler.L1AST.{Instruction => L1Instruction, _}
 
 object JVMInst {
@@ -225,4 +225,4 @@ trait JavaByteCodeGenerator extends L1Compiler.BackEnd {
 
   private val labels = Iterator.from(0)
   private def nextNewLabel() = Label("Generated_Label_" + labels.next())
-}
+}*/
