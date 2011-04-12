@@ -21,7 +21,7 @@ trait Liveness {
 
   val callerSave = Set[X](eax, ebx, ecx, edx)
   val calleeSave = Set[X](edi, esi)
-  val arguments = Set[X](eax, edx, ecx)
+  val arguments = Set[X](eax, ecx, edx)
   val result = Set[X](eax)
 
   def gen(i:Instruction): Set[X] = {
@@ -54,6 +54,8 @@ trait Liveness {
     }
   }
 
+  // TODO: ask robby about print/alloc/arrerr
+  // maybe all the C calling convention caller save registers are killed?
   def kill(i:Instruction): Set[X] = {
     def kill(rhs:AssignmentRHS): Set[X] = rhs match {
       case r:Register => Set()
@@ -92,57 +94,50 @@ trait Liveness {
   // then there is a result for each slide all the way down to the last slide
   // when things are finally complete (we've reached the fixed point)
   def inout(instructions:List[Instruction]): List[List[InstructionInOutSet]] = {
-    class InOutHelper {
-      def succIndeces(n:Int): Set[Int] = instructions(n) match {
-        case Return|TailCall(_) => Set()
-        case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l1))
-        // we have to test that there is something after this instruction
-        // in case the last instruction is something other than return or cjump
-        case _ if(instructions.isDefinedAt(n+1)) => Set(n+1)
-        case _ => Set()
-      }
 
-      def findLabelDecIndex(label:Label):Int = {
-        val index = instructions.indexOf(LabelDeclaration(label))
-        if(index == -1) error("no such label: " + label.name) else index
-      }
+    // does the next round of moving things up the in/out chains.
+    // recurs until the result is the same as what we've got so far.
+    def inout(acc:List[List[InstructionInOutSet]]): List[List[InstructionInOutSet]] = {
 
-      def inout: List[List[InstructionInOutSet]] = {
-        // start out with empty in and out sets for all instructions
-        val emptyStartSet = instructions.zipWithIndex.map {
-          case (inst, index) => InstructionInOutSet(index, inst, Set[X](), Set[X]())
+      val current = acc.last
+
+      // returns the successors for a given instruction.
+      def succ(i:InstructionInOutSet): Set[InstructionInOutSet] = {
+        def succIndeces(n: Int): Set[Int] = instructions(n) match {
+          case Return | TailCall(_) => Set()
+          case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l1))
+          // we have to test that there is something after this instruction
+          // in case the last instruction is something other than return or cjump
+          // i think that in normal functions this doesn't happen but the hw allows it.
+          case _ if (instructions.isDefinedAt(n + 1)) => Set(n + 1)
+          case _ => Set()
         }
-        // then fill them in until we reach the fixed point.
-        inout(List(emptyStartSet))
+        def findLabelDecIndex(label: Label): Int = {
+          val index = instructions.indexOf(LabelDeclaration(label))
+          if (index == -1) error("no such label: " + label.name) else index
+        }
+        succIndeces(i.index).map(current(_))
       }
 
-      /**
-       * in(n) = gen(n-th-inst) ∪ (out (n) - kill(n-th-inst))
-       * out(n) = ∪{in(m) | m ∈ succ(n)}
-       */
-      // does the next round of moving things up the in/out chains.
-      // recurs until the result is the same as what we've got so far.
-      private def inout(acc:List[List[InstructionInOutSet]]): List[List[InstructionInOutSet]] = {
+      // in and out functions
+      // in(n) = gen(n-th-inst) ∪ (out (n) - kill(n-th-inst))
+      def in(i:InstructionInOutSet): Set[X] = gen(i.inst) union (i.out -- kill(i.inst))
+      // out(n) = ∪{in(m) | m ∈ succ(n)}
+      def out(i:InstructionInOutSet): Set[X] = succ(i).flatMap(_.in)
 
-        val current = acc.last
+      // build the next result
+      val nextStep = current.map(i => InstructionInOutSet(i.index, i.inst, in(i), out(i)))
 
-        // in and out functions
-        def in(i:InstructionInOutSet): Set[X] = gen(i.inst) union (i.out -- kill(i.inst))
-        def out(i:InstructionInOutSet): Set[X] = {
-          val indices = succIndeces(i.index)
-          if(indices.isEmpty) Set() else indices.map(current(_).in).reduceLeft(_ union _)
-        }
-
-        // build the next result
-        val nextStep: List[InstructionInOutSet] = current.foldRight(List[InstructionInOutSet]()){
-          case (i, c) => InstructionInOutSet(i.index, i.inst, in(i), out(i)) :: c
-        }
-
-        // if we've reached the fixed point, we can stop. otherwise continue.
-        if(nextStep == current) acc else inout(acc :+ nextStep)
-      }
+      // if we've reached the fixed point, we can stop. otherwise continue.
+      if(nextStep == current) acc else inout(acc :+ nextStep)
     }
-    new InOutHelper().inout
+
+    // start out with empty in and out sets for all instructions
+    val emptyStartSet = instructions.zipWithIndex.map {
+      case (inst, index) => InstructionInOutSet(index, inst, Set[X](), Set[X]())
+    }
+    // then fill them in until we reach the fixed point.
+    inout(List(emptyStartSet))
   }
 
   /**
@@ -211,12 +206,3 @@ case class InstructionInOutSet(index: Int, inst:Instruction, in:Set[X], out:Set[
 //val newHead: InstructionInOutSet = head.copy(in = head.in - edi - esi)
 //newHead :: rest
 //head :: rest
-
-//      val next = acc.foldRight((List[InstructionInOutSet](), Set[X]())){
-//        case (iios, (acc, lastIn)) => {
-//          val newIn = in(iios)
-//          val newOut = out(iios)
-//          //println(iios + ", " + toCode(newIn) + ", " + toCode(newOut))
-//          (InstructionInOutSet(iios.index, iios.inst, newIn, newOut) :: acc, newIn)
-//        }
-//      }._1
