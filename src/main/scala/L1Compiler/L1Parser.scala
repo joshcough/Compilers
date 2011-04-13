@@ -32,12 +32,13 @@ trait L1Parser {
       case '-= => Decrement(parseRegister(s1), parseNumOrRegister(s2))
       case '*= => Multiply(parseRegister(s1), parseNumOrRegister(s2))
       case '&= => BitwiseAnd(parseRegister(s1), parseNumOrRegister(s2))
-      // TODO (ebx <<= ecx) right side must be ecx
-      // and this converts to sall %cl, %ebx
       case '>>= => RightShift(parseRegister(s1), parseNumOrEcx(s2))
       case '<<= => LeftShift(parseRegister(s1), parseNumOrEcx(s2))
     }
     case List('goto, s:Symbol) => Goto(parseLabel(s.toString))
+    // TODO: for call and tail-call this should be parseLabelOrRegister
+    // but the grammar allows number. robby said i could fix the grammar.
+    // maybe i will.
     case List('call, a:Any) => Call(parseS(a))
     case List(Symbol("tail-call"), a:Any) => TailCall(parseS(a))
     case List('return) => Return

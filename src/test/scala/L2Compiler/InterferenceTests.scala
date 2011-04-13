@@ -7,7 +7,6 @@ class InterferenceTests extends L2CompilerTest {
 
   import compiler._
 
-
   test("interference 1"){
     val code = """
       |(:f

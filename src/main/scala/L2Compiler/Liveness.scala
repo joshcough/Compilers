@@ -20,6 +20,7 @@ object LivenessMain {
 trait Liveness {
 
   val callerSave = Set[X](eax, ebx, ecx, edx)
+  val x86CallerSave = Set[X](eax, ecx, edx)
   val calleeSave = Set[X](edi, esi)
   val arguments = Set[X](eax, ecx, edx)
   val result = Set[X](eax)
@@ -38,12 +39,15 @@ trait Liveness {
     }
     i match {
       case Assignment(x, i) => gen(i)
+
+      // TODO: abstract over these
       case Increment(x, s)  => gen(x) union gen(s)
       case Decrement(x, s)  => gen(x) union gen(s)
       case Multiply(x, s)   => gen(x) union gen(s)
       case LeftShift(x, s)  => gen(x) union gen(s)
       case RightShift(x, s) => gen(x) union gen(s)
       case BitwiseAnd(x, s) => gen(x) union gen(s)
+
       case CJump(comp, l1, l2) => gen(comp)
       case MemWrite(MemLoc(bp, _), s) => Set(bp) union gen(s)
       case Goto(s) => gen(s)
@@ -59,9 +63,9 @@ trait Liveness {
   def kill(i:Instruction): Set[X] = {
     def kill(rhs:AssignmentRHS): Set[X] = rhs match {
       case r:Register => Set()
-      case Print(s) => Set(eax) // hmmm...i thought others were killed here as well.
-      case Allocate(n, init) => Set(eax) // same here
-      case ArrayError(a, n)  => Set(eax) // same here
+      case Print(s) => x86CallerSave // these include result (eax)
+      case Allocate(n, init) => x86CallerSave
+      case ArrayError(a, n)  => x86CallerSave
       case Comp(s1, op, s2)  => Set()
       case MemRead(MemLoc(bp, _)) => Set()
       case n:Num => Set()

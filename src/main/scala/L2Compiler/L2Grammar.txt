@@ -1,23 +1,25 @@
-p ::= ((i ...) (label i ...) ...)
-i ::= (x <- s)
-     | (x <- (mem x n4))
-     | ((mem x n4) <- s)
-     | (x aop= s)
-     | (cx <- s cmp s)
-     | label
-     | (goto s)
-     | (cjump s cmp s label label)
-     | (call s)
-     | (return)
-     | (eax <- (print s))
-     | (eax <- (allocate s s))
-aop= ::= += | -= | *=
-cmp ::= < | <= | =
-s ::= x | num | label
-x, y ::= any-variable-at-all | reg
-cx ::= x
-reg ::= eax | ecx | edx | ebx | esi | edi | ebp | esp
-
-# Only difference with L1, L1 had:
-#x, y ::= cx | esi | edi | ebp | esp
-#cx ::= eax | ecx | edx | ebx
+p::= ((i ...) (label i ...) ...)
+i::= (x <- s)
+|(x <- (mem s n4))
+|((mem x n4) <- s)
+|(x aop= s)
+|(x sop= sx)
+|(x sop= num)
+|(cx <- s cmp s)
+|label
+|(goto label)
+|(cjump s cmp s label label)
+|(call s)
+|(tail-call s)
+|(return)
+|(eax <- (print s))
+|(eax <- (allocate s s))
+|(eax <- (array-error s s))
+aop=::= += | -= | *= | &=
+sop::= <<= | >>=
+cmp::= < | <= | =
+s::= x | num | label
+x, y::= any-variable-at-all | reg
+cx::= any-variable-at-all | reg
+sx::= any-variable-at-all | reg
+reg::= eax | ecx | edx | ebx | esi | edi | ebp | es
