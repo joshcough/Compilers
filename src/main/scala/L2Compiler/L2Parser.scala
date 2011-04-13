@@ -33,13 +33,13 @@ trait L2Parser {
       case '-= => Decrement(parseX(s1), parseNumOrRegisterOrVar(s2))
       case '*= => Multiply(parseX(s1), parseNumOrRegisterOrVar(s2))
       case '&= => BitwiseAnd(parseX(s1), parseNumOrRegisterOrVar(s2))
-      // TODO (ebx <<= ecx) right side must be ecx
-      case '>>= => RightShift(parseX(s1), parseNumOrVarOrEcx(s2))
-      case '<<= => LeftShift(parseX(s1), parseNumOrVarOrEcx(s2))
+      // TODO: right hand side has to be ecx for L1...how does this work?
+      case '>>= => RightShift(parseX(s1), parseNumOrRegisterOrVar(s2))
+      case '<<= => LeftShift(parseX(s1), parseNumOrRegisterOrVar(s2))
     }
     case List('goto, s:Symbol) => Goto(parseLabel(s.toString))
-    case List('call, s:Symbol) => Call(parseLabelOrRegisterOrVar(s))
-    case List(Symbol("tail-call"), s:Symbol) => TailCall(parseLabelOrRegisterOrVar(s))
+    case List('call, a:Any) => Call(parseS(a))
+    case List(Symbol("tail-call"), a:Any) => TailCall(parseS(a))
     case List('return) => Return
     // (cjump s cmp s label label) ;; conditional jump
     case 'cjump :: _ => parseCJump(expr)
@@ -56,13 +56,6 @@ trait L2Parser {
   def parseNumOrRegisterOrVar(exp:Any): S = exp match {
     case n: Int => Num(n)
     case s: Symbol => parseX(s)
-  }
-
-  def parseNumOrVarOrEcx(exp:Any): S = parseNumOrRegisterOrVar(exp) match {
-    case n:Num => n
-    case v:Variable => v
-    case e if e == ecx => e
-    case _ => error("expected number, variable, or ecx. got: " + exp)
   }
 
   def parseLabelOrRegisterOrVar(s: Symbol): S = {

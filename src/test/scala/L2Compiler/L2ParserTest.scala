@@ -2,6 +2,8 @@ package L2Compiler
 
 import L2AST._
 
+abstract class L2ParserTest extends L2CompilerTest
+
 class ParsePrimitivesTest extends L2CompilerTest {
   testParseS('eex -> Variable("eex"))
 }

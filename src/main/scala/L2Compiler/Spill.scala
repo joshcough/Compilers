@@ -20,7 +20,7 @@ object SpillMain {
     // read the program part first, and then deal with the rest.
     val (program, rest) = readWithRest(input)
     // the test has these three things that we read.
-    val List(varToSpill, offset, prefix) = read("(" + rest.toList.mkString.trim + ")").asInstanceOf[List[Any]]
+    val List(varToSpill, offset, prefix) = read("(" + rest + ")").asInstanceOf[List[Any]]
     // after we have the program and the other arguments
     val newProgram = compiler.spill(
       Variable(varToSpill.toString.drop(1)), offset.toString.toInt,

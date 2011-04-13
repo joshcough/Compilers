@@ -46,11 +46,35 @@ class ReaderTest extends FunSuite with MustMatchers {
 (((eax <- 19)
   (eax <- (print eax))))""", List(List(List('eax, '<-, 19), List('eax, '<-, List('print, 'eax)))))
 
+  testReadWithRest("""(
+ ; Round 1
+ (x <- y < z)
+ (x <- y <= z)
+ (x <- y = z))
+x
+-4
+s_
+  """, (List(List('x, '<-, 'y, '<, 'z), List('x, '<-, 'y, '<=, 'z), List('x, '<-, 'y, '=, 'z)), "x -4 s_" ))
+
+  testReadWithRest("""(
+  ; Test whether spill function correctly ignores things that
+  ; shouldn't be spilled. The code itself is nonsense.
+
+  ; The following are labels, not variables, so they should be ignored.
+  :x
+  (call :x)
+)
+x
+-16
+s_""", (List(Symbol(":x"), List('call, Symbol(":x"))),"x -16 s_"))
+
 
   // helper functions
   def read(s:String) = new Reader{}.read(s)
+  def readWithRest(s:String) = new Reader{}.readWithRest(s)
   case class Error(message:String)
   def testRead(s: String, a: Any) = test(s + " => " + a){ read(s) must be(a) }
+  def testReadWithRest(s: String, a: Any) = test(s + " => " + a){ readWithRest(s) must be(a) }
   def testRead(s:String,e:Error) = {
     test(s + " => " + e){ intercept[Throwable]{ read(s) }.getMessage must be(e.message) }
   }

@@ -127,6 +127,10 @@ class ParseOtherStuffTest extends L1ParserTest {
   testParseInstruction("(goto :label)" -> Goto(Label("label")))
   testParseInstruction("(call :func)" -> Call(Label("func")))
   testParseInstruction("(call eax)" -> Call(eax))
+  testParseInstruction("(call 7)" -> Call(Num(7)))
+  testParseInstruction("(tail-call :func)" -> TailCall(Label("func")))
+  testParseInstruction("(tail-call eax)" -> TailCall(eax))
+  testParseInstruction("(tail-call 7)" -> TailCall(Num(7)))
   testParseInstruction("(return)" -> Return)
   testParseInstructionError("(goto 7)" -> "not an instuction: List('goto, 7)")
 }

@@ -5,7 +5,10 @@ trait Reader {
   def read(s:String): Any = read(stripComments(s).toList)
   def stripComments(code:String) = code.split("\n").map(s => s.takeWhile(_!=';').trim).mkString(" ")
   def read(stream:List[Char]): Any = readWithRest(stream)._1
-  def readWithRest(s:String): (Any, List[Char]) = readWithRest(s.toList)
+  def readWithRest(s:String): (Any, String) = {
+    val rwr = readWithRest(stripComments(s).toList)
+    (rwr._1, rwr._2.mkString.trim)
+  }
 
   def readWithRest(stream:List[Char]): (Any, List[Char]) = {
 

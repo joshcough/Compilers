@@ -38,8 +38,8 @@ trait L1Parser {
       case '<<= => LeftShift(parseRegister(s1), parseNumOrEcx(s2))
     }
     case List('goto, s:Symbol) => Goto(parseLabel(s.toString))
-    case List('call, s:Symbol) => Call(parseLabelOrRegister(s))
-    case List(Symbol("tail-call"), s:Symbol) => TailCall(parseLabelOrRegister(s))
+    case List('call, a:Any) => Call(parseS(a))
+    case List(Symbol("tail-call"), a:Any) => TailCall(parseS(a))
     case List('return) => Return
     // (cjump s cmp s label label) ;; conditional jump
     case 'cjump :: _ => parseCJump(expr)
