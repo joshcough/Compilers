@@ -25,12 +25,8 @@ This directory contains:
             ^D
             $ ./L4-steps < file_containing_L3_expr
 
-These scripts require that you have PLT Scheme v4.2.5 installed
-      and its bin directory on your path. If that is not the case,
-      then (once PLT v4.2.5 is installed), edit the script to point to
-      mzscheme in the bin directory. 
-
-      Pass the --help command line argument to see some options.
+- check-coloring: a script that runs on the output of the graph coloring
+  assignment to determine if the coloring is valid for the graph
 
 - run-test-fests: a script that runs the tests from the Test Fests.
   Command-line arguments determine which tests to run. For example,
@@ -42,12 +38,23 @@ These scripts require that you have PLT Scheme v4.2.5 installed
   the --help flag to see the names of the other command-line
   arguments.
 
+  The run-test-fests script expects tests.tar.gz to be unpacked in
+  the same directory as itself, but run-test-fests can be run from
+  any directory (and it will still find the test cases)
+
   If your compiler executables are shell scripts, be sure the scripts
   begin with a #! line; otherwise, you'll get an error about exec
   failing.
 
+These scripts require that you have Racket v5.1 installed and its bin
+directory on your path. If that is not the case, then (once Racket
+v5.1 is installed), edit the script to point to racket in the bin
+directory.
+
+Pass the --help command line argument to see some options.
+
 - run.ss: a file that allows you to run the L1 and L2 interpreters
-          via DrScheme. Start up DrScheme, open the file, and call
+          via DrRacket. Start up DrRacket, open the file, and call
           L1-interp/file or L2-interp/file with whatever file you 
           want to run in the interpreter.
 
