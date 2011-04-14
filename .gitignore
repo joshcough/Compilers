@@ -9,6 +9,7 @@ target/
 src/main/compilers/L1/1-test/*.S
 src/main/compilers/L1/1-test/*.o
 src/main/compilers/L1/1-test/*.res
+src/main/compilers/interpreters/1-test/
 .idea/workspace.xml
 a.out
 runtime.o

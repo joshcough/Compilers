@@ -1,0 +1,4 @@
+#!/bin/sh
+
+exec racket $(dirname $0)/check-coloring.rkt "$@"
+
