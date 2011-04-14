@@ -10,7 +10,7 @@ object LivenessMain {
   val compiler = new L2Compiler{}
   import compiler._
 
-  def main(args:Array[String]){ println(liveness(new File(args(1)).read)) }
+  def main(args:Array[String]){ println(liveness(new File(args(0)).read)) }
 
   //  % liveness f.L2f
   //  ((in (eax) (eax x)) (out (eax x) ()))
