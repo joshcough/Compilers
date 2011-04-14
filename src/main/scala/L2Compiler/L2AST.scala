@@ -21,7 +21,7 @@ object L2AST {
   case class RightShift(x:X, s:S) extends Instruction
   case class BitwiseAnd(x:X, s:S) extends Instruction
   case class MemWrite(loc: MemLoc, s:S) extends Instruction
-  case class Goto(s:S) extends Instruction
+  case class Goto(label:Label) extends Instruction
   case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction
   case class LabelDeclaration(l: Label) extends Instruction
   case class Call(s:S) extends Instruction

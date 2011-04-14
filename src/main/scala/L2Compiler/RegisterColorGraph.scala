@@ -86,7 +86,7 @@ case class RegisterColorGraph(data:BiDirectionalGraph[ColoredNode]){
     case LeftShift(s1, s2) => LeftShift(getRegister(s1), replaceVarsWithRegisters(s2))
     case RightShift(s1, s2) => RightShift(getRegister(s1), replaceVarsWithRegisters(s2))
     case MemWrite(loc, x) => MemWrite(replaceVarsWithRegisters(loc), replaceVarsWithRegisters(x))
-    case Goto(x) => Goto(replaceVarsWithRegisters(x))
+    case g:Goto => g
     case CJump(comp, l1, l2) => CJump(replaceVarsWithRegisters(comp), l1, l2)
     case Call(x) => Call(replaceVarsWithRegisters(x))
     case TailCall(x) => Call(replaceVarsWithRegisters(x))

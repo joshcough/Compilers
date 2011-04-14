@@ -68,7 +68,7 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
   def parseListOfInstructions(a:List[Any]): List[Instruction] = parseInstructionList(a)
   def inoutForTesting(code:String, step:Option[Int]=None):List[InstructionInOutSet] = {
     val result = inout(parseListOfInstructions(code))
-    step.map(result(_)).getOrElse(result.last)
+    step.map(result.reverse(_)).getOrElse(result.head)
   }
 
   // TODO: variables Registers can interfere.

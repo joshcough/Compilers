@@ -31,7 +31,7 @@ trait Liveness {
       case Print(s) => gen(s)
       case Allocate(n, init) => gen(n)  union gen(init)
       case ArrayError(a, n)  => gen(a)  union gen(n)
-      case Comp(s1, op, s2)  => gen(s1) union gen(s1)
+      case Comp(s1, op, s2)  => gen(s1) union gen(s2)
       case MemRead(MemLoc(bp, _)) => Set(bp)
       case n:Num => Set()
       case l:Label => Set()
@@ -39,15 +39,12 @@ trait Liveness {
     }
     i match {
       case Assignment(x, i) => gen(i)
-
-      // TODO: abstract over these
       case Increment(x, s)  => gen(x) union gen(s)
       case Decrement(x, s)  => gen(x) union gen(s)
       case Multiply(x, s)   => gen(x) union gen(s)
       case LeftShift(x, s)  => gen(x) union gen(s)
       case RightShift(x, s) => gen(x) union gen(s)
       case BitwiseAnd(x, s) => gen(x) union gen(s)
-
       case CJump(comp, l1, l2) => gen(comp)
       case MemWrite(MemLoc(bp, _), s) => Set(bp) union gen(s)
       case Goto(s) => gen(s)
@@ -58,18 +55,18 @@ trait Liveness {
     }
   }
 
-  // TODO: ask robby about print/alloc/arrerr
-  // maybe all the C calling convention caller save registers are killed?
   def kill(i:Instruction): Set[X] = {
     def kill(rhs:AssignmentRHS): Set[X] = rhs match {
       case r:Register => Set()
-      case Print(s) => x86CallerSave // these include result (eax)
-      case Allocate(n, init) => x86CallerSave
-      case ArrayError(a, n)  => x86CallerSave
       case Comp(s1, op, s2)  => Set()
       case MemRead(MemLoc(bp, _)) => Set()
       case n:Num => Set()
       case l:Label => Set()
+      // the x86CallerSave also include result (eax)
+      case Print(s) => x86CallerSave
+      case Allocate(n, init) => x86CallerSave
+      // i wonder if array error just kills everything...
+      case ArrayError(a, n)  => x86CallerSave
     }
     i match {
       case Assignment(x:X, _) => Set(x)
@@ -103,12 +100,13 @@ trait Liveness {
     // recurs until the result is the same as what we've got so far.
     def inout(acc:List[List[InstructionInOutSet]]): List[List[InstructionInOutSet]] = {
 
-      val current = acc.last
+      val current = acc.head
 
       // returns the successors for a given instruction.
       def succ(i:InstructionInOutSet): Set[InstructionInOutSet] = {
         def succIndeces(n: Int): Set[Int] = instructions(n) match {
-          case Return | TailCall(_) => Set()
+          case Return | TailCall(_) | Assignment(_, ArrayError(_, _)) => Set()
+          case Goto(label) => Set(findLabelDecIndex(label))
           case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l1))
           // we have to test that there is something after this instruction
           // in case the last instruction is something other than return or cjump
@@ -133,7 +131,7 @@ trait Liveness {
       val nextStep = current.map(i => InstructionInOutSet(i.index, i.inst, in(i), out(i)))
 
       // if we've reached the fixed point, we can stop. otherwise continue.
-      if(nextStep == current) acc else inout(acc :+ nextStep)
+      if(nextStep == current) acc else inout(nextStep :: acc)
     }
 
     // start out with empty in and out sets for all instructions

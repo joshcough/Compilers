@@ -296,6 +296,119 @@ class LivenessTest extends L2CompilerTest {
       step=End)
   }
 
+  test("print doesnt kill ebx"){
+    livenessTest(
+      """
+        |((eax <- 1)
+        |(ebx <- 1)
+        |(ecx <- 1)
+        |(edx <- 1)
+        |(edi <- 1)
+        |(esi <- 1)
+        |(eax <- (print 7))
+        |(eax <- (print ebx)))""",
+    """
+        |((eax <- 1) () ())
+        |((ebx <- 1) () (ebx))
+        |((ecx <- 1) (ebx) (ebx))
+        |((edx <- 1) (ebx) (ebx))
+        |((edi <- 1) (ebx) (ebx))
+        |((esi <- 1) (ebx) (ebx))
+        |((eax <- (print 7)) (ebx) (ebx))
+        |((eax <- (print ebx)) (ebx) ())""", step = End
+    )
+  }
+
+  test("print doesnt kill ebx, edi, or esi"){
+    livenessTest(
+      """
+        |((eax <- 1)
+        |(ebx <- 1)
+        |(ecx <- 1)
+        |(edx <- 1)
+        |(edi <- 1)
+        |(esi <- 1)
+        |(eax <- (print 7))
+        |(eax <- (print ebx))
+        |(eax <- (print edi))
+        |(eax <- (print esi)))""",
+    """
+        |((eax <- 1) () ())
+        |((ebx <- 1) () (ebx))
+        |((ecx <- 1) (ebx) (ebx))
+        |((edx <- 1) (ebx) (ebx))
+        |((edi <- 1) (ebx) (ebx edi))
+        |((esi <- 1) (ebx edi) (ebx edi esi))
+        |((eax <- (print 7)) (ebx edi esi) (ebx edi esi))
+        |((eax <- (print ebx)) (ebx edi esi) (edi esi))
+        |((eax <- (print edi)) (edi esi) (esi))
+        |((eax <- (print esi)) (esi) ())""", step = End
+    )
+  }
+
+  test("goto"){
+    livenessTest("""
+        |((goto :keep_going)
+        |:keep_going
+        |(eax <- (print ebx))
+        |(goto :end)
+        |(eax <- (print ecx)) ; should not be printed
+        |:end
+        |(eax <- (print 7)))""",
+      """
+        |((goto :keep_going) (ebx) (ebx))
+        |(:keep_going (ebx) (ebx))
+        |((eax <- (print ebx)) (ebx) ())
+        |((goto :end) () ())
+        |((eax <- (print ecx)) (ecx) ())
+        |(:end () ())
+        |((eax <- (print 7)) () ())""",
+      step=End)
+  }
+
+  test("infinite loop"){
+    livenessTest("""
+        |(:keep_going
+        |(eax *= eax)
+        |(goto :keep_going))""",
+      """
+        |(:keep_going (eax) (eax))
+        |((eax *= eax) (eax) (eax))
+        |((goto :keep_going) (eax) (eax))""",
+      step=End)
+  }
+
+  test("array error has no successors"){
+    livenessTest("""
+        |((eax <- (array-error ebx ecx))
+        |(eax -= eax))""",
+      """
+        |((eax <- (array-error ebx ecx)) (ebx ecx) ())
+        |((eax -= eax) (eax) ())""",
+      step=End)
+  }
+
+  test("cmp"){
+    livenessTest(
+      "((eax <- ebx < ecx))",
+      "((eax <- ebx < ecx) (ebx ecx) ())",
+      step=End)
+  }
+
+  test("mem read"){
+    livenessTest(
+      "((eax <- (mem ebx 4)))",
+      "((eax <- (mem ebx 4)) (ebx) ())",
+      step=End)
+  }
+
+  test("mem write"){
+    livenessTest(
+      "(((mem ebx 4) <- ecx)))",
+      "(((mem ebx 4) <- ecx) (ebx ecx) ())",
+      step=End)
+  }
+
   def End = None // sort of hacky, but whatever.
   def Just(i:Int) = Some(i)
   implicit def pimpedString(s:String) = new {

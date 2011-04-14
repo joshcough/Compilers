@@ -300,13 +300,7 @@ trait Spill {
         }
         else List(tc)
       }
-      case g@Goto(s) => {
-        if(s==spillVar) {
-          val newVar0 = newVar()
-          List(Assignment(newVar0, readSpillVar),Goto(newVar0))
-        }
-        else List(g)
-      }
+      case g:Goto => List(g)
       case ld:LabelDeclaration => List(ld)
       case Return => List(Return)
     }

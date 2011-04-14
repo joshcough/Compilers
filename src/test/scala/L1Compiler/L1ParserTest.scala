@@ -78,7 +78,6 @@ class ParseAssignmentsTest extends L1ParserTest {
   // print
   testParseInstruction("(eax <- (print eax))" -> Assignment(eax, Print(eax)))
   testParseInstruction("(eax <- (print ebx))" -> Assignment(eax, Print(ebx)))
-  // TODO: figure out if this is even legal
   testParseInstruction("(eax <- (print 7))" -> Assignment(eax, Print(Num(7))))
 
   // allocate

@@ -47,8 +47,6 @@ trait L2Parser {
   }
 
   def parseS(exp:Any) = exp match {
-    // num   ::= number between (inclusive) -2^31 and (2^31)-1
-    // TODO: check range
     case n: Int => Num(n)
     case s: Symbol => parseLabelOrRegisterOrVar(s)
   }
@@ -67,7 +65,6 @@ trait L2Parser {
   // #rx"^:[a-zA-Z0-9_]$"
   def parseLabel(s: String) = {
     val chop = s.toString.drop(1) // remove the ' from ':label
-    // TODO: put some legit error checking here...
     Label(s.drop(2)) // remove the ' and : from ':label.
   }
 
@@ -77,7 +74,6 @@ trait L2Parser {
 
   def parseCxRegisterOrVar(s: Symbol): X = CXRegister(s).getOrElse(Variable(s.toString.drop(1)))
 
-  // TODO: isnt there an ecx only case in here somewhere? look at L1Parser
   def parseComp(s1: Any, cmp: Symbol, s2: Any): Comp = {
     Comp(parseNumOrRegisterOrVar(s1), parseCompOp(cmp),parseNumOrRegisterOrVar(s2))
   }

@@ -48,8 +48,6 @@ trait L1Parser {
   }
 
   def parseS(exp:Any) = exp match {
-    // num   ::= number between (inclusive) -2^31 and (2^31)-1
-    // TODO: check range
     case n: Int => Num(n)
     case s: Symbol => parseLabelOrRegister(s)
   }
@@ -116,7 +114,6 @@ trait L1Parser {
         MemWrite(MemLoc(parseRegister(x), Num(n4)), parseS(x2))
       // ;; two calls into the runtime system, one to print a value:
       //(eax <- (print s))
-      // TODO: figure out if this is even legal (print 8)
       case ('eax, '<-, List('print, s)) => Assignment(eax, Print(parseNumOrRegister(s)))
       // ;; and one to allocate & initialize some space
       // (eax <- (allocate s s))

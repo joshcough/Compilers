@@ -18,7 +18,7 @@ object L1AST {
   case class RightShift(r:Register, s:S) extends Instruction
   case class BitwiseAnd(r:Register, s:S) extends Instruction
   case class MemWrite(loc: MemLoc, s:S) extends Instruction
-  case class Goto(s:S) extends Instruction
+  case class Goto(label:Label) extends Instruction
   case class CJump(comp:Comp, l1: Label, l2: Label) extends Instruction
   case class LabelDeclaration(l: Label) extends Instruction
   case class Call(s:S) extends Instruction
