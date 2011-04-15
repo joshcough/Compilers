@@ -1,0 +1,13 @@
+(:there
+ :here
+ :anywhere
+ (eax <- s3)
+ (eax <- s2)
+ (eax <- s1)
+ (eax <- s0)
+ (cjump s0 < s1 :here :there)
+ (cjump s2 < s3 :here :anywhere)
+ (s3 <- 0)
+ (s2 <- 1)
+ (s1 <- 2)
+ (s0 <- 3))

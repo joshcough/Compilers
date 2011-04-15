@@ -29,3 +29,6 @@ echo "scp ./build/compilers.tar.gz jdc974@tlab-18.cs.northwestern.edu:./"
 
 tar cfvz ../spill-test.tar.gz spill-test
 echo "done creating ./build/spill-test.tar.gz."
+
+tar cfvz ../liveness-test.tar.gz liveness-test
+echo "done creating ./build/liveness-test.tar.gz."

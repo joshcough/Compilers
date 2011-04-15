@@ -1,5 +1,8 @@
 package L2Compiler
 
+import java.io.File
+import io.FileHelper._
+
 class LivenessTest extends L2CompilerTest {
 
   test("test first big example from lecture notes") {
@@ -429,14 +432,31 @@ class LivenessTest extends L2CompilerTest {
     // print hw view only if we are viewing the final result of a liveness run
     if(!step.isDefined){
       // write out the tests files and results.
-      import java.io.File
-      import io.FileHelper._
+
       val index = count.next()
       // write the test
       new File("./liveness-test/test" + index + ".L2f").write(code.clean)
       // write the expected result
       assert(LivenessMain.liveness(code.clean) === InstructionInOutSet.hwView(insAndOuts))
       new File("./liveness-test/test" + index + ".lres").write(InstructionInOutSet.hwView(insAndOuts))
+    }
+  }
+}
+
+class LivenessTestRobby extends L2CompilerTest {
+  for((testFile, resultFile) <- io.Dir.RobbyLivenessTests.zip(io.Dir.RobbyLivenessResults)) {
+    test(testFile.getParentFile.getName + "/" + testFile.getName){
+      val code = testFile.read
+      val myResult = LivenessMain.liveness(code)
+      val robbysResult = resultFile.read.replace("\n", "").replace("  ", " ")
+
+      if(myResult != robbysResult){
+        println(testFile + " failed: ")
+        println("code: " + code)
+        println("josh result:\t" + myResult)
+        println("robb result:\t" + robbysResult)
+      }
+      assert(myResult === robbysResult)
     }
   }
 }

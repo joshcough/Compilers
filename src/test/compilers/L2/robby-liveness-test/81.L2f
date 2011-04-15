@@ -1,0 +1,6 @@
+((abc <- 11)
+ (abc <- 11)
+ (abc <- 11)
+ (abc <- 11)
+ (eax <- (allocate s0 s1))
+ (eax <- (allocate s2 s3)))

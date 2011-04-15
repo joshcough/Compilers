@@ -4,8 +4,8 @@ import L1Compiler._
 
 class TestCompilerVsInterpreter extends L1X86Test{
   import io.FileHelper._
-  //Dir.testFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
-  //Dir.testFiles.foreach(testCompilerVsInterpreter)
+  //Dir.L1TestFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
+  //Dir.L1TestFiles.foreach(testCompilerVsInterpreter)
 }
 
 class CompileInstructionListTest extends L1X86Test {
@@ -213,7 +213,7 @@ trait L1X86Test extends org.scalatest.FunSuite{
   }
 
   def testCompilerVsInterpreter(filename: String) {
-    val fullPath = Dir.L1File("1-test/" + filename)
+    val fullPath = io.Dir.L1File("1-test/" + filename)
     test(filename){ assert(X86.L1X86Runner.runFile(fullPath) === L1Interpreter.runFile(fullPath)) }
   }
 }

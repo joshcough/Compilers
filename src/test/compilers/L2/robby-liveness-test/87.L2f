@@ -1,0 +1,6 @@
+((abc <- 11)
+ (abc <- 11)
+ (abc <- 11)
+ (abc <- 11)
+ (eax <- (array-error s0 s1))
+ (eax <- (array-error s2 s3)))

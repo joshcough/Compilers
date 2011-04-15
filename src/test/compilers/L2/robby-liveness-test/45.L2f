@@ -1,0 +1,8 @@
+(:there
+ :anywhere
+ (eax <- 0)
+ (ebx <- 1)
+ (ecx <- 2)
+ (edx <- 3)
+ (esi <- 4)
+ (edi <- 5))
