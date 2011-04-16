@@ -182,9 +182,10 @@ class InterferenceGraphTests extends L2CompilerTest {
       |(edi <- (mem ebp -4))
       |(esi <- (mem ebp -8))
       |(return))"""
+    // TODO: this variable is not used
     val interference = interferenceGraph(code)
     println(interference.hwView)
-    val actual = chooseRegisters(interference)
+    val actual = attemptAllocation(inoutForTesting(code.clean, step=End))
     println(actual)
   }
 

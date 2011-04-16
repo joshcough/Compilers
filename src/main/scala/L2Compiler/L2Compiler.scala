@@ -17,6 +17,7 @@ trait L2Compiler extends Reader with L2Parser with Rewriter {
   def parseProgram(s:String) = parse(read(s))
   def compileFile(filename:String) = compile(new File(filename).read)
   def compile(code: String): L2 = rewrite(parseProgram(code))
+  def compileToString(code:String): String = L2Printer.toCode(compile(code))
 }
 
 object L2CompilerExtras extends L2CompilerExtras
@@ -33,25 +34,42 @@ trait L2CompilerExtras extends L2Compiler {
 trait Rewriter extends Spill with Liveness with Interference {
 
   def rewrite(ast: L2): L2 = {
-    val newL2FunctionsAndRegisterAllocations =
-      (ast.main :: ast.funs).map(f => colorCompletely(initialRewrite(f)))
+    //println("rewriting: " + L2Printer.toCode(ast))
+    val newL2FunctionsAndRegisterAllocations = (ast.main :: ast.funs).map(f => allocateCompletely(f))
     val l1OneFunctions = newL2FunctionsAndRegisterAllocations.map {
       case (f, allocs) => new VariableToRegisterReplacer(allocs).replaceVarsWithRegisters(f)
     }
-    L2(l1OneFunctions.head, l1OneFunctions.tail)
+    // ugh! strip the main label out of the main function
+    val main = Func(l1OneFunctions.head.body.tail)
+    L2(main, l1OneFunctions.tail)
   }
 
-  def colorCompletely(f: Func): (Func, Map[Variable, Register]) = {
-    def colorCompletely(f: Func, offset: Int): (Func, Map[Variable, Register]) = {
-      chooseRegisters(buildInterferenceSet(inoutFinalResult(f))) match {
-        case Some(registerMap) => (f, registerMap)
-        case None => {
-          colorCompletely(Func(spill(
-            chooseSpillVar(liveRanges(inoutFinalResult(f))).get, offset, "spilled_var_", f.body)), offset - 4)
+  def allocateCompletely(f: Func): (Func, Map[Variable, Register]) = {
+    //println("allocating for: " + L2Printer.toCode(f))
+    // first, try to see if we can do allocation without any rewriting
+    //println("----inoutFinalResult-----: " + inoutFinalResult(f))
+    attemptAllocation(inoutFinalResult(f)) match {
+      case Some(registerMap) => {
+        //println("first attempt to color was good!")
+        //println("registerMap: " + registerMap)
+        (f, registerMap)
+      }
+      case _ => {
+        // then if it fails, rewrite until we can color
+        def allocateCompletely(f: Func, offset: Int): (Func, Map[Variable, Register]) = {
+          attemptAllocation(inoutFinalResult(f)) match {
+            case Some(registerMap) => (f, registerMap)
+            case None => {
+              val newFunction = Func(spill(chooseSpillVar(liveRanges(inoutFinalResult(f))).get, offset, f.body))
+              allocateCompletely(newFunction, offset - 4)
+            }
+          }
         }
+        // TODO: probably adjust the stack at the start of the function right here.
+        // see the TODO at the top of this file
+        allocateCompletely(initialRewrite(f), -4)
       }
     }
-    colorCompletely(f, -4)
   }
 
   def initialRewrite(f:Func): Func = {
@@ -72,6 +90,8 @@ trait Rewriter extends Spill with Liveness with Interference {
   }
 
   class VariableToRegisterReplacer(replacements:Map[Variable, Register]) {
+
+    //println("replacements: " + replacements)
 
     def replaceVarsWithRegisters(f:Func): Func = Func(f.body.map(replaceVarsWithRegisters))
 

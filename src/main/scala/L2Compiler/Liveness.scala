@@ -87,7 +87,7 @@ trait Liveness {
   }
 
   // just gets the last inout result. (the most important one)
-  def inoutFinalResult(f:Func): List[InstructionInOutSet] = inout(f.body).last
+  def inoutFinalResult(f:Func): List[InstructionInOutSet] = inout(f.body).head
 
   // builds up a giant list of all the intermediate inout results
   // robby starts out with a function, and empty in and out sets for each instruction

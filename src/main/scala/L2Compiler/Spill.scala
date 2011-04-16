@@ -30,6 +30,9 @@ object SpillMain {
 
 trait Spill {
 
+  def spill(spillVar:Variable, stackOffset: Int, ins: List[Instruction]): List[Instruction] =
+    spill(spillVar, stackOffset, "spilled_var_", ins)
+
   def spill(spillVar:Variable, stackOffset: Int, spillPrefix:String, ins: List[Instruction]): List[Instruction] = {
 
     ///////////// Helper functions //////////////////
