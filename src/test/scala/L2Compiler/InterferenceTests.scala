@@ -6,24 +6,24 @@ import L2AST._
 class InterferenceTests extends L2CompilerTest {
 
   import compiler._
-
-  test("interference 1"){
-    val code = """
-      |(:f
-      |(x2 <- eax)
-      |(x2 *= x2)
-      |(2x2 <- x2)
-      |(2x2 *= 2)
-      |(3x <- eax)
-      |(3x *= 3)
-      |(eax <- 2x2)
-      |(eax += 3x)
-      |(eax += 4)
-      |(return))""".stripMargin.trim
-
-    assert(interferingVariables(code) ===
-            Set((Variable("3x"),Variable("2x2")), (Variable("2x2"),Variable("3x"))))
-  }
+//
+//  test("interference 1"){
+//    val code = """
+//      |(:f
+//      |(x2 <- eax)
+//      |(x2 *= x2)
+//      |(2x2 <- x2)
+//      |(2x2 *= 2)
+//      |(3x <- eax)
+//      |(3x *= 3)
+//      |(eax <- 2x2)
+//      |(eax += 3x)
+//      |(eax += 4)
+//      |(return))""".stripMargin.trim
+//
+//    assert(interferingVariables(code) ===
+//            Set((Variable("3x"),Variable("2x2")), (Variable("2x2"),Variable("3x"))))
+//  }
 //
 //  test("interference 2"){
 //        val code = """

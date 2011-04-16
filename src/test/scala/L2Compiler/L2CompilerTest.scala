@@ -97,4 +97,10 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite{
 //      assert(out === t._2.trim)
 //    }
 //  }
+
+  def End = None // sort of hacky, but whatever.
+  def Just(i:Int) = Some(i)
+  implicit def pimpedString(s:String) = new {
+    def clean = s.stripMargin.trim
+  }
 }

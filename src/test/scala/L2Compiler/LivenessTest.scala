@@ -409,11 +409,6 @@ class LivenessTest extends L2CompilerTest {
       step=End)
   }
 
-  def End = None // sort of hacky, but whatever.
-  def Just(i:Int) = Some(i)
-  implicit def pimpedString(s:String) = new {
-    def clean = s.stripMargin.trim
-  }
   lazy val count = Iterator.from(0)
   new java.io.File("./liveness-test").mkdir()
   def livenessTest(code:String, expected:String, step: Option[Int] = None) = {

@@ -1,6 +1,7 @@
 package L2Compiler
 
 import L2AST._
+import Liveness.kill
 
 object InterferenceGraph {
   def base: InterferenceGraph = {
@@ -10,6 +11,41 @@ object InterferenceGraph {
       ecx -> edi, ecx -> edx, ecx -> esi,
       edi -> edx, edi -> esi,
       edx -> esi)))
+  }
+
+  /**
+    TODO: - not yet using the kill set as part of interference!
+    TODO: cx <- instructions
+    TODO:
+    Constrained arithmetic operators
+    Add interference edges to disallow the illegal registers
+    when building the interference graph, before starting the
+    coloring.
+    E.g., if you have this instruction (a <- y < x) then
+    add edges between a and the registers edi and esi,
+    ensuring a ends up in eax, ecx, edx, ebx, or spilled
+
+    Build interference graph from the liveness information
+        Two variable live at the same time interfere with each other
+        Killed variables interferes with all live variables at that
+        point, unless it is a (x <- y) instruction (in which
+        case it is fine if x and y share a register)
+        All real registers interfere with each other
+   */
+  def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
+    val i:Set[(X, X)] = iioss.flatMap { iios: InstructionInOutSet =>
+      val in_interference: Set[(X,X)] = for(x <- iios.in; y <- iios.in; if(x!=y)) yield (x,y)
+      val out_interference: Set[(X,X)] = {
+        // add in the kill
+        val outsPlusKill = (iios.out ++ kill(iios.inst))
+        for(x <- outsPlusKill; y <- outsPlusKill; if(x!=y)) yield (x,y)
+      }
+      val special_interference: Set[(X, X)] = iios match {
+        case _ => Set()
+      }
+      in_interference ++ out_interference ++ special_interference
+    }.toSet
+    base.addInterference(i)
   }
 }
 
