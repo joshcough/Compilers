@@ -24,6 +24,12 @@ object InterferenceGraph {
     E.g., if you have this instruction (a <- y < x) then
     add edges between a and the registers edi and esi,
     ensuring a ends up in eax, ecx, edx, ebx, or spilled
+   
+The (cx <- s cmp s) instruction in L1 is limited to
+only 4 possible destinations.
+The (x sop= sx) instruction in L1 is limited to only
+shifting by the value of ecx (or by a constant in the
+other form)
 
     Build interference graph from the liveness information
         Two variable live at the same time interfere with each other
@@ -33,7 +39,7 @@ object InterferenceGraph {
         All real registers interfere with each other
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
-    val i:Set[(X, X)] = iioss.flatMap { iios: InstructionInOutSet =>
+    base.addInterference(iioss.flatMap { iios: InstructionInOutSet =>
       val in_interference: Set[(X,X)] = for(x <- iios.in; y <- iios.in; if(x!=y)) yield (x,y)
       val out_interference: Set[(X,X)] = {
         // add in the kill
@@ -44,8 +50,7 @@ object InterferenceGraph {
         case _ => Set()
       }
       in_interference ++ out_interference ++ special_interference
-    }.toSet
-    base.addInterference(i)
+    }.toSet)
   }
 }
 
@@ -56,6 +61,8 @@ case class InterferenceGraph(data:BiDirectionalGraph[X]){
   def addInterference(connections:(X,X)*): InterferenceGraph = addInterference(connections.toSet)
   def addInterference(connections:Set[(X,X)]): InterferenceGraph = connections.toList match {
     case Nil => this
+    // dont bother adding ebp or esp to the graph. 
+    case (x1,x2)::xs if (x1 == ebp || x2 == ebp || x1 == esp || x2 == esp) => this.addInterference(xs.toSet)
     case (x1,x2)::xs => InterferenceGraph(data + (x1 -> x2)).addInterference(xs.toSet)
   }
 

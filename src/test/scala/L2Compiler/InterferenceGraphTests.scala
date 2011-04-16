@@ -54,4 +54,92 @@ class InterferenceGraphTests extends L2CompilerTest {
 (x2 eax edi esi))""".trim)
   }
 
+  test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p 24)"){
+    val code = """
+      |;; f(x) = let y = g(x)
+      |;; in h(y+x) + y*5
+      |(:f
+      |(x <- eax) ;; save our argument
+      |(call :g) ;; call g with our argument
+      |(y <- eax) ;; save g's result in y
+      |(eax += x) ;; compute h's arg
+      |(call :h) ;; call h
+      |(y5 <- y) ;; compute y*5 in y5, i
+      |(y5 *= 5) ;; compute y*5 in y5, ii
+      |(eax += y5) ;; add h's res to y*5
+      |(return)) ;; and we're done"""
+    val insAndOuts = compiler.inoutForTesting(code.clean, step=End)
+    val actual = InterferenceGraph.buildInterferenceSet(insAndOuts).hwView
+
+    assert(actual === """
+((eax ebx ecx edi edx esi x y y5)
+(ebx eax ecx edi edx esi x y)
+(ecx eax ebx edi edx esi x y)
+(edi eax ebx ecx edx esi x y y5)
+(edx eax ebx ecx edi esi x y)
+(esi eax ebx ecx edi edx x y y5)
+(x eax ebx ecx edi edx esi y)
+(y eax ebx ecx edi edx esi x)
+(y5 eax edi esi))""".trim)
+  }
+
+  // spilling y
+  test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p 53)"){
+    val code = """
+      |;; f(x) = let y = g(x)
+      |;; in h(y+x) + y*5
+      |(:f
+      |(x <- eax) ;; save our argument
+      |(call :g) ;; call g with our argument
+      |((mem ebp -4) <- eax) ;; save g's result in y
+      |(eax += x) ;; compute h's arg
+      |(call :h) ;; call h
+      |(y5 <- (mem ebp -4)) ;; compute y*5 in y5, i
+      |(y5 *= 5) ;; compute y*5 in y5, ii
+      |(eax += y5) ;; add h's res to y*5
+      |(return)) ;; and we're done"""
+    val insAndOuts = compiler.inoutForTesting(code.clean, step=End)
+    val actual = InterferenceGraph.buildInterferenceSet(insAndOuts).hwView
+
+    assert(actual === """
+((eax ebx ecx edi edx esi x y5)
+(ebx eax ecx edi edx esi x)
+(ecx eax ebx edi edx esi x)
+(edi eax ebx ecx edx esi x y5)
+(edx eax ebx ecx edi esi x)
+(esi eax ebx ecx edi edx x y5)
+(x eax ebx ecx edi edx esi)
+(y5 eax edi esi))""".trim)
+  }
+
+
+  // spilling y and x
+  test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p 72)"){
+    val code = """
+      |;; f(x) = let y = g(x)
+      |;; in h(y+x) + y*5
+      |(:f
+      |((mem ebp -8) <- eax) ;; save our argument
+      |(call :g) ;; call g with our argument
+      |((mem ebp -4) <- eax) ;; save g's result in y
+      |(sx0 <- (mem ebp -8))
+      |(eax += sx0) ;; compute h's arg
+      |(call :h) ;; call h
+      |(y5 <- (mem ebp -4)) ;; compute y*5 in y5, i
+      |(y5 *= 5) ;; compute y*5 in y5, ii
+      |(eax += y5) ;; add h's res to y*5
+      |(return)) ;; and we're done"""
+    val insAndOuts = compiler.inoutForTesting(code.clean, step=End)
+    val actual = InterferenceGraph.buildInterferenceSet(insAndOuts).hwView
+
+    assert(actual === """
+((eax ebx ecx edi edx esi sx0 y5)
+(ebx eax ecx edi edx esi)
+(ecx eax ebx edi edx esi sx0)
+(edi eax ebx ecx edx esi sx0 y5)
+(edx eax ebx ecx edi esi sx0)
+(esi eax ebx ecx edi edx sx0 y5)
+(sx0 eax ecx edi edx esi)
+(y5 eax edi esi))""".trim)
+  }
 }
