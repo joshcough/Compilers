@@ -1,6 +1,5 @@
 package L2Compiler
 
-import RegisterColorGraph._
 import L2AST._
 
 class InterferenceTests extends L2CompilerTest {

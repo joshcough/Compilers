@@ -8,8 +8,10 @@ object L2AST {
   case class L2(main: Func, funs:List[Func]) extends L2ASTNode
   case class Func(body: List[Instruction]) extends L2ASTNode
   case class MemLoc(basePointer:X, offset: Num) extends L2ASTNode
-  sealed trait X extends S with L2ASTNode // the S here is kinda funny, but leaving it.
-
+  sealed trait X extends S with L2ASTNode with Ordered[X]{
+    val name: String
+    def compare(that:X) = this.name.compare(that.name)
+  }
 
   // the main instructions
   sealed trait Instruction extends L2ASTNode
