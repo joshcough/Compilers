@@ -4,7 +4,6 @@ import L2AST._
 
 class InterferenceTests extends L2CompilerTest {
 
-  import compiler._
 //
 //  test("interference 1"){
 //    val code = """

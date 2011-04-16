@@ -412,7 +412,7 @@ class LivenessTest extends L2CompilerTest {
   lazy val count = Iterator.from(0)
   new java.io.File("./liveness-test").mkdir()
   def livenessTest(code:String, expected:String, step: Option[Int] = None) = {
-    val insAndOuts = compiler.inoutForTesting(code.clean, step=step)
+    val insAndOuts = inoutForTesting(code.clean, step=step)
     val actual = insAndOuts.mkString("\n")
     if(actual.clean != expected.clean){
       println("code:\n" + code.clean)

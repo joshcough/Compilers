@@ -6,9 +6,7 @@ import L2Printer._
 object LivenessMain {
   import io.FileHelper._
   import java.io.File
-
-  val compiler = new L2Compiler{}
-  import compiler._
+  import L2CompilerExtras._
 
   def main(args:Array[String]){ println(liveness(new File(args(0)).read)) }
 
@@ -130,7 +128,7 @@ trait Liveness {
       def out(i:InstructionInOutSet): Set[X] = succ(i).flatMap(_.in)
 
       // build the next result
-      val nextStep = current.map(i => InstructionInOutSet(i.index, i.inst, in(i), out(i)))
+      val nextStep = current.map(i => i.copy(in=in(i), out=out(i)))
 
       // if we've reached the fixed point, we can stop. otherwise continue.
       if(nextStep == current) acc else inout(nextStep :: acc)
@@ -138,12 +136,11 @@ trait Liveness {
 
     // start out with empty in and out sets for all instructions
     val emptyStartSet = instructions.zipWithIndex.map {
-      case (inst, index) => InstructionInOutSet(index, inst, Set[X](), Set[X]())
+      case (inst, index) => InstructionInOutSet(index, inst, gen(inst), kill(inst), Set[X](), Set[X]())
     }
     // then fill them in until we reach the fixed point.
     inout(List(emptyStartSet))
   }
-
 
   object LiveRange {
     def print(ranges:List[List[LiveRange]]) = ranges.map(_.mkString(" ")).mkString("(", "\n", ")")
@@ -177,12 +174,6 @@ object InstructionInOutSet {
   }
 }
 
-case class InstructionInOutSet(index: Int, inst:Instruction, in:Set[X], out:Set[X]){
+case class InstructionInOutSet(index: Int, inst:Instruction, gen:Set[X], kill:Set[X], in:Set[X], out:Set[X]){
   override def toString = "(" + toCode(inst) + " " + toCodeSorted(in) + " " + toCodeSorted(out) + ")"
 }
-
-// this was in the inout function:
-//val (head::rest) = inout(empty, 0, stopAfterNSteps)
-//val newHead: InstructionInOutSet = head.copy(in = head.in - edi - esi)
-//newHead :: rest
-//head :: rest

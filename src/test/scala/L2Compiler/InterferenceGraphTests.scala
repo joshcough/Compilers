@@ -5,7 +5,7 @@ import L2AST._
 class InterferenceGraphTests extends L2CompilerTest {
 
   test("base graph with just the registers") {
-    assert(InterferenceGraph.base.hwView === """
+    assert(registerInterference.hwView === """
       |((eax ebx ecx edi edx esi)
       |(ebx eax ecx edi edx esi)
       |(ecx eax ebx edi edx esi)
@@ -16,7 +16,7 @@ class InterferenceGraphTests extends L2CompilerTest {
 
   test("base graph with some added interference") {
     val x = Variable("x")
-    assert(InterferenceGraph.base.addInterference(eax -> x, edi -> x, esi -> x).hwView === """
+    assert(registerInterference.addInterference(eax -> x, edi -> x, esi -> x).hwView === """
       |((eax ebx ecx edi edx esi x)
       |(ebx eax ecx edi edx esi)
       |(ecx eax ebx edi edx esi)
@@ -164,7 +164,7 @@ class InterferenceGraphTests extends L2CompilerTest {
   }
 
   def interferenceGraph(code:String) =
-    InterferenceGraph.buildInterferenceSet(compiler.inoutForTesting(code.clean, step=End))
+    buildInterferenceSet(inoutForTesting(code.clean, step=End))
 
   test("coloring"){
     val code = """
@@ -184,7 +184,7 @@ class InterferenceGraphTests extends L2CompilerTest {
       |(return))"""
     val interference = interferenceGraph(code)
     println(interference.hwView)
-    val actual = InterferenceGraph.chooseRegisters(interference)
+    val actual = chooseRegisters(interference)
     println(actual)
   }
 

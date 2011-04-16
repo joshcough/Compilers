@@ -60,12 +60,7 @@ class L2CompilerTests extends L2CompilerTest {
 
 
 //((x <- 1) (eax += x)) x -4 s
-abstract class L2CompilerTest extends org.scalatest.FunSuite{
-
-  val compiler = new L2Compiler{
-    def generateCode(ast:L2):String = error("TODO")
-  }
-  import compiler._
+abstract class L2CompilerTest extends org.scalatest.FunSuite with L2CompilerExtras {
 
   def testParseSExpr(t: (Any, L2)){
     test(t._1 + " => " + t._2){ assert(parse(t._1) === t._2) }
