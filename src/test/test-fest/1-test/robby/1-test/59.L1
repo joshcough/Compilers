@@ -1,0 +1,7 @@
+(((cjump 1 = 3 :then :else)
+  :then
+  (eax <- (print 3))
+  (goto :done)
+  :else
+  (eax <- (print 1))
+  :done))

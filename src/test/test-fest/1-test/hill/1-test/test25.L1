@@ -1,0 +1,30 @@
+;; #25 factorial
+(((eax <- 10)
+  (call :FACTORIAL)
+  (eax <- 7)
+  (call :FACTORIAL)
+  (eax <- 9)
+  (call :FACTORIAL)
+  (eax <- 6)
+  (call :FACTORIAL)
+  (eax <- 11)
+  (call :FACTORIAL)
+  (eax <- 8)
+  (call :FACTORIAL))
+  
+ (:FACTORIAL
+  (esi <- eax)
+  (edi <- 0)
+  (eax <- 1)
+  :RERUN
+  (edi += 1)
+  (eax *= edi)
+  (cjump edi < esi :RERUN :ANSWER)
+  :ANSWER
+  (eax <<= 1)
+  (eax += 1)
+  (eax <- (print eax))
+  (eax <- 0)
+  (return)))
+
+

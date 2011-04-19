@@ -1,0 +1,15 @@
+(((eax <- (allocate 5 5))
+  (esi <- eax)
+  (edi <- 10)
+  (eax <- (print esi))
+  :loop
+  (eax <- (mem esi 0))
+  (eax <<= 1)
+  (eax += 1)
+  (eax <- (allocate eax eax))
+  (esi <- eax)
+  (eax <- (print esi))
+  (edi -= 1)
+  (cjump 0 < edi :loop :exit)
+  :exit
+  (eax <- (print esi))))

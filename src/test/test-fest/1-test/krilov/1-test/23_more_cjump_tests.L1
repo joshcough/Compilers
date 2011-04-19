@@ -1,0 +1,19 @@
+; More cjump tests - conditional function calls from one procedure to another
+((
+  (edi <- 3)
+  (call :func1)
+  )
+ (:func1
+   (eax <- (print 3))
+   (edi -= 1)
+   (cjump edi <= 0 :call_func2 :recur)
+   :recur
+   (tail-call :func1)
+   :call_func2
+   (tail-call :func2)
+   (return))
+ (:func2
+   (eax <- (print 5))
+   (return)
+   )
+)

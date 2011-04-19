@@ -1,0 +1,9 @@
+(((call :L_1))
+ (:L_1
+  (ecx <- 1)
+  (call :f)
+  (v <- eax)
+  (eax <- (print v))
+  (eax <- eax)
+  (return))
+ (:f (x <- ecx) (eax <- x) (return)))

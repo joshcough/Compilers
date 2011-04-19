@@ -1,0 +1,9 @@
+((
+(edx <- 5)
+(ecx <- 7)
+
+(ecx &= edx)
+
+(eax <- (print ecx))
+))
+

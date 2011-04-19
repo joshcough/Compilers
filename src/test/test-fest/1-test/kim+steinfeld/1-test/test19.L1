@@ -1,0 +1,11 @@
+(
+ (
+  (call :give_val)
+  (eax <- (print esi))
+ )
+
+ (:give_val
+  (esi <- 61)
+  (return)
+ )
+)

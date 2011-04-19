@@ -1,0 +1,9 @@
+(((esi <- 999)
+  (edi <- 999)
+  (cjump esi <= edi :true :false)
+  :true
+  (eax <- (print 3))
+  (goto :done)
+  :false
+  (eax <- (print 1))
+  :done))

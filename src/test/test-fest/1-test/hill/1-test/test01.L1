@@ -1,0 +1,16 @@
+;; #1 assignment, limits, addition
+(((esi <- 29)
+  (edi <- -71)
+  (eax <- 0)
+  (eax += esi)
+  (eax += esi)
+  (eax += edi)
+  (eax <- (print eax))
+  (ecx <- 0)
+  (ecx += 31)
+  (eax <- (print ecx))
+  (edx <- 0)
+  (edx += 47)
+  (eax <- (print edx))))
+
+

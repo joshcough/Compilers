@@ -1,0 +1,22 @@
+;; #7 allocate, heap mem write, heap mem read
+(((esi <- 25)
+  (eax <- (allocate esi 1))
+  (esi <- eax)
+  (ecx <- 9)
+  (edx <- 11)
+  (edi <- 47)
+  ((mem esi 0) <- ecx)
+  ((mem esi 4) <- edx)
+  ((mem esi 8) <- edi)
+  (eax <- (mem esi 0))
+  (eax <- (print eax))
+  (eax <- (mem esi 4))
+  (eax <- (print eax))
+  (eax <- (mem esi 8))
+  (eax <- (print eax))
+  (eax <- (allocate 9 1))
+  ((mem eax 0) <- 121)
+  (eax <- (mem eax 0))
+  (eax <- (print eax))))
+
+

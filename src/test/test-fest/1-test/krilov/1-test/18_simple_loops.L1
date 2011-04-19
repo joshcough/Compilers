@@ -1,0 +1,15 @@
+; Test simple loops
+((
+  (edi <- 5)   ; loop termination variable
+  (esi <- 0)   ; loop index variable
+  
+  :loop
+  (cjump esi < edi :keep_going :done)
+  
+  :keep_going  
+  (eax <- (print 3))
+  (esi += 1)
+  (goto :loop)
+  
+  :done
+))

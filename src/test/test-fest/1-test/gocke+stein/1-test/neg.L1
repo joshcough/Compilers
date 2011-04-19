@@ -1,0 +1,5 @@
+(((eax <- 1) ;; Move 1
+  (eax -= 3)
+  (eax *= 2) ;; Convert
+  (eax += 1)
+  (eax <- (print eax))))

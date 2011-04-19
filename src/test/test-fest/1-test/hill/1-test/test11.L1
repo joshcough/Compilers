@@ -1,0 +1,13 @@
+;; #11 cjump with equals
+((:LOOP3_SETUP
+  (ebx <- 64)
+  :LOOP3_TOP
+  (ebx >>= 1)
+  (cjump ebx = 0 :LOOP3_FIN :LOOP3_TOP)
+  (ecx <- 11)
+  (eax <- (print ecx))
+  :LOOP3_FIN
+  (ebx += 25)
+  (eax <- (print ebx))))
+
+

@@ -1,0 +1,17 @@
+(((eax <- 3)
+  (ecx <- eax)
+  (ecx -= 1)
+  (call :fact)
+  (ecx <- eax)
+  (ecx -= 1)
+  (call :fact)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax)))
+ (:fact
+  :loop
+  (eax *= ecx)
+  (ecx -= 1)
+  (cjump ecx = 0 :done :loop)
+  :done
+  (return)))

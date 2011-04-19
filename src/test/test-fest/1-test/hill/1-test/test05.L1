@@ -1,0 +1,21 @@
+;; #5 less than or equal to
+(((ebx <- 5)
+  (esi <- 5)
+  (edi <- -2)
+  (eax <- ebx <= esi)
+  (ecx <- ebx <= edi)
+  (edx <- edi <= ebx)
+  (ebx <- eax)
+  (esi <- ecx)
+  (edi <- edx)
+  (ebx <<= 1)
+  (ebx += 1)
+  (eax <- (print ebx))
+  (esi <<= 1)
+  (esi += 1)
+  (eax <- (print esi))
+  (edi <<= 1)
+  (edi += 1)
+  (eax <- (print edi))))
+
+

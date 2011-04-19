@@ -1,0 +1,19 @@
+; Test functions
+((
+  (call :func2)  
+  (call :func3)
+  (call :func1)
+  )
+ (:func1
+   (eax <- 3)
+   (eax <- (print eax))
+   (return))
+ (:func2
+   (eax <- 5)
+   (eax <- (print eax))
+   (return))
+ (:func3
+   (eax <- 7)
+   (eax <- (print eax))
+   (return))
+)

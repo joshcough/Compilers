@@ -1,0 +1,12 @@
+;;3
+(((eax <- 3)
+ (cjump 1 < 3 :good :bad)
+ (eax += 2)
+ :good
+ (eax += 4)
+ (goto :result)
+ :bad
+ (eax += 8)
+ (goto :result)
+ :result
+ (eax <- (print eax))))

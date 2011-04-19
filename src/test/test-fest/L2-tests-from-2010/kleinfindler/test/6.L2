@@ -1,0 +1,13 @@
+(((call :L_1))
+ (:L_1
+  (eax <- (allocate 5 0))
+  ((mem eax 4) <- 21)
+  ((mem eax 8) <- 23)
+  (x <- eax)
+  (y <- x)
+  (y &= 1)
+  (y <<= 1)
+  (y += 1)
+  (eax <- (print y))
+  (eax <- eax)
+  (return)))

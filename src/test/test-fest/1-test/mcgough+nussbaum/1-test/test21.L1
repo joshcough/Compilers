@@ -1,0 +1,17 @@
+(((call :foo)
+(eax <- (print eax)))
+(:foo
+(call :bar)
+(return))
+(:bar
+(call :baz)
+(return))
+(:baz
+(call :qux)
+(return))
+(:qux
+(call :quux)
+(return))
+(:quux
+(eax <- 11)
+(return)))

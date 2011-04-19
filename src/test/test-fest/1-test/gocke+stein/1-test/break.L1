@@ -1,0 +1,9 @@
+;; Test loop breaking
+(((eax <- 0) ;; Start at zero
+  :loop
+  (eax += 1)
+  (cjump eax = 5 :out :next)
+  :next
+  (goto :loop)
+  :out
+  (eax <- (print eax))))

@@ -1,0 +1,19 @@
+(
+((call :first))
+
+(:first
+(edi <- 3)
+(esi <- 51)
+(eax <- (print edi))
+(call :second)
+(return))
+
+(:second
+(edi += 2)
+(eax <- (print edi))
+(cjump edi < esi :keep_going :done)
+:keep_going
+(call :second)
+:done
+(return))
+)

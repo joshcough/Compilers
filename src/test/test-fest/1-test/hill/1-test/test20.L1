@@ -1,0 +1,18 @@
+;; #20 cjump using result of comparison
+(((edx <- 301 < 501)
+  (edi <- edx)
+  (cjump edi < 0 :a :a)
+  (eax <- (print 25))
+  :a
+  (cjump edi <= 0 :b :b)
+  (eax <- (print 39))
+  :b
+  (cjump edi = 0 :c :c)
+  (eax <- (print 35))
+  :c
+  (cjump 1 = edi :d :d)
+  (eax <- (print 81))
+  :d
+  (eax <- (print 95))))
+
+

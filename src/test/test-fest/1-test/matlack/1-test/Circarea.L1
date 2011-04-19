@@ -1,0 +1,12 @@
+(((eax <- 42)
+  (call :square)
+  (call :pimult)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax)))
+ (:square
+  (eax *= eax)
+  (return))
+ (:pimult
+  (eax *= 3)
+  (return)))

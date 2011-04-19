@@ -1,0 +1,57 @@
+; Linked list test - allocates a linked list, then prints it.
+((
+  ; Construct a linked list structure containing 1 -> 2 -> 3 -> 4 -> 5 ( -> 9999 )
+  ; Each cell in the structure is a list containing a value and the address of the next cell.
+  ; (The cell containing 9999 is a "sentinel" cell which marks the end of the linked list.
+  ; Looks like implementing this without a sentinel is impossible.)
+  
+  ; Allocate the head (containing the value 1) - esi will contain the pointer to the head of the list
+  (eax <- (allocate 5 3))
+  (esi <- eax)
+  
+  ; Allocate the rest of the linked list (2 through 5) in a loop
+  
+  (ebx <- 5)    ; Loop index
+  (edi <- esi)  ; edi stores the address of the previous cell
+  
+  :allocate_next
+  
+  ; Allocate a new cell
+  (eax <- (allocate 5 ebx))
+  (ebx <- (mem eax 4))
+  
+  ; Link the previous cell to this one
+  ((mem edi 8) <- eax)
+  (edi <- eax)
+  (ebx += 2)
+  (cjump ebx <= 11 :allocate_next :done_allocating)
+  
+  :done_allocating
+  
+  ; Allocate the sentinel cell and set the tail's pointer to it.
+  (eax <- (allocate 5 9999))
+  ((mem edi 8) <- eax)
+  
+  ; Now print the linked list structure, whose head is at esi
+  (edi <- esi)
+  (call :print_list)
+  )
+  (:print_list
+    ; edi points to the current cell
+	
+	; Get the value of the current cell and print it
+	(eax <- (mem edi 4))
+	(eax <- (print eax))
+	
+	; Get the pointer to the next cell and check its value - if it's 9999, it's the sentinel, so stop printing the list.
+	(edi <- (mem edi 8))
+	(eax <- (mem edi 4))
+	(cjump eax = 9999 :done :print_next)
+	
+	:print_next
+	(tail-call :print_list)
+	
+	:done
+	(return)
+  )
+)

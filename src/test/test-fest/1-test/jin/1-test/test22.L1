@@ -1,0 +1,20 @@
+;test case 22
+(((eax <- 16)
+  (call :mul)
+  (eax -= 1)
+  (eax <- (print eax)))
+ (:mul
+  (cjump eax < 10 :mul1 :mul2)
+  :mul1
+  (eax *= 2)
+  (return)
+  :mul2
+  (ecx <- 1)
+  :loop  
+  (cjump ecx < 5 :times :result)
+  :times
+  (eax *= ecx)
+  (ecx += 1)
+  (goto :loop)
+  :result
+  (return)))

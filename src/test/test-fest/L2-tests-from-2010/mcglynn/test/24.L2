@@ -1,0 +1,25 @@
+(((call :f) (eax <- (print eax)))
+
+(:f
+(a <- 1)
+ (b <- 3)
+ (c <- 5)
+ (d <- 7)
+ (e <- 9)
+ (f <- 11)
+ (g <- 13)
+ (eax <- (print a))
+ (eax <- (print b))
+ (eax <- (print c))
+ (eax <- (print d))
+ (eax <- (print d))
+ (eax <- (print f))
+ (eax <- (print g))
+ 
+ (cjump a < b :true :false)
+ :true
+ (eax <- 99)
+ (return)
+ :false
+ (eax <- -99)
+ (return)))

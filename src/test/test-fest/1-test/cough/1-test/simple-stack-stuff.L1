@@ -1,0 +1,18 @@
+((
+  (esp -= 12)    ;; save space on the stack for 3 temporaries
+
+  ; put something on the stack
+  ((mem ebp -4) <- 3)
+  ((mem ebp -8) <- 85)
+  ((mem ebp -12) <- 109)
+
+  ; set up the stack pointer to get something off the stack, i think...
+  (edx <- (mem ebp -4))
+  (eax <- (print edx))
+  (edx <- (mem ebp -8))
+  (eax <- (print edx))
+  (edx <- (mem ebp -12))
+  (eax <- (print edx))
+
+  (esp += 12)
+))

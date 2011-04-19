@@ -1,0 +1,20 @@
+(((eax <- 1)
+  (call :printone))
+ (:printone
+  (esi <- eax)
+  (esi <<= 1)
+  (esi += 1)
+  (eax <- (print esi))
+  (eax <- esi)
+  (eax >>= 1)
+  (eax += 1)
+  (call :skipone)
+  (return))
+ (:skipone
+  (cjump eax < 10 :go_on :quit)
+  :go_on
+  (eax += 1)
+  (call :printone)
+  :quit
+  (return))
+ )

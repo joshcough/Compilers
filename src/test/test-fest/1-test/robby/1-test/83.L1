@@ -1,0 +1,10 @@
+(((call :f))
+ (:f
+  (esp -= 4)
+  ((mem esp 0) <- 3)
+  (call :g)
+  (eax <- (mem esp 0))
+  (eax <- (print eax))
+  (return))
+ (:g (esp -= 40) (tail-call :h))
+ (:h (return)))

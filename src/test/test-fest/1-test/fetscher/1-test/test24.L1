@@ -1,0 +1,14 @@
+(((call :one)
+  (call :two)
+  (call :three))
+ (:one
+  (eax <- 1)
+  (eax <- (print eax))
+  (return))
+ (:two
+  (call :one)
+  (return))
+ (:three
+  (call :two)
+  (call :one)
+  (return)))

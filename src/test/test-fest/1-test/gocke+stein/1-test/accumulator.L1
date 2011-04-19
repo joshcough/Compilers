@@ -1,0 +1,10 @@
+(((eax <- 0)
+  :loop
+  (eax += 1)
+  (cjump eax < 100000 :loop :finish)
+  :finish
+
+  (ebx <- eax)
+  (ebx *= 2)
+  (ebx += 1)
+  (eax <- (print ebx))))

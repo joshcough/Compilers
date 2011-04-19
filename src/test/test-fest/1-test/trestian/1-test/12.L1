@@ -1,0 +1,63 @@
+(
+(
+(edi <- -3)
+(call :L1)
+)
+(:L1
+(call :L2)
+(return))
+(:L2
+(call :L3)
+(return))
+(:L3
+(call :L4)
+(return))
+(:L4
+(call :L5)
+(return))
+(:L5
+(call :L6)
+(return))
+(:L6
+(call :L7)
+(return))
+(:L7
+(call :L8)
+(return))
+(:L8
+(call :L9)
+(return))
+(:L9
+(call :L10)
+(return))
+(:L10
+(call :L11)
+(return))
+(:L11
+(call :L12)
+(return))
+(:L12
+(call :L13)
+(return))
+(:L13
+(call :L14)
+(return))
+
+(:L14
+(call :L15)
+(return))
+
+(:L15
+(call :L16)
+(return))
+
+(:L16
+(call :L17)
+(return))
+
+(:L17
+;;(call :L14)
+(eax <- (print edi))
+(return))
+
+)

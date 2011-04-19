@@ -1,0 +1,1 @@
+(((eax <- 1) (ebx <- 3 = eax) (ebx += ebx) (ebx += 1) (eax <- (print ebx))))

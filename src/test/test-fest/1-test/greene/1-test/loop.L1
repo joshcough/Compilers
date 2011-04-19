@@ -1,0 +1,14 @@
+(((eax <- 65)
+  (ebx <- 15)
+  (goto :loop2)
+  :loop1
+  (eax += 327)
+  (eax -= 1)
+  :loop2
+  (eax -= 3)
+  (eax += 1)
+  (ebx -= 3)
+  (ebx += 1)
+  (cjump 1 = ebx :end :loop2)
+  :end
+  (eax <- (print eax))))

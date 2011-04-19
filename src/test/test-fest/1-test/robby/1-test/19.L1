@@ -1,0 +1,7 @@
+(((esi <- 999)
+  (edi <- 999)
+  (edx <- 2)
+  (edx <- esi = edi)
+  (edx += edx)
+  (edx += 1)
+  (eax <- (print edx))))

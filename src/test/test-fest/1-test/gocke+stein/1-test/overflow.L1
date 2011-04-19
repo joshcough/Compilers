@@ -1,0 +1,9 @@
+(((eax <- 0)
+  (ebx <- 2097152)
+  :loop
+  (eax += ebx)
+  (cjump eax < 2145386495 :loop :finish)
+  :finish
+  (ecx <- eax)
+  (ecx += 1)
+  (eax <- (print ecx))))

@@ -1,0 +1,10 @@
+(((eax <- (allocate 3 1))
+  (ebx <- eax)
+  (ebx += 4)
+  (cjump ebx < eax :lt :ge)
+  :lt
+  (eax <- (print 3))
+  (goto :done)
+  :ge
+  (eax <- (print 1))
+  :done))

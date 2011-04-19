@@ -1,0 +1,18 @@
+((
+(esi <- :func1)
+(edi <- 1)
+
+:loop
+(cjump edi < 5 :keep_going :done)
+:keep_going
+(edi += 1)
+(call esi)
+(goto :loop)
+:done
+(eax <- (print edi))
+)
+(
+:func1
+(return)
+)
+)

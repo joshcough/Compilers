@@ -1,0 +1,10 @@
+((
+(edx <- 33)
+
+(goto :jumptarget)
+(edx *= 2)
+(edx -= 1)
+
+:jumptarget
+(eax <- (print edx))
+))

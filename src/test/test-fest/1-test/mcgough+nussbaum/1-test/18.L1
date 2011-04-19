@@ -1,0 +1,14 @@
+;;11
+(((eax <- (allocate 3 3))
+  ((mem eax 0) <- 21)
+  (call :function1)
+  (eax <- (mem eax 0))
+  (eax <- (print eax)))
+ (:function1 
+  (edx <- (mem eax 0))
+  (call :function2)
+  (return))
+ (:function2 
+  (edx += 2)
+  ((mem eax 0) <- edx)
+  (return)))

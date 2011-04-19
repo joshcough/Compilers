@@ -1,0 +1,16 @@
+(((eax <- (allocate 9 1))
+  (edx <- eax)
+  (eax <- 1024)
+  (ebx <- 0)
+
+  :loop
+  (ebx += eax)
+  ((mem edx 0) <- ebx)
+  (eax -= 4)
+  (cjump eax < 0 :finish :loop)
+
+  :finish
+  (ecx <- (mem edx 0))
+  (ecx *= 2)
+  (ecx += 1)
+  (eax <- (print ecx))))

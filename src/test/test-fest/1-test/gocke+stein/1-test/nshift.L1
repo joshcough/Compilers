@@ -1,0 +1,7 @@
+(((eax <- -256)
+  (eax <<= 8)
+  (eax >>= 8)
+  (ebx <- eax)
+  (ebx *= 2)
+  (ebx += 1)
+  (eax <- (print ebx))))

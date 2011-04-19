@@ -1,0 +1,13 @@
+((
+(eax <- 1)
+(edx <- 8)
+:top
+(edx *= eax)
+(cjump eax < 67 :increment :edxcheck)
+:increment
+(eax += 2)
+:edxcheck
+(cjump edx < 799 :top :done)
+:done
+(eax += edx)
+(eax <- (print eax))))

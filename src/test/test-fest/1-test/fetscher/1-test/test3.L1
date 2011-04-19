@@ -1,0 +1,6 @@
+(((goto :skip)
+  (eax <- 5)
+  (eax <- (print eax))
+  :skip
+  (eax <- 1)
+  (eax <- (print eax))))

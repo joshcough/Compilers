@@ -1,0 +1,10 @@
+(((eax <- 5)
+  (call :func1)
+  (eax += 1)
+  (eax <- (print eax)))
+ (:func1
+  (x <- 5)
+  (y <- 2)
+  (x -= y)
+  (eax += x)
+  (return)))

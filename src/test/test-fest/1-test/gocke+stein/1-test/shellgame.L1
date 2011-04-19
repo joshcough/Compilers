@@ -1,0 +1,17 @@
+(((eax <- 1000)
+  (ebx <- 0)
+  (ecx <- 1)
+  (edx <- 2)
+
+  :loop
+  (edi <- ebx)
+  (ebx <- ecx)
+  (ecx <- edx)
+  (edx <- edi)
+  (eax -= 1)
+  (cjump eax = 0 :finish :loop)
+
+  :finish
+  (ebx *= 2)
+  (ebx += 1)
+  (eax <- (print ebx))))

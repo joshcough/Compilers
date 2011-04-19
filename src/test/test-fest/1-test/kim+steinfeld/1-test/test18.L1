@@ -1,0 +1,19 @@
+((
+(esi <- 9)
+(eax <- (allocate esi 1))
+(edi <- eax)         ;; base pointer
+(edi += 4)
+
+((mem edi 0) <- 51)  ;; store new values
+((mem edi 8) <- 37)
+
+(ecx <- (mem edi 0)) 
+(edx <- (mem edi 8))
+
+(ecx += edx)
+(ecx -= 1)
+((mem edi 0) <- ecx)
+
+(edx <- (mem edi 0))
+(eax <- (print edx))
+))

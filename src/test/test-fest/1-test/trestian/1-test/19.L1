@@ -1,0 +1,6 @@
+((
+(ecx <- 5)
+(edx <- :next1)
+:next1
+(eax <- (print ecx)) 
+))

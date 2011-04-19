@@ -1,0 +1,16 @@
+(((eax <- (print 9))
+	(call :f)
+	(call :g)
+	)
+ (:f
+  (p <- 8)
+  (c <- 7)
+  (c -= 2)
+  (esi <- c)
+  (eax <- (print esi))
+  (return)
+  )
+ (:g
+  (eax <- (print eax))
+  (return)
+  ))

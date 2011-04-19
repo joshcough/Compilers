@@ -1,0 +1,1 @@
+(((eax <- 1001) (eax <- (print eax))))

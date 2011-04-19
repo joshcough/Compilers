@@ -1,0 +1,19 @@
+(((y <- 9)
+	(eax <- (print y))
+	(eax -= y)
+	(call :a)
+	(eax <- (print eax))
+	)
+ (:a
+  (cjump eax < 1 :c :d)
+  :c
+  (call :b)
+  (tail-call :a)
+  :d
+  (return)
+  )
+ (:b
+  (eax <- (print 7))
+  (call :a)
+  (return)
+  ))

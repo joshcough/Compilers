@@ -1,0 +1,6 @@
+((
+(edi <- 3)
+(eax <- (print edi))
+(edi >>= 1)
+(eax <- (print edi))
+))

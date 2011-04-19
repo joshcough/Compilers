@@ -1,0 +1,30 @@
+((
+(goto :next1)
+:next1
+(goto :next2)
+:next2
+(goto :next3)
+:next3
+(goto :next4)
+:next4
+(goto :next5)
+:next5
+(goto :next6)
+:next6
+(goto :next7)
+:next7
+(goto :next8)
+:next8
+(goto :next9)
+:next9
+(goto :next10)
+:next10
+(goto :next11)
+:next11
+(goto :next12)
+:next12
+(goto :next13)
+:next13
+(edx <- -1)
+(eax <- (print edx))
+))

@@ -1,0 +1,22 @@
+;;10
+(((eax <- (allocate 3 3))
+  (ecx <- eax)
+  ((mem ecx 0) <- 21)
+  (call :function1)
+  (eax <- (mem ecx 0))
+  (eax <- (print eax)))
+ (:function1 
+  (edx <- (mem ecx 0))
+  (cjump edx < 23 :good :bad)
+  :good
+  (eax <- edx)
+  (goto :return)
+  :bad
+  (call :function2)
+  (goto :return)
+  :return
+  (return))
+ (:function2 
+  (edx += 2)
+  (eax <- edx)
+  (return)))

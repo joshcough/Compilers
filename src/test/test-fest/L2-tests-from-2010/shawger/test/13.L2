@@ -1,0 +1,3 @@
+(((x <- 5)
+  (eax <- (allocate x 7))
+  (eax <- (print eax))))

@@ -1,0 +1,13 @@
+;; #9 cjump with less than
+((:LOOP1_SETUP
+  (eax <- 1)
+  (ecx <- 21)
+  :LOOP1_TOP
+  (eax += 2)
+  (cjump eax < ecx :LOOP1_TOP :LOOP1_FIN)
+  (esi <- 7)
+  (eax <- (print esi))
+  :LOOP1_FIN
+  (eax <- (print eax))))
+
+

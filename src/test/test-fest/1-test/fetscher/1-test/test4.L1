@@ -1,0 +1,8 @@
+(((eax <- 1234567)
+  (call :zeroit)
+  (eax <- (print eax)))
+ (:zeroit
+  (ebx <- 0)
+  (eax &= ebx)
+  (eax += 1)
+  (return)))

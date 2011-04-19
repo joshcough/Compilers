@@ -1,0 +1,28 @@
+;; this is the (stupid) recursive version of fib, ie:
+;;   fib(0) = 1
+;;   fib(1) = 1
+;;   fib(n) = fib(n-1) + fib(n-2)
+;; it computes the answer as a regular L1 number and
+;; then encodes the number just before calling print
+
+(((eax <- 10)   ;; initial argument to fib.
+  (call :fib)   ;; the call
+  (eax += eax)  ;; encode & print
+  (eax += 1)
+  (eax <- (print eax)))
+ (:fib
+  (cjump eax < 2 :base :recur)
+  :base            ;; non-recursive case
+  (eax <- 1)       ;; store result
+  (return)         ;; return
+  :recur           ;; recursive case
+  (arg <- eax)     ;; save the argument
+  (arg -= 1)       ;; decrement the argument
+  (eax <- arg)     ;; prepare the argument
+  (call :fib)      ;; make first recursive call
+  (result <- eax)  ;; save the result of first call
+  (arg -= 1)       ;; decrement the arg again
+  (eax <- arg)     ;; prepare the argument
+  (call :fib)      ;; call
+  (eax += result)  ;; sum the two results
+  (return)))       ;; and we're done.

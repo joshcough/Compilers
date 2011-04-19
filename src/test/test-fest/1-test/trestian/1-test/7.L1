@@ -1,0 +1,22 @@
+(
+((call :first))
+
+(:first
+(edi <- 3)
+(eax <- (print edi))
+(call :second)
+(return))
+
+(:second
+(edi += 2)
+(eax <- (print edi))
+(call :third)
+(return))
+
+(:third
+(edi += 4)
+(eax <- (print edi))
+(return))
+
+
+)

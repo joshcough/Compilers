@@ -1,0 +1,10 @@
+;;2
+(((goto :start)
+  :_a1A
+  (eax <- 5)
+  (goto :done)
+  :start
+  (eax <- 3)
+  (goto :_a1A)
+  :done
+  (eax <- (print eax))))

@@ -1,0 +1,27 @@
+(((call :L_1))
+ (:L_1
+  (eax <- (allocate 15 0))
+  ((mem eax 4) <- 1)
+  ((mem eax 8) <- 3)
+  ((mem eax 12) <- 5)
+  ((mem eax 16) <- 7)
+  ((mem eax 20) <- 9)
+  ((mem eax 24) <- 11)
+  ((mem eax 28) <- 13)
+  (a <- eax)
+  (x_2 <- -1)
+  (bnds_3 <- (mem a 0))
+  (bnds_3 <<= 1)
+  (bnds_3 += 1)
+  (cjump x_2 < bnds_3 :oka_5 :die_4)
+  :oka_5
+  (cjump 0 <= x_2 :okb_6 :die_4)
+  :die_4
+  (eax <- (array-error a -1))
+  :okb_6
+  (x_2 >>= 1)
+  (x_2 *= 4)
+  (x_2 += a)
+  ((mem x_2 4) <- 643)
+  (eax <- 1)
+  (return)))

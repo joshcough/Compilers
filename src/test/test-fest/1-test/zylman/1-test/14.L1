@@ -1,0 +1,9 @@
+(((goto :part_1)
+  :part_1
+  (eax <- (print 1001))
+  (goto :end)
+  
+  :part_2
+  (eax <- (print 3))
+  
+  :end))

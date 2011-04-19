@@ -1,0 +1,19 @@
+((
+(call :foo)
+(eax <- (print eax)))
+(:foo
+(edx <- 9)
+(cjump 1 < 3 :true :false)
+:true
+(call :bar)
+(goto :done)
+:false
+(call :bar)
+(call :bar)
+(call :bar)
+:done
+(eax <- edx)
+(return))
+(:bar
+(edx += 2)
+(return)))

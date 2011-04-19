@@ -1,0 +1,35 @@
+; Test comparing registers to literals and other registers
+((
+  (eax <- 3)
+  (eax <- eax = 3)
+  (eax <- (print eax))  ; 0
+  
+  (ebx <- 4)
+  (eax <- 3 = ebx)
+  (eax += 11)
+  (eax <- (print eax))  ; 5
+  
+  (eax <- 5)
+  (ebx <- 7)
+  (eax <- eax < ebx)
+  (eax <- (print eax))  ; 0
+  
+  (eax <- 5)
+  (eax <- eax <= 6)
+  (eax <- (print eax))  ; 0
+  
+  (ebx <- 5)
+  (eax <- 7 < ebx)
+  (eax += 11)
+  (eax <- (print eax))  ; 5
+  
+  (ebx <- 6)
+  (eax <- ebx < ebx)
+  (eax += 11)
+  (eax <- (print eax))  ; 5
+  
+  (eax <- 6)
+  (eax <- eax <= 6)
+  (eax <- (print eax))  ; 0
+  
+))

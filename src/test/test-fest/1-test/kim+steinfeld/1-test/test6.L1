@@ -1,0 +1,16 @@
+((
+(edx <- 11)
+(ecx <- 21)
+
+(cjump edx < ecx :if :else)
+
+:if
+(eax <- (print edx))
+(goto :done)
+
+:else
+(eax <- (print ecx))
+
+:done
+))
+

@@ -1,0 +1,15 @@
+((
+(edi <- 5)
+(call :func1)
+)
+(:func1
+ :func2
+ :func3
+ :func4
+ :func5
+
+(eax <- (print edi))
+
+(return)
+)
+)

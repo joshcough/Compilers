@@ -1,0 +1,22 @@
+(((call :L_1))
+ (:L_1
+  (ecx <- 3)
+  (edx <- 5)
+  (call :f)
+  (v <- eax)
+  (eax <- (print v))
+  (eax <- eax)
+  (return))
+ (:f
+  (a <- ecx)
+  (b <- edx)
+  (c <- a < b)
+  (c += c)
+  (c += 1)
+  (cjump c = 1 :L_3 :L_2)
+  :L_3
+  (eax <- 5)
+  (return)
+  :L_2
+  (eax <- 3)
+  (return)))

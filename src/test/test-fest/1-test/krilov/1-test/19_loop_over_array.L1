@@ -1,0 +1,20 @@
+; Test looping over an array
+((
+  ; Allocate the array [7 7 7 7 7] and print each value in a loop
+  (eax <- (allocate 11 15))
+  (esi <- eax)
+  (esi += 4)    ; esi stores the address of the first element in the array (which is apparently 4 beyond the address of the array itself)
+  (edi <- esi)
+  (edi += 16)   ; edi stores the address of the last element in the array
+  
+  :loop
+  (cjump esi <= edi :keep_going :done)
+  
+  :keep_going
+  (eax <- (mem esi 0))
+  (eax <- (print eax))
+  (esi += 4)
+  (goto :loop)
+  
+  :done
+))

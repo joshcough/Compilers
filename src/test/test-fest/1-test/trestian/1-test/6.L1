@@ -1,0 +1,14 @@
+(
+(
+:this1
+(call :this2)
+(goto :this3)
+:this3
+)
+(
+:this2
+(edx <- -1)
+(eax <- (print edx))
+(return)
+)
+)

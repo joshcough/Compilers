@@ -1,0 +1,7 @@
+(((ebx <- 1)
+  (edx <- 0)
+  (cjump 0 < ebx :safety :danger)
+  :danger
+  (ecx <- (mem edx 0))
+  :safety
+  (eax <- (print 1))))

@@ -1,0 +1,14 @@
+(
+(
+(ebx <- 2147383647)
+(edx <- -2147483647)
+
+:loop
+(cjump edx < ebx :keep_going :done)
+:keep_going
+(edx += 100000)
+(goto :loop)
+:done
+(eax <- (print edx))
+)
+)

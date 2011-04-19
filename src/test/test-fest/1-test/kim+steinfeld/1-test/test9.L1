@@ -1,0 +1,15 @@
+((
+(edx <- 13)
+(ecx <- 7)
+(ecx *= 2)
+(ecx -= 1)
+
+(cjump  edx = ecx :if :else)
+
+:if
+(ecx *= 2)
+(ecx -= 1)
+
+:else
+(eax <- (print ecx)) 
+))

@@ -1,0 +1,4 @@
+(((x <- 11)
+  (y <- 13)
+  (eax <- (print x))
+  (eax <- (print y))))

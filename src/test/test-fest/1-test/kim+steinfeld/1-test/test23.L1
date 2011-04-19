@@ -1,0 +1,22 @@
+(
+ (
+  (eax <- 11)    ;; factorial argument
+  (esi <- 1)	 ;; accumulation
+  (call :factorial)
+  (esi *= 2)
+  (esi += 1)
+  (eax <- (print esi))
+ )
+
+ (:factorial
+  (cjump eax < 2 :base :recur)
+
+  :base
+  (return)
+
+  :recur
+  (esi *= eax)
+  (eax -= 1)
+  (tail-call :factorial)
+ )
+)

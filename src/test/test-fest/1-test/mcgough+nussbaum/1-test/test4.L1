@@ -1,0 +1,10 @@
+(((esi <- 27) ;;put 13 encoded into esi
+(esi >>= 1) ;; de-encode
+(edx <- 15) ;; put 7 encoded into edx
+(edx >>= 1) ;; de-encode
+(esi += edx) ;; add edx to esi
+(esi *= 2) ;; encode again
+(esi += 1)
+(eax <- esi)
+(eax <- (print eax))))
+

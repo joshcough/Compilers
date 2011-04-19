@@ -1,0 +1,46 @@
+;; This is wrong, there's a bug somewhere in the recursion
+;; Should produce an answer though
+(((eax <- 0)
+  (edi <- 0)
+  (call :ack)
+  (call :decode)
+  (eax <- (print eax)) ;; A(0,0) = 1
+  (eax <- 3)
+  (edi <- 0)
+  (call :ack)
+  (call :decode)
+  (eax <- (print eax)) ;; A(3,0) = 4
+  (eax <- 1)
+  (edi <- 3)
+  (call :ack) 
+  (call :decode)
+  (eax <- (print eax)) ;; A(1,3) = 5
+  (eax <- 3)
+  (edi <- 3)
+  (call :ack)
+  (call :decode)
+  (eax <- (print eax))) ;; A(3,3) = 61
+ (:ack
+  (cjump eax = 0 :ret :cont)
+  :ret
+  (eax <- edi)
+  (eax += 1)
+  (return)
+  :cont
+  (cjump edi = 0 :ack1 :ackfull)
+  :ack1
+  (eax -= 1)
+  (edi <- 1)
+  (tail-call :ack)
+  :ackfull
+  (esi <- eax)
+  (edi -= 1)
+  (call :ack)
+  (edi <- eax)
+  (eax <- esi)
+  (eax -= 1)
+  (tail-call :ack))
+ (:decode
+  (eax *= 2)
+  (eax += 1)
+  (return)))

@@ -1,0 +1,14 @@
+;; Array length
+(((eax <- (allocate 7 11))
+  (edi <- eax)
+  (eax <- (allocate 11 13))
+  (call :sum)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax)))
+ (:sum
+  (eax <- (mem eax 0))
+  (esi <- (mem edi 0))
+  (eax += esi)
+  (return)))
+

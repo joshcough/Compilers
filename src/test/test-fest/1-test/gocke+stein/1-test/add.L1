@@ -1,0 +1,5 @@
+(((edi <- 1) ;; Move 1 into eax
+  (edi += 1) ;; Add 1
+  (edi *= 2) ;; Convert
+  (edi += 1)
+  (eax <- (print edi))))

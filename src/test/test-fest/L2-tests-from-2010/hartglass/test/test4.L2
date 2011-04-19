@@ -1,0 +1,15 @@
+(((p <- 1)
+	(esi <- p)
+	(edi <- esi)
+	:start
+	(p += 2)
+	(edx <- p)
+	(eax <- (print edx))
+	(lbl <- :end)
+	(cjump 6 < 5 :start :e)
+	:e
+	(goto :end)
+	(eax <- (print 9999))
+	:end
+	(eax <- (print 9))
+	))

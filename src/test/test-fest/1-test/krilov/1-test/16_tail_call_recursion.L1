@@ -1,0 +1,14 @@
+; Test tail call recursion
+((
+  (edi <- 3)   ; recur 3 times
+  (call :rec)
+  )
+ (:rec
+   (eax <- (print 3))
+   (edi -= 1)
+   (cjump edi <= 0 :done :recur)
+   :recur
+   (tail-call :rec)
+   :done
+   (return))
+)

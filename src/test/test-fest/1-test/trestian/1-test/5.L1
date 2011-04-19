@@ -1,0 +1,20 @@
+((
+(ecx <- 25)
+(ebx <- 3)
+:loop
+(cjump ebx < ecx :keep_going :done)
+:keep_going
+(edx <- ebx)
+;;(eax <- (print edx))
+(call :func)
+(ebx <- edx)
+(ebx += 2)
+;;(call :func)
+:done
+(eax <- (print ebx))
+)
+(:func
+;;(eax <- (print ebx))
+(return)                       
+))
+

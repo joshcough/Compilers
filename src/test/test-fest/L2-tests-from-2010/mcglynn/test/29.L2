@@ -1,0 +1,13 @@
+(((eax <- (allocate 21 21))
+  (address <- eax)
+  (address += 4)
+  (end <- eax)
+  (end += 40)
+  (data <- 99)
+  :loop
+  ((mem address 0) <- data)
+  (data += 2)
+  (address += 4)
+  (cjump address <= end :loop :end)
+  :end
+  (eax <- (print eax))))

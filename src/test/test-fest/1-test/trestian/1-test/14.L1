@@ -1,0 +1,7 @@
+(
+(
+(esi <- 3)
+(eax <- (allocate esi 3))
+(eax <- (array-error eax 3))
+)
+)

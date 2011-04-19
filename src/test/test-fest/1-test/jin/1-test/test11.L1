@@ -1,0 +1,26 @@
+;test case 11
+(((esi <- 21)  
+  (eax <- (allocate esi 21))
+  (edi <- eax)  
+  (ebx <- 5)    
+  :loop
+  (cjump ebx < esi :keep_going :done)
+  :keep_going
+  (edx <- ebx)
+  (edx -= 2)    
+  (edx -= 1)   
+  (edx *= 2) 
+  (edx += edi) 
+  (edx += 4)   
+  (edx <- (mem edx 0))
+  (edx -= 2) 
+  (ecx <- ebx)
+  (ecx -= 1)   
+  (ecx *= 2)   
+  (ecx += 4)    
+  (ecx += edi) 
+  ((mem ecx 0) <- edx)
+  (ebx += 2)
+  (goto :loop)
+  :done
+  (eax <- (print edi))))

@@ -1,0 +1,15 @@
+(((call :func)
+  (eax <- 3)
+  (eax <- (print eax)))
+ (:func
+  (cjump 1 < 2 :true :false)
+  :true
+  (call :func2)
+  (return)
+  :false
+  (call :func2))
+ (:func2
+  :loop
+  (cjump 1 < 2 :exit :loop)
+  :exit
+  (return)))

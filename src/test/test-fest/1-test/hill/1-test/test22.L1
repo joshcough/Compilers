@@ -1,0 +1,19 @@
+;; #22 recursive, tail-call function calls
+(((eax <- 15)
+  (call :FN_A))
+  
+ (:FN_A
+  (esi <- eax)
+  (ecx <- eax)
+  (ecx <<= 1)
+  (ecx += 1)
+  (eax <- (print ecx))
+  (eax <- esi)
+  (cjump 0 < eax :GO :QUIT)
+  :GO
+  (eax -= 1)
+  (tail-call :FN_A)
+  :QUIT
+  (return)))
+
+

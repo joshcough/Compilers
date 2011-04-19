@@ -1,0 +1,68 @@
+(((eax <- 72)
+  (ebx <- eax)
+  (ecx <- eax)
+  (edx <- eax)
+  (esi <- eax)
+  (edi <- eax)
+
+  (ebx += 1)
+
+  (eax <- ebx)
+  (ecx <- ebx)
+  (edx <- ebx)
+  (esi <- ebx)
+  (edi <- ebx)
+  
+  (ecx += 1)
+
+  (eax <- ecx)
+  (ebx <- ecx)
+  (edx <- ecx)
+  (esi <- ecx)
+  (edi <- ecx)
+
+  (edx += 1)
+
+  (eax <- edx)
+  (ebx <- edx)
+  (ecx <- edx)
+  (esi <- edx)
+  (edi <- edx)
+
+  (esi += 1)
+
+  (eax <- esi)
+  (ebx <- esi)
+  (ecx <- esi)
+  (edx <- esi)
+  (edi <- esi)
+
+  (edi += 1)
+
+  (eax <- edi)
+  (ebx <- edi)
+  (ecx <- edi)
+  (edx <- edi)
+  (esi <- edi)
+
+  (eax *= 2)
+  (eax += 1)
+
+  (ebx *= 2)
+  (ebx += 1)
+
+  (ecx *= 2)
+  (ecx += 1)
+
+  (edx *= 2)
+  (edx += 1)
+
+  (esi *= 2)
+  (esi += 1)
+
+  (edi *= 2)
+  (edi += 1)
+
+  (eax <- (print eax))
+  (eax <- (print esi))
+  (eax <- (print edi))))

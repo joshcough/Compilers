@@ -1,0 +1,11 @@
+(((eax <- esp)
+  (esi <- eax)
+  (call :f)
+  (cjump esi < eax :lt :ge)
+  :lt
+  (eax <- (print 3))
+  (goto :done)
+  :ge
+  (eax <- (print 1))
+  :done)
+ (:f (eax <- esp) (return)))

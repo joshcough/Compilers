@@ -1,0 +1,17 @@
+((
+(edi <- 5)
+(esi <- 15)
+(ebx <- 25)
+(call :helper)
+)
+
+(:helper
+(eax <- (print edi))
+(eax <- (print esi))
+(cjump edi < esi :keep_going :done)
+:keep_going
+(return)
+:done
+(eax <- (print ebx))
+)
+)

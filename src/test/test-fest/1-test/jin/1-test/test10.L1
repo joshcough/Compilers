@@ -1,0 +1,6 @@
+;test case 10
+(((eax <- 11)
+  (esi <- eax)
+  (edi <- eax)
+  (eax <- (print esi))
+  (eax <- (print edi))))

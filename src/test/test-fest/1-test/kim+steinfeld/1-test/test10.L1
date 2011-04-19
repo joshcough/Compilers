@@ -1,0 +1,22 @@
+((
+(esi <- 21)  ;; loop termination
+(ebx <- 1)   ;; counter
+(edi <- 1)   ;; result
+
+:loop
+(cjump ebx < esi :keep_going :done)
+:keep_going
+
+;; add 2 
+(edx <- edi)
+(edx += 4)
+(edi <- edx)
+
+;; increase counter
+(ebx += 2)
+
+(goto :loop)
+
+:done
+(eax <- (print edi))
+))

@@ -1,0 +1,10 @@
+((
+(ecx <- 21)
+(edx <- 25)
+
+(ebx <- edx <= ecx)
+(ebx *= 2)
+(ebx += 1)
+
+(eax <- (print ebx))
+))

@@ -1,0 +1,18 @@
+(((eax <- 2)
+  (ebx <- 2)
+  (ecx <- 2)
+
+  :loop1
+  :loop2
+  (eax *= eax)
+  (ebx -= 1)
+  (cjump ebx = 0 :finish2 :loop2)
+  :finish2
+  (ebx <- 2)
+  (ecx -= 1)
+  (cjump ecx = 0 :finish1 :loop1)
+  :finish1
+
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax))))

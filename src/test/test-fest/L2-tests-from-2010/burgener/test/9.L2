@@ -1,0 +1,5 @@
+(((var <- 3)
+  (hi <- var)
+  (hi += 2)
+  (eax <- (print hi))
+  (eax <- (print var))))

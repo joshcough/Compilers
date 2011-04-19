@@ -1,0 +1,1 @@
+(((eax <- (allocate 1 1)) (eax <- (print eax))))

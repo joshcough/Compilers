@@ -1,0 +1,32 @@
+(
+ (
+  (eax <- (allocate 21 21))
+  (edx <- 1)
+  (call :number)
+  (eax <- (print eax))
+ )
+
+ (:number
+  (array <- eax)
+  (index <- edx)
+  (size <- (mem array 0))
+  (cjump index <= size :proceed :done)
+  :done
+  (return)
+
+  :proceed
+  (address <- index)
+  (address *= 4)
+  (address += array)
+  (data <- index)
+  (data *= 2)
+  (data += 1)
+  ((mem address 0) <- data)
+
+  (edx <- index)
+  (edx += 1)
+  (eax <- array)
+  (call :number)
+  (return)
+ )
+)

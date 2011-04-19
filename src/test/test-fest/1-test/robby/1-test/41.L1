@@ -1,0 +1,12 @@
+(((esi <- 4)
+  (edi <- 0)
+  (ebx <- 1)
+  :top
+  (cjump esi = edi :done :cont)
+  :cont
+  (eax <- (allocate 3 ebx))
+  (ebx <- eax)
+  (esi -= 1)
+  (goto :top)
+  :done
+  (eax <- (print ebx))))

@@ -1,0 +1,6 @@
+;; Check number bounds
+(((eax <- 65535)
+  (eax &= 1073676288)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax))))

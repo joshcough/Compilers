@@ -1,0 +1,21 @@
+;; #16 tail call function
+(((ebx <- 17)
+  (call :first_fn)
+  (eax <- (print eax)))
+  
+ (:first_fn
+  (esi <- 11)
+  (esi <<= 1)
+  (esi += 1)
+  (eax <- (print esi))
+  (tail-call :second_fn))
+ 
+ (:second_fn
+  (esi <- 19)
+  (esi <<= 1)
+  (esi += 1)
+  (eax <- (print esi))
+  (eax <- 49)
+  (return)))
+
+

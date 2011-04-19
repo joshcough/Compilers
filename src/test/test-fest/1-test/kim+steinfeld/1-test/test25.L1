@@ -1,0 +1,29 @@
+(
+ (
+  (eax <- 3)   ;; exponent
+  (esi <- 5)   ;; base
+  (call :exp) 
+  (eax <- esi)
+  (eax += eax)  
+  (eax += 1)
+  (eax <- (print eax)) 
+ )
+
+ (:exp
+  (esp -= 4)
+  ((mem ebp -4) <- esi)
+
+  :loop
+  (cjump 1 < eax :keep_going :done)
+
+  :keep_going
+  (eax -= 1)
+  (ebx <- (mem ebp -4))
+  (esi *= ebx)
+  (goto :loop)
+
+  :done
+  (esp += 4)
+  (return)
+ )
+)   

@@ -1,0 +1,32 @@
+(((call :a)
+  (eax <- (print eax)))
+ (:a
+  (cjump 1 < 2 :true :false)
+  :true
+  (call :b)
+  (return)
+  :false
+  (call :c)
+  (return))
+ (:b
+  (cjump 1 <= 1 :trueb :falseb)
+  :trueb
+  (call :d)
+  (return)
+  :falseb
+  (call :e)
+  (return))
+ (:c
+  (eax <- 0)
+  (return))
+ (:d
+  (cjump 1 = 2 :trued :falsed)
+  :trued
+  (eax <- 0)
+  (return)
+  :falsed
+  (eax <- 1)
+  (return))
+ (:e
+  (eax <- 0)
+  (return)))

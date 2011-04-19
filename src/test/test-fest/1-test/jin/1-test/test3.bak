@@ -1,0 +1,13 @@
+;;test case 3
+(((eax <- 1)
+  (call :fib)
+  (eax -= 2)
+  (eax <- (print eax)))
+ (:fib
+  (cjump eax < 2 :base :recur)
+  :base
+  (eax <- 31)
+  (return)
+  :recur
+  (eax <- 51)
+  (return)))

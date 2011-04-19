@@ -1,0 +1,14 @@
+(((eax <- 10)
+  (ebx <- eax)
+
+  :loop
+  (eax -= 1)
+  (cjump eax = 1 :finish :contloop)
+  :contloop
+  (ebx *= eax)
+  (goto :loop)
+
+  :finish
+  (ebx *= 2)
+  (ebx += 1)
+  (eax <- (print ebx))))

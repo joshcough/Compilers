@@ -1,0 +1,4 @@
+(((t <- 5)
+ (eax <- (print 7))
+ (u <- t)
+ (eax <- (print u))))

@@ -1,0 +1,32 @@
+(
+(
+  (ecx <- 11)
+  (eax <- (allocate ecx 5))
+  ((mem eax 4) <- 13)
+  ((mem eax 8) <- 19)
+  ((mem eax 12) <- 29)
+  ((mem eax 16) <- 51)
+  ((mem eax 20) <- 79)
+  (ecx <- 20)
+  (call :reverse)
+  (eax <- (print eax))
+)
+(:reverse
+  (edx <- ecx)
+  (esi <- 4)
+  (esi += eax)
+  (edx += eax)
+  :loop
+  (cjump esi = edx :else :if )
+  :if  
+  (edi <- (mem esi 0))
+  (ebx <- (mem edx 0))
+  ((mem esi 0) <- ebx)
+  ((mem edx 0) <- edi)
+  (esi += 4)
+  (edx -= 4)  
+  (goto :loop)
+  :else
+  (return)
+)
+)

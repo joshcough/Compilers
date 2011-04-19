@@ -1,0 +1,14 @@
+(
+ (
+  (eax <- 35)
+  (call :multby2)
+  (eax <- (print esi))
+ )
+
+ (:multby2
+  (esi <- eax)
+  (esi *= 2)
+  (esi -= 1)
+  (return)
+ )
+)

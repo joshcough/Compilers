@@ -1,0 +1,22 @@
+;; #17 tail call indirect function
+(((esi <- :first_fn)
+  (call esi)
+  (eax <- (print eax)))
+  
+ (:first_fn
+  (esi <- 16)
+  (esi <<= 1)
+  (esi += 1)
+  (eax <- (print esi))
+  (ecx <- :second_fn)
+  (tail-call ecx))
+ 
+ (:second_fn
+  (esi <- 12)
+  (esi <<= 1)
+  (esi += 1)
+  (eax <- (print esi))
+  (eax <- -201)
+  (return)))
+
+

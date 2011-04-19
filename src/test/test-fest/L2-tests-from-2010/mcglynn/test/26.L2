@@ -1,0 +1,17 @@
+(((i <- 1)
+  (sum_of_squares <- 0)
+  :loop
+  (a <- i)
+  (a *= a)
+  (disp_sq <- a)
+  (disp_sq *= 2)
+  (disp_sq += 1)
+  (eax <- (print disp_sq))
+  (sum_of_squares += a)
+  (i += 1)
+  (cjump i <= 10 :loop :end)
+  :end
+  (disp_sum <- sum_of_squares)
+  (disp_sum *= 2)
+  (disp_sum += 1)
+  (eax <- (print disp_sum))))

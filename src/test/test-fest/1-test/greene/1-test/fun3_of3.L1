@@ -1,0 +1,12 @@
+(((eax <- 93)
+  (call :fun2)
+  (eax <- (print eax)))
+ (:fun0
+  (eax += 63)
+  (return))
+ (:fun1
+  (eax -= 567)
+  (return))
+ (:fun2
+  (eax -= 2)
+  (return)))

@@ -1,0 +1,13 @@
+;; Create a long tail recursion -- shouldn't die
+(((eax <- 10000)
+  (call :recur_not_recurse)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax)))
+ (:recur_not_recurse
+  (cjump eax = 0 :ret :recur)
+  :ret
+  (return)
+  :recur
+  (eax -= 1)
+  (tail-call :recur_not_recurse)))

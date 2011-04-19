@@ -1,0 +1,10 @@
+;test case 6
+(((eax <- 9)
+  (esp -= 4)
+  ((mem ebp -4) <- eax)
+  (eax += 2)
+  (eax <- (print eax))
+  (eax <- (mem ebp -4))
+  (eax <- (print eax))
+  (esp += 4)
+  ))

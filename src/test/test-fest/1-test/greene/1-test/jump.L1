@@ -1,0 +1,7 @@
+(((eax <- 13)
+  (cjump eax <= 17 :go :end)
+  :go
+  (eax += 15)
+  (eax -= 1)
+  :end
+  (eax <- (print eax))))

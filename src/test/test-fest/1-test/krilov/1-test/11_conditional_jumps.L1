@@ -1,0 +1,35 @@
+; Test conditional jumps
+((
+  :print1
+  (eax <- (print 3))
+  ; Test comparing literals & taking the true branch
+  (cjump 3 < 5 :print3 :bad)  ; should go to :print3
+  
+  :print2
+  (eax <- (print 5))
+  ; Test comparing registers & taking the true branch
+  (eax <- 3)
+  (ebx <- 5)
+  (cjump eax < ebx :print4 :bad)  ; should go to :print4
+  
+  :print3
+  (eax <- (print 7))
+  ; Test comparing literals & taking the false branch
+  (cjump 6 < 6 :bad :print2)  ; should go to :print2
+  
+  :print4
+  (eax <- (print 9))
+  ; Test comparing registers & taking the false branch
+  (eax <- 5)
+  (ebx <- 3)
+  (cjump eax < ebx :bad :print5)  ; should go to :print5
+  
+  :print5
+  (eax <- (print 11))
+  (goto :done)
+  
+  :bad
+  (eax <- (print 999999))  ; 499999
+  
+  :done
+))

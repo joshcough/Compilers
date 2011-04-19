@@ -1,0 +1,20 @@
+;; #21 recursive, non tail-call function calls
+(((eax <- 10)
+  (call :FN_A))
+  
+ (:FN_A
+  (edi <- eax)
+  (ecx <- eax)
+  (ecx <<= 1)
+  (ecx += 1)
+  (eax <- (print ecx))
+  (eax <- edi)
+  (cjump 0 < eax :GO :QUIT)
+  :GO
+  (eax -= 1)
+  (call :FN_A)
+  (return)
+  :QUIT
+  (return)))
+
+

@@ -1,0 +1,31 @@
+(
+ (
+  (edx <- 21)    ;; factorial argument
+  (call :factorial)
+  (eax <- (print edi))
+ )
+
+ (:factorial
+  (esi <- edx)   ;;counter
+  (esi -= 1)
+  (esi >>= 1)
+
+  (edi <- 3)     ;;result
+  (edi -= 1)
+  (edi >>= 1)
+
+  :loop
+  (cjump 1 < esi :keep_going :done)
+
+  :keep_going
+  (edi *= esi)
+  (esi -= 1)
+  (goto :loop)
+
+  :done 
+  (edi *= 2)
+  (edi += 1)
+  
+  (return)
+ )
+)

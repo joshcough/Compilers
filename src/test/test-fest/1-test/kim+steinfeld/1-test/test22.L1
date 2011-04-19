@@ -1,0 +1,40 @@
+(
+ (
+  (ecx <- 7)
+  (eax <- (allocate ecx 5))
+  ((mem eax 4) <- 13)
+  ((mem eax 8) <- 19)
+  ((mem eax 12) <- 29)
+  (ecx <- 7)	
+  (call :squarearray)
+  (eax <- (print eax))
+ )
+
+ (:squarearray
+  (esi <- 3)
+
+  :loop
+  (cjump esi <= ecx :if :end)
+
+  :if
+  (edi <- esi)
+  (edi -= 1)
+  (edi >>= 1)
+  (edi *= 4)
+  (edi += eax)
+
+  (ebx <- (mem edi 0))
+  (ebx -= 1)
+  (ebx >>= 1)
+  (ebx *= ebx)
+  (ebx <<= 1)
+  (ebx += 1)
+  ((mem edi 0) <- ebx)
+
+  (esi += 2)
+  (goto :loop)
+
+  :end
+  (return)
+ )
+)

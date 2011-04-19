@@ -1,0 +1,17 @@
+;test case 19
+(((eax <- 10)
+  (ebx <- eax)
+  (call :fac)
+  (eax <- (print eax)))
+  (:fac
+   (cjump ebx = 1 :base :recure)
+   :base
+   (eax *= 1)
+   (return)
+   :recure
+   (edx <- eax)
+   (eax -= 1)
+   (eax *= edx)
+   (ebx -= 1)
+   (eax -= 1)
+   (return)))

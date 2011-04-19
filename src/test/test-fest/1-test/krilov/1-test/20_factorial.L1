@@ -1,0 +1,21 @@
+; A function that computes the factorial of a number
+((
+  ; Find 7!
+  (eax <- 1)
+  (ebx <- 7)
+  (call :fac)
+  
+  ; Encode result for printing
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax))
+  )
+ (:fac
+   (cjump ebx <= 1 :done :recur)
+   :recur
+   (eax *= ebx)
+   (ebx -= 1)
+   (tail-call :fac)
+   :done
+   (return))
+)

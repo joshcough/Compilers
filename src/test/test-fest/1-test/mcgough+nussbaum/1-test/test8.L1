@@ -1,0 +1,8 @@
+(((edx <- 67)
+(edx >>= 1)
+(edx *= 2)
+(edx *= 2)
+(edx += 1)
+:unusedlabel
+(eax <- edx)
+(eax <- (print eax))))

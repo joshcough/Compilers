@@ -1,0 +1,5 @@
+((
+  (eax <- 7) ; set eax to 3
+  (eax -= 2) ; decrement eax. 111 - 10 = 101 = 5 = 2
+  (eax <- (print eax))
+))

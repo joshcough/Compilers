@@ -1,0 +1,5 @@
+(((cvar <- 7)
+  (goto :end)
+  (cvar += 2)
+  :end
+  (eax <- (print cvar))))

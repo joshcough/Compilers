@@ -1,0 +1,15 @@
+(((call :numberone)
+  (eax <- (print eax)))
+ (:numberone
+  (call :numberthree)
+  (call :numbertwo)
+  (eax += 1)
+  (return))
+ (:numbertwo
+  (call :numberthree)
+  (eax <<= 1)
+  (return))
+ (:numberthree
+  (eax <- 9)
+  (return)))
+

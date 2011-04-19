@@ -1,0 +1,5 @@
+(((goto :l2)
+  :l1
+  (eax <- (print 5))
+  :l2
+  (eax <- (print 7))))

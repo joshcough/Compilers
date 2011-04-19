@@ -1,0 +1,8 @@
+(((a <- 1)
+  (b <- 3)
+  (c <- 5)
+  (d <- 7)
+  (eax <- (print a))
+  (eax <- (print b))
+  (eax <- (print c))
+  (eax <- (print d))))

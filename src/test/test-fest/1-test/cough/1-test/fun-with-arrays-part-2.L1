@@ -1,0 +1,39 @@
+((
+  (eax <- (allocate 101 3)) ; size 50 array of 1's.
+  (edi <- eax) ; save the array pointer in edi
+  (esi <- 50) ; the array index
+  (edx <- 1) ; what to put in the array
+
+  ; fill the array backwards so it contains 50 -> 1
+  :filler
+
+  (ecx <- esi) ; save the current index in ecx
+  (ecx *= 4) ; times by 4 for the real array position
+  (ecx += edi) ; add in the base pointer 
+  (ebx <- edx) ; encode edx in ebx
+  (ebx *= 2)
+  (ebx += 1)
+  ((mem ecx 0) <- ebx)
+
+  (esi -= 1)
+  (edx += 1)
+  (cjump esi < 1 :printer :filler)
+
+  :printer
+  (esi <- 1)
+
+  :printer2
+  ; print the elements in the array from start to finish
+  (ecx <- esi) ; esi is still the array index
+  (ecx *= 4) ; get the real array index
+  (ecx += edi) ; add in the base pointer
+  (ecx <- (mem ecx 0)) ; put the 1st element into ecx
+  (eax <- (print ecx)) ; print it
+  (edx <- 51)
+  (esi += 1)
+  (cjump esi < edx :printer2 :ender)
+
+  :ender
+  ; should print the entire array since edi is the pointer to it.
+  (eax <- (print edi)) 
+))

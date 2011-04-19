@@ -1,0 +1,11 @@
+;; #15 indirect function
+(((ecx <- 5)
+  (edx <- :indirect_fn)
+  (call edx)
+  (eax <- (print eax)))
+  
+ (:indirect_fn
+  (eax <- 7)
+  (return)))
+
+

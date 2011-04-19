@@ -1,0 +1,27 @@
+((
+(eax <- 1)
+:loops
+(call :foo)
+(cjump eax < 999 :loops :done)
+:done
+(eax <- (print eax)))
+(:foo
+(call :bar)
+(call :bar)
+(call :bar)
+(return))
+(:bar
+(call :baz)
+(call :qux)
+(call :quux)
+(return))
+(:baz
+(call :qux)
+(call :qux)
+(return))
+(:qux
+(call :quux)
+(return))
+(:quux
+(eax += 8)
+(return)))

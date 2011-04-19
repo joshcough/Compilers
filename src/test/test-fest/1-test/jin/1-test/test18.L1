@@ -1,0 +1,8 @@
+;test case 18
+(((eax <- 32)
+  ((mem esp -4) <- eax)
+  (eax += 5)
+  (eax <- (print eax))
+  (eax <- (mem esp -4))
+  (eax <- (print eax))
+  ))

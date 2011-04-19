@@ -1,0 +1,16 @@
+;; #12 label case sensitivity
+(((eax <- 5)
+  (ebx <- 5)
+  (cjump eax = ebx :GOOD_PLACE :good_place)
+  :good_place
+  (eax <- 7)
+  (eax <<= 1)
+  (eax += 1)
+  (eax <- (print eax))
+  :GOOD_PLACE
+  (eax <- 13)
+  (eax <<= 1)
+  (eax += 1)
+  (eax <- (print eax))))
+
+

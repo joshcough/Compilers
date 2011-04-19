@@ -1,0 +1,20 @@
+((
+(edi <- 3)
+(eax <- (print edi))
+
+(esi <- 71)
+(ebx <- 13)
+
+:loop
+(cjump ebx < esi :keep_going :done)
+
+:keep_going
+(edi <<= 1)
+(edi += 1)
+;;(eax <- (print edi))
+(ebx += 2)
+
+(goto :loop)
+:done
+(eax <- (print edi))
+))

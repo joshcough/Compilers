@@ -1,0 +1,22 @@
+((
+(esi <- 7)
+(eax <- (allocate esi 5))
+
+((mem eax 4) <- 15)
+((mem eax 8) <- 21)
+(ebx <- (mem eax 4))
+(edx <- (mem eax 8))
+
+(cjump ebx < edx :if :else)
+
+:if
+((mem eax 12) <- 51)
+(goto :done)
+
+:else
+((mem eax 12) <- 101)
+
+:done
+(edx <- (mem eax 12))
+(eax <- (print edx))
+))

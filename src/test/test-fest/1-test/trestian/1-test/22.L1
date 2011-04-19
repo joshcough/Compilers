@@ -1,0 +1,12 @@
+((
+(edi <- 3)
+(esi <- 5)
+
+(cjump edi < esi :then :else)
+:then
+(eax <- (print edi))
+(goto :done)
+:else
+(eax <- (print esi))
+:done
+))

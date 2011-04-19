@@ -1,0 +1,14 @@
+;; #19 cjump with nums
+(((cjump 5 < 6 :good1 :bad)
+  :good1
+  (cjump 11 <= -13 :bad :good2)
+  :good2
+  (cjump 15 = 15 :good3 :bad)
+  :good3
+  (eax <- (print 41))
+  (goto :end)
+  :bad
+  (eax <- (print 21))
+  :end))
+
+

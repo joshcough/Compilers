@@ -1,0 +1,7 @@
+(((eax <- 7)
+  (eax *= 42)
+  (eax += 1337)
+  (eax -= 13)
+  (eax <<= 1)
+  (eax += 1)
+  (eax <- (print eax))))

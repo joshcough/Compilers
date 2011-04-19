@@ -1,0 +1,23 @@
+;; #13 stack memory usage
+(((eax <- esp)
+  (esp -= 32)
+  ((mem esp 0) <- 17)
+  ((mem esp 4) <- 19)
+  ((mem esp 8) <- 21)
+  ((mem esp 12) <- 33)
+  (esi <- 0)
+  :loop_top
+  (esi += 1)
+  (eax <- (mem esp 0))
+  (eax <- (print eax))
+  (eax <- (mem esp 4))
+  (eax <- (print eax))
+  (eax <- (mem esp 8))
+  (eax <- (print eax))
+  (eax <- (mem esp 12))
+  (eax <- (print eax))
+  (cjump esi < 3 :loop_top :loop_fin)
+  :loop_fin
+  (esp += 32)))
+
+
