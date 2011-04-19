@@ -9,26 +9,72 @@ class L2CompilerTests extends L2CompilerTest {
     """(((x <- 7)
         |(eax <- (print x))
         |(return)))""",
-    expected=
+    expected=Some(
     """(((eax <- 7)
         |(eax <- (print eax))
-        |(return)))""")
+        |(return)))"""))
 
-//
-//  // interesting case here.... y isnt in the in or out set anywhere...
-//  // why? shouldnt it be in the out set of its own assignment statement? maybe not...
-//  // this could possibly be a case where we can whack that entire statement altogether,
-//  // because it didnt appear in the in or out set.
-//  testCompile("(((x <- 7)(y <- 8)(eax <- (print x))))" -> """
-//(((edx <- ebx)
-//(ecx <- edi)
-//(eax <- esi)
-//(ebx <- 7)
-//(print ebx)
-//(ebx <- edx)
-//(edi <- ecx)
-//(esi <- eax))
-//)""")
+  testCompile(
+    input=
+    """(((eax <- 7)
+        |(ebx <- 7)
+        |(ecx <- 7)
+        |(edx <- 7)
+        |(edi <- 7)
+        |(esi <- 7)
+        |(r:x <- eax)
+        |(r:x += ebx)
+        |(r:x += ecx)
+        |(r:x += edx)
+        |(r:x += edi)
+        |(r:x += esi)
+        |(r:x += eax)
+        |(return)))""",
+    error = Some("allocation impossible"))
+
+  testCompile(
+    input=
+    """(((eax <- 7)
+        |(ebx <- 7)
+        |(ecx <- 7)
+        |(edx <- 7)
+        |(r:x <- eax)
+        |(r:x += ebx)
+        |(r:x += ecx)
+        |(r:x += edx)
+        |(r:x += eax)
+        |(return)))""",
+    expected = Some(
+    """((((mem ebp -4) <- edi)
+        |(esi <- esi)
+        |(eax <- 7)
+        |(ebx <- 7)
+        |(ecx <- 7)
+        |(edx <- 7)
+        |(edi <- eax)
+        |(edi += ebx)
+        |(edi += ecx)
+        |(edi += edx)
+        |(edi += eax)
+        |(edi <- (mem ebp -4))
+        |(esi <- esi)
+        |(return)))"""))
+
+  // interesting case here.... y isnt in the in or out set anywhere...
+  // why? shouldnt it be in the out set of its own assignment statement? maybe not...
+  // this could possibly be a case where we can whack that entire statement altogether,
+  // because it didnt appear in the in or out set. JC 4/2010
+
+  // JC 4/18/2011 knows the answer. y isn't in its own out set because it is never used.
+  // and yes, we can whack that assignment statement.
+  // TODO: if we have an assignment statement and the variable doesn't appear in its
+  // own out set, the whole statement is dead. this must apply for registers too.
+  testCompile(
+    input = "(((x <- 7)(y <- 8)(eax <- (print x))))",
+    expected = Some("""
+        |(((eax <- 7)
+        |(ebx <- 8)
+        |(eax <- (print eax))))"""))
 
 }
 
@@ -65,16 +111,26 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite with L2CompilerExtr
     }
   }
 
-  def testCompile(input:String, expected:String): Unit = {
-    test(input){
-      val actual = L2Printer.toCode(compile(input.clean))
-      if(actual != expected.clean){
-        println("compile test failed")
-        println("code: " + input.clean)
-        println("expected: " + expected.clean)
-        println("actual: " + actual)
+  def testCompile(input:String, expected:Option[String] = None, error: Option[String] = None): Unit = {
+    test(input.clean){
+      if(expected == None && error == None) throw new IllegalStateException()
+
+      try{
+        val actual = toCode(compile(input.clean))
+        if(! expected.isDefined) throw new IllegalStateException("expected error, but didnt get one!")
+        if(actual != expected.get.clean){
+          println("compile test failed")
+          println("code: " + input.clean)
+          println("expected: " + expected.get.clean)
+          println("actual: " + actual)
+        }
+        assert(actual === expected.get.clean)
+      } catch{
+        case e => error match {
+          case Some(message) => assert(e.getMessage === message)
+          case None => throw e
+        }
       }
-      assert(actual === expected.clean)
     }
   }
 }

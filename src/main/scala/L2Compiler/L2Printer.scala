@@ -1,6 +1,8 @@
 package L2Compiler
 
-object L2Printer {
+object L2Printer extends L2Printer
+
+trait L2Printer {
   import L2AST._
   def toCode(a:L2ASTNode): String = a match {
     case L2(main, funcs) => (main :: funcs).map(toCode).mkString("(", "\n", ")")
@@ -30,5 +32,28 @@ object L2Printer {
     case r:Register => r.name
     case v:Variable => v.name
   }
+
+
+  def printAllocation(opairs: Option[Map[Variable, Register]]) = opairs match {
+    case Some(pairs) =>
+      pairs.keys.toList.sortWith(_<_).map(v =>
+        "(" + toCode(v) + " " + toCode(pairs(v)) + ")").mkString("(", " ", ")")
+    case _ => "#f"
+  }
+
   def toCodeSorted(is:Iterable[L2ASTNode]): String = is.map(toCode).toList.sorted.mkString("(", " ", ")")
+
+  def toCode(iios:InstructionInOutSet): String =
+    "(" + toCode(iios.inst) + " " + toCodeSorted(iios.in) + " " + toCodeSorted(iios.out) + ")"
+
+  def hwView(inouts: List[InstructionInOutSet]) = {
+    val inSet = inouts.map(_.in).map(L2Printer.toCodeSorted).mkString(" ")
+    val outSet = inouts.map(_.out).map(toCodeSorted).mkString(" ")
+    "((in " + inSet + ") (out " + outSet + "))"
+  }
+  def testView(inouts: List[InstructionInOutSet]) = inouts.map(toCode).mkString("\n")
+
+  def toCode(lr:LiveRange): String = "(" + toCode(lr.x) + " " + lr.range + ")"
+  def printLiveRanges(ranges:List[List[LiveRange]]) =
+    ranges.map(_.map(toCode).mkString(" ")).mkString("(", "\n", ")")
 }

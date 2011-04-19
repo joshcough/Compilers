@@ -413,7 +413,7 @@ class LivenessTest extends L2CompilerTest {
   new java.io.File("./liveness-test").mkdir()
   def livenessTest(code:String, expected:String, step: Option[Int] = None) = {
     val insAndOuts = inoutForTesting(code.clean, step=step)
-    val actual = insAndOuts.mkString("\n")
+    val actual = L2Printer.testView(insAndOuts)
     if(actual.clean != expected.clean){
       println("code:\n" + code.clean)
       println("actual:\n" + actual.clean)
@@ -430,8 +430,8 @@ class LivenessTest extends L2CompilerTest {
       // write the test
       new File("./liveness-test/test" + index + ".L2f").write(code.clean)
       // write the expected result
-      assert(LivenessMain.liveness(code.clean) === InstructionInOutSet.hwView(insAndOuts))
-      new File("./liveness-test/test" + index + ".lres").write(InstructionInOutSet.hwView(insAndOuts))
+      assert(LivenessMain.liveness(code.clean) === L2Printer.hwView(insAndOuts))
+      new File("./liveness-test/test" + index + ".lres").write(L2Printer.hwView(insAndOuts))
     }
   }
 }
@@ -453,15 +453,15 @@ class LiveRangeTests extends L2CompilerTest {
       |(eax += y5) ;; add h's res to y*5
       |(return)) ;; and we're done""".stripMargin.trim
 
-    assert(LiveRange.print(liveRanges(inoutForTesting(code))) === """
+    assert(printLiveRanges(liveRanges(inoutForTesting(code))) === """
       |((eax 10)
-      |(y5 2)
+      |(ecx 6)
       |(edi 10)
       |(edx 6)
       |(esi 10)
-      |(ecx 6)
       |(x 3)
-      |(y 3))""".stripMargin.trim)
+      |(y 3)
+      |(y5 2))""".stripMargin.trim)
   }
 
   test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p73)"){
@@ -478,15 +478,14 @@ class LiveRangeTests extends L2CompilerTest {
       |(eax += y5)
       |(return))""".stripMargin.trim
 
-    assert(LiveRange.print(liveRanges(inoutForTesting(code))) === """
+    assert(printLiveRanges(liveRanges(inoutForTesting(code))) === """
       |((eax 11)
-      |(y5 2)
+      |(ecx 7)
       |(edi 11)
       |(edx 7)
       |(esi 11)
-      |(ecx 7)
-      |(ebp 8)
-      |(sx0 1))""".stripMargin.trim)
+      |(sx0 1)
+      |(y5 2))""".stripMargin.trim)
   }
 
   test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p95)"){
@@ -506,16 +505,16 @@ class LiveRangeTests extends L2CompilerTest {
       |(esi <- z2)
       |(return))""".stripMargin.trim
 
-    assert(LiveRange.print(liveRanges(inoutForTesting(code))) === """
-      |((z2 10)
-      |(eax 14)
-      |(y5 2)
+    assert(printLiveRanges(liveRanges(inoutForTesting(code))) === """
+      |((eax 14)
+      |(ecx 8)
       |(edi 2) (edi 2)
       |(edx 8)
       |(esi 3) (esi 1)
-      |(ecx 8)
       |(x 3)
       |(y 3)
-      |(z1 10))""".stripMargin.trim)
+      |(y5 2)
+      |(z1 10)
+      |(z2 10))""".stripMargin.trim)
   }
 }

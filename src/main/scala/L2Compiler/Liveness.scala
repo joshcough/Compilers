@@ -1,7 +1,6 @@
 package L2Compiler
 
 import L2AST._
-import L2Printer._
 
 object LivenessMain {
   import io.FileHelper._
@@ -12,10 +11,14 @@ object LivenessMain {
 
   //  % liveness f.L2f
   //  ((in (eax) (eax x)) (out (eax x) ()))
-  def liveness(code:String) = InstructionInOutSet.hwView(inoutForTesting(code))
+  def liveness(code:String) = L2Printer.hwView(inoutForTesting(code))
 }
 
 object Liveness extends Liveness
+
+// TODO: probably should fill in the usages variable.
+case class LiveRange(x:X, range:Int, usages:Int=0)
+case class InstructionInOutSet(index: Int, inst:Instruction, gen:Set[X], kill:Set[X], in:Set[X], out:Set[X])
 
 trait Liveness {
 
@@ -142,14 +145,6 @@ trait Liveness {
     inout(List(emptyStartSet))
   }
 
-  object LiveRange {
-    def print(ranges:List[List[LiveRange]]) = ranges.map(_.mkString(" ")).mkString("(", "\n", ")")
-  }
-
-  case class LiveRange(x:X, range:Int){
-    override def toString = "(" + toCode(x) + " " + range + ")"
-  }
-
   def liveRanges(iioss: List[InstructionInOutSet]): List[List[LiveRange]] = {
     def liveRanges(x: X, sets: List[List[X]]): List[LiveRange] = sets match {
       case Nil => Nil
@@ -161,19 +156,9 @@ trait Liveness {
       }
     }
     val inSets = iioss.map(_.in)
-    val variablesAndRegisters = inSets.foldLeft(Set[X]()){ case (acc, s) => acc union s}
-    for(x <- variablesAndRegisters.toList) yield liveRanges(x, inSets.map(_.toList))
+    val variablesAndRegisters = inSets.foldLeft(Set[X]()){
+      case (acc, s) => acc union s
+    }.filterNot(x => x == ebp || x == esp)
+    for(x <- variablesAndRegisters.toList.sorted) yield liveRanges(x, inSets.map(_.toList))
   }
-}
-
-object InstructionInOutSet {
-  def hwView(inouts: List[InstructionInOutSet]) = {
-    val inSet = inouts.map(_.in).map(toCodeSorted).mkString(" ")
-    val outSet = inouts.map(_.out).map(toCodeSorted).mkString(" ")
-    "((in " + inSet + ") (out " + outSet + "))"
-  }
-}
-
-case class InstructionInOutSet(index: Int, inst:Instruction, gen:Set[X], kill:Set[X], in:Set[X], out:Set[X]){
-  override def toString = "(" + toCode(inst) + " " + toCodeSorted(in) + " " + toCodeSorted(out) + ")"
 }

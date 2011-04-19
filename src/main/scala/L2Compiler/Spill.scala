@@ -24,7 +24,7 @@ object SpillMain {
     val newProgram = L2CompilerExtras.spill(
       Variable(varToSpill.toString.drop(1)), offset.toString.toInt,
       prefix.toString.drop(1), parseListOfInstructions(program.asInstanceOf[List[Any]]))
-      newProgram.map(L2Printer.toCode).mkString("(", " ", ")")
+    newProgram.map(toCode).mkString("(", " ", ")")
   }
 }
 

@@ -87,8 +87,12 @@ trait Interference {
     }.toSet)
   }
 
-  def attemptAllocation(iioss:List[InstructionInOutSet]): Option[Map[Variable, Register]] = {
-    def attemptAllocation(graph:InterferenceGraph): Option[Map[Variable, Register]] = {
+  // the second thing returned here is the progress we were actually able to make.
+  def attemptAllocation(iioss:List[InstructionInOutSet]):
+    (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
+
+    def attemptAllocation(graph:InterferenceGraph):
+      (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
       //println("graph: " + graph.hwView)
       val variables: Set[Variable] = graph.data.members.collect{ case v: Variable => v }
       //println("variables: " + variables)
@@ -118,7 +122,8 @@ trait Interference {
       // see if any variables were unpaired with a register
       val anyVariablesUnpaired = finalPairings.find{ case (v, or) => ! or.isDefined }
       // if so, the graph was uncolorable. if not, return the pairings (but strip off the Option wrapper)
-      if(anyVariablesUnpaired.isDefined) None else Some(finalPairings.map{ case (v, or) => (v, or.get)})
+      if(anyVariablesUnpaired.isDefined) (None, finalPairings)
+      else (Some(finalPairings.map{ case (v, or) => (v, or.get)}), finalPairings)
     }
     //println("iioss: " + iioss)
     attemptAllocation(buildInterferenceSet(iioss))

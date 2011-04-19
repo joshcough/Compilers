@@ -166,7 +166,7 @@ class InterferenceGraphTests extends L2CompilerTest {
   def interferenceGraph(code:String) =
     buildInterferenceSet(inoutForTesting(code.clean, step=End))
 
-  test("coloring"){
+  test("colorable graph"){
     val code = """
       |(:f
       |((mem ebp -4) <- edi)
@@ -182,11 +182,32 @@ class InterferenceGraphTests extends L2CompilerTest {
       |(edi <- (mem ebp -4))
       |(esi <- (mem ebp -8))
       |(return))"""
-    // TODO: this variable is not used
-    val interference = interferenceGraph(code)
-    println(interference.hwView)
-    val actual = attemptAllocation(inoutForTesting(code.clean, step=End))
-    println(actual)
+    val actual = printAllocation(attemptAllocation(inoutForTesting(code.clean, step=End))._1)
+    assert(actual === "((x edi) (y esi) (y5 ebx))")
   }
 
+  test("uncolorable graph"){
+    val code = """
+      |((r:x <- eax)
+      |(r:x += ebx)
+      |(r:x += ecx)
+      |(r:x += edx)
+      |(r:x += edi)
+      |(r:x += esi)
+      |(r:x += eax))""".clean
+    val interference = interferenceGraph(code)
+    assert(interference.hwView === """
+((eax ebx ecx edi edx esi r:x)
+(ebx eax ecx edi edx esi r:x)
+(ecx eax ebx edi edx esi r:x)
+(edi eax ebx ecx edx esi r:x)
+(edx eax ebx ecx edi esi r:x)
+(esi eax ebx ecx edi edx r:x)
+(r:x eax ebx ecx edi edx esi))""".trim)
+    assert(printAllocation(attemptAllocation(inoutForTesting(code, step=End))._1) === "#f")
+//    println("spill var: " + chooseSpillVar(liveRanges(inoutForTesting(code))))
+//    val spillVar = chooseSpillVar(liveRanges(inoutForTesting(code))).get
+//    val newProgram = spill(spillVar, -4, parseListOfInstructions(code))
+//    println("code after spilling: " + newProgram.map(L2Printer.toCode).mkString("(", "\n", ")"))
+  }
 }

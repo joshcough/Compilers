@@ -1,9 +1,10 @@
 package L2Compiler
 
 import java.io.File
-import L2AST._
+
 import io.FileHelper._
 import io.Reader
+import L2AST._
 
 // TODO: note...after we register allocate, we know how much space we need on the stack
 // then we have to do one more thing...make some space on the stack
@@ -17,7 +18,7 @@ trait L2Compiler extends Reader with L2Parser with Rewriter {
   def parseProgram(s:String) = parse(read(s))
   def compileFile(filename:String) = compile(new File(filename).read)
   def compile(code: String): L2 = rewrite(parseProgram(code))
-  def compileToString(code:String): String = L2Printer.toCode(compile(code))
+  def compileToString(code:String): String = toCode(compile(code))
 }
 
 object L2CompilerExtras extends L2CompilerExtras
@@ -31,10 +32,10 @@ trait L2CompilerExtras extends L2Compiler {
   }
 }
 
-trait Rewriter extends Spill with Liveness with Interference {
+trait Rewriter extends Spill with Liveness with Interference with L2Printer {
 
   def rewrite(ast: L2): L2 = {
-    //println("rewriting: " + L2Printer.toCode(ast))
+    //println("rewriting: " + toCode(ast))
     val newL2FunctionsAndRegisterAllocations = (ast.main :: ast.funs).map(f => allocateCompletely(f))
     val l1OneFunctions = newL2FunctionsAndRegisterAllocations.map {
       case (f, allocs) => new VariableToRegisterReplacer(allocs).replaceVarsWithRegisters(f)
@@ -45,39 +46,62 @@ trait Rewriter extends Spill with Liveness with Interference {
   }
 
   def allocateCompletely(f: Func): (Func, Map[Variable, Register]) = {
-    //println("allocating for: " + L2Printer.toCode(f))
+    //println("allocating for: " + toCode(f))
     // first, try to see if we can do allocation without any rewriting
     //println("----inoutFinalResult-----: " + inoutFinalResult(f))
-    attemptAllocation(inoutFinalResult(f)) match {
+    attemptAllocation(inoutFinalResult(f))._1 match {
       case Some(registerMap) => {
-        //println("first attempt to color was good!")
-        //println("registerMap: " + registerMap)
+//        println("first attempt to color was good!")
+//        println("registerMap: " + registerMap)
         (f, registerMap)
       }
       case _ => {
+//        println("first attempt to color failed!")
         // then if it fails, rewrite until we can color
         def allocateCompletely(f: Func, offset: Int): (Func, Map[Variable, Register]) = {
-          attemptAllocation(inoutFinalResult(f)) match {
+          val inoutset = inoutFinalResult(f)
+//          println(testView(inoutset))
+          val alloc = attemptAllocation(inoutset)
+          alloc._1 match {
             case Some(registerMap) => (f, registerMap)
             case None => {
-              val newFunction = Func(spill(chooseSpillVar(liveRanges(inoutFinalResult(f))).get, offset, f.body))
-              allocateCompletely(newFunction, offset - 4)
+//              println("needing to spill")
+//              println("allocation was: " + alloc._2)
+              val lives = liveRanges(inoutset)
+              chooseSpillVar(lives) match {
+                case Some(sv) =>
+//                  println("spill var: " + toCode(sv))
+                  val newFunction = Func(spill(sv, offset, f.body))
+//                  println("new function: " + toCode(newFunction))
+                  allocateCompletely(newFunction, offset - 4)
+                case None => error("allocation impossible")
+              }
             }
           }
         }
         // TODO: probably adjust the stack at the start of the function right here.
         // see the TODO at the top of this file
-        allocateCompletely(initialRewrite(f), -4)
+        val rw = initialRewrite(f)
+        allocateCompletely(rw, -4)
       }
     }
   }
 
+  // TODO: !!!! this is horribly wrong!
+  // Init new variables at beginning of fun, restore them
+  // before returning or making a tail call.
   def initialRewrite(f:Func): Func = {
     val z1In = Assignment(Variable("__z1"), edi)
     val z2In = Assignment(Variable("__z2"), esi)
     val z1Out = Assignment(edi, Variable("__z1"))
     val z2Out = Assignment(esi, Variable("__z2"))
-    Func(f.body.head :: List(z1In,z2In) ::: f.body.drop(1) ::: List(z1Out,z2Out))
+    Func(f.body.head :: List(z1In,z2In) ::: f.body.drop(1).flatMap {
+      i => i match {
+        case Return => List(z1Out,z2Out, Return)
+        case t:TailCall => List(z1Out,z2Out, t)
+        case _ => List(i)
+      }
+    })
   }
 
   def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
@@ -85,13 +109,11 @@ trait Rewriter extends Spill with Liveness with Interference {
       case Nil => None
       case _ => Some(ranges.sortWith(_.range > _.range).head)
     }
-    liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.
-            find(_.x.isInstanceOf[Variable]).map(_.x.asInstanceOf[Variable])
+    liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.map(_.x)
+            .collect{case v:Variable => v}.filterNot(_.name.startsWith("spilled_var")).headOption
   }
 
   class VariableToRegisterReplacer(replacements:Map[Variable, Register]) {
-
-    //println("replacements: " + replacements)
 
     def replaceVarsWithRegisters(f:Func): Func = Func(f.body.map(replaceVarsWithRegisters))
 
