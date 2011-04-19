@@ -13,7 +13,6 @@ src/main/compilers/interpreters/1-test/
 .idea/workspace.xml
 a.out
 runtime.o
-test.*
 Test.*
 test2.*
 tmp

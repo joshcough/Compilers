@@ -45,30 +45,13 @@ trait Interference {
   }
 
   /**
-    TODO:
-    Constrained arithmetic operators
-    Add interference edges to disallow the illegal registers
-    when building the interference graph, before starting the
-    coloring.
-    E.g., if you have this instruction (a <- y < x) then
-    add edges between a and the registers edi and esi,
-    ensuring a ends up in eax, ecx, edx, ebx, or spilled
-
-    TODO: cx <- instructions
-    The (cx <- s cmp s) instruction in L1 is limited to
-    only 4 possible destinations.
-
-    TODO:
-    The (x sop= sx) instruction in L1 is limited to only
-    shifting by the value of ecx (or by a constant in the
-    other form)
-
-    TODO:
     Build interference graph from the liveness information
       Two variable live at the same time interfere with each other
       Killed variables interferes with all live variables at that
-      point, unless it is a (x <- y) instruction (in which
+      point,
+    TODO: unless it is a (x <- y) instruction (in which
       case it is fine if x and y share a register)
+
       All real registers interfere with each other
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
@@ -80,7 +63,19 @@ trait Interference {
         val outsPlusKill = (iios.out ++ iios.kill)
         for(x <- outsPlusKill; y <- outsPlusKill; if(x!=y)) yield (x,y)
       }
-      val special_interference: Set[(X, X)] = iios match {
+      //  Constrained arithmetic operators
+      //  Add interference edges to disallow the illegal registers
+      //  when building the interference graph, before starting the coloring.
+      val special_interference: Set[(X, X)] = iios.inst match {
+        // if you have this instruction (a <- y < x) then
+        // add edges between a and the registers edi and esi,
+        // ensuring a ends up in eax, ecx, edx, ebx, or spilled
+        // The (cx <- s cmp s) instruction in L1 is limited to only 4 possible destinations.
+        case Assignment(v:Variable, _:Comp) => Set((v, edi), (v, esi))
+        // The (x sop= sx) instruction in L1 is limited to only
+        // shifting by the value of ecx (or by a constant in the other form)
+        case LeftShift(v:Variable,  _) => Set((v, eax), (v, ebx), (v, edi), (v, edx), (v, esi))
+        case RightShift(v:Variable, _) => Set((v, eax), (v, ebx), (v, edi), (v, edx), (v, esi))
         case _ => Set()
       }
       in_interference ++ out_interference ++ special_interference

@@ -74,6 +74,7 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
                   val newFunction = Func(spill(sv, offset, f.body))
 //                  println("new function: " + toCode(newFunction))
                   allocateCompletely(newFunction, offset - 4)
+                // TODO: id prefer to use Either, or Option here instead of erroring.
                 case None => error("allocation impossible")
               }
             }
@@ -87,9 +88,6 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
     }
   }
 
-  // TODO: !!!! this is horribly wrong!
-  // Init new variables at beginning of fun, restore them
-  // before returning or making a tail call.
   def initialRewrite(f:Func): Func = {
     val z1In = Assignment(Variable("__z1"), edi)
     val z2In = Assignment(Variable("__z2"), esi)
