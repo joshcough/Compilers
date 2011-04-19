@@ -1,10 +1,10 @@
 package L2Compiler
 
 import java.io.File
-import io.Reader
-import L2AST._
+
 import io.FileHelper._
 import io.Reader
+import L2AST._
 
 // TODO: note...after we register allocate, we know how much space we need on the stack
 // then we have to do one more thing...make some space on the stack
@@ -14,44 +14,94 @@ import io.Reader
 // ((mem ebp -4) <- esi)
 // ((mem ebp -8) <- edi)
 // see page 119 in http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf
-trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
+trait L2Compiler extends Reader with L2Parser with Rewriter {
   def parseProgram(s:String) = parse(read(s))
   def compileFile(filename:String) = compile(new File(filename).read)
-  def compile(code: String): L2 = {
-    def color(f:Func) = {
-      val interference = buildInterferenceSet(inoutFinalResult(f))
-      RegisterColorGraph.base.addInterference(interference).color
-    }
+  def compile(code: String): L2 = rewrite(parseProgram(code))
+  def compileToString(code:String): String = toCode(compile(code))
+}
 
-    def initialRewrite(f:Func) = {
-      val z1In = Assignment(Variable("__z1"), edi)
-      val z2In = Assignment(Variable("__z2"), esi)
-      val z1Out = Assignment(edi, Variable("__z1"))
-      val z2Out = Assignment(esi, Variable("__z2"))
-      Func(f.body.head :: List(z1In,z2In) ::: f.body.drop(1) ::: List(z1Out,z2Out))
-    }
+object L2CompilerExtras extends L2CompilerExtras
 
-    def colorCompletely(f: Func): (Func, RegisterColorGraph) = {
-      def colorCompletely(f: Func, offset: Int): (Func, RegisterColorGraph) = {
-        color(f) match {
-          case Some(coloring) => (f, coloring)
-          case None => {
-            colorCompletely(Func(spill(
-              chooseSpillVar(liveRanges(inoutFinalResult(f))).get, offset, "spilled_var_", f.body)), offset - 4)
+trait L2CompilerExtras extends L2Compiler {
+  def parseListOfInstructions(s:String): List[Instruction] = parseListOfInstructions(read(s).asInstanceOf[List[Any]])
+  def parseListOfInstructions(a:List[Any]): List[Instruction] = parseInstructionList(a)
+  def inoutForTesting(code:String, step:Option[Int]=None):List[InstructionInOutSet] = {
+    val result = inout(parseListOfInstructions(code))
+    step.map(result.reverse(_)).getOrElse(result.head)
+  }
+}
+
+trait Rewriter extends Spill with Liveness with Interference with L2Printer {
+
+  def rewrite(ast: L2): L2 = {
+    //println("rewriting: " + toCode(ast))
+    val newL2FunctionsAndRegisterAllocations = (ast.main :: ast.funs).map(f => allocateCompletely(f))
+    val l1OneFunctions = newL2FunctionsAndRegisterAllocations.map {
+      case (f, allocs) => new VariableToRegisterReplacer(allocs).replaceVarsWithRegisters(f)
+    }
+    // ugh! strip the main label out of the main function
+    val main = Func(l1OneFunctions.head.body.tail)
+    L2(main, l1OneFunctions.tail)
+  }
+
+  def allocateCompletely(f: Func): (Func, Map[Variable, Register]) = {
+    //println("allocating for: " + toCode(f))
+    // first, try to see if we can do allocation without any rewriting
+    //println("----inoutFinalResult-----: " + inoutFinalResult(f))
+    attemptAllocation(inoutFinalResult(f))._1 match {
+      case Some(registerMap) => {
+//        println("first attempt to color was good!")
+//        println("registerMap: " + registerMap)
+        (f, registerMap)
+      }
+      case _ => {
+//        println("first attempt to color failed!")
+        // then if it fails, rewrite until we can color
+        def allocateCompletely(f: Func, offset: Int): (Func, Map[Variable, Register]) = {
+          val inoutset = inoutFinalResult(f)
+//          println(testView(inoutset))
+          val alloc = attemptAllocation(inoutset)
+          alloc._1 match {
+            case Some(registerMap) => (f, registerMap)
+            case None => {
+//              println("needing to spill")
+//              println("allocation was: " + alloc._2)
+              val lives = liveRanges(inoutset)
+              chooseSpillVar(lives) match {
+                case Some(sv) =>
+//                  println("spill var: " + toCode(sv))
+                  val newFunction = Func(spill(sv, offset, f.body))
+//                  println("new function: " + toCode(newFunction))
+                  allocateCompletely(newFunction, offset - 4)
+                case None => error("allocation impossible")
+              }
+            }
           }
         }
-      }
-      colorCompletely(f, -4)
-    }
-    val ast = parseProgram(code)
-    val funsAndColors = (ast.main :: ast.funs).map(f => colorCompletely(initialRewrite(f)))
-    val l1OneFunctions = funsAndColors.map {
-      case (func, colorGraph) => {
-        //println("color graph: " + colorGraph)
-        colorGraph.replaceVarsWithRegisters(func)
+        // TODO: probably adjust the stack at the start of the function right here.
+        // see the TODO at the top of this file
+        val rw = initialRewrite(f)
+        allocateCompletely(rw, -4)
       }
     }
-    L2(l1OneFunctions.head, l1OneFunctions.tail)
+  }
+
+  // TODO: !!!! this is horribly wrong!
+  // Init new variables at beginning of fun, restore them
+  // before returning or making a tail call.
+  def initialRewrite(f:Func): Func = {
+    val z1In = Assignment(Variable("__z1"), edi)
+    val z2In = Assignment(Variable("__z2"), esi)
+    val z1Out = Assignment(edi, Variable("__z1"))
+    val z2Out = Assignment(esi, Variable("__z2"))
+    Func(f.body.head :: List(z1In,z2In) ::: f.body.drop(1).flatMap {
+      i => i match {
+        case Return => List(z1Out,z2Out, Return)
+        case t:TailCall => List(z1Out,z2Out, t)
+        case _ => List(i)
+      }
+    })
   }
 
   def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
@@ -59,28 +109,55 @@ trait L2Compiler extends Reader with L2Parser with Liveness with Spill {
       case Nil => None
       case _ => Some(ranges.sortWith(_.range > _.range).head)
     }
-    liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.
-            find(_.x.isInstanceOf[Variable]).map(_.x.asInstanceOf[Variable])
+    liveRanges.flatMap(maxRange).sortWith{_.range > _.range}.map(_.x)
+            .collect{case v:Variable => v}.filterNot(_.name.startsWith("spilled_var")).headOption
   }
 
-  // these are testing entry points...
-  def parseListOfInstructions(s:String): List[Instruction] = parseListOfInstructions(read(s).asInstanceOf[List[Any]])
-  def parseListOfInstructions(a:List[Any]): List[Instruction] = parseInstructionList(a)
-  def inoutForTesting(code:String, step:Option[Int]=None):List[InstructionInOutSet] = {
-    val result = inout(parseListOfInstructions(code))
-    step.map(result.reverse(_)).getOrElse(result.head)
-  }
+  class VariableToRegisterReplacer(replacements:Map[Variable, Register]) {
 
-  // TODO: variables Registers can interfere.
-  // see http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture05.pdf p19
-  // basically, if they are alive at the same time...they interfere.
-  // hmm...better read moreabout this. see page 18 also
-  def interferingVariables(code:String) = buildInterferenceSet(inoutForTesting(code, None)).filter{
-    case (x:Variable,y:Variable) => true
-    case _ => false
-  }
-//  def attemptToColor(code:String) =
-//    RegisterColorGraph.base.addInterference(buildInterferenceSet(inout(code, None))).color
-  def spill(code:String):List[Instruction] = spill(Variable("x"), -4, "s_", parseListOfInstructions(code))
+    def replaceVarsWithRegisters(f:Func): Func = Func(f.body.map(replaceVarsWithRegisters))
 
+    private def getRegister(x:X): Register = x match {
+      case v:Variable => replacements(v)
+      case r:Register => r
+    }
+
+    def replaceVarsWithRegisters(i:Instruction): Instruction = i match {
+      case Assignment(x1, x2) => Assignment(getRegister(x1), replaceVarsWithRegisters(x2))
+      case Increment(s1, s2) => Increment(getRegister(s1), replaceVarsWithRegisters(s2))
+      case Decrement(s1, s2) => Decrement(getRegister(s1), replaceVarsWithRegisters(s2))
+      case Multiply(s1, s2) => Multiply(getRegister(s1), replaceVarsWithRegisters(s2))
+      case BitwiseAnd(s1, s2) => BitwiseAnd(getRegister(s1), replaceVarsWithRegisters(s2))
+      case LeftShift(s1, s2) => LeftShift(getRegister(s1), replaceVarsWithRegisters(s2))
+      case RightShift(s1, s2) => RightShift(getRegister(s1), replaceVarsWithRegisters(s2))
+      case MemWrite(loc, x) => MemWrite(replaceVarsWithRegisters(loc), replaceVarsWithRegisters(x))
+      case g:Goto => g
+      case CJump(comp, l1, l2) => CJump(replaceVarsWithRegisters(comp), l1, l2)
+      case Call(x) => Call(replaceVarsWithRegisters(x))
+      case TailCall(x) => Call(replaceVarsWithRegisters(x))
+      case ld:LabelDeclaration => ld
+      case Return => Return
+    }
+
+    def replaceVarsWithRegisters(s:S): S = s match {
+      case r:Register => r
+      case v:Variable => getRegister(v)
+      case n:Num => n
+      case l:Label => l
+    }
+
+    def replaceVarsWithRegisters(rhs:AssignmentRHS):AssignmentRHS = rhs match {
+      case MemRead(loc) => MemRead(replaceVarsWithRegisters(loc))
+      case Print(s) => Print(replaceVarsWithRegisters(s))
+      case Allocate(n, init) => Allocate(replaceVarsWithRegisters(n), replaceVarsWithRegisters(init))
+      case ArrayError(a, n) => Allocate(replaceVarsWithRegisters(a), replaceVarsWithRegisters(n))
+      case c:Comp => replaceVarsWithRegisters(c)
+      case s:S => replaceVarsWithRegisters(s)
+    }
+
+    private def replaceVarsWithRegisters(loc:MemLoc): MemLoc =
+      MemLoc(getRegister(loc.basePointer),loc.offset)
+    private def replaceVarsWithRegisters(c:Comp): Comp =
+      Comp(replaceVarsWithRegisters(c.s1), c.op, replaceVarsWithRegisters(c.s2))
+  }
 }
