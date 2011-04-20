@@ -62,11 +62,8 @@ trait Interference {
   /**
     Build interference graph from the liveness information
       Two variable live at the same time interfere with each other
-      Killed variables interferes with all live variables at that
-      point,
-    TODO: unless it is a (x <- y) instruction (in which
-      case it is fine if x and y share a register)
-
+      TODO: Killed variables interferes with all live variables at that point,
+      TODO: unless it is a (x <- y) instruction (in which case it is fine if x and y share a register)
       All real registers interfere with each other
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
@@ -89,8 +86,8 @@ trait Interference {
         case Assignment(v:Variable, _:Comp) => Set((v, edi), (v, esi))
         // The (x sop= sx) instruction in L1 is limited to only
         // shifting by the value of ecx (or by a constant in the other form)
-        case LeftShift(v:Variable,  _) => Set((v, eax), (v, ebx), (v, edi), (v, edx), (v, esi))
-        case RightShift(v:Variable, _) => Set((v, eax), (v, ebx), (v, edi), (v, edx), (v, esi))
+        case LeftShift(_,  x:X) => Set((x, eax), (x, ebx), (x, edi), (x, edx), (x, esi))
+        case RightShift(_, x:X) => Set((x, eax), (x, ebx), (x, edi), (x, edx), (x, esi))
         case _ => Set()
       }
       in_interference ++ out_interference ++ special_interference

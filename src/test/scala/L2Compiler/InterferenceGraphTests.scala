@@ -281,6 +281,35 @@ class InterferenceGraphTests extends L2CompilerTest {
       |(y edi esi x))""",
     expectedAllocation="((x eax) (y ebx))")
 
+//  interferenceAndAllocationTest(
+//    name="x <- y",
+//    code = "((y <- 7) (x <- y) (x1 <- x) (y1 <- y))",
+//    expectedInterference = """
+//      |((eax ebx ecx edi edx esi)
+//      |(ebx eax ecx edi edx esi)
+//      |(ecx eax ebx edi edx esi)
+//      |(edi eax ebx ecx edx esi)
+//      |(edx eax ebx ecx edi esi)
+//      |(esi eax ebx ecx edi edx)
+//      |(x ??)
+//      |(y ??))""",
+//    expectedAllocation="((x eax) (y ebx))")
+
+
+
+  interferenceAndAllocationTest(
+    name="wfewff",
+    code = "((x <- 1) (eax <- (print x)))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx)
+      |(x))""",
+    expectedAllocation="((x eax))")
+
   new java.io.File("./graph-test").mkdir()
   val count = Iterator.from(0)
 
