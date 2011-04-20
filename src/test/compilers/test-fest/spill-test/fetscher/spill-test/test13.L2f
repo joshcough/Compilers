@@ -1,0 +1,6 @@
+((eax <- 1)
+ (var <- eax)
+ (eax <- var))
+ var
+ -4
+ v

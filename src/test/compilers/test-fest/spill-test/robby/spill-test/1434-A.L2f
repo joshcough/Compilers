@@ -1,0 +1,1 @@
+((eax <- (allocate A :xw)) (eax <- (allocate A :xw)) (eax <- (allocate A :xw))) A -24 s

@@ -1,0 +1,1 @@
+((cjump eax <= edx :d :d) (cjump eax <= edx :d :d))

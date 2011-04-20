@@ -1,0 +1,1 @@
+((eax <- (array-error :g :VU)) (eax <- (array-error :g :VU)) (eax <- (array-error :g :VU))) r -32 s

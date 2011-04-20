@@ -1,0 +1,1 @@
+((cjump H <= H :P :W) (cjump H <= H :P :W) (cjump H <= H :P :W)) H -24 s

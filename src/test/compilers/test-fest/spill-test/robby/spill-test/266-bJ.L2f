@@ -1,0 +1,1 @@
+((eax <- (mem bJ 0)) (eax <- (mem bJ 0))) bJ -32 s

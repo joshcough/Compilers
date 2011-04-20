@@ -1,0 +1,4 @@
+(((mem edi 0) <- edi)
+ ((mem edi 0) <- edi)
+ ((mem edi 0) <- edi)
+ ((mem edi 0) <- edi))

@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -36))
+ (cjump :HY <= s0 :k :z)
+ (s1 <- (mem ebp -36))
+ (cjump :HY <= s1 :k :z)
+ (s2 <- (mem ebp -36))
+ (cjump :HY <= s2 :k :z)
+ (s3 <- (mem ebp -36))
+ (cjump :HY <= s3 :k :z))

@@ -1,0 +1,1 @@
+(((mem eax 0) <- :I) ((mem eax 0) <- :I) ((mem eax 0) <- :I)) r -20 s

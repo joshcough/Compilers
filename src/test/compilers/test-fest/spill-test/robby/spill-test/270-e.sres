@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -24))
+ (ebx <- (mem s0 0))
+ (s1 <- (mem ebp -24))
+ (ebx <- (mem s1 0))
+ (s2 <- (mem ebp -24))
+ (ebx <- (mem s2 0))
+ (s3 <- (mem ebp -24))
+ (ebx <- (mem s3 0)))

@@ -1,0 +1,1 @@
+(((mem eax 0) <- w) ((mem eax 0) <- w))

@@ -1,0 +1,1 @@
+((eax <- (print ecx)) (eax <- (print ecx))) r -24 s

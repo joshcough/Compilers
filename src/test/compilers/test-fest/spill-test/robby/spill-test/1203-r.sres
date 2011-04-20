@@ -1,0 +1,1 @@
+((cjump Z <= :S :A :w) (cjump Z <= :S :A :w) (cjump Z <= :S :A :w))

@@ -1,0 +1,1 @@
+((eax <- (allocate :n K)) (eax <- (allocate :n K))) K -20 s

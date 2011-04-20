@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -36))
+ ((mem s0 0) <- :wN)
+ (s1 <- (mem ebp -36))
+ ((mem s1 0) <- :wN))

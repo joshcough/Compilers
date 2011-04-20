@@ -1,0 +1,1 @@
+((eax <- (allocate eax ebx))) r 0 s

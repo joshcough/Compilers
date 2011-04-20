@@ -1,0 +1,1 @@
+((eax <- (allocate 3 6)) (eax <- (allocate 3 6)))

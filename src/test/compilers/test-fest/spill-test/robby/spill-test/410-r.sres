@@ -1,0 +1,4 @@
+(((mem esi 4) <- :y)
+ ((mem esi 4) <- :y)
+ ((mem esi 4) <- :y)
+ ((mem esi 4) <- :y))

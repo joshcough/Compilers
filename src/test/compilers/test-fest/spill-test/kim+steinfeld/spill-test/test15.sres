@@ -1,0 +1,20 @@
+(((mem ebp -4) <- 30)
+ (s_0 <- (mem ebp -4))
+ (cjump s_0 <= 31 :first :second)
+ :first
+ (s_1 <- (mem ebp -4))
+ (s_1 >>= 1)
+ ((mem ebp -4) <- s_1)
+ (s_2 <- (mem ebp -4))
+ (cjump s_2 <= 15 :third :fourth)
+ :second
+ (s_3 <- 4 < 5)
+ ((mem ebp -4) <- s_3)
+ (goto :end)
+ :third
+ (goto :end)
+ :fourth
+ (s_4 <- 5 < 4)
+ ((mem ebp -4) <- s_4)
+ :end
+ (return))

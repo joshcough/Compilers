@@ -1,0 +1,1 @@
+((eax <- (array-error :call E)) (eax <- (array-error :call E)) (eax <- (array-error :call E)) (eax <- (array-error :call E))) E -32 s

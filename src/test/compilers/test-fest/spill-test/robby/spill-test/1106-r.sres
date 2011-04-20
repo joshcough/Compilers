@@ -1,0 +1,1 @@
+((cjump edi = edi :goto :t))

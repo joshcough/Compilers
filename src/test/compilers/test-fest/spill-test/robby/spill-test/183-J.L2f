@@ -1,0 +1,1 @@
+((J <- (mem eax 0)) (J <- (mem eax 0)) (J <- (mem eax 0)) (J <- (mem eax 0))) J -8 s

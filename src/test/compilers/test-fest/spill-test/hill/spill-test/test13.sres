@@ -1,0 +1,21 @@
+((ebx <- eax)
+ (ebx *= ebx)
+ ((mem ebp -4) <- ebx)
+ (c <- 10)
+ (goto :salmon)
+ :tuna
+ (samp_0 <- (mem ebp -4))
+ (samp_0 -= 3)
+ ((mem ebp -4) <- samp_0)
+ (samp_1 <- (mem ebp -4))
+ (eax += samp_1)
+ (eax -= 1)
+ :salmon
+ (c -= 1)
+ (cjump c <= 0 :done :tuna)
+ :done
+ (samp_2 <- (mem ebp -4))
+ (eax <- (print samp_2))
+ (eax <- (print eax))
+ (eax <- (print 7))
+ (return))

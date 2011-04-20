@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -32))
+ (cjump edi = s0 :e :E)
+ (s1 <- (mem ebp -32))
+ (cjump edi = s1 :e :E))

@@ -1,0 +1,8 @@
+((s10 <- (mem ebp -28))
+ (eax <- (print s10))
+ (s11 <- (mem ebp -28))
+ (eax <- (print s11))
+ (s12 <- (mem ebp -28))
+ (eax <- (print s12))
+ (s13 <- (mem ebp -28))
+ (eax <- (print s13)))

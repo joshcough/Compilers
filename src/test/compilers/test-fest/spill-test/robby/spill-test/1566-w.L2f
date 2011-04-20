@@ -1,0 +1,1 @@
+((eax <- (array-error w 3)) (eax <- (array-error w 3)) (eax <- (array-error w 3))) w -24 s

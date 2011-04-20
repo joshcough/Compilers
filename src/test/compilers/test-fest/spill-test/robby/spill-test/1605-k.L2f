@@ -1,0 +1,1 @@
+((eax <- (array-error :G k)) (eax <- (array-error :G k))) k -24 s

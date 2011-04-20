@@ -1,0 +1,1 @@
+((eax <- (allocate Z m)) (eax <- (allocate Z m)) (eax <- (allocate Z m)) (eax <- (allocate Z m))) Z 0 s

@@ -1,0 +1,6 @@
+(((mem ebp 44) <- 1)
+ (s_0 <- (mem ebp 44))
+ (eax += s_0)
+ (s_1 <- (mem ebp 44))
+ (s_1 += eax)
+ ((mem ebp 44) <- s_1))

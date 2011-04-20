@@ -1,0 +1,1 @@
+(((mem edi 0) <- eax) ((mem edi 0) <- eax)) r -32 s

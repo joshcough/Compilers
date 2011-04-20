@@ -1,0 +1,1 @@
+((cjump ecx < ecx :u :O) (cjump ecx < ecx :u :O) (cjump ecx < ecx :u :O) (cjump ecx < ecx :u :O)) r -16 s

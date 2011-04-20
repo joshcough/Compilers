@@ -1,0 +1,12 @@
+(((mem ebp -4) <- 0)
+ :loop
+ (s_0 <- (mem ebp -4))
+ (s_0 += 1)
+ ((mem ebp -4) <- s_0)
+ (s_1 <- (mem ebp -4))
+ (cjump s_1 = 5 :out :next)
+ :next
+ (goto :loop)
+ :out
+ (s_2 <- (mem ebp -4))
+ (eax <- (print s_2)))

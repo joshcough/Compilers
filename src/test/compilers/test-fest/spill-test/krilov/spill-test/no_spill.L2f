@@ -1,0 +1,11 @@
+((y <- 3)
+ (z <- y)
+ (cjump y <= z :a :b)
+ :a
+ (eax <- (print y))
+ :b
+ (eax <- (print z))
+ (call :c))
+x
+-4
+s_

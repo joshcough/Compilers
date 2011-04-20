@@ -1,0 +1,1 @@
+((eax <- (print b)) (eax <- (print b)) (eax <- (print b)) (eax <- (print b))) b -12 s

@@ -1,0 +1,1 @@
+((eax <- (allocate ecx :Eo)) (eax <- (allocate ecx :Eo))) r -8 s

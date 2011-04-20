@@ -1,0 +1,1 @@
+((cjump esi < g :X :M) (cjump esi < g :X :M) (cjump esi < g :X :M) (cjump esi < g :X :M)) g -24 s

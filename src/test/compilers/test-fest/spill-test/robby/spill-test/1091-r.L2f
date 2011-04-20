@@ -1,0 +1,1 @@
+((cjump edi < edi :PvA :s) (cjump edi < edi :PvA :s)) r -12 s

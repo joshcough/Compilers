@@ -1,0 +1,20 @@
+(
+  ; Test whether spill function correctly ignores things that
+  ; shouldn't be spilled. The code itself is nonsense.
+  
+  ; The following are labels, not variables, so they should be ignored.
+  :x
+  (call :x)
+  (y <- :x)
+  (goto :x)
+  
+  ; Different variable, should be ignored.
+  (esi <- y)
+  
+  ; Only spill this one
+  (eax <- x)
+  (edi += eax)
+)
+x
+-16
+s_

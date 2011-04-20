@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -12))
+ (cjump s0 < :fQcr :wM :S)
+ (s1 <- (mem ebp -12))
+ (cjump s1 < :fQcr :wM :S)
+ (s2 <- (mem ebp -12))
+ (cjump s2 < :fQcr :wM :S)
+ (s3 <- (mem ebp -12))
+ (cjump s3 < :fQcr :wM :S))

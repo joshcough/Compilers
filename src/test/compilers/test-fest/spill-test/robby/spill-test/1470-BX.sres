@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -12))
+ (eax <- (allocate :t s0))
+ (s1 <- (mem ebp -12))
+ (eax <- (allocate :t s1)))

@@ -1,0 +1,8 @@
+((s0 <- :I = ecx)
+ ((mem ebp -4) <- s0)
+ (s1 <- :I = ecx)
+ ((mem ebp -4) <- s1)
+ (s2 <- :I = ecx)
+ ((mem ebp -4) <- s2)
+ (s3 <- :I = ecx)
+ ((mem ebp -4) <- s3))

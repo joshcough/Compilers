@@ -1,0 +1,1 @@
+((eax <- (array-error 5 iib)) (eax <- (array-error 5 iib)) (eax <- (array-error 5 iib)) (eax <- (array-error 5 iib))) iib -20 s

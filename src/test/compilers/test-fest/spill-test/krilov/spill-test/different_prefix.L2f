@@ -1,0 +1,6 @@
+((x <- 1)
+ (eax += x)
+ (x += eax))
+x
+-4
+blablabla_

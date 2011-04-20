@@ -1,0 +1,6 @@
+((eax <- 1)
+ (ebx <- 2)
+ (result <- eax < ebx))
+ result
+ -16
+ r_

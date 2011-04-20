@@ -1,0 +1,6 @@
+((s0 <- (mem ebp 0))
+ (edi <- Op <= s0)
+ (s1 <- (mem ebp 0))
+ (edi <- Op <= s1)
+ (s2 <- (mem ebp 0))
+ (edi <- Op <= s2))

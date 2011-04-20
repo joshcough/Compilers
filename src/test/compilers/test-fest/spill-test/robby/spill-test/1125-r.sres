@@ -1,0 +1,4 @@
+((cjump SO <= :A :Jh :S)
+ (cjump SO <= :A :Jh :S)
+ (cjump SO <= :A :Jh :S)
+ (cjump SO <= :A :Jh :S))

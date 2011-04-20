@@ -1,0 +1,6 @@
+((s0 <- (mem ebp -12))
+ (edi <- s0 = :n)
+ (s1 <- (mem ebp -12))
+ (edi <- s1 = :n)
+ (s2 <- (mem ebp -12))
+ (edi <- s2 = :n))

@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -4))
+ (WD <- s0 <= :C)
+ (s1 <- (mem ebp -4))
+ (WD <- s1 <= :C)
+ (s2 <- (mem ebp -4))
+ (WD <- s2 <= :C)
+ (s3 <- (mem ebp -4))
+ (WD <- s3 <= :C))

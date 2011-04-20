@@ -1,0 +1,4 @@
+((cjump ecx < ecx :FyY :m)
+ (cjump ecx < ecx :FyY :m)
+ (cjump ecx < ecx :FyY :m)
+ (cjump ecx < ecx :FyY :m))

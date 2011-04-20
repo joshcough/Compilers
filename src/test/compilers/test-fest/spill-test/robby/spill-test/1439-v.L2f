@@ -1,0 +1,1 @@
+((eax <- (allocate v 4)) (eax <- (allocate v 4)) (eax <- (allocate v 4)) (eax <- (allocate v 4))) v -4 s

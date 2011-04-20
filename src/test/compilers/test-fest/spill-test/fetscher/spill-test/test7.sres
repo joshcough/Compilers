@@ -1,0 +1,5 @@
+(((mem ebp -16) <- -1)
+ (somethingelse <- -2)
+ (x <- somethingelse)
+ (something_0 <- (mem ebp -16))
+ (x *= something_0))

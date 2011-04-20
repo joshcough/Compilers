@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -36))
+ (call s0)
+ (s1 <- (mem ebp -36))
+ (call s1)
+ (s2 <- (mem ebp -36))
+ (call s2)
+ (s3 <- (mem ebp -36))
+ (call s3))

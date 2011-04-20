@@ -1,0 +1,13 @@
+((x <- :another_fn)
+ (y <- 7)
+ (z <- 9)
+ (ecx <- y < z)
+ (ecx <- z < y)
+ (ecx <- y <= z)
+ (ecx <- z <= y)
+ (ecx <- y = z)
+ (ecx <- z = y)
+ (tail-call x))
+y
+-8
+s_

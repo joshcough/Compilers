@@ -1,0 +1,1 @@
+(((mem ecx 0) <- FF) ((mem ecx 0) <- FF)) r -12 s

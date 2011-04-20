@@ -1,0 +1,3 @@
+((eax <- (allocate eax ye))
+ (eax <- (allocate eax ye))
+ (eax <- (allocate eax ye)))

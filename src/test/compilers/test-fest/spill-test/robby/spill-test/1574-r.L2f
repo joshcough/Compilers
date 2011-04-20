@@ -1,0 +1,1 @@
+((eax <- (array-error edi 3))) r -28 s

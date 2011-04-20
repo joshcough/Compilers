@@ -1,0 +1,1 @@
+((B >>= ecx) (B >>= ecx) (B >>= ecx) (B >>= ecx)) B 0 s

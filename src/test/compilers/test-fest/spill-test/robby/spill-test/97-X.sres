@@ -1,0 +1,4 @@
+((P <- (mem ebp -36))
+ (P <- (mem ebp -36))
+ (P <- (mem ebp -36))
+ (P <- (mem ebp -36)))

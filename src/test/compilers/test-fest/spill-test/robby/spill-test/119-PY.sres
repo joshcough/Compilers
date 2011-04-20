@@ -1,0 +1,4 @@
+(((mem ebp -8) <- eax)
+ ((mem ebp -8) <- eax)
+ ((mem ebp -8) <- eax)
+ ((mem ebp -8) <- eax))

@@ -1,0 +1,1 @@
+((cjump ecx <= ecx :W :N) (cjump ecx <= ecx :W :N) (cjump ecx <= ecx :W :N) (cjump ecx <= ecx :W :N)) r -24 s

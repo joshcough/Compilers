@@ -1,0 +1,1 @@
+((eax <- (mem jfz 0)) (eax <- (mem jfz 0))) jfz -16 s

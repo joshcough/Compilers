@@ -1,0 +1,4 @@
+((eax <- (allocate :n K))
+ (eax <- (allocate :n K))
+ (eax <- (allocate :n K))
+ (eax <- (allocate :n K)))

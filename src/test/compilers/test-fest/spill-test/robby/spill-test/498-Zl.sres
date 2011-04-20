@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -24))
+ (Q *= s0)
+ (s1 <- (mem ebp -24))
+ (Q *= s1)
+ (s2 <- (mem ebp -24))
+ (Q *= s2)
+ (s3 <- (mem ebp -24))
+ (Q *= s3))

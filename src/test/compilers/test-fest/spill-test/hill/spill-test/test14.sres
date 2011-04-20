@@ -1,0 +1,20 @@
+((ebx <- eax)
+ (ebx *= ebx)
+ (x <- ebx)
+ ((mem ebp -8) <- 10)
+ (goto :salmon)
+ :tuna
+ (x -= 3)
+ (eax += x)
+ (eax -= 1)
+ :salmon
+ (l_0 <- (mem ebp -8))
+ (l_0 -= 1)
+ ((mem ebp -8) <- l_0)
+ (l_1 <- (mem ebp -8))
+ (cjump l_1 <= 0 :done :tuna)
+ :done
+ (eax <- (print x))
+ (eax <- (print eax))
+ (eax <- (print 7))
+ (return))

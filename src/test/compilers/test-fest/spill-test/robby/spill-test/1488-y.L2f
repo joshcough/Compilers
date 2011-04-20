@@ -1,0 +1,1 @@
+((eax <- (allocate eax y))) y -12 s

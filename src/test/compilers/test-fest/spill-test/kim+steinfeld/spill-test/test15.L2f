@@ -1,0 +1,22 @@
+((x <- 30)
+ (cjump x <= 31 :first :second)
+ 
+ :first
+ (x >>= 1)
+ (cjump x <= 15 :third :fourth)
+
+ :second
+ (x <- 4 < 5)
+ (goto :end)
+
+ :third
+ (goto :end)
+
+ :fourth
+ (x <- 5 < 4)
+
+ :end
+ (return))
+x
+-4
+s_

@@ -1,0 +1,10 @@
+((eax &= ebx)
+ (ebx &= eax)
+ (eax &= x)
+ (ebx &= x)
+ (x &= eax)
+ (x &= 7)
+ (x &= x))
+x
+-4
+s_

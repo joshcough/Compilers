@@ -1,0 +1,4 @@
+((eax <- (print gj))
+ (eax <- (print gj))
+ (eax <- (print gj))
+ (eax <- (print gj)))

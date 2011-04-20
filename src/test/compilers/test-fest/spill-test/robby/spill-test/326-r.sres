@@ -1,0 +1,4 @@
+(((mem edx 0) <- :QP)
+ ((mem edx 0) <- :QP)
+ ((mem edx 0) <- :QP)
+ ((mem edx 0) <- :QP))

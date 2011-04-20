@@ -1,0 +1,1 @@
+(((mem l 0) <- w) ((mem l 0) <- w) ((mem l 0) <- w) ((mem l 0) <- w)) r -28 s

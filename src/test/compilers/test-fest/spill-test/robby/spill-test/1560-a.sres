@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -28))
+ (eax <- (array-error s0 ebx))
+ (s1 <- (mem ebp -28))
+ (eax <- (array-error s1 ebx)))

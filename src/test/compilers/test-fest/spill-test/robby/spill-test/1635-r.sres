@@ -1,0 +1,3 @@
+((eax <- (array-error :g :VU))
+ (eax <- (array-error :g :VU))
+ (eax <- (array-error :g :VU)))

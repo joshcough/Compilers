@@ -1,0 +1,1 @@
+((eax <- (allocate px esi)) (eax <- (allocate px esi)) (eax <- (allocate px esi))) r -8 s

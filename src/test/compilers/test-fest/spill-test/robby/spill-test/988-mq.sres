@@ -1,0 +1,6 @@
+((s0 <- (mem ebp -4))
+ (I <- :K < s0)
+ (s1 <- (mem ebp -4))
+ (I <- :K < s1)
+ (s2 <- (mem ebp -4))
+ (I <- :K < s2))

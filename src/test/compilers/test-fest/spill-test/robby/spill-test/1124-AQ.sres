@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -36))
+ (cjump s0 <= edi :U :D)
+ (s1 <- (mem ebp -36))
+ (cjump s1 <= edi :U :D))

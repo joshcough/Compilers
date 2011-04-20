@@ -1,0 +1,1 @@
+((eax <- (array-error :call E))) r -32 s

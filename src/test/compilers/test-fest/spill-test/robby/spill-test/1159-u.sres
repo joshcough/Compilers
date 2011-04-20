@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -20))
+ (cjump s0 < Ee :x :G)
+ (s1 <- (mem ebp -20))
+ (cjump s1 < Ee :x :G)
+ (s2 <- (mem ebp -20))
+ (cjump s2 < Ee :x :G)
+ (s3 <- (mem ebp -20))
+ (cjump s3 < Ee :x :G))

@@ -1,0 +1,1 @@
+((s0 <- (mem ebp 0)) (cjump s0 = :p :S :allocate))

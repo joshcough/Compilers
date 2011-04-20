@@ -1,0 +1,3 @@
+((eax <- (allocate RP ebx))
+ (eax <- (allocate RP ebx))
+ (eax <- (allocate RP ebx)))

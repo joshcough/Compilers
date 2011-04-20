@@ -1,0 +1,10 @@
+((x <- 23)
+ ((mem ebp -4) <- 15)
+ (s_0 <- (mem ebp -4))
+ (cjump x = s_0 :first :second)
+ :first
+ ((mem ebp -4) <- 10)
+ (goto :end)
+ :second
+ ((mem ebp -4) <- 5)
+ :end)

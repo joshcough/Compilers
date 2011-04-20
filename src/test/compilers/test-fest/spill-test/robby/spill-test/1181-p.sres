@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -16))
+ (cjump 2 < s0 :edx :u)
+ (s1 <- (mem ebp -16))
+ (cjump 2 < s1 :edx :u)
+ (s2 <- (mem ebp -16))
+ (cjump 2 < s2 :edx :u)
+ (s3 <- (mem ebp -16))
+ (cjump 2 < s3 :edx :u))

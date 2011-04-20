@@ -1,0 +1,4 @@
+((eax <- (allocate ecx ix))
+ (eax <- (allocate ecx ix))
+ (eax <- (allocate ecx ix))
+ (eax <- (allocate ecx ix)))

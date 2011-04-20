@@ -1,0 +1,1 @@
+((eax <- (allocate edi h))) r -16 s

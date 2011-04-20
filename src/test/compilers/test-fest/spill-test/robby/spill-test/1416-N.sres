@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -8))
+ (eax <- (allocate s0 MA))
+ (s1 <- (mem ebp -8))
+ (eax <- (allocate s1 MA))
+ (s2 <- (mem ebp -8))
+ (eax <- (allocate s2 MA))
+ (s3 <- (mem ebp -8))
+ (eax <- (allocate s3 MA)))

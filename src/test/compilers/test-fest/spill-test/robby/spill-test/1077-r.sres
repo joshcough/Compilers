@@ -1,0 +1,4 @@
+((cjump H <= H :P :W)
+ (cjump H <= H :P :W)
+ (cjump H <= H :P :W)
+ (cjump H <= H :P :W))

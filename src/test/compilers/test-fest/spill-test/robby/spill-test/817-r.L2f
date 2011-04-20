@@ -1,0 +1,1 @@
+((eax <- ecx = ecx) (eax <- ecx = ecx)) r 0 s

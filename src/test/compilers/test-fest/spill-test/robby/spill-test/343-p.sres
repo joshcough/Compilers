@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -8))
+ ((mem s0 0) <- jq)
+ (s1 <- (mem ebp -8))
+ ((mem s1 0) <- jq)
+ (s2 <- (mem ebp -8))
+ ((mem s2 0) <- jq)
+ (s3 <- (mem ebp -8))
+ ((mem s3 0) <- jq))

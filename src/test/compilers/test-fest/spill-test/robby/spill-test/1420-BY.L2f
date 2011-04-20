@@ -1,0 +1,1 @@
+((eax <- (allocate edi BY))) BY -32 s

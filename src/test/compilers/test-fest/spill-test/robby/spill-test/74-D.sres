@@ -1,0 +1,4 @@
+((eax <- (mem ebp -28))
+ (eax <- (mem ebp -28))
+ (eax <- (mem ebp -28))
+ (eax <- (mem ebp -28)))

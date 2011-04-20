@@ -1,0 +1,16 @@
+(((mem ebp -4) <- esi)
+ (esi <- eax)
+ (r <- eax)
+ (t <- eax)
+ (r += t)
+ (a <- 5)
+ (b <- 7)
+ (c <- 9)
+ (r <- r)
+ (d <- 11)
+ (eax <- r)
+ (esi <- (mem ebp -4))
+ (return))
+r
+-8
+q_

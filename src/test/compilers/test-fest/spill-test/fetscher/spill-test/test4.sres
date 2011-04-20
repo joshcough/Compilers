@@ -1,0 +1,7 @@
+((x <- 1)
+ ((mem ebp -8) <- x)
+ (z <- (mem ebp -8))
+ (yy_0 <- (mem ebp -8))
+ (z += yy_0)
+ (yy_1 <- (mem ebp -8))
+ (eax <- (print yy_1)))

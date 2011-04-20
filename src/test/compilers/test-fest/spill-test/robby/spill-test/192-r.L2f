@@ -1,0 +1,1 @@
+((ebx <- (mem esi 4)) (ebx <- (mem esi 4))) r -24 s

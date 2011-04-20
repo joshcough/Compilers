@@ -1,0 +1,1 @@
+((s0 <- (mem ebp -20)) (cjump s0 = ecx :R :w))

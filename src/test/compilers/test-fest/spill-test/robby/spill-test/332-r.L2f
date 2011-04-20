@@ -1,0 +1,1 @@
+(((mem edx 0) <- :l) ((mem edx 0) <- :l)) r -24 s

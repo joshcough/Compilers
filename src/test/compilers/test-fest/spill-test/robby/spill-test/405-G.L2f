@@ -1,0 +1,1 @@
+(((mem G 0) <- ecx) ((mem G 0) <- ecx)) G -12 s

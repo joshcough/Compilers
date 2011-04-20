@@ -1,0 +1,1 @@
+((eax <- (allocate :x Ha)) (eax <- (allocate :x Ha)) (eax <- (allocate :x Ha))) Ha -16 s

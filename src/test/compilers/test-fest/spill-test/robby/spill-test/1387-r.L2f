@@ -1,0 +1,1 @@
+((eax <- (allocate edi edi)) (eax <- (allocate edi edi)) (eax <- (allocate edi edi))) r -12 s

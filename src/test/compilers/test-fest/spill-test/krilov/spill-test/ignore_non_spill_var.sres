@@ -1,0 +1,7 @@
+(:x
+ (call :x)
+ (y <- :x)
+ (goto :x)
+ (esi <- y)
+ (eax <- (mem ebp -16))
+ (edi += eax))

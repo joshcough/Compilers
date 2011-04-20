@@ -1,0 +1,1 @@
+((cjump w < w :CD :Hb) (cjump w < w :CD :Hb)) w 0 s

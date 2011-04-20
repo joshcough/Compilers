@@ -1,0 +1,1 @@
+((w <- (mem fG 0)) (w <- (mem fG 0)) (w <- (mem fG 0)) (w <- (mem fG 0))) w -12 s

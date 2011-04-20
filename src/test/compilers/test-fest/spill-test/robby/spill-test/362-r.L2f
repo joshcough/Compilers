@@ -1,0 +1,1 @@
+(((mem esi 0) <- s) ((mem esi 0) <- s) ((mem esi 0) <- s) ((mem esi 0) <- s)) r -4 s1

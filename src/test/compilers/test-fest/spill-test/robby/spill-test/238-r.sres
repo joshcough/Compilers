@@ -1,0 +1,1 @@
+((q <- (mem edi 0)) (q <- (mem edi 0)) (q <- (mem edi 0)))

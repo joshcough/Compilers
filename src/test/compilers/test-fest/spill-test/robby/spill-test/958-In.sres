@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -24))
+ (edi <- :cYsc < s0)
+ (s1 <- (mem ebp -24))
+ (edi <- :cYsc < s1))

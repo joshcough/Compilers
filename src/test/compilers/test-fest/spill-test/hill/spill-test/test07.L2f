@@ -1,0 +1,14 @@
+((temp <- eax)
+ (var1 <- temp)
+ (var2 <- temp)
+ (var3 <- ecx)
+ (var4 <- edx)
+ (var1 += var1)
+ (var1 *= var1)
+ (var1 -= var2)
+ (var1 &= var3)
+ (eax <- var1)
+ (return))
+var2
+-20
+s_

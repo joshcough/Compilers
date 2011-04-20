@@ -1,0 +1,12 @@
+((eax <- x)
+ (eax += x)
+ (ebx <- 2)
+ (x += ebx)
+ (x -= 7)
+ (ecx <- 3)
+ (x *= ecx)
+ (x -= eax)
+ (eax <- (print x)))
+x
+-4
+s_

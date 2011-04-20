@@ -1,0 +1,1 @@
+((eax <- (mem iZ 0)) (eax <- (mem iZ 0)) (eax <- (mem iZ 0)))

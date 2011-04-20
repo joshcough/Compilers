@@ -1,0 +1,21 @@
+(((mem ebp -12) <- 30)
+ (eax_0 <- (mem ebp -12))
+ (cjump eax_0 <= 31 :first :second)
+ :first
+ (eax_1 <- (mem ebp -12))
+ (eax_1 >>= 1)
+ ((mem ebp -12) <- eax_1)
+ (eax_2 <- (mem ebp -12))
+ (cjump eax_2 <= 15 :third :fourth)
+ :second
+ (eax_3 <- 4 < 5)
+ ((mem ebp -12) <- eax_3)
+ (goto :end)
+ :third
+ (goto :end)
+ :fourth
+ (eax_4 <- 5 < 4)
+ ((mem ebp -12) <- eax_4)
+ :end
+ (eax_5 <- (mem ebp -12))
+ (eax <- (print eax_5)))

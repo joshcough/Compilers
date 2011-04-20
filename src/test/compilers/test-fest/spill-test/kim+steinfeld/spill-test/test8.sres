@@ -1,0 +1,1 @@
+((ebx <- :middle) ((mem ebp -4) <- ebx) (s_0 <- (mem ebp -4)) (call s_0))

@@ -1,0 +1,1 @@
+((cjump esi < esi :Y :j) (cjump esi < esi :Y :j)) r -36 s

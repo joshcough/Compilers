@@ -1,0 +1,4 @@
+((eax <- (allocate esi :Y))
+ (eax <- (allocate esi :Y))
+ (eax <- (allocate esi :Y))
+ (eax <- (allocate esi :Y)))

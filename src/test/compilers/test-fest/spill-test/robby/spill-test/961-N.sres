@@ -1,0 +1,8 @@
+((s0 <- edi <= edi)
+ ((mem ebp -20) <- s0)
+ (s1 <- edi <= edi)
+ ((mem ebp -20) <- s1)
+ (s2 <- edi <= edi)
+ ((mem ebp -20) <- s2)
+ (s3 <- edi <= edi)
+ ((mem ebp -20) <- s3))

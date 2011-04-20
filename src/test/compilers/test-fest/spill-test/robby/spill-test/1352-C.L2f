@@ -1,0 +1,1 @@
+((eax <- (print C))) C -32 s

@@ -1,0 +1,1 @@
+((cjump H <= H :A :c) (cjump H <= H :A :c) (cjump H <= H :A :c) (cjump H <= H :A :c)) H -32 s

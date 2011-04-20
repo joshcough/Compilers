@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -16))
+ (cjump s0 < s0 :G :d)
+ (s1 <- (mem ebp -16))
+ (cjump s1 < s1 :G :d))

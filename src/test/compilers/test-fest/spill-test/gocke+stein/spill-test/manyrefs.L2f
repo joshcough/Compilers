@@ -1,0 +1,9 @@
+((x <- ebx)
+ (y <- x)
+ (eax <- x)
+ (x <- eax)
+ (eax <- (print x))
+ (eax <- (allocate ecx x)))
+x
+-16
+s_

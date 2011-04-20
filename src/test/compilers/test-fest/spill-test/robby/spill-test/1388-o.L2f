@@ -1,0 +1,1 @@
+((eax <- (allocate o o)) (eax <- (allocate o o))) o -36 s

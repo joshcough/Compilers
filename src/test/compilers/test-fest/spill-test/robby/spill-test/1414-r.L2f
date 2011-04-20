@@ -1,0 +1,1 @@
+((eax <- (allocate a D)) (eax <- (allocate a D))) r -36 s

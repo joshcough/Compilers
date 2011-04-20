@@ -1,0 +1,14 @@
+((cjump y < 7 :l1 :l2)
+ (cjump y <= 7 :l1 :l2)
+ (cjump y = 7 :l1 :l2)
+ 
+ (cjump x < 7 :l1 :l2)
+ (cjump x <= 7 :l1 :l2)
+ (cjump x = 7 :l1 :l2)
+ 
+ (cjump 7 < x :l1 :l2)
+ (cjump 7 <= x :l1 :l2)
+ (cjump 7 = x :l1 :l2))
+x
+-4
+s_

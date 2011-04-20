@@ -1,0 +1,4 @@
+((eax <- (allocate eax y))
+ (eax <- (allocate eax y))
+ (eax <- (allocate eax y))
+ (eax <- (allocate eax y)))

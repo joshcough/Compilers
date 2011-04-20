@@ -1,0 +1,1 @@
+((cjump ecx = t :v :q) (cjump ecx = t :v :q) (cjump ecx = t :v :q)) t -20 s

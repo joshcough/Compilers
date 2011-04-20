@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -8))
+ (cjump :j < s0 :v :cjump)
+ (s1 <- (mem ebp -8))
+ (cjump :j < s1 :v :cjump))

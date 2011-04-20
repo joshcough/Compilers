@@ -1,0 +1,4 @@
+(((mem ebp -4) <- ecx)
+ ((mem ebp -4) <- ecx)
+ ((mem ebp -4) <- ecx)
+ ((mem ebp -4) <- ecx))

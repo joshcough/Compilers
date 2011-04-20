@@ -1,0 +1,1 @@
+((O <- (mem ecx 0)) (O <- (mem ecx 0))) O -24 s

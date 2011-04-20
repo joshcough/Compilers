@@ -1,0 +1,15 @@
+((x <- 23)
+ (y <- 15)
+ (cjump x = y :first :second)
+
+ :first
+ (y <- 10)
+ (goto :end)
+
+ :second
+ (y <- 5)
+
+ :end)
+y
+-4
+s_

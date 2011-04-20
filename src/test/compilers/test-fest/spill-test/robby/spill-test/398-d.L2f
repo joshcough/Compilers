@@ -1,0 +1,1 @@
+(((mem ecx 4) <- d) ((mem ecx 4) <- d) ((mem ecx 4) <- d)) d -32 s

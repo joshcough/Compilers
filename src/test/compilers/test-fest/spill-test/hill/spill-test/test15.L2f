@@ -1,0 +1,14 @@
+(:start
+ (counter <- 8)
+ (accum <- 1)
+ :retry
+ (accum *= counter)
+ (counter -= 1)
+ (cjump counter <= 0 :retry :done)
+ :done
+ (eax <- (print accum))
+ (eax <- 0)
+ (return))
+accum
+-12
+yyy_

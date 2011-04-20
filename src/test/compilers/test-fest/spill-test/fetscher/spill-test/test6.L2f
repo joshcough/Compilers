@@ -1,0 +1,10 @@
+((x <- 1)
+ (y <- 2)
+ (cjump x < y :yes :no)
+ :yes
+ (eax <- (print x))
+ :no
+ (eax <- (print y)))
+ x
+ -4
+ eax

@@ -1,0 +1,1 @@
+((eax <- (array-error :Q edx))) r 0 s

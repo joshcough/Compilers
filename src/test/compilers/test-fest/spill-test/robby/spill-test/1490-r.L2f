@@ -1,0 +1,1 @@
+((eax <- (allocate K :P)) (eax <- (allocate K :P)) (eax <- (allocate K :P))) r -24 s

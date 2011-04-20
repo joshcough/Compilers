@@ -1,0 +1,6 @@
+(((mem ebp -12) <- -10)
+ (b <- 10)
+ (a_temp0 <- (mem ebp -12))
+ (cjump a_temp0 < b :yes :no)
+ :yes
+ :no)

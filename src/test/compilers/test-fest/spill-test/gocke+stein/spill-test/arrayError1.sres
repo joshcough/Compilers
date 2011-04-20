@@ -1,0 +1,4 @@
+(((mem ebp -4) <- ebx)
+ (y <- 8)
+ (s_0 <- (mem ebp -4))
+ (eax <- (array-error s_0 y)))

@@ -1,0 +1,1 @@
+((eax <- (array-error 0 eax)) (eax <- (array-error 0 eax)) (eax <- (array-error 0 eax))) r -28 s

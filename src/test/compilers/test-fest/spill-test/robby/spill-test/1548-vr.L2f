@@ -1,0 +1,1 @@
+((eax <- (array-error vr edi)) (eax <- (array-error vr edi))) vr -32 s

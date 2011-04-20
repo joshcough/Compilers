@@ -1,0 +1,1 @@
+((ecx <- edi <= ecx) (ecx <- edi <= ecx))

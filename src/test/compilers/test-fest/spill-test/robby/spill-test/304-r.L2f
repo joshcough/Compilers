@@ -1,0 +1,1 @@
+(((mem I 0) <- :b) ((mem I 0) <- :b) ((mem I 0) <- :b) ((mem I 0) <- :b)) r -32 s

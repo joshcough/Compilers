@@ -1,0 +1,6 @@
+((s0 <- (mem ebp -20))
+ (cjump :z = s0 :ny :P)
+ (s1 <- (mem ebp -20))
+ (cjump :z = s1 :ny :P)
+ (s2 <- (mem ebp -20))
+ (cjump :z = s2 :ny :P))

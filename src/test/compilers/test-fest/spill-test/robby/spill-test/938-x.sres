@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -32))
+ (edx <- s0 <= le)
+ (s1 <- (mem ebp -32))
+ (edx <- s1 <= le)
+ (s2 <- (mem ebp -32))
+ (edx <- s2 <= le)
+ (s3 <- (mem ebp -32))
+ (edx <- s3 <= le))

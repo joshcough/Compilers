@@ -1,0 +1,1 @@
+((eax >>= edx) (eax >>= edx) (eax >>= edx))

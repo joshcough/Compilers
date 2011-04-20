@@ -1,0 +1,8 @@
+(((mem ebp -16) <- ebx)
+ (y <- (mem ebp -16))
+ (eax <- (mem ebp -16))
+ ((mem ebp -16) <- eax)
+ (s_0 <- (mem ebp -16))
+ (eax <- (print s_0))
+ (s_1 <- (mem ebp -16))
+ (eax <- (allocate ecx s_1)))

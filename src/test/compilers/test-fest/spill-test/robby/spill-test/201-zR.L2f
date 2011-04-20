@@ -1,0 +1,1 @@
+((ecx <- (mem zR 0)) (ecx <- (mem zR 0)) (ecx <- (mem zR 0))) zR -4 s

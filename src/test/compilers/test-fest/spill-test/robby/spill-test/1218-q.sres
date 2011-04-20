@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -20))
+ (cjump s0 = :t :W :Q)
+ (s1 <- (mem ebp -20))
+ (cjump s1 = :t :W :Q)
+ (s2 <- (mem ebp -20))
+ (cjump s2 = :t :W :Q)
+ (s3 <- (mem ebp -20))
+ (cjump s3 = :t :W :Q))

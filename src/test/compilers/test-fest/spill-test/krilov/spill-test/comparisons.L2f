@@ -1,0 +1,33 @@
+(
+ ; Round 1
+ (x <- y < z)
+ (x <- y <= z)
+ (x <- y = z)
+ 
+ ; Round 2
+ (y <- x < z)
+ (y <- x <= z)
+ (y <- x = z)
+ 
+ ; Round 3
+ (y <- z < x)
+ (y <- z <= x)
+ (y <- z = x)
+ 
+ ; Round 4
+ (x <- x < y)
+ (x <- x <= y)
+ (x <- x = y)
+ 
+ ; Round 5
+ (x <- y < x)
+ (x <- y <= x)
+ (x <- y = x)
+ 
+ ; Round 6
+ (x <- x < x)
+ (x <- x <= x)
+ (x <- x = x))
+x
+-4
+s_

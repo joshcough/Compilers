@@ -1,0 +1,4 @@
+((eax <- (allocate d G))
+ (eax <- (allocate d G))
+ (eax <- (allocate d G))
+ (eax <- (allocate d G)))

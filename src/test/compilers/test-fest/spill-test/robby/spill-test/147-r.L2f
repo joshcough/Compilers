@@ -1,0 +1,1 @@
+((d <- (mem d 0)) (d <- (mem d 0)) (d <- (mem d 0)) (d <- (mem d 0))) r -24 s

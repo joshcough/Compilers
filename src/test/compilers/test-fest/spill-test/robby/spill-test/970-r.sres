@@ -1,0 +1,1 @@
+((s0 <- (mem ebp -4)) (edx <- s0 <= :e) (s1 <- (mem ebp -4)) (edx <- s1 <= :e))

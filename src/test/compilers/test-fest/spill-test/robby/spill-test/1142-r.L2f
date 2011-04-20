@@ -1,0 +1,1 @@
+((cjump eax < 1 :q :S) (cjump eax < 1 :q :S)) r -16 s

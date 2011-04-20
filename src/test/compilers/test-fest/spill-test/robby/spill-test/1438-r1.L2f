@@ -1,0 +1,1 @@
+((eax <- (allocate r T))) r1 -28 s

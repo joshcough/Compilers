@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -36))
+ (cjump s0 = :lk :SZ :i)
+ (s1 <- (mem ebp -36))
+ (cjump s1 = :lk :SZ :i)
+ (s2 <- (mem ebp -36))
+ (cjump s2 = :lk :SZ :i)
+ (s3 <- (mem ebp -36))
+ (cjump s3 = :lk :SZ :i))

@@ -1,0 +1,1 @@
+((edi <<= edi) (edi <<= edi)) r -32 s

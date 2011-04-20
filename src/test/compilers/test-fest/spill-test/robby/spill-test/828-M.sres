@@ -1,0 +1,1 @@
+((s0 <- (mem ebp 0)) (ecx <- s0 = s0) (s1 <- (mem ebp 0)) (ecx <- s1 = s1))

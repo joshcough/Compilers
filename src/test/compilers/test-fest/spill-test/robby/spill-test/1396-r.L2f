@@ -1,0 +1,1 @@
+((eax <- (allocate R R)) (eax <- (allocate R R))) R -24 s

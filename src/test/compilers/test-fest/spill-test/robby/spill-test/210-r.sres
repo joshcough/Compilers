@@ -1,0 +1,4 @@
+((edi <- (mem ebx 0))
+ (edi <- (mem ebx 0))
+ (edi <- (mem ebx 0))
+ (edi <- (mem ebx 0)))

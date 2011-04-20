@@ -1,0 +1,1 @@
+((eax <- (array-error f :NY))) f -24 s

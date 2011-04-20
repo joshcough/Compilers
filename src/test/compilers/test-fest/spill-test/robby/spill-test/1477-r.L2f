@@ -1,0 +1,1 @@
+((eax <- (allocate :F ecx))) r -32 s

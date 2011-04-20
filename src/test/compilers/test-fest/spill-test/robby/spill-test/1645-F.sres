@@ -1,0 +1,1 @@
+((s0 <- (mem ebp -16)) (eax <- (array-error 4 s0)))

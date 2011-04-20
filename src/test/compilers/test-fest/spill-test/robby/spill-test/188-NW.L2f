@@ -1,0 +1,1 @@
+((eax <- (mem NW 0)) (eax <- (mem NW 0)) (eax <- (mem NW 0))) NW -16 s

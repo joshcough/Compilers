@@ -1,0 +1,1 @@
+((cjump eax < eax :me :C) (cjump eax < eax :me :C) (cjump eax < eax :me :C) (cjump eax < eax :me :C)) r -28 s

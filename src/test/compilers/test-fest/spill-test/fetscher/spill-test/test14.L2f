@@ -1,0 +1,8 @@
+((a <- -10)
+ (b <- 10)
+ (cjump a < b :yes :no)
+ :yes
+ :no)
+ a
+ -12
+ a_temp

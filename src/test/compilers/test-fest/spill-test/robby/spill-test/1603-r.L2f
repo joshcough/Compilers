@@ -1,0 +1,1 @@
+((eax <- (array-error :wi V)) (eax <- (array-error :wi V))) r -12 s

@@ -1,0 +1,1 @@
+((cjump g <= g :P :s) (cjump g <= g :P :s)) r -12 s

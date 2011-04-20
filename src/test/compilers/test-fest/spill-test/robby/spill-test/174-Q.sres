@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -16))
+ (NFP <- (mem s0 0))
+ (s1 <- (mem ebp -16))
+ (NFP <- (mem s1 0)))

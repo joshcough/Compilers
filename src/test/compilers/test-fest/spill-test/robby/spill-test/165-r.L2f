@@ -1,0 +1,1 @@
+((eax <- (mem eax 4)) (eax <- (mem eax 4))) r -8 s

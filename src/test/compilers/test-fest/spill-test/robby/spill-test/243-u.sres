@@ -1,0 +1,6 @@
+((s0 <- (mem ebp -8))
+ (N <- (mem s0 4))
+ (s1 <- (mem ebp -8))
+ (N <- (mem s1 4))
+ (s2 <- (mem ebp -8))
+ (N <- (mem s2 4)))

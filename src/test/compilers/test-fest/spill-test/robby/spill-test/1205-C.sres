@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -16))
+ (cjump esi = s0 :C :Kw)
+ (s1 <- (mem ebp -16))
+ (cjump esi = s1 :C :Kw)
+ (s2 <- (mem ebp -16))
+ (cjump esi = s2 :C :Kw)
+ (s3 <- (mem ebp -16))
+ (cjump esi = s3 :C :Kw))

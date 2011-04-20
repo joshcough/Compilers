@@ -1,0 +1,1 @@
+((eax <- (array-error FVx FVx)) (eax <- (array-error FVx FVx))) FVx -4 s

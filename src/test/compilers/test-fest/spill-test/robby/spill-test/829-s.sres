@@ -1,0 +1,4 @@
+((s10 <- ecx < ecx)
+ ((mem ebp -36) <- s10)
+ (s11 <- ecx < ecx)
+ ((mem ebp -36) <- s11))

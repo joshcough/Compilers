@@ -1,0 +1,8 @@
+((s0 <- :rD <= :print)
+ ((mem ebp 0) <- s0)
+ (s1 <- :rD <= :print)
+ ((mem ebp 0) <- s1)
+ (s2 <- :rD <= :print)
+ ((mem ebp 0) <- s2)
+ (s3 <- :rD <= :print)
+ ((mem ebp 0) <- s3))

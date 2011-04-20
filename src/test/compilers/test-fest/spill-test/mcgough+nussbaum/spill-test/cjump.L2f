@@ -1,0 +1,1 @@
+((var <- 3) (eax <- 5) (cjump var < eax :true :false) :true (eax += var) (goto :done) :false (eax -= var) :done) var -4 pre_

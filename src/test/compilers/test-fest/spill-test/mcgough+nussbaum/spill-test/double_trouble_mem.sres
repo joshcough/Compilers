@@ -1,0 +1,1 @@
+(((mem ebp -4) <- 3) (pre_0 <- (mem ebp -4)) ((mem eax 4) <- pre_0))

@@ -1,0 +1,4 @@
+((s0 <- (mem ebp -36))
+ (cjump :i = s0 :o :P)
+ (s1 <- (mem ebp -36))
+ (cjump :i = s1 :o :P))

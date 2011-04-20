@@ -1,0 +1,4 @@
+((bqA <- (mem bqA 0))
+ (bqA <- (mem bqA 0))
+ (bqA <- (mem bqA 0))
+ (bqA <- (mem bqA 0)))

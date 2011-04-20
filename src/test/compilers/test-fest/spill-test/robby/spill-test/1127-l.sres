@@ -1,0 +1,6 @@
+((s0 <- (mem ebp -28))
+ (cjump s0 <= :Q :V :e)
+ (s1 <- (mem ebp -28))
+ (cjump s1 <= :Q :V :e)
+ (s2 <- (mem ebp -28))
+ (cjump s2 <= :Q :V :e))

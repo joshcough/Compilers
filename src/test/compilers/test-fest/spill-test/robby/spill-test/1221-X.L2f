@@ -1,0 +1,1 @@
+((cjump X < :d :s :lh) (cjump X < :d :s :lh)) X -12 s

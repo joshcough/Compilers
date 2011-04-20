@@ -1,0 +1,1 @@
+(((mem f 0) <- ecx) ((mem f 0) <- ecx))

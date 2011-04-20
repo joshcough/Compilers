@@ -1,0 +1,1 @@
+((eax <- (allocate :NNp 2)) (eax <- (allocate :NNp 2)))

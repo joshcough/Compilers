@@ -1,0 +1,1 @@
+((cjump t < R :o :eax) (cjump t < R :o :eax) (cjump t < R :o :eax)) R -20 s

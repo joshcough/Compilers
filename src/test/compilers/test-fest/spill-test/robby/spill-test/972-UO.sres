@@ -1,0 +1,8 @@
+((s0 <- ID = u)
+ ((mem ebp -8) <- s0)
+ (s1 <- ID = u)
+ ((mem ebp -8) <- s1)
+ (s2 <- ID = u)
+ ((mem ebp -8) <- s2)
+ (s3 <- ID = u)
+ ((mem ebp -8) <- s3))

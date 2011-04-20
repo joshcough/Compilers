@@ -1,0 +1,4 @@
+((eax <- (mem edx 8))
+ (eax <- (mem edx 8))
+ (eax <- (mem edx 8))
+ (eax <- (mem edx 8)))

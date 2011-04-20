@@ -1,0 +1,1 @@
+((cjump 3 <= :j :SJ :z) (cjump 3 <= :j :SJ :z) (cjump 3 <= :j :SJ :z) (cjump 3 <= :j :SJ :z)) r 0 s

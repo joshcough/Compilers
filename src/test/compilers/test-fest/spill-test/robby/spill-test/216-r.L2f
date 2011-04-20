@@ -1,0 +1,1 @@
+((k <- (mem edx 0)) (k <- (mem edx 0)) (k <- (mem edx 0)) (k <- (mem edx 0))) r -12 s

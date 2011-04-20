@@ -1,0 +1,6 @@
+((s0 <- eax = edi)
+ ((mem ebp 0) <- s0)
+ (s1 <- eax = edi)
+ ((mem ebp 0) <- s1)
+ (s2 <- eax = edi)
+ ((mem ebp 0) <- s2))

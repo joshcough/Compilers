@@ -1,0 +1,1 @@
+((eax <- (allocate v Ko)) (eax <- (allocate v Ko)) (eax <- (allocate v Ko))) Ko -36 s

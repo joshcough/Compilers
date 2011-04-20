@@ -1,0 +1,4 @@
+(((mem edx 0) <- edx)
+ ((mem edx 0) <- edx)
+ ((mem edx 0) <- edx)
+ ((mem edx 0) <- edx))

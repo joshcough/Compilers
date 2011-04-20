@@ -1,0 +1,1 @@
+((eax <- (allocate t edx))) t -8 s

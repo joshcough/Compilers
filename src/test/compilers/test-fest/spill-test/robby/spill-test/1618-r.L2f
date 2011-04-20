@@ -1,0 +1,1 @@
+((eax <- (array-error :o ebx)) (eax <- (array-error :o ebx)) (eax <- (array-error :o ebx))) r -20 s

@@ -1,0 +1,1 @@
+(((mem l 0) <- ecx) ((mem l 0) <- ecx) ((mem l 0) <- ecx) ((mem l 0) <- ecx)) r -8 s

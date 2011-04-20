@@ -1,0 +1,4 @@
+(((mem ebx 0) <- :S)
+ ((mem ebx 0) <- :S)
+ ((mem ebx 0) <- :S)
+ ((mem ebx 0) <- :S))

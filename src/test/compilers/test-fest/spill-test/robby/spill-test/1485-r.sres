@@ -1,0 +1,3 @@
+((eax <- (allocate px esi))
+ (eax <- (allocate px esi))
+ (eax <- (allocate px esi)))

@@ -1,0 +1,1 @@
+((var <- 3) ((mem eax 4) <- var)) var -4 pre_

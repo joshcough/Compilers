@@ -1,0 +1,24 @@
+((eax <<= ecx)
+ (ebx >>= ecx)
+ 
+ (eax <<= x)
+ (ebx <<= x)
+ 
+ (eax <<= y)
+ (ebx <<= y)
+ 
+ (eax >>= x)
+ (ebx >>= x)
+ 
+ (x <<= x)
+ (x <<= y)
+ (y <<= x)
+ (y <<= z)
+ 
+ (x >>= x)
+ (x >>= y)
+ (y >>= x)
+ (y >>= z))
+x
+-4
+s_

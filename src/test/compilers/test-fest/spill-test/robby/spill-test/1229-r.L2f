@@ -1,0 +1,1 @@
+((cjump edx = ebx :f :k)) r -28 s

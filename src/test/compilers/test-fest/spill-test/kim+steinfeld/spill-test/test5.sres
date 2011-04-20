@@ -1,0 +1,8 @@
+(((mem ebp -4) <- 3)
+ (y <- 4)
+ (s_0 <- (mem ebp -4))
+ (s_0 *= s_0)
+ ((mem ebp -4) <- s_0)
+ (y *= y)
+ (eax <- (mem ebp -4))
+ (eax += y))

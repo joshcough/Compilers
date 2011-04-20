@@ -1,0 +1,1 @@
+((eax <- (allocate ebx :b)) (eax <- (allocate ebx :b)))

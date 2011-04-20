@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -28))
+ (esi <- s0 = s0)
+ (s1 <- (mem ebp -28))
+ (esi <- s1 = s1)
+ (s2 <- (mem ebp -28))
+ (esi <- s2 = s2)
+ (s3 <- (mem ebp -28))
+ (esi <- s3 = s3))

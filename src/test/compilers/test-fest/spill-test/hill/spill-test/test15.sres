@@ -1,0 +1,14 @@
+(:start
+ (counter <- 8)
+ ((mem ebp -12) <- 1)
+ :retry
+ (yyy_0 <- (mem ebp -12))
+ (yyy_0 *= counter)
+ ((mem ebp -12) <- yyy_0)
+ (counter -= 1)
+ (cjump counter <= 0 :retry :done)
+ :done
+ (yyy_1 <- (mem ebp -12))
+ (eax <- (print yyy_1))
+ (eax <- 0)
+ (return))

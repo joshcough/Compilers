@@ -1,0 +1,1 @@
+(((mem eax 4) <- eax) ((mem eax 4) <- eax) ((mem eax 4) <- eax)) r -16 s

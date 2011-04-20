@@ -1,0 +1,4 @@
+((s0 <- (mem ebp 0))
+ (cjump s0 < s0 :CD :Hb)
+ (s1 <- (mem ebp 0))
+ (cjump s1 < s1 :CD :Hb))

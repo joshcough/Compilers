@@ -1,0 +1,4 @@
+((eax <- (allocate edi BY))
+ (eax <- (allocate edi BY))
+ (eax <- (allocate edi BY))
+ (eax <- (allocate edi BY)))

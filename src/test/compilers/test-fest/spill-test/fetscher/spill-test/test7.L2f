@@ -1,0 +1,7 @@
+((something <- -1)
+ (somethingelse <- -2)
+ (x <- somethingelse)
+ (x *= something))
+ something
+ -16
+ something_

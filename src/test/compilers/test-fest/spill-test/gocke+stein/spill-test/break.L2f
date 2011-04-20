@@ -1,0 +1,11 @@
+((x <- 0)
+  :loop
+  (x += 1)
+  (cjump x = 5 :out :next)
+  :next
+  (goto :loop)
+  :out
+  (eax <- (print x)))
+x
+-4
+s_

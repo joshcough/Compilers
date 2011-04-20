@@ -1,0 +1,10 @@
+((v <- eax)
+ (u <- 8)
+ (v += v)
+ (z <- 9)
+ (z += v)
+ (eax <- z)
+ (return))
+v
+-4
+spilled_

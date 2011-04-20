@@ -1,0 +1,1 @@
+((ecx <- (mem DM 0)) (ecx <- (mem DM 0))) DM -4 s

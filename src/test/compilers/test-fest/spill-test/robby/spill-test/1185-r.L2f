@@ -1,0 +1,1 @@
+((cjump :O <= eax :e :X) (cjump :O <= eax :e :X) (cjump :O <= eax :e :X) (cjump :O <= eax :e :X)) r -4 s

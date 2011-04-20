@@ -1,0 +1,1 @@
+((eax <- (allocate b :s)) (eax <- (allocate b :s))) b -28 s

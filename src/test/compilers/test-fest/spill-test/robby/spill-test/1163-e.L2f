@@ -1,0 +1,1 @@
+((cjump edi = e :e :E) (cjump edi = e :e :E)) e -32 s

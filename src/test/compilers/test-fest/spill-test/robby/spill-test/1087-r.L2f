@@ -1,0 +1,1 @@
+((cjump edx = edx :jS :goto) (cjump edx = edx :jS :goto) (cjump edx = edx :jS :goto)) r 0 s

@@ -1,0 +1,1 @@
+((eax <- (array-error :f :mem)) (eax <- (array-error :f :mem)) (eax <- (array-error :f :mem)) (eax <- (array-error :f :mem))) r -20 s

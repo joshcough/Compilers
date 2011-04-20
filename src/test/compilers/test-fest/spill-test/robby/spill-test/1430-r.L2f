@@ -1,0 +1,1 @@
+((eax <- (allocate esi :Y)) (eax <- (allocate esi :Y)) (eax <- (allocate esi :Y)) (eax <- (allocate esi :Y))) r -20 s

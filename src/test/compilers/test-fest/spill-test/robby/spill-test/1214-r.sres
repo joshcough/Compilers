@@ -1,0 +1,4 @@
+((cjump O = ecx :print :q)
+ (cjump O = ecx :print :q)
+ (cjump O = ecx :print :q)
+ (cjump O = ecx :print :q))

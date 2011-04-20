@@ -1,0 +1,1 @@
+((eax <- (allocate y y))) x -4 s_

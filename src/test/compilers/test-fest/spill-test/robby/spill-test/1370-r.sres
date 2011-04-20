@@ -1,0 +1,4 @@
+((eax <- (print :wYG))
+ (eax <- (print :wYG))
+ (eax <- (print :wYG))
+ (eax <- (print :wYG)))

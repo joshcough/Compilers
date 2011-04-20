@@ -1,0 +1,1 @@
+((cjump w < E :W :I) (cjump w < E :W :I)) r 0 s

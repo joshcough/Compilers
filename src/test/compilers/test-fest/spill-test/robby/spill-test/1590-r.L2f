@@ -1,0 +1,1 @@
+((eax <- (array-error U edi)) (eax <- (array-error U edi))) r -4 s

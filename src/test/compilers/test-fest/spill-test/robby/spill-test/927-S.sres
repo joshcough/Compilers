@@ -1,0 +1,8 @@
+((s0 <- (mem ebp -24))
+ (bw <- :rC < s0)
+ (s1 <- (mem ebp -24))
+ (bw <- :rC < s1)
+ (s2 <- (mem ebp -24))
+ (bw <- :rC < s2)
+ (s3 <- (mem ebp -24))
+ (bw <- :rC < s3))

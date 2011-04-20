@@ -1,0 +1,4 @@
+((eax <- (allocate 2 4))
+ (eax <- (allocate 2 4))
+ (eax <- (allocate 2 4))
+ (eax <- (allocate 2 4)))

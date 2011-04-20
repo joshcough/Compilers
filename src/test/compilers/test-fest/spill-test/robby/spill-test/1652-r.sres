@@ -1,0 +1,4 @@
+((eax <- (array-error WPX :q))
+ (eax <- (array-error WPX :q))
+ (eax <- (array-error WPX :q))
+ (eax <- (array-error WPX :q)))
