@@ -19,21 +19,31 @@ object InterferenceMain {
 
 trait Interference {
 
-  case class InterferenceGraph(data:BiDirectionalGraph[X]){
-    def sortedMembers = data.members.toList.sorted
+  class InterferenceGraph(private val map:Map[X, Set[X]]){
+    def this() = this(Map())
 
-    // TODO: this could all get cleaned up.
-    def addInterference(connections:(X,X)*): InterferenceGraph = addInterference(connections.toSet)
-    def addInterference(connections:Set[(X,X)]): InterferenceGraph = connections.toList match {
-      case Nil => this
-      // dont bother adding ebp or esp to the graph.
-      case (x1,x2)::xs if (x1 == ebp || x2 == ebp || x1 == esp || x2 == esp) => this.addInterference(xs.toSet)
-      case (x1,x2)::xs => InterferenceGraph(data + (x1 -> x2)).addInterference(xs.toSet)
+    def addNodes(xs:X*):InterferenceGraph = xs.foldLeft(this){ case (g, x) => g.addNode(x) }
+
+    def addNode(x:X):InterferenceGraph = {
+      if(map.contains(x)) this else new InterferenceGraph(map + (x -> Set()))
+    }
+    // TODO...I wonder if i should add all nodes first, and fail here if x1 or x2 isnt present...
+    def addEdge(x1:X, x2:X): InterferenceGraph = {
+      // dont bother adding ebp or esp
+      if(x1 == ebp || x1 == esp || x2 == ebp || x2 == esp) this
+      else{
+        val x1Connections = map.getOrElse(x1, Set()) + x2
+        val x2Connections = map.getOrElse(x2, Set()) + x1
+        new InterferenceGraph(map + (x1 -> x1Connections) + (x2 -> x2Connections))
+      }
     }
 
-    def sortedNeighborNames(x:X): List[String] = {
-      data.neigborsOf(x).toList.sorted.map(L2Printer.toCode)
+    def addEdges(connections:(X,X)*): InterferenceGraph = {
+      connections.foldLeft(this){ case (g, (x1, x2)) => g.addEdge(x1, x2) }
     }
+
+    def members = map.keySet
+    def neigborsOf(x:X): Set[X] = map(x)
 
     /**
       Example:
@@ -45,18 +55,22 @@ trait Interference {
       (esi eax ebx ecx edi edx x)
       (x eax edi esi))
      */
-    def hwView = sortedMembers.map{
-      m => (L2Printer.toCode(m) :: sortedNeighborNames(m)).mkString("(", " ", ")")
-    }.mkString("(", "\n", ")")
+    def hwView = {
+      def sortedMembers = members.toList.sorted
+      def sortedNeighborNames(x:X): List[String] = map(x).toList.sorted.map(L2Printer.toCode)
+      sortedMembers.map{ m =>
+        (L2Printer.toCode(m) :: sortedNeighborNames(m)).mkString("(", " ", ")")
+      }.mkString("(", "\n", ")")
+    }
   }
 
   val registerInterference: InterferenceGraph = {
-    InterferenceGraph(new BiDirectionalGraph(Set(
+    new InterferenceGraph().addEdges(
       eax -> ebx, eax -> ecx, eax -> edi, eax -> edx, eax -> esi,
       ebx -> ecx, ebx -> edi, ebx -> edx, ebx -> esi,
       ecx -> edi, ecx -> edx, ecx -> esi,
       edi -> edx, edi -> esi,
-      edx -> esi)))
+      edx -> esi)
   }
 
   /**
@@ -67,8 +81,11 @@ trait Interference {
       All real registers interfere with each other
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
-    registerInterference.addInterference(iioss.flatMap { iios: InstructionInOutSet =>
+
+    val interference: List[(X,X)] = iioss.flatMap { iios: InstructionInOutSet =>
       //println("iios: " + iios)
+      val variables = iios.in ++ iios.out
+
       val in_interference: Set[(X,X)] = for(x <- iios.in; y <- iios.in; if(x!=y)) yield (x,y)
       val out_interference: Set[(X,X)] = {
         // add in the kill
@@ -91,7 +108,12 @@ trait Interference {
         case _ => Set()
       }
       in_interference ++ out_interference ++ special_interference
-    }.toSet)
+    }
+
+    // TODO: find a better way to get the variables.
+    val variables = iioss.flatMap { iios => (iios.in ++ iios.out) }.collect{ case v:Variable => v }
+
+    registerInterference.addNodes(variables:_*).addEdges(interference:_*)
   }
 
   // the second thing returned here is the progress we were actually able to make.
@@ -101,14 +123,14 @@ trait Interference {
     def attemptAllocation(graph:InterferenceGraph):
       (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
       //println("graph: " + graph.hwView)
-      val variables: Set[Variable] = graph.data.members.collect{ case v: Variable => v }
+      val variables: Set[Variable] = graph.members.collect{ case v: Variable => v }.toSet
       //println("variables: " + variables)
       val registers: Set[Register] = Set(eax, ebx, ecx, edx, edi, esi)
       val defaultPairings: Map[Variable, Option[Register]] = variables.map(v => (v, None)).toMap
       val finalPairings = variables.foldLeft(defaultPairings){ (pairs, v) =>
         //println("--------------------------------------")
         //println("v=" + v)
-        val neighbors: Set[X] = graph.data.neigborsOf(v)
+        val neighbors: Set[X] = graph.neigborsOf(v)
         //println("neighbors=" + neighbors)
         val neighborRegisters: Set[Register] = neighbors.collect{ case r: Register => r }
         //println("neighborRegisters=" + neighborRegisters)

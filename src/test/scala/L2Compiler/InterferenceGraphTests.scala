@@ -189,7 +189,7 @@ class InterferenceGraphTests extends L2CompilerTest {
 
   interferenceAndAllocationTest(
     name="simple right shift",
-    code = "((x <- 7) (x >>= 2))",
+    code = "((x >>= x))",
     expectedInterference = """
       |((eax ebx ecx edi edx esi x)
       |(ebx eax ecx edi edx esi x)
@@ -202,7 +202,7 @@ class InterferenceGraphTests extends L2CompilerTest {
 
   interferenceAndAllocationTest(
     name="simple left shift",
-    code = "((x <- 7) (x <<= 2))",
+    code = "((x <<= x))",
     expectedInterference = """
       |((eax ebx ecx edi edx esi x)
       |(ebx eax ecx edi edx esi x)
@@ -215,7 +215,7 @@ class InterferenceGraphTests extends L2CompilerTest {
 
   interferenceAndAllocationTest(
     name="right and left shifts",
-    code = "((x <- 7) (x <<= 2) (x >>= 2))",
+    code = "((x <<= x) (x >>= x))",
     expectedInterference = """
       |((eax ebx ecx edi edx esi x)
       |(ebx eax ecx edi edx esi x)
@@ -228,7 +228,7 @@ class InterferenceGraphTests extends L2CompilerTest {
 
   interferenceAndAllocationTest(
     name="right and left shifts with two variables",
-    code = "((x <- 7) (y <- 7) (x <<= 2) (y <<= 2) (x >>= 2) (y >>= 2))",
+    code = "((x <- 7) (y <- 7) (x <<= y) (y <<= x) (x >>= y) (y >>= x))",
     expectedInterference = """
       |((eax ebx ecx edi edx esi x y)
       |(ebx eax ecx edi edx esi x y)
@@ -332,7 +332,7 @@ class InterferenceGraphTests extends L2CompilerTest {
   // TODO: figure out how to remove this  
   test("base graph with some added interference") {
     val x = Variable("x")
-    assert(registerInterference.addInterference(eax -> x, edi -> x, esi -> x).hwView === """
+    assert(registerInterference.addEdges(eax -> x, edi -> x, esi -> x).hwView === """
       |((eax ebx ecx edi edx esi x)
       |(ebx eax ecx edi edx esi)
       |(ecx eax ebx edi edx esi)
