@@ -4,27 +4,17 @@ import L2AST._
 
 class InterferenceGraphTests extends L2CompilerTest {
 
-  test("base graph with just the registers") {
-    assert(registerInterference.hwView === """
+  interferenceAndAllocationTest(
+    name = "no code at all",
+    code = "()",
+    expectedInterference = """
       |((eax ebx ecx edi edx esi)
       |(ebx eax ecx edi edx esi)
       |(ecx eax ebx edi edx esi)
       |(edi eax ebx ecx edx esi)
       |(edx eax ebx ecx edi esi)
-      |(esi eax ebx ecx edi edx))""".clean)
-  }
-
-  test("base graph with some added interference") {
-    val x = Variable("x")
-    assert(registerInterference.addInterference(eax -> x, edi -> x, esi -> x).hwView === """
-      |((eax ebx ecx edi edx esi x)
-      |(ebx eax ecx edi edx esi)
-      |(ecx eax ebx edi edx esi)
-      |(edi eax ebx ecx edx esi x)
-      |(edx eax ebx ecx edi esi)
-      |(esi eax ebx ecx edi edx x)
-      |(x eax edi esi))""".clean)
-  }
+      |(esi eax ebx ecx edi edx))""",
+    expectedAllocation="()")
 
   interferenceAndAllocationTest(
     name = "http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture05.pdf (p 111)",
@@ -197,13 +187,129 @@ class InterferenceGraphTests extends L2CompilerTest {
       |(x eax edi esi))""",
     expectedAllocation="((x ebx))")
 
+  interferenceAndAllocationTest(
+    name="simple right shift",
+    code = "((x <- 7) (x >>= 2))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi x)
+      |(ebx eax ecx edi edx esi x)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x)
+      |(edx eax ebx ecx edi esi x)
+      |(esi eax ebx ecx edi edx x)
+      |(x eax ebx edi edx esi))""",
+    expectedAllocation="((x ecx))")
+
+  interferenceAndAllocationTest(
+    name="simple left shift",
+    code = "((x <- 7) (x <<= 2))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi x)
+      |(ebx eax ecx edi edx esi x)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x)
+      |(edx eax ebx ecx edi esi x)
+      |(esi eax ebx ecx edi edx x)
+      |(x eax ebx edi edx esi))""",
+    expectedAllocation="((x ecx))")
+
+  interferenceAndAllocationTest(
+    name="right and left shifts",
+    code = "((x <- 7) (x <<= 2) (x >>= 2))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi x)
+      |(ebx eax ecx edi edx esi x)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x)
+      |(edx eax ebx ecx edi esi x)
+      |(esi eax ebx ecx edi edx x)
+      |(x eax ebx edi edx esi))""",
+    expectedAllocation="((x ecx))")
+
+  interferenceAndAllocationTest(
+    name="right and left shifts with two variables",
+    code = "((x <- 7) (y <- 7) (x <<= 2) (y <<= 2) (x >>= 2) (y >>= 2))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi x y)
+      |(ebx eax ecx edi edx esi x y)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x y)
+      |(edx eax ebx ecx edi esi x y)
+      |(esi eax ebx ecx edi edx x y)
+      |(x eax ebx edi edx esi y)
+      |(y eax ebx edi edx esi x))""",
+    expectedAllocation="#f")
+
+  interferenceAndAllocationTest(
+    name="Comp 1",
+    code = "((x <- 5 < 6))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx x)
+      |(x edi esi))""",
+    expectedAllocation="((x eax))")
+
+  interferenceAndAllocationTest(
+    name="Comp 2",
+    code = "((x <- 5 < 6) (y <- 5 <= 6) )",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x y)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx x y)
+      |(x edi esi)
+      |(y edi esi))""",
+    expectedAllocation="((x eax) (y eax))")
+
+  interferenceAndAllocationTest(
+    name="Comp 3",
+    code = "((x <- 5 < 6) (y <- 5 <= 6) (x <- x < x))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x y)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx x y)
+      |(x edi esi y)
+      |(y edi esi x))""",
+    expectedAllocation="((x eax) (y ebx))")
+
+  new java.io.File("./graph-test").mkdir()
+  val count = Iterator.from(0)
+
   def interferenceAndAllocationTest(name:String, code:String, expectedInterference:String, expectedAllocation:String){
     test(name){
-      val inouts = inoutForTesting(code.clean, step=End)
-      val interference = buildInterferenceSet(inouts)
-      val actualAllocation = printAllocation(attemptAllocation(inouts)._1)
-      assert(interference.hwView === expectedInterference.clean)
-      assert(actualAllocation === expectedAllocation)
+      val (interference, actualAllocation) = InterferenceMain.interferenceAndAllocation(code.clean)
+      verboseAssert(code, interference, expectedInterference)
+      verboseAssert(code, actualAllocation, expectedAllocation)
+      // write out the tests files and results.
+      import java.io.File
+      import io.FileHelper._
+      val index = count.next()
+      // write the test
+      new File("./graph-test/test" + index + ".L2f").write(code.clean)
+      // write the expected result
+      new File("./graph-test/test" + index + ".gres").write(interference + "\n" + actualAllocation)
     }
+  }
+
+  // TODO: figure out how to remove this  
+  test("base graph with some added interference") {
+    val x = Variable("x")
+    assert(registerInterference.addInterference(eax -> x, edi -> x, esi -> x).hwView === """
+      |((eax ebx ecx edi edx esi x)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx x)
+      |(x eax edi esi))""".clean)
   }
 }

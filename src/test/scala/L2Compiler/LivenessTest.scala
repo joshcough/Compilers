@@ -423,7 +423,6 @@ class LivenessTest extends L2CompilerTest {
     // print hw view only if we are viewing the final result of a liveness run
     if(!step.isDefined){
       // write out the tests files and results.
-
       val index = count.next()
       // write the test
       new File("./liveness-test/test" + index + ".L2f").write(code.clean)

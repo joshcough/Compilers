@@ -2,6 +2,21 @@ package L2Compiler
 
 import L2AST._
 
+object InterferenceMain {
+  import L2CompilerExtras._
+  import io.FileHelper._
+
+  def main(args:Array[String]){
+    val (i,a) = interferenceAndAllocation(new java.io.File(args(0)).read)
+    println(i + "\n" + a)
+  }
+
+  def interferenceAndAllocation(code:String) = {
+    val inouts = inoutForTesting(code, None)
+    (buildInterferenceSet(inouts).hwView, printAllocation(attemptAllocation(inouts)._1))
+  }
+}
+
 trait Interference {
 
   case class InterferenceGraph(data:BiDirectionalGraph[X]){
