@@ -93,29 +93,6 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite with L2CompilerExtr
     def clean = s.stripMargin.trim
   }
 
-  def testParseSExpr(t: (Any, L2)){
-    test(t._1 + " => " + t._2){ assert(parse(t._1) === t._2) }
-  }
-
-  def testParse(t: (String, L2)): Unit = {
-    test(t._1 + " => " + t._2){ assert(parseProgram(t._1) === t._2) }
-  }
-
-  def testParseS(t: (Any, S)): Unit = {
-    test(t._1 + " => " + t._2){ assert(parseS(t._1) === t._2) }
-  }
-
-  def testParseInstruction(t: (String, Instruction)): Unit = {
-    test(t._1 + " => " + t._2){ assert(parseInstruction(read(t._1)) === t._2) }
-  }
-
-  def testParseInstructionError(t: (String, String)): Unit  = {
-    test(t._1 + " => " + t._2){
-      val ex = intercept[Exception] { parseInstruction(read(t._1)) }
-      assert(ex.getMessage === t._2)
-    }
-  }
-
   def testCompile(input:String, expected:Option[String] = None, error: Option[String] = None): Unit = {
     test(input.clean){
       if(expected == None && error == None) throw new IllegalStateException()
