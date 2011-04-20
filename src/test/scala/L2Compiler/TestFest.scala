@@ -20,20 +20,13 @@ class L2TestFest2010 extends L2CompilerTest {
 
 abstract class TestFest(testFiles:Iterable[File],
                         resultFiles:Iterable[File],
-                        f: String => String) extends org.scalatest.FunSuite {
+                        f: String => String) extends L2CompilerTest {
   for((testFile, resultFile) <- testFiles.zip(resultFiles)) {
     test(testFile.getAbsolutePath){
       val code = testFile.read
       val myResult = f(code)
-      val exptectedResult = resultFile.read.replace("\n", "").replace("  ", " ")
-
-      if(myResult != exptectedResult){
-        println(testFile + " failed: ")
-        println("input: " + code)
-        println("actual   result:\t" + myResult)
-        println("expected result:\t" + exptectedResult)
-      }
-      assert(myResult === exptectedResult)
+      val expectedResult = resultFile.read.replace("\n", "").replace("  ", " ")
+      verboseAssert(code, myResult, expectedResult)
     }
   }
 }

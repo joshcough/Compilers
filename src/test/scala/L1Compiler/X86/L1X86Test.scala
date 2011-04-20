@@ -204,7 +204,6 @@ trait L1X86Test extends org.scalatest.FunSuite{
     }
   }
 
-
   def testCompileAndRunString(t: (String, String)) { testCompileAndRun(t._1, t._1, t._2) }
   private def testCompileAndRun(testName: String, code: String, expectedResults: String): Unit = {
     test(testName + " => " + expectedResults){

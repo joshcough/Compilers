@@ -122,13 +122,7 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite with L2CompilerExtr
       try{
         val actual = toCode(compile(input.clean))
         if(! expected.isDefined) throw new IllegalStateException("expected error, but didnt get one!")
-        if(actual != expected.get.clean){
-          println("compile test failed")
-          println("code: " + input.clean)
-          println("expected: " + expected.get.clean)
-          println("actual: " + actual)
-        }
-        assert(actual === expected.get.clean)
+        verboseAssert(input, actual, expected.get)
       } catch{
         case e => error match {
           case Some(message) => assert(e.getMessage === message)
@@ -136,6 +130,15 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite with L2CompilerExtr
         }
       }
     }
+  }
+
+  def verboseAssert(code:String, actual: String, expected: String) {
+    if (actual.clean != expected.clean) {
+      println("code:\n" + code.clean)
+      println("actual:\n" + actual.clean)
+      println("expected:\n" + expected.clean)
+    }
+    assert(actual.clean === expected.clean)
   }
 }
 

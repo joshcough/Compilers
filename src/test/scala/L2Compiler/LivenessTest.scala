@@ -417,12 +417,8 @@ class LivenessTest extends L2CompilerTest {
   def livenessTest(code:String, expected:String, step: Option[Int] = None) = {
     val insAndOuts = inoutForTesting(code.clean, step=step)
     val actual = L2Printer.testView(insAndOuts)
-    if(actual.clean != expected.clean){
-      println("code:\n" + code.clean)
-      println("actual:\n" + actual.clean)
-      println("expected:\n" + expected.clean)
-    }
-    assert(actual.clean === expected.clean)
+
+    verboseAssert(code, actual, expected)
 
     // print hw view only if we are viewing the final result of a liveness run
     if(!step.isDefined){
