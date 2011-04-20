@@ -43,6 +43,7 @@ trait Interference {
     }
 
     def members = map.keySet
+    def variables = members.collect{ case v: Variable => v }.toSet
     def neigborsOf(x:X): Set[X] = map(x)
 
     /**
@@ -123,7 +124,7 @@ trait Interference {
     def attemptAllocation(graph:InterferenceGraph):
       (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
       //println("graph: " + graph.hwView)
-      val variables: Set[Variable] = graph.members.collect{ case v: Variable => v }.toSet
+      val variables: Set[Variable] = graph.variables
       //println("variables: " + variables)
       val registers: Set[Register] = Set(eax, ebx, ecx, edx, edi, esi)
       val defaultPairings: Map[Variable, Option[Register]] = variables.map(v => (v, None)).toMap
