@@ -1,0 +1,7 @@
+;;test case 5
+(((eax <- 5)
+  ((mem esp -4) <- eax)
+  (eax <- (print eax))
+  ((mem esp -4) <- 3)
+  (eax <- (mem esp -4))
+  (eax <- (print eax))))

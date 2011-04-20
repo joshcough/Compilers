@@ -15,7 +15,7 @@ trait BackEnd{
 }
 
 trait Runner{
-  def runFile(filename:String): String = run(new File(filename).read, filename)
+  def runFile(file:File): String = run(file.read, file.getAbsolutePath)
   def run(code:String, originalFileName:String): String
   def test(code:String) = run(code, "Test.L1")
 }

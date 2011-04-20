@@ -1,0 +1,44 @@
+; More comparison tests
+((
+  ; Compare all numbers between -5 and 5 to the number 2
+  (edi <- 5)   ; loop termination variable
+  (esi <- -5)   ; loop index variable
+  :loop1
+  (cjump esi <= edi :keep_going1 :done1)
+  :keep_going1  
+  (eax <- esi = 2)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax))
+  (esi += 1)
+  (goto :loop1)
+  :done1
+  
+  ; Now do the same, but with < instead of =
+  (edi <- 5)   ; loop termination variable
+  (esi <- -5)   ; loop index variable
+  :loop2
+  (cjump esi <= edi :keep_going2 :done2)
+  :keep_going2
+  (eax <- esi < 2)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax))
+  (esi += 1)
+  (goto :loop2)
+  :done2
+  
+  ; And again, but with <= instead of <
+  (edi <- 5)   ; loop termination variable
+  (esi <- -5)   ; loop index variable
+  :loop3
+  (cjump esi <= edi :keep_going3 :done3)
+  :keep_going3
+  (eax <- esi <= 2)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax))
+  (esi += 1)
+  (goto :loop3)
+  :done3
+))

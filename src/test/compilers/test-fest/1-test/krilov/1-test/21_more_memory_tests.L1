@@ -1,0 +1,39 @@
+; More memory tests
+((
+  ; Construct the array [1 2 3 4 5]
+  
+  ; Allocate the array [0 0 0 0 0]
+  (eax <- (allocate 11 0))
+  (esi <- eax)
+  (esi += 4)    ; esi stores the address of the first element in the array
+  (edi <- esi)
+  (edi += 16)   ; edi stores the address of the last element in the array
+  
+  ; Loop over each element and update it
+  (eax <- 1)
+  :loop1
+  (cjump eax <= 5 :keep_going1 :done1)
+  :keep_going1
+  ; Convert into 2a+1 form
+  (ebx <- eax)
+  (ebx *= 2)
+  (ebx += 1)
+  ((mem esi 0) <- ebx)
+  (esi += 4)
+  (eax += 1)
+  (goto :loop1)
+  :done1
+  
+  ; Now loop over each element and print it
+  (esi -= 20)
+  :loop2
+  (cjump esi <= edi :keep_going2 :done2)
+  
+  :keep_going2
+  (eax <- (mem esi 0))
+  (eax <- (print eax))
+  (esi += 4)
+  (goto :loop2)
+  
+  :done2
+))

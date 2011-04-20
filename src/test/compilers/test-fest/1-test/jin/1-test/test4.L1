@@ -1,0 +1,9 @@
+;;test case 4
+(((eax <- 10)
+  (eax += 5)
+  (eax <- (print eax))
+  (eax <- 9)
+  (ebx <- 4)
+  (eax -= ebx)
+  (eax <- (print eax)))) 
+

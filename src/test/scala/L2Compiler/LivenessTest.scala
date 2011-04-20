@@ -438,24 +438,6 @@ class LivenessTest extends L2CompilerTest {
   }
 }
 
-class LivenessTestRobby extends L2CompilerTest {
-  for((testFile, resultFile) <- io.Dir.RobbyLivenessTests.zip(io.Dir.RobbyLivenessResults)) {
-    test(testFile.getParentFile.getName + "/" + testFile.getName){
-      val code = testFile.read
-      val myResult = LivenessMain.liveness(code)
-      val robbysResult = resultFile.read.replace("\n", "").replace("  ", " ")
-
-      if(myResult != robbysResult){
-        println(testFile + " failed: ")
-        println("code: " + code)
-        println("josh result:\t" + myResult)
-        println("robb result:\t" + robbysResult)
-      }
-      assert(myResult === robbysResult)
-    }
-  }
-}
-
 class LiveRangeTests extends L2CompilerTest {
   // live range tests
   test("http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf (p24)"){

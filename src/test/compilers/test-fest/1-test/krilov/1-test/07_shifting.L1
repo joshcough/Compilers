@@ -1,0 +1,25 @@
+; Test shifting operators
+((
+  ; Test left shift by 1 bit
+  (eax <- 3)  ; 011
+  (eax <<= 1) ; 110
+  (eax += 1)  ; 111 = 7_encoded = 3
+  (eax <- (print eax))  ; 3
+  
+  ; Test left shift by 3 bits
+  (eax <- 3)  ; 011
+  (eax <<= 3) ; 11000
+  (eax += 1)  ; 11001 = 25_encoded = 12
+  (eax <- (print eax))  ; 12
+  
+  ; Test right shift by 1 bit
+  (eax <- 6)  ; 110
+  (eax >>= 1) ; 011 = 3_encoded = 1
+  (eax <- (print eax))  ; 1
+  
+  ; Test right shift by 2 bits
+  (eax <- 20) ; 10100
+  (eax >>= 2) ; 00101 = 5_encoded = 2
+  (eax <- (print eax))  ; 2
+  
+))

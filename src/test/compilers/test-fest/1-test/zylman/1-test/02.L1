@@ -1,0 +1,8 @@
+((;;5 + 4 = 9
+  (ebx <- 5)
+  (ecx <- 4)
+  (ebx += ecx)
+  ;; Encode for printing
+  (ebx *= 2)
+  (ebx += 1)
+  (eax <- (print ebx))))

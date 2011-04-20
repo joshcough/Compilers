@@ -1,0 +1,45 @@
+
+;;test case 1
+(((eax <- 3)
+  (eax <- (print eax))
+  (ecx <- 5)
+  (eax <- (print ecx))
+  (edx <- 7)
+  (eax <- (print edx))
+  (ebx <- 9)
+  (eax <- (print ebx))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

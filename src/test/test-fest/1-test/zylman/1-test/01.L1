@@ -1,2 +1,0 @@
-(((ebx <- 13)
-  (eax <- (print ebx))))

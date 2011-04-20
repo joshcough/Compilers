@@ -1,0 +1,153 @@
+; Tree test - allocates a tree, then traverses it and prints it.
+((
+  ; Create a tree structure containing the following values:
+  ;
+  ;      (7777)
+  ;        |
+  ;        1
+  ;       / \
+  ;     2    5
+  ;    /\    /\
+  ;   3  4  6  7
+  ;  /\ /\ /\  /\
+  ; . .. .. . .  .  (all dots here indicate 9999)
+  ;
+  ; Each node in the tree is a list containing a value, the address of the left child,
+  ; the address of the right child, and the address of the parent.
+  ; The node containing 9999 is a sentinel - we ignore and continue traversal if we encounter it in the address of the child.
+  ; The node containing 7777 is also a sentinel - if we encounter it in the address of the parent, then we know we're 
+  ; at the root node.
+  
+  ; Allocate the root (containing the value 1) - esi will contain the pointer to the root of the tree
+  (eax <- (allocate 9 3))
+  (esi <- eax)
+  (edi <- eax)
+  
+  ; Allocate the 7777 sentinel and set the root's parent pointer to it.
+  (eax <- (allocate 9 7777))
+  ((mem esi 16) <- eax)
+  
+  ; Allocate the left subtree
+  ; -------------------------
+  
+  ; 2
+  (eax <- (allocate 9 5))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 8) <- eax)   ; Update parent's left child
+  (edi <- eax)
+  
+  ; 3
+  (eax <- (allocate 9 7))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 8) <- eax)   ; Update parent's left child
+  (edi <- eax)
+  
+  ; 9999 sentinel
+  (eax <- (allocate 9 9999))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 8) <- eax)   ; Update parent's left child
+  ((mem edi 12) <- eax)  ; Also update parent's right child
+  
+  ; Set edi to point to the 2 node
+  (edi <- (mem edi 16))
+  
+  ; 4
+  (eax <- (allocate 9 9))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 12) <- eax)   ; Update parent's right child
+  (edi <- eax)
+  
+  ; Allocate another 9999 sentinel
+  (eax <- (allocate 9 9999))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 8) <- eax)   ; Update parent's left child
+  ((mem edi 12) <- eax)  ; Also update parent's right child
+  
+  ; Set 4's children to the sentinel node
+  ((mem edi 8) <- eax)
+  ((mem edi 12) <- eax)
+  
+  ;; Allocate the right subtree
+  ;; --------------------------
+  
+  ; Set edi to point to the root again
+  (edi <- esi)
+  
+  ; 5
+  (eax <- (allocate 9 11))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 12) <- eax)   ; Update parent's right child
+  (edi <- eax)
+  
+  ; 6
+  (eax <- (allocate 9 13))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 8) <- eax)   ; Update parent's left child
+  (edi <- eax)
+  
+  ; 9999 sentinel
+  (eax <- (allocate 9 9999))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 8) <- eax)   ; Update parent's left child
+  ((mem edi 12) <- eax)  ; Also update parent's right child
+  
+  ; Set edi to point to the 5 node
+  (edi <- (mem edi 16))
+  
+  ; 7
+  (eax <- (allocate 9 15))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 12) <- eax)   ; Update parent's right child
+  (edi <- eax)
+  
+  ; Allocate another 9999 sentinel
+  (eax <- (allocate 9 9999))
+  ((mem eax 16) <- edi)  ; Set the parent pointer
+  ((mem edi 8) <- eax)   ; Update parent's left child
+  ((mem edi 12) <- eax)  ; Also update parent's right child
+  
+  ; Set 7's children to the sentinel node
+  ((mem edi 8) <- eax)
+  ((mem edi 12) <- eax)
+  
+  ; Now traverse the tree structure (preorder), whose root is at esi
+  (edi <- esi)
+  (call :traverse_tree)
+  )
+  (:traverse_tree
+    ; edi points to the current node
+	
+	; Get the value of the current node and print it
+	(eax <- (mem edi 4))
+	(eax <- (print eax))
+	
+	; Get the pointer to the left child and check its value - if it's 9999, it's the sentinel, so skip it.
+	(esi <- edi)
+	(edi <- (mem edi 8))
+	(eax <- (mem edi 4))
+	(cjump eax = 9999 :skip_left_child :visit_left_child)
+	
+	:visit_left_child
+	(call :traverse_tree)
+	
+	:skip_left_child
+	(edi <- esi)
+	
+	; Get the pointer to the right child and check its value - if it's 9999, it's the sentinel, so skip it.
+	(edi <- (mem edi 12))
+	(eax <- (mem edi 4))
+	(cjump eax = 9999 :skip_right_child :visit_right_child)
+	
+	:visit_right_child
+	(call :traverse_tree)
+	
+	:skip_right_child
+	(edi <- esi)
+	
+	; Set esi to the parent
+	(esi <- (mem edi 16))
+	
+	:done
+	(return)
+  )
+)

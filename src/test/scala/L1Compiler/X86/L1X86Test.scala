@@ -212,8 +212,8 @@ trait L1X86Test extends org.scalatest.FunSuite{
     }
   }
 
-  def testCompilerVsInterpreter(filename: String) {
-    val fullPath = io.Dir.L1File("1-test/" + filename)
-    test(filename){ assert(X86.L1X86Runner.runFile(fullPath) === L1Interpreter.runFile(fullPath)) }
+  def testCompilerVsInterpreter(file: java.io.File) {
+    val path = file.getAbsolutePath
+    test(path){ assert(X86.L1X86Runner.runFile(file) === L1Interpreter.runFile(file)) }
   }
 }

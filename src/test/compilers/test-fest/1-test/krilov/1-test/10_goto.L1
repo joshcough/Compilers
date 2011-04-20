@@ -1,0 +1,24 @@
+; Test goto
+((
+  :print1
+  (eax <- (print 3))
+  (goto :print3)
+  
+  :print2
+  (eax <- (print 5))
+  (goto :print5)
+  
+  :print3
+  (eax <- (print 7))
+  (goto :print2)
+  
+  :print4
+  (eax <- (print 9))
+  (goto :done)
+  
+  :print5
+  (eax <- (print 11))
+  (goto :print4)
+  
+  :done
+))

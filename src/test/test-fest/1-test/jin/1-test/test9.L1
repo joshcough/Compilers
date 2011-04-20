@@ -1,5 +1,0 @@
-;test case 9
-(((eax <- 9)
-  (eax >>= 11)
-  (eax += 1)
-  (eax <- (print eax))))

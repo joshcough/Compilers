@@ -1,0 +1,7 @@
+(((eax <- 15)  ;15*5
+  (edx <- 5)
+  (eax *= edx)
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax))))
+  

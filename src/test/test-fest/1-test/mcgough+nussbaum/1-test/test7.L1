@@ -1,6 +1,0 @@
-(((edx <- 67)
-(goto :jumphere)
-(edx *= 2)
-:jumphere
-(eax <- edx)
-(eax <- (print eax))))

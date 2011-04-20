@@ -1,0 +1,6 @@
+ (((eax <- 11)
+  (eax *= 3)
+  (eax <- (print eax))
+  (eax <- 11)
+  (eax &= 11)
+  (eax <- (print eax))))

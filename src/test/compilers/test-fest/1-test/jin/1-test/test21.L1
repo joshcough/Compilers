@@ -1,0 +1,16 @@
+;test case 21
+(((eax <- 18)
+  (call :add)
+  (eax -= 2)
+  (eax <- (print eax)))
+ (:add
+  (cjump eax < 20 :add1 :add2)
+  :add1
+  (eax += 1)
+  (return)
+  :add2
+  (call :sub)
+  (eax += 2)
+  (return))
+ (:sub
+  (eax -= 10)))

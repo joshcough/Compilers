@@ -1,0 +1,27 @@
+; Test comparing literals to other literals
+((
+  (eax <- 3 = 3)  ; eax gets 1, but this is encoded, so the actual value is 0
+  (eax <- (print eax))  ; 0
+  
+  (eax <- 3 = 4)  ; eax gets 0, but this is untagged...
+  (eax += 11)     ; ... so add 11 to it, so now printing it out should show 5
+  (eax <- (print eax))  ; 5
+  
+  (eax <- 5 < 7)
+  (eax <- (print eax))  ; 0
+  
+  (eax <- 5 <= 6)
+  (eax <- (print eax))  ; 0
+  
+  (eax <- 7 < 5)
+  (eax += 11)
+  (eax <- (print eax))  ; 5
+  
+  (eax <- 6 < 6)
+  (eax += 11)
+  (eax <- (print eax))  ; 5
+  
+  (eax <- 6 <= 6)
+  (eax <- (print eax))  ; 0
+  
+))

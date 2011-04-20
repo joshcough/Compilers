@@ -1,0 +1,13 @@
+; Test updating memory
+((
+  ; Allocate the array [5 5 5], then change the second value to 7, and print the array.
+  (eax <- (allocate 7 11))
+  (edi <- eax)
+  ((mem edi 8) <- 15)
+  (eax <- (mem edi 4))
+  (eax <- (print eax))   ; 5
+  (eax <- (mem edi 8))
+  (eax <- (print eax))   ; 7
+  (eax <- (mem edi 12))
+  (eax <- (print eax))   ; 5
+  ))))

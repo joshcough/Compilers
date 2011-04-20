@@ -1,0 +1,7 @@
+(((ebx <- 5)
+(ecx <- 3)
+(edx <- ecx = ebx) ;;save comparison
+(eax <- edx)
+(eax *= 2) ;;encode value
+(eax += 1)
+(eax <- (print eax))))

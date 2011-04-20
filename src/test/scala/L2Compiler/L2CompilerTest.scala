@@ -84,21 +84,6 @@ class L2CompilerTests extends L2CompilerTest {
 
 }
 
-class L2CompilerTestsFrom2010 extends L2CompilerTest {
-  import io.FileHelper._
-  val baseDir = "src/test/test-fest/L2-tests-from-2010/kleinfindler/test/"
-  val testFiles = new File(baseDir).list.toList.filter(_.endsWith("L2"))
-  for(t<-testFiles){
-    test(t){
-      val code = new File(baseDir + t).read
-      val actual = toCode(compile(code))
-      println(actual)
-      val x86 = new L1Compiler.L1Compiler with L1Compiler.X86.X86Generator{}.compile(actual, "test")
-      println(x86)
-    }
-  }
-}
-
 //((x <- 1) (eax += x)) x -4 s
 abstract class L2CompilerTest extends org.scalatest.FunSuite with L2CompilerExtras {
 

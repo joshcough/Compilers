@@ -16,15 +16,30 @@ object FileHelper{
 }
 
 object Dir {
-  val L1 = "./src/test/compilers/L1/"
-  val L2 = "./src/test/compilers/L2/"
-  def L1TestFiles = filesInDir(L1+ "/1-test", "L1")
-  def RobbyLivenessTests = filesInDir(L2+ "/robby-liveness-test", "L2f")
-  def RobbyLivenessResults = filesInDir(L2+ "/robby-liveness-test", "lres")
-  def filesInDir(dir:String, ending:String) = {
-    val parent = new File(dir)
-    parent.list.toList.filter(_.endsWith(ending)).sorted.map(name => new File(parent, name))
-  }
+  val testDir = "./src/test/compilers/"
+  val L1 = testDir + "L1/"
+  val L2 = testDir + "L2/"
+  val testFest = testDir + "test-fest/"
+
   def L1File(name:String) = Dir.L1 + name
   def L2File(name:String) = Dir.L2 + name
+  def L1TestFiles = filesInDir(L1 + "/1-test", "L1")
+
+  def spillTestFestTests = filesInDir(testFest + "spill-test", "L2f")
+  def spillTestFestResults = filesInDir(testFest + "spill-test", "sres")
+
+  def RobbyLivenessTests = filesInDir(L2 + "/robby-liveness-test", "L2f")
+  def RobbyLivenessResults = filesInDir(L2 + "/robby-liveness-test", "lres")
+
+  def L2TestFest2010Tests = filesInDir(testFest + "L2-tests-from-2010", "L2")
+  def L2TestFest2010Results = filesInDir(testFest + "L2-tests-from-2010", "res")
+
+  def filesInDir(dir:String, ending:String): Iterable[File] = filesInDir(new File(dir), ending)
+  def filesInDir(parent:File, endingWith:String): Iterable[File] = {
+    filesInDir(parent).filter(_.getName.endsWith(endingWith))
+  }
+  def filesInDir(parent:File): Iterable[File] = {
+    parent.listFiles.flatMap{f => if(f.isDirectory) filesInDir(f) else List(f)}
+            .sortWith(_.getAbsolutePath < _.getAbsolutePath)
+  }
 }

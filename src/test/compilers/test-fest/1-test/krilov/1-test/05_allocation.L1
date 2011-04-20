@@ -1,0 +1,12 @@
+; Test allocating & initializing memory
+((
+  ; Allocate the array [5 5 5] and print each value individually
+  (eax <- (allocate 7 11))
+  (edi <- eax)
+  (eax <- (mem edi 4))
+  (eax <- (print eax))   ; 5
+  (eax <- (mem edi 8))
+  (eax <- (print eax))   ; 5
+  (eax <- (mem edi 12))
+  (eax <- (print eax))   ; 5
+  ))

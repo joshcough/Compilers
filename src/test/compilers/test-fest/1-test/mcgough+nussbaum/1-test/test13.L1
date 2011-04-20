@@ -1,0 +1,9 @@
+(((call :foo)
+(eax += 8)
+(eax <- (print eax)))
+(:foo
+(eax <- (allocate 5 1))
+((mem eax 4) <- 53)
+((mem eax 0) <- 1)
+(eax <- (mem eax 0))
+(return)))

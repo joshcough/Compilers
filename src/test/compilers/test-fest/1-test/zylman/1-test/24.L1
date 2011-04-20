@@ -1,0 +1,12 @@
+(((ecx <- 5)
+  (ebx <- 0)
+  
+  :top
+  (ecx -= 1)
+  (ebx += 1)
+  (cjump ecx = 0 :end :top)
+  
+  :end
+  (ebx += ebx)
+  (ebx += 1)
+  (eax <- (print ebx))))
