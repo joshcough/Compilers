@@ -85,12 +85,13 @@ trait Interference {
 
     val interference: List[(X,X)] = iioss.flatMap { iios: InstructionInOutSet =>
       //println("iios: " + iios)
-      val variables = iios.in ++ iios.out
-
       val in_interference: Set[(X,X)] = for(x <- iios.in; y <- iios.in; if(x!=y)) yield (x,y)
       val out_interference: Set[(X,X)] = {
         // add in the kill
-        val outsPlusKill = (iios.out ++ iios.kill)
+        val outsPlusKill = iios.inst match {
+          case Assignment(v1:Variable, v2:Variable) => iios.out
+          case _ => (iios.out ++ iios.kill)
+        }
         for(x <- outsPlusKill; y <- outsPlusKill; if(x!=y)) yield (x,y)
       }
       //  Constrained arithmetic operators
@@ -111,10 +112,8 @@ trait Interference {
       in_interference ++ out_interference ++ special_interference
     }
 
-    // TODO: find a better way to get the variables.
-    val variables = iioss.flatMap { iios => (iios.in ++ iios.out) }.collect{ case v:Variable => v }
-
-    registerInterference.addNodes(variables:_*).addEdges(interference:_*)
+    val vs = iioss.flatMap { iios => variables(iios.inst) }
+    registerInterference.addNodes(vs:_*).addEdges(interference:_*)
   }
 
   // the second thing returned here is the progress we were actually able to make.
@@ -158,4 +157,36 @@ trait Interference {
     //println("iioss: " + iioss)
     attemptAllocation(buildInterferenceSet(iioss))
   }
+
+
+  def variables(i:Instruction): Set[Variable] = {
+    def variables(rhs:AssignmentRHS): Set[Variable] = rhs match {
+      case v:Variable => Set(v)
+      case Print(s) => variables(s)
+      case Allocate(n, init) => variables(n)  union variables(init)
+      case ArrayError(a, n)  => variables(a)  union variables(n)
+      case Comp(s1, op, s2)  => variables(s1) union variables(s2)
+      case MemRead(MemLoc(bp, _)) => variables(bp)
+      case r:Register => Set()
+      case n:Num => Set()
+      case l:Label => Set()
+    }
+    i match {
+      case Assignment(x, i) => variables(x) union variables(i)
+      case Increment(x, s)  => variables(x) union variables(s)
+      case Decrement(x, s)  => variables(x) union variables(s)
+      case Multiply(x, s)   => variables(x) union variables(s)
+      case LeftShift(x, s)  => variables(x) union variables(s)
+      case RightShift(x, s) => variables(x) union variables(s)
+      case BitwiseAnd(x, s) => variables(x) union variables(s)
+      case CJump(comp, l1, l2) => variables(comp)
+      case MemWrite(MemLoc(bp, _), s) => variables(bp) union variables(s)
+      case Call(s) => variables(s)
+      case TailCall(s) => variables(s)
+      case Goto(_) => Set()
+      case Return => Set()
+      case LabelDeclaration(_) => Set()
+    }
+  }
+
 }

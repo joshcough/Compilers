@@ -281,24 +281,50 @@ class InterferenceGraphTests extends L2CompilerTest {
       |(y edi esi x))""",
     expectedAllocation="((x eax) (y ebx))")
 
-//  interferenceAndAllocationTest(
-//    name="x <- y",
-//    code = "((y <- 7) (x <- y) (x1 <- x) (y1 <- y))",
-//    expectedInterference = """
-//      |((eax ebx ecx edi edx esi)
-//      |(ebx eax ecx edi edx esi)
-//      |(ecx eax ebx edi edx esi)
-//      |(edi eax ebx ecx edx esi)
-//      |(edx eax ebx ecx edi esi)
-//      |(esi eax ebx ecx edi edx)
-//      |(x ??)
-//      |(y ??))""",
-//    expectedAllocation="((x eax) (y ebx))")
-
-
+  interferenceAndAllocationTest(
+    name="x <- y with some usages",
+    code = "((x <- y) (eax <- (print x)))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx)
+      |(x)
+      |(y))""",
+    expectedAllocation="((x eax) (y eax))")
 
   interferenceAndAllocationTest(
-    name="wfewff",
+    name="x <- y with some usages 2",
+    code = "((x <- y) (eax <- (print y)))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx)
+      |(x)
+      |(y))""",
+    expectedAllocation="((x eax) (y eax))")
+
+  interferenceAndAllocationTest(
+    name="x <- y",
+    code = "((x <- y))",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx)
+      |(x)
+      |(y))""",
+    expectedAllocation="((x eax) (y eax))")
+
+  interferenceAndAllocationTest(
+    name="variable that conflicts with nothing",
     code = "((x <- 1) (eax <- (print x)))",
     expectedInterference = """
       |((eax ebx ecx edi edx esi)
@@ -313,9 +339,23 @@ class InterferenceGraphTests extends L2CompilerTest {
   new java.io.File("./graph-test").mkdir()
   val count = Iterator.from(0)
 
-  def interferenceAndAllocationTest(name:String, code:String, expectedInterference:String, expectedAllocation:String){
+  def interferenceAndAllocationTest(name:String, code:String,
+                                    expectedInterference:String,
+                                    expectedAllocation:String,
+                                    dumpAll:Boolean=false){
     test(name){
-      val (interference, actualAllocation) = InterferenceMain.interferenceAndAllocation(code.clean)
+
+      val inouts = inout(parseListOfInstructions(code.clean))
+      val (interference, actualAllocation) =
+        (buildInterferenceSet(inouts.head).hwView, printAllocation(attemptAllocation(inouts.head)._1))
+
+      if(dumpAll){
+        for(io <- inouts.reverse) {
+          println(L2Printer.hwView(io))
+        }
+      }
+
+      //val (interference, actualAllocation) = InterferenceMain.interferenceAndAllocation(code.clean)
       verboseAssert(code, interference, expectedInterference)
       verboseAssert(code, actualAllocation, expectedAllocation)
       // write out the tests files and results.
