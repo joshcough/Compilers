@@ -58,12 +58,12 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
       case _ => {
 //        println("first attempt to color failed!")
         // then if it fails, rewrite until we can color
-        def allocateCompletely(f: Func, offset: Int): (Func, Map[Variable, Register]) = {
+        def allocateCompletely(f: Func, offset: Int): ((Func, Map[Variable, Register]), Int) = {
           val inoutset = inoutFinalResult(f)
 //          println(testView(inoutset))
           val alloc = attemptAllocation(inoutset)
           alloc._1 match {
-            case Some(registerMap) => (f, registerMap)
+            case Some(registerMap) => ((f, registerMap), offset)
             case None => {
 //              println("needing to spill")
 //              println("allocation was: " + alloc._2)
@@ -71,7 +71,7 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
               chooseSpillVar(lives) match {
                 case Some(sv) =>
 //                  println("spill var: " + toCode(sv))
-                  val newFunction = Func(spill(sv, offset, f.body))
+                  val newFunction = Func(spill(sv, offset - 4, f.body))
 //                  println("new function: " + toCode(newFunction))
                   allocateCompletely(newFunction, offset - 4)
                 // TODO: id prefer to use Either, or Option here instead of erroring.
@@ -83,7 +83,15 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
         // TODO: probably adjust the stack at the start of the function right here.
         // see the TODO at the top of this file
         val rw = initialRewrite(f)
-        allocateCompletely(rw, -4)
+        val ((almostFinalFunction, allocs), espOffset) = allocateCompletely(rw, 0)
+
+        // TODO: horrible
+        if(espOffset == 0) (almostFinalFunction, allocs)
+        else {
+          val finalFunction =
+            Func(almostFinalFunction.body.head :: List(Decrement(esp, Num(- espOffset))) ::: almostFinalFunction.body.drop(1))
+          (finalFunction, allocs)
+        }
       }
     }
   }
@@ -148,7 +156,7 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
       case MemRead(loc) => MemRead(replaceVarsWithRegisters(loc))
       case Print(s) => Print(replaceVarsWithRegisters(s))
       case Allocate(n, init) => Allocate(replaceVarsWithRegisters(n), replaceVarsWithRegisters(init))
-      case ArrayError(a, n) => Allocate(replaceVarsWithRegisters(a), replaceVarsWithRegisters(n))
+      case ArrayError(a, n) => ArrayError(replaceVarsWithRegisters(a), replaceVarsWithRegisters(n))
       case c:Comp => replaceVarsWithRegisters(c)
       case s:S => replaceVarsWithRegisters(s)
     }

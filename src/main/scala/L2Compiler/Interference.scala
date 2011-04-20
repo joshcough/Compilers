@@ -84,7 +84,6 @@ trait Interference {
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
 
     val interference: List[(X,X)] = iioss.flatMap { iios: InstructionInOutSet =>
-      //println("iios: " + iios)
       val in_interference: Set[(X,X)] = for(x <- iios.in; y <- iios.in; if(x!=y)) yield (x,y)
       val out_interference: Set[(X,X)] = {
         // add in the kill

@@ -58,35 +58,24 @@ trait Liveness {
     }
   }
 
-  def kill(i:Instruction): Set[X] = {
-    def kill(rhs:AssignmentRHS): Set[X] = rhs match {
-      case r:Register => Set()
-      case Comp(s1, op, s2)  => Set()
-      case MemRead(MemLoc(bp, _)) => Set()
-      case n:Num => Set()
-      case l:Label => Set()
-      // the x86CallerSave also include result (eax)
-      case Print(s) => x86CallerSave
-      case Allocate(n, init) => x86CallerSave
-      // i wonder if array error just kills everything...
-      case ArrayError(a, n)  => x86CallerSave
-    }
-    i match {
-      case Assignment(x:X, _) => Set(x)
-      case Increment(x, _) => Set(x)
-      case Decrement(x, _) => Set(x)
-      case Multiply(x, _) => Set(x)
-      case LeftShift(x, _) => Set(x)
-      case RightShift(x, _) => Set(x)
-      case BitwiseAnd(x, _) => Set(x)
-      case MemWrite(_, _) => Set()
-      case Goto(s) => Set()
-      case CJump(comp, l1, l2) => Set()
-      case Call(s) => callerSave union result
-      case TailCall(s) => Set()
-      case Return => Set()
-      case LabelDeclaration(_) => Set()
-    }
+  def kill(i:Instruction): Set[X] = i match {
+    case Assignment(x:X, Print(s)) => Set(x) union x86CallerSave
+    case Assignment(x:X, Allocate(n, init)) => Set(x) union x86CallerSave
+    case Assignment(x:X, ArrayError(a, n)) => Set(x) union x86CallerSave
+    case Assignment(x:X, _) => Set(x)
+    case Increment(x, _) => Set(x)
+    case Decrement(x, _) => Set(x)
+    case Multiply(x, _) => Set(x)
+    case LeftShift(x, _) => Set(x)
+    case RightShift(x, _) => Set(x)
+    case BitwiseAnd(x, _) => Set(x)
+    case MemWrite(_, _) => Set()
+    case Goto(s) => Set()
+    case CJump(comp, l1, l2) => Set()
+    case Call(s) => callerSave union result
+    case TailCall(s) => Set()
+    case Return => Set()
+    case LabelDeclaration(_) => Set()
   }
 
   // just gets the last inout result. (the most important one)
