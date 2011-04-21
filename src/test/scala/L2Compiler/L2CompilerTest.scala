@@ -8,12 +8,11 @@ class L2CompilerTests extends L2CompilerTest {
   testCompile(
     input =
     """(((x <- 7)
-        |(eax <- (print x))
-        |(return)))""",
+        |(eax <- (print x))))""",
+  
     expected=Some(
     """(((eax <- 7)
-        |(eax <- (print eax))
-        |(return)))"""))
+        |(eax <- (print eax))))"""))
 
   testCompile(
     input=
@@ -30,7 +29,7 @@ class L2CompilerTests extends L2CompilerTest {
         |(r:x += edi)
         |(r:x += esi)
         |(r:x += eax)
-        |(return)))""",
+        |(eax <- (print r:x))))""",
     error = Some("allocation impossible"))
 
   // interesting case. first, we rewrite to make edi, and esi into variables
@@ -48,12 +47,9 @@ class L2CompilerTests extends L2CompilerTest {
         |(r:x += ebx)
         |(r:x += ecx)
         |(r:x += edx)
-        |(r:x += eax)
-        |(return)))""",
+        |(r:x += eax)))""",
     expected = Some(
-    """((((mem ebp -4) <- edi)
-        |(esi <- esi)
-        |(eax <- 7)
+    """(((eax <- 7)
         |(ebx <- 7)
         |(ecx <- 7)
         |(edx <- 7)
@@ -61,10 +57,7 @@ class L2CompilerTests extends L2CompilerTest {
         |(edi += ebx)
         |(edi += ecx)
         |(edi += edx)
-        |(edi += eax)
-        |(edi <- (mem ebp -4))
-        |(esi <- esi)
-        |(return)))"""))
+        |(edi += eax)))"""))
 
   // interesting case here.... y isnt in the in or out set anywhere...
   // why? shouldnt it be in the out set of its own assignment statement? maybe not...

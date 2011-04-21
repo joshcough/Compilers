@@ -1,0 +1,3 @@
+((eax <- eax)
+ (ebx <- ebx)
+ (ecx <- ecx))

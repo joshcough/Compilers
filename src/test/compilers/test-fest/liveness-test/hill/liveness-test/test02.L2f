@@ -1,0 +1,12 @@
+(:somefn
+ (x <- eax)
+ (x *= x)
+ (y <- x)
+ (y *= 2)
+ (z <- eax)
+ (z *= 3)
+ (eax <- y)
+ (eax += z)
+ (eax -= 16)
+ (return))
+

@@ -1,0 +1,5 @@
+((x <- 0)
+:label1
+(x += 1)
+(cjump x < 2 :label1 :label2)
+:label2)

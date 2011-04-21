@@ -1,0 +1,1 @@
+(:f (x2 <- eax) (x2 *= x2) (2x2 <- x2) (2x2 *= 2) (3x <- eax) (3x *= 3) (eax <- 2x2) (eax += 3x) (eax += 4) (return))

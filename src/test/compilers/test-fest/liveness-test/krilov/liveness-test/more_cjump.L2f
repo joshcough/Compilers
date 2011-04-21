@@ -1,0 +1,12 @@
+((eax <- a)
+ (eax <- b)
+ (cjump x < y :label1 :label2)
+ (eax <- c)
+ (eax <- d)
+ :label1
+ (eax <- e)
+ (eax <- f)
+ :label2
+ (eax <- g)
+ (eax <- h))
+ 

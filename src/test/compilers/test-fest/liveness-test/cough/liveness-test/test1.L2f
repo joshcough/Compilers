@@ -1,0 +1,12 @@
+;; f(x) = let y = g(x)
+;; in h(y+x) + y*5
+(:f
+(x <- eax) ;; save our argument
+(call :g) ;; call g with our argument
+(y <- eax) ;; save g's result in y
+(eax += x) ;; compute h's arg
+(call :h) ;; call h
+(y5 <- y) ;; compute y*5 in y5, i
+(y5 *= 5) ;; compute y*5 in y5, ii
+(eax += y5) ;; add h's res to y*5
+(return)) ;; and we're done

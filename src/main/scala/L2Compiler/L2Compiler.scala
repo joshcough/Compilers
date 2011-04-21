@@ -51,28 +51,28 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
     //println("----inoutFinalResult-----: " + inoutFinalResult(f))
     attemptAllocation(inoutFinalResult(f))._1 match {
       case Some(registerMap) => {
-//        println("first attempt to color was good!")
-//        println("registerMap: " + registerMap)
+        //println("first attempt to color was good!")
+        //println("registerMap: " + registerMap)
         (f, registerMap)
       }
       case _ => {
-//        println("first attempt to color failed!")
+        //println("first attempt to color failed!")
         // then if it fails, rewrite until we can color
         def allocateCompletely(f: Func, offset: Int): ((Func, Map[Variable, Register]), Int) = {
           val inoutset = inoutFinalResult(f)
-//          println(testView(inoutset))
+          //println(testView(inoutset))
           val alloc = attemptAllocation(inoutset)
           alloc._1 match {
             case Some(registerMap) => ((f, registerMap), offset)
             case None => {
-//              println("needing to spill")
-//              println("allocation was: " + alloc._2)
+              //println("needing to spill")
+              //println("allocation was: " + alloc._2)
               val lives = liveRanges(inoutset)
               chooseSpillVar(lives) match {
                 case Some(sv) =>
-//                  println("spill var: " + toCode(sv))
+                  //println("spill var: " + toCode(sv))
                   val newFunction = Func(spill(sv, offset - 4, f.body))
-//                  println("new function: " + toCode(newFunction))
+                  //println("new function: " + toCode(newFunction))
                   allocateCompletely(newFunction, offset - 4)
                 // TODO: id prefer to use Either, or Option here instead of erroring.
                 case None => error("allocation impossible")
@@ -80,17 +80,21 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
             }
           }
         }
-        // TODO: probably adjust the stack at the start of the function right here.
-        // see the TODO at the top of this file
+
         val rw = initialRewrite(f)
         val ((almostFinalFunction, allocs), espOffset) = allocateCompletely(rw, 0)
 
-        // TODO: horrible
+        // adjust the stack at the start of the function right here.
+        // TODO: horrible implementation
         if(espOffset == 0) (almostFinalFunction, allocs)
         else {
-          val finalFunction =
-            Func(almostFinalFunction.body.head :: List(Decrement(esp, Num(- espOffset))) ::: almostFinalFunction.body.drop(1))
-          (finalFunction, allocs)
+          val isMain = f.body.head == LabelDeclaration(Label("__main"))
+          val label = almostFinalFunction.body.head
+          val bodyWithoutLabel = almostFinalFunction.body.drop(1)
+          val decEsp = List(Decrement(esp, Num(- espOffset)))
+          val incEspMaybe = if(isMain) List(Increment(esp, Num(- espOffset))) else List()
+          val newBody = label :: decEsp ::: bodyWithoutLabel ::: incEspMaybe
+          (Func(newBody), allocs)
         }
       }
     }

@@ -1,0 +1,5 @@
+((cjump x <= y :label1 :label2)
+ :label1
+ (eax <- a)
+ :label2
+ (return))

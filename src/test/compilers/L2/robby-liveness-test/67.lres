@@ -1,2 +1,0 @@
-((in (eax ecx edi edx esi s0 s1) (eax ecx edi edx esi s1) () () () () () ())
- (out (eax ecx edi edx esi s1) () () () () () () ()))

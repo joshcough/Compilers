@@ -5,7 +5,7 @@ import io.Dir._
 import java.io.File
 
 class SpillTestFest extends TestFest(spillTestFestTests, spillTestFestResults, SpillMain.spill)
-class LivenessTestFest extends TestFest(RobbyLivenessTests, RobbyLivenessResults, LivenessMain.liveness)
+class LivenessTestFest extends TestFest(livenessTestFestTests, livenessTestFestResults, LivenessMain.liveness)
 
 class L2TestFest2010 extends L2CompilerTest {
 
@@ -19,28 +19,18 @@ class L2TestFest2010 extends L2CompilerTest {
 
   new File("./tmp").mkdir
 
-  for(((t, r), index) <- L2TestFest2010Tests.zip(L2TestFest2010Results).zipWithIndex){//}; if(index == 76)){
+  for(((t, r), index) <- L2TestFest2010Tests.zip(L2TestFest2010Results).zipWithIndex ; if(index < 730)){
     test(index + "-" + t.getAbsolutePath){
       val code = t.read
-      //println("L2 Code: " + code)
-      val fileContainingCompilationResults = new File("./tmp/test" + index + ".L1")
-      val originalL2File = new File("./tmp/test" + index + ".L2")
-      val expectedResultFile = new File("./tmp/test" + index + ".res")
+      val fileContainingCompilationResults = new File("./tmp/" + index + ".L1")
       val compilationResult = toCode(compile(code))
-      //println("L1 Code: " + compilationResult)
-      fileContainingCompilationResults.write(";" + t.getAbsolutePath + "\n" + compilationResult)
-      originalL2File.write(code)
-      expectedResultFile.write(r.read)
+      val commentedOutCode = code.split("\n").map("; " + _).mkString("\n") + "\n\n"
+      val commentedOutResult = r.read.split("\n").map("; " + _).mkString("\n") + "\n\n"
+      fileContainingCompilationResults.write(commentedOutCode + commentedOutResult + compilationResult)
       verboseAssert(t.getAbsolutePath, L1Interpreter.run(fileContainingCompilationResults), r.read)
       // if we make it this far, delete the file.
       // the ones remaining are failures.
       fileContainingCompilationResults.delete()
-      originalL2File.delete()
-      expectedResultFile.delete()
-      //val L1Code = toCode(compile(code))
-      //println(actual)
-      //val x86 = new L1Compiler.L1Compiler with L1Compiler.X86.X86Generator{}.compile(actual, "test")
-      //println(x86)
     }
   }
 }

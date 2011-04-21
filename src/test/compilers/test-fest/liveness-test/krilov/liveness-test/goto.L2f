@@ -1,0 +1,8 @@
+((eax <- a)
+ (eax <- b)
+ (goto :label)
+ (eax <- c)
+ (eax <- d)
+ :label
+ (eax <- e)
+ (eax <- f))

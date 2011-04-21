@@ -1,0 +1,7 @@
+((eax <- 1)
+ (cjump eax = 1 :t :f)
+ :t
+ (eax += 1)
+ :f
+ (eax += 2)
+ (return))

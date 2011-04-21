@@ -1,0 +1,3 @@
+((ebx <- :middle)
+ (x <- ebx)
+ (call x))

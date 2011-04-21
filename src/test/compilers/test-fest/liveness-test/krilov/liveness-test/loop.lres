@@ -1,0 +1,1 @@
+((in (a c d e x y) (c d e x y) (c d e x y) (b c d e x y) (c d e x y) (c d e x y) (c d e x y) (d e) (d e) (e) (e)) (out (c d e x y) (c d e x y) (c d e x y) (c d e x y) (c d e x y) (c d e x y) (c d e x y) (d e) (e) (e) ()))

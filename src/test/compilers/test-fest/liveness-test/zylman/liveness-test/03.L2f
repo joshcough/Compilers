@@ -1,0 +1,1 @@
+(:f (x <- eax) (call :g) (y <- eax) (eax += x) (call :h) (y5 <- y) (y5 *= 5) (eax += y5) (return))

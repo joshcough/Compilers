@@ -1,0 +1,5 @@
+(:fun1
+ (eax += x)
+ (call :fun2)
+ (x *= 5)
+ (eax <- x))

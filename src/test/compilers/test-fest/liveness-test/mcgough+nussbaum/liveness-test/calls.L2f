@@ -1,0 +1,1 @@
+((eax <- (allocate 5 3)) (eax <- (array-error 5 7)) (x <- :foo) (call x) (eax >>= 3) (eax <<= 3) (tail-call x) (return))

@@ -28,8 +28,8 @@ object Dir {
   def spillTestFestTests = filesInDir(testFest + "spill-test", "L2f")
   def spillTestFestResults = filesInDir(testFest + "spill-test", "sres")
 
-  def RobbyLivenessTests = filesInDir(L2 + "/robby-liveness-test", "L2f")
-  def RobbyLivenessResults = filesInDir(L2 + "/robby-liveness-test", "lres")
+  def livenessTestFestTests = filesInDir(testFest + "liveness-test", "L2f")
+  def livenessTestFestResults = filesInDir(testFest + "liveness-test", "lres")
 
   def L2TestFest2010Tests = filesInDir(testFest + "L2-tests-from-2010", "L2")
   def L2TestFest2010Results = filesInDir(testFest + "L2-tests-from-2010", "res")

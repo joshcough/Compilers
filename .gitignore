@@ -17,6 +17,3 @@ Test.*
 test2.*
 tmp
 build
-spill-test
-liveness-test
-graph-test

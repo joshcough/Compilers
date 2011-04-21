@@ -412,11 +412,34 @@ class LivenessTest extends L2CompilerTest {
       step=End)
   }
 
+  test("hill/liveness-test/test04.L2f"){
+    livenessTest("""
+      |(:go
+      |(a <- eax)
+      |(b <- eax)
+      |(b += ecx)
+      |(cjump a < b :good :bad)
+      |:good
+      |(eax <- edx)
+      |(return)
+      |:bad
+      |(eax <- ecx)
+      |(return))""",
+
+      """((in (eax ecx edi edx esi) (eax ecx edi edx esi) (a eax ecx edi edx esi) (a b ecx edi edx esi) (a b ecx edi edx esi) (edi edx esi) (edi edx esi) (eax edi esi) (ecx edi esi) (ecx edi esi) (eax edi esi)) (out (eax ecx edi edx esi) (a eax ecx edi edx esi) (a b ecx edi edx esi) (a b ecx edi edx esi) (ecx edi edx esi) (edi edx esi) (eax edi esi) () (ecx edi esi) (eax edi esi) ()))""",
+    step=End,
+    printStyle = HWStyle)
+  }
+
+  trait PrintStyle
+  object HWStyle extends PrintStyle
+  object TestStyle extends PrintStyle
+
   lazy val count = Iterator.from(0)
   new java.io.File("./liveness-test").mkdir()
-  def livenessTest(code:String, expected:String, step: Option[Int] = None) = {
+  def livenessTest(code:String, expected:String, step: Option[Int] = None, printStyle:PrintStyle=TestStyle) = {
     val insAndOuts = inoutForTesting(code.clean, step=step)
-    val actual = L2Printer.testView(insAndOuts)
+    val actual = if(printStyle == TestStyle) L2Printer.testView(insAndOuts) else L2Printer.hwView(insAndOuts)
 
     verboseAssert(code, actual, expected)
 
