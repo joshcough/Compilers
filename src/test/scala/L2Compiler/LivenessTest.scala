@@ -413,7 +413,7 @@ class LivenessTest extends L2CompilerTest {
   }
 
   test("hill/liveness-test/test04.L2f"){
-    livenessTest("""
+    val code = """
       |(:go
       |(a <- eax)
       |(b <- eax)
@@ -424,11 +424,9 @@ class LivenessTest extends L2CompilerTest {
       |(return)
       |:bad
       |(eax <- ecx)
-      |(return))""",
-
-      """((in (eax ecx edi edx esi) (eax ecx edi edx esi) (a eax ecx edi edx esi) (a b ecx edi edx esi) (a b ecx edi edx esi) (edi edx esi) (edi edx esi) (eax edi esi) (ecx edi esi) (ecx edi esi) (eax edi esi)) (out (eax ecx edi edx esi) (a eax ecx edi edx esi) (a b ecx edi edx esi) (a b ecx edi edx esi) (ecx edi edx esi) (edi edx esi) (eax edi esi) () (ecx edi esi) (eax edi esi) ()))""",
-    step=End,
-    printStyle = HWStyle)
+      |(return))"""
+    val expectedAtEnd = """((in (eax ecx edi edx esi) (eax ecx edi edx esi) (a eax ecx edi edx esi) (a b ecx edi edx esi) (a b ecx edi edx esi) (edi edx esi) (edi edx esi) (eax edi esi) (ecx edi esi) (ecx edi esi) (eax edi esi)) (out (eax ecx edi edx esi) (a eax ecx edi edx esi) (a b ecx edi edx esi) (a b ecx edi edx esi) (ecx edi edx esi) (edi edx esi) (eax edi esi) () (ecx edi esi) (eax edi esi) ()))"""
+    livenessTest(code, expectedAtEnd, step=End, printStyle = HWStyle)
   }
 
   trait PrintStyle
@@ -437,6 +435,11 @@ class LivenessTest extends L2CompilerTest {
 
   lazy val count = Iterator.from(0)
   new java.io.File("./liveness-test").mkdir()
+
+  def printSteps(code:String) = {
+     inout(parseListOfInstructions(code.clean)).reverse.map(L2Printer.hwView).foreach(println)
+  }
+
   def livenessTest(code:String, expected:String, step: Option[Int] = None, printStyle:PrintStyle=TestStyle) = {
     val insAndOuts = inoutForTesting(code.clean, step=step)
     val actual = if(printStyle == TestStyle) L2Printer.testView(insAndOuts) else L2Printer.hwView(insAndOuts)

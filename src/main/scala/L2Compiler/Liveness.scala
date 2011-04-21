@@ -99,7 +99,7 @@ trait Liveness {
         def succIndeces(n: Int): Set[Int] = instructions(n) match {
           case Return | TailCall(_) | Assignment(_, ArrayError(_, _)) => Set()
           case Goto(label) => Set(findLabelDecIndex(label))
-          case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l1))
+          case CJump(_, l1, l2) => Set(findLabelDecIndex(l1), findLabelDecIndex(l2))
           // we have to test that there is something after this instruction
           // in case the last instruction is something other than return or cjump
           // i think that in normal functions this doesn't happen but the hw allows it.
