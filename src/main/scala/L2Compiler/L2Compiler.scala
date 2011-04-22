@@ -144,7 +144,7 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
       case g:Goto => g
       case CJump(comp, l1, l2) => CJump(replaceVarsWithRegisters(comp), l1, l2)
       case Call(x) => Call(replaceVarsWithRegisters(x))
-      case TailCall(x) => Call(replaceVarsWithRegisters(x))
+      case TailCall(x) => TailCall(replaceVarsWithRegisters(x))
       case ld:LabelDeclaration => ld
       case Return => Return
     }
