@@ -429,6 +429,43 @@ class LivenessTest extends L2CompilerTest {
     livenessTest(code, expectedAtEnd, step=End, printStyle = HWStyle)
   }
 
+  test("sodfijsd"){
+    val code = """
+      |((a <- 1)
+      |(b <- 2)
+      |(c <- 3)
+      |(d <- 4)
+      |(e <- 5)
+      |(f <- 6)
+      |(g <- 7)
+      |(h <- 8)
+      |(a <<= h)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= g)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= f)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= e)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= d)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= c)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= b)
+      |(a -= 50)
+      |(a >>= a)
+      |(a += 1)
+      |(eax <- (print a)))"""
+    val expectedAtEnd = ""
+    livenessTest(code, expectedAtEnd, step=End, printStyle = TestStyle)
+  }
+
   trait PrintStyle
   object HWStyle extends PrintStyle
   object TestStyle extends PrintStyle

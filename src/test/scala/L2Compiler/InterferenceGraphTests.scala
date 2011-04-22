@@ -336,6 +336,61 @@ class InterferenceGraphTests extends L2CompilerTest {
       |(x))""",
     expectedAllocation="((x eax))")
 
+  interferenceAndAllocationTest(
+    name="2010 thing",
+    code = """
+      |((a <- 1)
+      |(b <- 2)
+      |(c <- 3)
+      |(d <- 4)
+      |(e <- 5)
+      |(f <- 6)
+      |(g <- 7)
+      |(h <- 8)
+      |(a <<= h)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= g)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= f)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= e)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= d)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= c)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= b)
+      |(a -= 50)
+      |(a >>= a)
+      |(a += 1)
+      |(eax <- (print a)))""",
+  // h doesnt intefere with ecx
+  // the other variables do because the are live when print is called
+  // and print kills ecx.
+    expectedInterference = """
+((a b c d e eax ebx ecx edi edx esi f g h)
+(b a c d e eax ebx ecx edi edx esi f g h)
+(c a b d e eax ebx ecx edi edx esi f g h)
+(d a b c e eax ebx ecx edi edx esi f g h)
+(e a b c d eax ebx ecx edi edx esi f g h)
+(eax a b c d e ebx ecx edi edx esi f g h)
+(ebx a b c d e eax ecx edi edx esi f g h)
+(ecx a b c d e eax ebx edi edx esi f g)
+(edi a b c d e eax ebx ecx edx esi f g h)
+(edx a b c d e eax ebx ecx edi esi f g h)
+(esi a b c d e eax ebx ecx edi edx f g h)
+(f a b c d e eax ebx ecx edi edx esi g h)
+(g a b c d e eax ebx ecx edi edx esi f h)
+(h a b c d e eax ebx edi edx esi f g))""",
+    expectedAllocation="#f")
+
+
   new java.io.File("./graph-test").mkdir()
   val count = Iterator.from(0)
 

@@ -59,6 +59,43 @@ class L2CompilerTests extends L2CompilerTest {
         |(edi += edx)
         |(edi += eax)))"""))
 
+  testCompile(
+    """
+      |(((a <- 1)
+      |(b <- 2)
+      |(c <- 3)
+      |(d <- 4)
+      |(e <- 5)
+      |(f <- 6)
+      |(g <- 7)
+      |(h <- 8)
+      |(a <<= h)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= g)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= f)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= e)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= d)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a >>= c)
+      |(a += 1)
+      |(eax <- (print a))
+      |(a <<= b)
+      |(a -= 50)
+      |(a >>= a)
+      |(a += 1)
+      |(eax <- (print a))))""",
+    expected = Some(
+    """?"""))
+
+
   // interesting case here.... y isnt in the in or out set anywhere...
   // why? shouldnt it be in the out set of its own assignment statement? maybe not...
   // this could possibly be a case where we can whack that entire statement altogether,
