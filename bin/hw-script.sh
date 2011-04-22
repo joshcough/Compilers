@@ -33,5 +33,5 @@ echo "done creating ./build/spill-test.tar.gz."
 tar cfvz ../liveness-test.tar.gz liveness-test
 echo "done creating ./build/liveness-test.tar.gz."
 
-tar cfvz ../graph-color-test.tar.gz graph-color-test
-echo "done creating ./build/graph-color-test.tar.gz."
+tar cfvz ../cough.graph-test.tar.gz graph-test
+echo "done creating ./build/cough.graph-test.tar.gz."
