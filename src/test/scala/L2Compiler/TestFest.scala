@@ -17,6 +17,7 @@ class L2TestFest2010 extends L2CompilerTest {
     }
   }
 
+  io.CommandRunner("rm -rf ./tmp")
   new File("./tmp").mkdir
 
   for(((t, r), index) <- L2TestFest2010Tests.zip(L2TestFest2010Results).zipWithIndex ; if(index < 730)){

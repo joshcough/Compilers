@@ -12,22 +12,22 @@ trait Reader {
 
   def readWithRest(stream:List[Char]): (Any, List[Char]) = {
 
-    def readList(stream: List[Char], acc: List[Any]): (List[Any], List[Char]) = stream match {
-      case ' ' :: tail => readList(tail, acc)
-      case ')' :: tail => (acc, tail)
+    def readList(stream: List[Char], acc: List[Any], terminator:Char): (List[Any], List[Char]) = stream match {
+      case ' ' :: tail => readList(tail, acc, terminator)
+      case x   :: tail if x == terminator => (acc, tail)
       case x   :: tail =>
         val (next, rest) = readWithRest(stream)
-        readList(rest, acc ::: List(next))
+        readList(rest, acc ::: List(next), terminator)
       case List()     => error("unclosed list")
     }
 
     def readSymbol(stream:List[Char]): (Symbol, List[Char]) = {
-      val (chars, rest) = stream.span( ! List('(', ')', ' ', '\n').contains(_) )
+      val (chars, rest) = stream.span( ! List('(', ')', '[', ']', ' ', '\n').contains(_) )
       (Symbol(chars.mkString), rest)
     }
 
     def readNumOrMaybeSymbol(stream:List[Char], negate:Boolean): (Any, List[Char]) = {
-      val (chars, rest) = stream.span( ! List('(', ')', ' ', '\n').contains(_) )
+      val (chars, rest) = stream.span( ! List('(', ')', '[', ']', ' ', '\n').contains(_) )
       // if there are any non number characters, this must be a symbol
       if(chars.exists(c => ! Character.isDigit(c))) (Symbol(chars.mkString), rest)
       else (((if(negate) "-" else "") + (chars.mkString)).toInt, rest)
@@ -45,15 +45,18 @@ trait Reader {
     }
 
     stream match {
-      case '('  ::  tail => readList(tail, Nil)
+      case '('  ::  tail => readList(stream=tail, acc=Nil, terminator=')')
+      case '['  ::  tail => readList(stream=tail, acc=Nil, terminator=']')
       case ' '  ::  tail => readWithRest(tail)
       case '\n' ::  tail => readWithRest(tail)
       case '"'  ::  tail => readStringLit(tail, "\"")
       case '\'' ::  tail => readCharLit(tail)
       case ')'  ::  _    => error("unexpected list terminator")
+      case ']'  ::  _    => error("unexpected list terminator")
       case c    ::  tail if(Character.isDigit(c)) => readNumOrMaybeSymbol(stream, negate=false)
       case '-'  :: c :: tail if(Character.isDigit(c)) => readNumOrMaybeSymbol(c :: tail, negate=true)
       case _ => readSymbol(stream)
     }
   }
 }
+//  testRead("([xlt2 (< x 2)])", List(Symbol("["), 'xlt2, List('<, 'x, 2), Symbol("]")))

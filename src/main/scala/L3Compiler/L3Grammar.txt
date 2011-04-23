@@ -1,0 +1,29 @@
+
+p ::= (e
+       (l (x ...) e)
+       ...)
+
+;; note that functions have arguments now
+
+e ::= (let ([x d]) e)
+    | (if v e e)
+    | d
+
+d ::= (biop v v)
+      (pred v)
+      (v v ...)
+      (new-array v v)
+      (new-tuple v ...)
+      (aref v v)
+      (aset v v v)
+      (alen v)
+      (print v)
+      (make-closure l v)
+      (closure-proc v)
+      (closure-vars v)
+      v
+
+v :: = x | l | num
+
+biop ::= + | - | * | < | <= | =
+pred ::= number? | a? ;; a? tests to see if the argument is an array or a tuple

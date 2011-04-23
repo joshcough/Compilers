@@ -337,6 +337,33 @@ class InterferenceGraphTests extends L2CompilerTest {
     expectedAllocation="((x eax))")
 
   interferenceAndAllocationTest(
+    name="robby email",
+    code = """
+      |((x <- 30)
+      |(cjump x <= 31 :first :second)
+      |:first
+      |(x >>= 1)
+      |(cjump x <= 15 :third :fourth)
+      |:second
+      |(x <- 4 < 5)
+      |(goto :end)
+      |:third
+      |(goto :end)
+      |:fourth
+      |(x <- 5 < 4)
+      |:end
+      |(eax <- (print x)))""",
+    expectedInterference = """
+      |((eax ebx ecx edi edx esi)
+      |(ebx eax ecx edi edx esi)
+      |(ecx eax ebx edi edx esi)
+      |(edi eax ebx ecx edx esi x)
+      |(edx eax ebx ecx edi esi)
+      |(esi eax ebx ecx edi edx x)
+      |(x edi esi))""",
+    expectedAllocation="((x eax))")
+
+  interferenceAndAllocationTest(
     name="2010 thing",
     code = """
       |((a <- 1)

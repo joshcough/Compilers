@@ -69,6 +69,12 @@ x
 s_""", (List(Symbol(":x"), List('call, Symbol(":x"))),"x -16 s_"))
 
 
+  testRead("([xlt2 (< x 2)])", List(List('xlt2, List('<, 'x, 2))))
+  testRead("((xlt2 (< x 2)))", List(List('xlt2, List('<, 'x, 2))))
+  testRead("(let ([x 7]) x)", List('let, List(List('x, 7)), 'x))
+  testRead("((let ([x 7]) x))", List(List('let, List(List('x, 7)), 'x)))
+
+
   // helper functions
   def read(s:String) = new Reader{}.read(s)
   def readWithRest(s:String) = new Reader{}.readWithRest(s)
