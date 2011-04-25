@@ -41,7 +41,12 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
 
   def compile(p:L3): L2 = p match {
     // TODO: think i'll need to strip off the return at the end of main.
-    case L3(main, funcs) => L2(main=L2Func(compileE(main)), funs = funcs map compileFunction)
+    case L3(main, funcs) => {
+      val secret = Label("__secret__main__")
+      val secretDec = LabelDeclaration(secret)
+      val realMain = L2Func(LabelDeclaration(secret)::compileE(main))
+      L2(main=L2Func(List(Call(secret))), funs = realMain :: (funcs map compileFunction))
+    }
   }
 
   // (l (x ...) e)
@@ -54,9 +59,30 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
   def compileE(e:E): List[L2Instruction] = e match {
     // e ::= (let ([x d]) e) | (if v e e) | d
     case Let(x:X, d:D, body:E) => compileD(d=d, destination=x) ::: compileE(body)
-    // TODO!
-    case IfStatement(v:V, t:E, f:E) => error("implement me")
-    case d:D => compileD(d, eax)
+    case IfStatement(v:V, t:E, f:E) => {
+      val tmp = temp()
+      val thenLabel = tempLabel()
+      val elseLabel = tempLabel()
+      List(
+        compileD(v, tmp),
+        List(CJump(Comp(tmp, L2EqualTo, Num(1)), elseLabel, thenLabel)),
+        List(LabelDeclaration(elseLabel)),
+        compileE(f),
+        List(LabelDeclaration(thenLabel)),
+        compileE(t)).flatten
+    }
+
+    //3) the e is a d:
+    //-> if it is an application, make a tail call
+    //   otherwise, generate the code for the d,
+    //   store the result in eax, and return.
+    // TODO: something is funny about passing eax and tailcall=true...
+    // it seems like i can collapse that into one argument somehow.
+    // because eax sort of signals that a tailcall should happen.
+    // otherwise we would get a variable and we need to store
+    // that variable into eax...hmmm...
+    case f:FunCall => compileFunCall(f, eax, tailCall = true)
+    case d:D => compileD(d, eax) ::: List(Return)
   }
 
   def encode(v:V): S = v match {
@@ -65,15 +91,21 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     case Label(name) => L2Label(name)
   }
 
+
+  def compileFunCall(f:FunCall, destination:X, tailCall:Boolean): List[L2Instruction] = {
+    val argAssignments =
+      for( (r, v) <- List(ecx, edx, eax).zip(f.args map encode) ) yield Assignment(r, v)
+    argAssignments ::: (
+      if(tailCall) List(TailCall(f.v))
+      else List(Call(f.v), Assignment(destination, eax))
+    )
+  }
+
   def compileD(d:D, destination: X): List[L2Instruction] = d match {
     case Print(v) => List(Assignment(eax, L2Print(encode(v))), Assignment(destination, eax))
 
     // TODO...tail-call if last d in the tree??
-    case FunCall(v, args) => {
-      val argAssignments =
-        for( (r, v) <- List(ecx, edx, eax).zip(args map encode) ) yield Assignment(r, v)
-      argAssignments ::: List(Call(v), Assignment(destination, eax))
-    }
+    case f:FunCall => compileFunCall(f, destination, tailCall = false)
 
     //biop ::= + | - | * | < | <= | =
     case Add(l:V, r:V)  => List(
