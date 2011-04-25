@@ -9,7 +9,7 @@ cd Interpreters
 
 #build the code
 ./bin/sbt update
-./bin/sbt test
+#./bin/sbt test
 ./bin/sbt package
 
 # move a few things into place
@@ -18,7 +18,7 @@ cp project/boot/scala-2.8.1/lib/scala-library.jar ./lib
 mv bin/L1 bin/spill bin/liveness bin/graph-color .
 
 # get rid of stuff i dont need to hand in
-rm -rf .git project target out lib_managed test 444-code src/main/scheme Test.class Test.j compilers.iml runtime.o test.S test2.S a.out bin Test.o Test.S
+rm -rf .git project target out lib_managed test 444-code src/main/scheme Test.class Test.j compilers.iml runtime.o test.S test2.S a.out bin Test.o Test.S src/test
 
 # create the tar to hand in
 tar cfvz ../compilers.tar.gz *
