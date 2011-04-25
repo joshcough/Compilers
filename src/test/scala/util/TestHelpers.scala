@@ -19,13 +19,21 @@ trait TestHelpers extends FunSuite {
   }
 }
 
-object L1Interpreter extends Interpreter("L1")
-object L2Interpreter extends Interpreter("L2")
-object L3Interpreter extends Interpreter("L3")
+object L1Interpreter extends Interpreter(1)
+object L2Interpreter extends Interpreter(2)
+object L3Interpreter extends Interpreter(3)
 
-class Interpreter(name:String) {
+object Interpreter{
+  val interps = Map(1->L1Interpreter, 2->L2Interpreter, 3->L3Interpreter)
+}
+
+case class Interpreter(level:Int) {
+  val name = "L" + level
+  def getCompiledCodeInterpreter = Interpreter.interps(level-1)
   def run(file: File): String = {
-    val (out, err) = io.CommandRunner("./src/test/compilers/interpreters/" + name+ " " + file.getAbsolutePath)
+    val command = "./src/test/compilers/interpreters/" + name+ " " + file.getAbsolutePath
+    println("command: " + command)
+    val (out, err) = io.CommandRunner(command)
     if (!(err startsWith "Welcome to " + name)) error(name + " interpreter died with the following errors:\n" + err)
     out
   }

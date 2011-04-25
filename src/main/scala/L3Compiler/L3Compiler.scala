@@ -14,6 +14,7 @@ import L2Compiler.L2AST.{
   Print => L2Print,
   Register => L2Register,
   Instruction => L2Instruction, _}
+import L2Compiler.L2Printer
 
 trait L3ToL2Implicits {
   val registerMappings: Map[Register, L2Register] =
@@ -36,6 +37,8 @@ trait L3ToL2Implicits {
 }
 
 class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
+
+  def compileToString(code:String): String = L2Printer.toCode(compile(code))
 
   def compile(code:String): L2 = compile(parse(read(code)))
 
