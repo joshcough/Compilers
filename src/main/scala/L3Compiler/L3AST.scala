@@ -2,28 +2,27 @@ package L3Compiler
 
 object L3AST {
 
-  trait L3ASTNode
+  sealed trait L3ASTNode
   //p ::= (e (l (x ...) e) ...)
   object L3{ def apply(main: E): L3 = L3(main, Nil) }
   case class L3(main: E, funs:List[Func]) extends L3ASTNode
   //(l (x ...) e)
-  type Argument = String
-  case class Func(l:Label, args:List[Argument], body: E) extends L3ASTNode
+  case class Func(label:Label, args:List[Variable], body: E) extends L3ASTNode
 
-  trait E extends L3ASTNode
+  sealed trait E extends L3ASTNode
   case class Let(x:X, d:D, body:E) extends E
   case class IfStatement(v:V, truePath:E, falsePath:E) extends E
-  trait D extends E
+  sealed trait D extends E
 
-  trait Biop extends D { val left:V; val right: V }
+  sealed trait Biop extends D { val left:V; val right: V }
   case class Add(left:V, right:V) extends Biop
   case class Sub(left:V, right:V) extends Biop
   case class Mult(left:V, right:V) extends Biop
   case class LessThan(left:V, right:V) extends Biop
   case class LessThanOrEqualTo(left:V, right:V) extends Biop
-  case class EqTo(left:V, right:V) extends Biop
+  case class EqualTo(left:V, right:V) extends Biop
 
-  trait Pred extends D
+  sealed trait Pred extends D
   case class IsNumber(v:V) extends Pred
   case class IsArray(v:V) extends Pred
 
@@ -41,7 +40,7 @@ object L3AST {
   case class ClosureVars(v:V) extends D
 
   // v's (registers, numbers, labels)
-  trait V extends D
+  sealed trait V extends D
 
   sealed trait X extends V with L3ASTNode with Ordered[X]{
     val name: String
@@ -50,7 +49,9 @@ object L3AST {
 
   case class Variable(name: String) extends X
 
-  case class Num(n: Int) extends V
+  case class Num(n: Int) extends V {
+    def *(i:Int) = Num(n*i)
+  }
   case class Label(name: String) extends V {
     override def toString = "Label(\"" + name + "\")"
   }

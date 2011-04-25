@@ -19,13 +19,13 @@ trait Runner{
   def run(code:String, originalFileName:String): String
   def test(code:String) = run(code, "Test.L1")
 }
-
-object L1Interpreter extends Runner {
-  def run(code:String, originalFileName:String): String = {
-    val (out, err) = CommandRunner("./src/test/compilers/interpreters/L1" + " " + new File(originalFileName).getAbsolutePath)
-    if(! (err startsWith "Welcome to L1")) error("interpreter died with the following errors:\n" + err)
-    val resultFile = new File(originalFileName.dropRight(3) + ".res")
-    resultFile.write(out)
-    out
-  }
-}
+//
+//object L1Interpreter extends Runner {
+//  def run(code:String, originalFileName:String): String = {
+//    val (out, err) = CommandRunner("./src/test/compilers/interpreters/L1" + " " + new File(originalFileName).getAbsolutePath)
+//    if(! (err startsWith "Welcome to L1")) error("interpreter died with the following errors:\n" + err)
+//    val resultFile = new File(originalFileName.dropRight(3) + ".res")
+//    resultFile.write(out)
+//    out
+//  }
+//}

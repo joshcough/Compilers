@@ -1,8 +1,9 @@
 package L3Compiler
 
-import org.scalatest.FunSuite
+import util.TestHelpers
 
-class L3ParserTests extends FunSuite{
+class L3ParserTests extends TestHelpers {
+  
   testParse("""
   ((:fib 18)
    (:fib (x)
@@ -14,11 +15,16 @@ class L3ParserTests extends FunSuite{
              (let ([x2 (- x 2)])
                (let ([f2 (:fib x2)])
                  (+ f1 f2)))))))))""")
+
+  testParse("((let ([x (+ 1 2)]) (let ([y (- 5 4)]) (* x y))))")
+  
   testParse("((if 6 7 8))")
 
   testParse("((:fib 18) (:fib (x) x))")
 
   testParse("((let ([x 7]) x))")
+
+  testParse("(8)")
 
   def testParse(program:String): Unit = {
     val parser = new L3Parser with L3Printer with io.Reader{}
@@ -30,18 +36,5 @@ class L3ParserTests extends FunSuite{
       //println("resultCode: " + resultCode)
       verboseAssert(program, read(resultCode).toString, expected.toString)
     }
-  }
-
-  implicit def pimpedString(s:String) = new {
-    def clean = s.stripMargin.trim
-  }
-
-  def verboseAssert(code:String, actual: String, expected: String) {
-    if (actual.clean != expected.clean) {
-      println("code:\n" + code.clean)
-      println("actual:\n" + actual.clean)
-      println("expected:\n" + expected.clean)
-    }
-    assert(actual.clean === expected.clean)
   }
 }

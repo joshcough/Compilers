@@ -18,7 +18,8 @@ trait L3Parser {
   }
 
   def parseArgs(args:List[Any]) = {
-    if(args.isInstanceOf[List[Symbol]]) args.asInstanceOf[List[Symbol]].map(_.toString.drop(1))
+    if(args.isInstanceOf[List[Symbol]])
+      args.asInstanceOf[List[Symbol]].map((s:Symbol) => Variable(s.toString.drop(1)))
     else error("bad argument list!")
   }
 

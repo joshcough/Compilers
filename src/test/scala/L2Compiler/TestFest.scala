@@ -3,19 +3,14 @@ package L2Compiler
 import io.FileHelper._
 import io.Dir._
 import java.io.File
+import util.L1Interpreter
 
 class SpillTestFest extends TestFest(spillTestFestTests, spillTestFestResults, SpillMain.spill)
 class LivenessTestFest extends TestFest(livenessTestFestTests, livenessTestFestResults, LivenessMain.liveness)
 
-class L2TestFest2010 extends L2CompilerTest {
+//TODO: add L1 here
 
-  object L1Interpreter {
-    def run(file: File): String = {
-      val (out, err) = io.CommandRunner("./src/test/compilers/interpreters/L1 " + file.getAbsolutePath)
-      if (!(err startsWith "Welcome to L1")) error("interpreter died with the following errors:\n" + err)
-      out
-    }
-  }
+class L2TestFest2010 extends L2CompilerTest {
 
   io.CommandRunner("rm -rf ./tmp")
   new File("./tmp").mkdir

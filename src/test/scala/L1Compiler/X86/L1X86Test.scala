@@ -2,12 +2,6 @@ package L1Compiler.X86
 
 import L1Compiler._
 
-class TestCompilerVsInterpreter extends L1X86Test{
-  import io.FileHelper._
-  //Dir.L1TestFiles.filter(_.contains("labels-on-heap.L1")).foreach(testCompilerVsInterpreter)
-  //Dir.L1TestFiles.foreach(testCompilerVsInterpreter)
-}
-
 class CompileInstructionListTest extends L1X86Test {
   testCompileString(""";;10
 (((eax <- 19) (eax <- (print eax))))""" -> """movl $19, %eax
@@ -209,10 +203,5 @@ trait L1X86Test extends org.scalatest.FunSuite{
     test(testName + " => " + expectedResults){
       assert(X86.L1X86Runner.test(code) === expectedResults)
     }
-  }
-
-  def testCompilerVsInterpreter(file: java.io.File) {
-    val path = file.getAbsolutePath
-    test(path){ assert(X86.L1X86Runner.runFile(file) === L1Interpreter.runFile(file)) }
   }
 }

@@ -115,13 +115,10 @@ class L2CompilerTests extends L2CompilerTest {
 }
 
 //((x <- 1) (eax += x)) x -4 s
-abstract class L2CompilerTest extends org.scalatest.FunSuite with L2CompilerExtras {
+abstract class L2CompilerTest extends util.TestHelpers with L2CompilerExtras {
 
   def End = None // sort of hacky, but whatever.
   def Just(i:Int) = Some(i)
-  implicit def pimpedString(s:String) = new {
-    def clean = s.stripMargin.trim
-  }
 
   def testCompile(input:String, expected:Option[String] = None, error: Option[String] = None): Unit = {
     test(input.clean){
@@ -137,15 +134,6 @@ abstract class L2CompilerTest extends org.scalatest.FunSuite with L2CompilerExtr
         }
       }
     }
-  }
-
-  def verboseAssert(code:String, actual: String, expected: String) {
-    if (actual.clean != expected.clean) {
-      println("code:\n" + code.clean)
-      println("actual:\n" + actual.clean)
-      println("expected:\n" + expected.clean)
-    }
-    assert(actual.clean === expected.clean)
   }
 }
 

@@ -37,12 +37,16 @@ trait Rewriter extends Spill with Liveness with Interference with L2Printer {
   def rewrite(ast: L2): L2 = {
     //println("rewriting: " + toCode(ast))
     val newL2FunctionsAndRegisterAllocations = (ast.main :: ast.funs).map(f => allocateCompletely(f))
-    val l1OneFunctions = newL2FunctionsAndRegisterAllocations.map {
+    val l1Functions = newL2FunctionsAndRegisterAllocations.map {
       case (f, allocs) => new VariableToRegisterReplacer(allocs).replaceVarsWithRegisters(f)
     }
+    // TODO: this really needs to get cleaned up better!!!!
     // ugh! strip the main label out of the main function
-    val main = Func(l1OneFunctions.head.body.tail)
-    L2(main, l1OneFunctions.tail)
+    // but only if its there! For L3, I'm not putting it there.
+    val main =
+      if(l1Functions.head.body.head == LabelDeclaration(Label("__main"))) Func(l1Functions.head.body.tail)
+      else Func(l1Functions.head.body)
+    L2(main, l1Functions.tail)
   }
 
   def allocateCompletely(f: Func): (Func, Map[Variable, Register]) = {
