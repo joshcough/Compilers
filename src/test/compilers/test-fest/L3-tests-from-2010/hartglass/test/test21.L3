@@ -1,0 +1,3 @@
+((let ([x (new-array 1 1)])
+   (let ([y (a? x)])
+     (if y (print 99) (print 1)))))

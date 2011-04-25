@@ -1,0 +1,6 @@
+((let ((v (:f 1 1 1))) (print v))
+ (:f
+  (a b c)
+  (if a
+    (if b (if c 0 1) (if c 2 3))
+    (if b (if c 4 5) (if c 6 7)))))

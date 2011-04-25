@@ -1,0 +1,4 @@
+((let ([a (:a 3 19)])
+   (print a))
+ (:a (a b)
+     (new-array a b)))

@@ -1,0 +1,5 @@
+((let ([x 19])
+   (let ([p (< x 20)])
+     (if p
+         (print 99)
+         (print 0)))))

@@ -1,0 +1,4 @@
+((let ([ans (:func)])
+  (print ans))
+ (:func ()
+  1))

@@ -1,0 +1,1 @@
+((let ([b (new-array 3 9)]) (let ([len (alen b)]) (print len))))

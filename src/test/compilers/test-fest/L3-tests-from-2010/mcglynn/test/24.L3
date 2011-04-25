@@ -1,0 +1,3 @@
+((let ((x (new-tuple 3 4 5)))
+   (let ((blah (aset x 2 22)))
+     (print x))))

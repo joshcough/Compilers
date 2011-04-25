@@ -1,0 +1,2 @@
+((let ((v (:f 1 2))) (print v))
+ (:f (a b) (let ((c (< a b))) (let ((d c)) (if c 1 2)))))

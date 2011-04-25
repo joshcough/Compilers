@@ -1,0 +1,9 @@
+((let ([ans (:rec 5)])
+  (print ans))
+ (:rec (x)
+       (let ([xtest (= x 1)])
+         (if xtest
+             1
+             (let ([x1 (- x 1)])
+               (let ([ans2 (:rec x1)])
+                 (+ x ans2)))))))

@@ -1,0 +1,2 @@
+((let ((x (new-array 5 6)))
+   (print x)))

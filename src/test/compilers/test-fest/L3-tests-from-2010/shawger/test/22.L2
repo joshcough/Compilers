@@ -1,0 +1,14 @@
+((
+(eax <- (allocate 7 9))
+(x <- eax)
+(y <- 3)
+(cjump y = 1 :else_3 :then_2)
+:then_2
+(eax <- (print 3))
+(goto :endif_4)
+:else_3
+(eax <- (print 5))
+(goto :endif_4)
+:endif_4
+)
+)

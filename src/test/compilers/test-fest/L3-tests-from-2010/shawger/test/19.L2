@@ -1,0 +1,12 @@
+((
+(x <- 3)
+(cjump x = 1 :else_3 :then_2)
+:then_2
+(eax <- (print 5))
+(goto :endif_4)
+:else_3
+(eax <- (print 7))
+(goto :endif_4)
+:endif_4
+)
+)

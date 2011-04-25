@@ -1,0 +1,2 @@
+((let ((a (new-array 10 11)))
+   (let ((i (aset a 3 321))) (let ((v (aref a 3))) (print v)))))

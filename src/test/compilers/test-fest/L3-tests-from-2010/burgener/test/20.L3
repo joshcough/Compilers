@@ -1,0 +1,1 @@
+((let ([x_0 (new-array 3 7)]) (let ([x_1 (* 4 2)]) (let ([x_2 (a? x_0)]) (if x_2 (print 1) (print 0)))))) 

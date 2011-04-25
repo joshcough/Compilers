@@ -1,0 +1,4 @@
+((let ([x (number? 2)])
+   (if x
+     (print 2)
+     (print 3))))

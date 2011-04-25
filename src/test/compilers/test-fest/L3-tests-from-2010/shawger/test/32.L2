@@ -1,0 +1,15 @@
+((
+(x <- 7)
+(x += 5)
+(x -= 1)
+(ecx <- x)
+(call :copy)
+(eax <- eax)
+)
+(
+:copy
+(x <- ecx)
+(eax <- (print x))
+(return)
+)
+)

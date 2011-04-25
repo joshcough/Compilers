@@ -1,0 +1,18 @@
+((
+(eax <- (allocate 7 9))
+(x <- eax)
+(y <- 5)
+(y >>= 1)
+(tmp4 <- (mem x 0))
+(cjump y < tmp4 :bnds_pass_9 :bnds_fail_8)
+:bnds_fail_8
+(eax <- (array-error x y))
+:bnds_pass_9
+(y *= 4)
+(y += x)
+((mem y 4) <- 13)
+(y <- 1)
+(z <- (mem x 12))
+(eax <- (print z))
+)
+)

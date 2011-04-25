@@ -1,0 +1,17 @@
+((
+(ecx <- 9)
+(edx <- 11)
+(call :add)
+(ans <- eax)
+(eax <- (print ans))
+)
+(
+:add
+(x <- ecx)
+(y <- edx)
+(eax <- x)
+(eax += y)
+(eax -= 1)
+(return)
+)
+)

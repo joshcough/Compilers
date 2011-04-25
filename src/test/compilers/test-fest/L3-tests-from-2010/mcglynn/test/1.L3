@@ -1,0 +1,12 @@
+((let ((x (:fib 10)))
+   (print x))
+               
+(:fib (n)
+  (let ((base (<= n 1)))
+    (if base
+        1
+        (let ((n1 (- n 1)))
+          (let ((n2 (- n 2)))
+            (let ((sub1 (:fib n1)))
+              (let ((sub2 (:fib n2)))
+                (+ sub1 sub2)))))))))

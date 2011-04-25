@@ -1,0 +1,1 @@
+((let ((a (new-array 10 1))) (let ((v (aref a 9))) (print v))))

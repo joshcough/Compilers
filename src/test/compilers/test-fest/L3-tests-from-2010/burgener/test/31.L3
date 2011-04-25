@@ -1,0 +1,1 @@
+((let ([args (new-tuple 4 5 6)]) (let ([clos (make-closure :myFun args)]) (let ([z (closure-proc clos)]) (let ([ans (z 4 5 6)]) (print ans))))) (:myFun (x y q) (let ([z (+ x y)]) (+ z q))))

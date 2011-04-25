@@ -1,0 +1,8 @@
+((:z 6 7 8)
+ (:z (arg1 arg2 arg3)
+     (let ([p (- arg1 1)])
+       (let ([q (- arg2 1)])
+         (let ([r (- arg3 1)])
+           (let ([s (* q r)])
+             (let ([t (+ s p)])
+               (print t))))))))

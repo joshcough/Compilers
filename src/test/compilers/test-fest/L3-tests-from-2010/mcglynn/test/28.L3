@@ -1,0 +1,7 @@
+((let ((x (:f 5 3 7)))
+   (print x))
+   
+ (:f (a b c)
+   (let ((x (+ a 1)))
+     (let ((y (* x b)))
+       (- y c)))))

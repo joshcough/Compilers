@@ -1,0 +1,11 @@
+((let ((a 5))
+   (let ((x (:fact a)))
+     (print x)))
+
+ (:fact (n)
+   (let ((one (< n 2)))
+     (if one
+         1
+         (let ((next (- n 1)))
+           (let ((factnext (:fact next)))
+             (* n factnext)))))))

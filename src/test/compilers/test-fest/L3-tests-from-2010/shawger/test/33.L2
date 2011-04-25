@@ -1,0 +1,31 @@
+((
+(ecx <- 11)
+(call :rec)
+(ans <- eax)
+(eax <- (print ans))
+)
+(
+:rec
+(x <- ecx)
+(xtest <- x = 3)
+(xtest <<= 1)
+(xtest += 1)
+(cjump xtest = 1 :else_3 :then_2)
+:then_2
+(eax <- 3)
+(goto :endif_4)
+:else_3
+(x1 <- x)
+(x1 -= 3)
+(x1 += 1)
+(ecx <- x1)
+(call :rec)
+(ans2 <- eax)
+(eax <- x)
+(eax += ans2)
+(eax -= 1)
+(goto :endif_4)
+:endif_4
+(return)
+)
+)

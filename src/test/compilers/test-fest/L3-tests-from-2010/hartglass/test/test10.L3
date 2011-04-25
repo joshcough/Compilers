@@ -1,0 +1,6 @@
+((let ([a (print 9)])
+   (if a
+       (print 10)
+       (:g)))
+ (:g ()
+     (print 8)))

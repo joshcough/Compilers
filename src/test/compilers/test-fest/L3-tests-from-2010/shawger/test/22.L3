@@ -1,0 +1,5 @@
+((let ([x (new-array 3 4)])
+   (let ([y (a? x)])
+     (if y
+         (print 1)
+         (print 2)))))

@@ -1,0 +1,5 @@
+((let ((x (new-array 5 5)))
+   (let ((a (number? x)))
+     (let ((b (a? x)))
+       (let ((z (print a)))
+         (print b))))))

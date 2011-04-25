@@ -1,0 +1,4 @@
+((let ((t (new-tuple 1 2 3)))
+   (let ((c (make-closure :f t)))
+     (let ((p (closure-proc c))) (let ((v (p 0))) (print v)))))
+ (:f (x) x))

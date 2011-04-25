@@ -1,0 +1,1 @@
+((let ([x_1 (new-array 3 7)]) (print x_1)))

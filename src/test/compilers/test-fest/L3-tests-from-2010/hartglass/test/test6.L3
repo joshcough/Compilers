@@ -1,0 +1,8 @@
+((:fun 17)
+ (:fun (n)
+       (let ([test (= n 0)])
+         (if test
+             (print 0)
+             (let ([w (print n)])
+               (let ([next (- n 1)])
+                 (:fun next)))))))

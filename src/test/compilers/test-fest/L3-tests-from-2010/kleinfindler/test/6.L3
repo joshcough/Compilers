@@ -1,0 +1,1 @@
+((let ((x (new-tuple 10 11))) (let ((y (number? x))) (print y))))

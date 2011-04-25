@@ -1,0 +1,7 @@
+((:f1)
+ (:f1 ()
+      (let ([z (print 3)])
+        (let ([g (:f2 2)])
+          (print g))))
+ (:f2 (n)
+      (print n)))

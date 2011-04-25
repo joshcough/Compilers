@@ -1,0 +1,10 @@
+((let ((x (:g 5 3 7)))
+   (print x))
+
+ (:g (a b c)
+   (:f a b c))
+
+ (:f (a b c)
+   (let ((x (+ a 1)))
+     (let ((y (* x b)))
+       (- y c)))))

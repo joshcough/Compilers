@@ -1,0 +1,1 @@
+((let ([res (:myFun 1 2 3)]) (print res)) (:myFun (x y q) (let ([z (+ x y)]) (+ z q))))

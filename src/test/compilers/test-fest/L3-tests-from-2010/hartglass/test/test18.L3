@@ -1,0 +1,6 @@
+((:g 1 2 3)
+ (:g (a b c)
+     (let ([e (+ a b)])
+       (let ([f (+ c 0)])
+         (let ([g (+ e f)])
+           (print g))))))

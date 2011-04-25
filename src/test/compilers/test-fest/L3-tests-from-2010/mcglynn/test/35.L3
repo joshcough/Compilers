@@ -1,0 +1,3 @@
+((let ((x (new-array 7 8)))
+   (let ((y (alen x)))
+     (print y))))

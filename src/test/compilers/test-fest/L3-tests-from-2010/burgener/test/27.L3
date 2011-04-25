@@ -1,0 +1,1 @@
+((let ([var (new-tuple 0 1 2)]) (let ([third (aref var 2)]) (print third))))

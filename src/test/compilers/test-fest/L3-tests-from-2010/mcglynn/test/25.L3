@@ -1,0 +1,6 @@
+((let ((x (:f)))
+   (print x))
+   
+ (:f ()
+   (let ((x (print 7)))
+     99)))

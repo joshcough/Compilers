@@ -1,0 +1,37 @@
+((
+(ecx <- 71)
+(call :fib)
+(ans <- eax)
+(eax <- (print ans))
+)
+(
+:fib
+(x <- ecx)
+(xlt2 <- x < 5)
+(xlt2 <<= 1)
+(xlt2 += 1)
+(cjump xlt2 = 1 :else_3 :then_2)
+:then_2
+(eax <- 3)
+(goto :endif_4)
+:else_3
+(x1 <- x)
+(x1 -= 3)
+(x1 += 1)
+(ecx <- x1)
+(call :fib)
+(f1 <- eax)
+(x2 <- x)
+(x2 -= 5)
+(x2 += 1)
+(ecx <- x2)
+(call :fib)
+(f2 <- eax)
+(eax <- f1)
+(eax += f2)
+(eax -= 1)
+(goto :endif_4)
+:endif_4
+(return)
+)
+)

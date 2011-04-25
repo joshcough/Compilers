@@ -1,0 +1,4 @@
+((let ([z (new-tuple 3 4 5)])
+   (let ([v (aref z 1)])
+     (let ([r (aset z 0 v)])
+       (print z)))))

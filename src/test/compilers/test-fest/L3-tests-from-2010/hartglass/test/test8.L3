@@ -1,0 +1,7 @@
+((let ([z (- 9 10)])
+   (let ([t (< z -1)])
+     (if t
+         (if t (print 9) (print 8))
+         (let ([p (= t 0)])
+           (if p (print 7) (print 6)))
+         ))))

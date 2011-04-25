@@ -1,0 +1,11 @@
+((let ((a 5))
+   (let ((x (:fact a 1)))
+     (print x)))
+     
+ (:fact (n prod)
+   (let ((newprod (* n prod)))
+     (let ((same (= newprod prod)))
+       (if same
+           prod
+           (let ((next (- n 1)))
+             (:fact next newprod)))))))

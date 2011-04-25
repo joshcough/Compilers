@@ -1,0 +1,2 @@
+((let ((a (new-tuple 0 1 2 3 4 5 6)))
+   (let ((i (aset a 3 321))) (let ((v (aref a 3))) (print v)))))

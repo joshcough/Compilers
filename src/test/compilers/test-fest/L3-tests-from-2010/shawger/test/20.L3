@@ -1,0 +1,5 @@
+((let ([y 6])
+   (let ([x (number? y)])
+     (if x
+       (print 2)
+       (print 3)))))

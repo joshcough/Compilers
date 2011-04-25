@@ -1,0 +1,6 @@
+((
+(eax <- (allocate 7 9))
+(x <- eax)
+(eax <- (print x))
+)
+)
