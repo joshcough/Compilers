@@ -54,6 +54,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
   def compileE(e:E): List[L2Instruction] = e match {
     // e ::= (let ([x d]) e) | (if v e e) | d
     case Let(x:X, d:D, body:E) => compileD(d=d, destination=x) ::: compileE(body)
+    // TODO!
     case IfStatement(v:V, t:E, f:E) => error("implement me")
     case d:D => compileD(d, eax)
   }
@@ -67,7 +68,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
   def compileD(d:D, destination: X): List[L2Instruction] = d match {
     case Print(v) => List(Assignment(eax, L2Print(encode(v))), Assignment(destination, eax))
 
-    // todo...tail-call if last d in the tree??
+    // TODO...tail-call if last d in the tree??
     case FunCall(v, args) => {
       val argAssignments =
         for( (r, v) <- List(ecx, edx, eax).zip(args map encode) ) yield Assignment(r, v)
@@ -141,8 +142,15 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     case ARef(arr:V, loc:V) => {
       assert(arr.isInstanceOf[X])
       assert(loc.isInstanceOf[Num])
-      List(Assignment(destination, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), loc.asInstanceOf[Num] * 4))))
+      List(
+        Assignment(destination, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), loc.asInstanceOf[Num] * 4))))
     }
+
+    case ALen(arr:V) => List(
+      Assignment(destination, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
+      LeftShift(destination, Num(1)),
+      Increment(destination, Num(1))
+    )
 
     // TODO: review assertions, particularly x vs variable
     //((mem x n4) <- s)
@@ -154,7 +162,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
       val boundsFailLabel = tempLabel()
       val boundsPassLabel = tempLabel()
       List(
-        // `(,x <- ,(encode v2))
+        //`(,x <- ,(encode v2))
         Assignment(destination, encode(loc)),
         // `(,x >>= 1)
         RightShift(destination, Num(1)),
@@ -164,31 +172,33 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
         CJump(Comp(tmp, L2LessThan, destination), boundsFailLabel, boundsPassLabel),
         //bounds-fail-label
         LabelDeclaration(boundsFailLabel),
-        //  `(eax <- (array-error v1 x))
+        //`(eax <- (array-error v1 x))
         Assignment(eax, ArrayError(arr, destination)),
         //bounds-pass-label
         LabelDeclaration(boundsPassLabel),
-        //  `(,x *= 4)
+        //`(,x *= 4)
         Multiply(destination, Num(4)),
-        //  `(,x += ,v1)
+        //`(,x += ,v1)
         Increment(destination, arr),
-        //  `((mem ,x 4) <- ,(encode v3))
+        //`((mem ,x 4) <- ,(encode v3))
         MemWrite(MemLoc(destination, Num(4)), encode(newVal)),
         //`(,x <- 1)   ;; put the final result for aset into x (always 0).
         Assignment(destination, Num(1))
       )
     }
 
+    case NewTuple(vs) => {
+      val setStatemets = vs.zipWithIndex.map{ case (v,i) => ASet(destination, Num(i), v) }
+      val tmp = temp()
+      compileD(NewArray(Num(vs.size), Num(0)), destination) ::: setStatemets.flatMap(compileD(_, tmp))
+    }
 
-
-//    case NewTuple(vs) => "(new-tuple "+ vs.map(compile).mkString(" ") + ")"
-//    case ALen(arr:V) => "(alen " + compile(arr) +")"
-//    case MakeClosure(l:Label, v:V) => "(make-closure " + compile(l) +" " + compile(v) +")"
-//    case ClosureProc(v:V) => "(closure-proc " + compile(v) +")"
-//    case ClosureVars(v:V) => "(closure-vars " + compile(v) +")"
+    // TODO: make tests for these three
+    case MakeClosure(l:Label, v:V) => compileD(NewTuple(List(l, v)), destination)
+    case ClosureProc(v:V) => compileD(ARef(v, Num(0)), destination)
+    case ClosureVars(v:V) => compileD(ARef(v, Num(1)), destination)
 
     case v:V => List(Assignment(destination, encode(v)))
-    case _ => error("implement d:" + d)
   }
 
   private val count = Iterator.from(0)

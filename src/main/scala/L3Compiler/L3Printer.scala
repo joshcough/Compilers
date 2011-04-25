@@ -19,7 +19,7 @@ trait L3Printer {
     case Mult(l:V, r:V)  => "(* " + toCode(l) + " " +  toCode(r) + ")"
     case LessThan(l:V, r:V)  => "(< " + toCode(l) + " " +  toCode(r) + ")"
     case LessThanOrEqualTo(l:V, r:V)  => "(<= " + toCode(l) + " " +  toCode(r) + ")"
-    case EqTo(l:V, r:V)  => "(= " + toCode(l) + " " +  toCode(r) + ")"
+    case EqualTo(l:V, r:V)  => "(= " + toCode(l) + " " +  toCode(r) + ")"
 
     case IsNumber(v:V) => "(number? " + toCode(v) +")"
     case IsArray(v:V) => "(s? " + toCode(v) +")"

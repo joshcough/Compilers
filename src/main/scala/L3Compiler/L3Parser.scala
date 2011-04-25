@@ -49,7 +49,7 @@ trait L3Parser {
     case '*  :: left :: right :: Nil => Mult(parseV(left), parseV(right))
     case '<  :: left :: right :: Nil => LessThan(parseV(left), parseV(right))
     case '<= :: left :: right :: Nil => LessThanOrEqualTo(parseV(left), parseV(right))
-    case '=  :: left :: right :: Nil => EqTo(parseV(left), parseV(right))
+    case '=  :: left :: right :: Nil => EqualTo(parseV(left), parseV(right))
     case Symbol("number?") :: v :: Nil => IsNumber(parseV(v))
     case Symbol("a?") :: v :: Nil => IsArray(parseV(v))
 
