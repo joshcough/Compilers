@@ -7,7 +7,8 @@ trait L3Printer {
   def toCode(a:L3ASTNode): String = a match {
     case L3(main, funcs) => (main :: funcs).map(toCode).mkString("(", "\n", ")")
     //(l (x ...) e)
-    case Func(label, args, body) => "(" + toCode(label) + " " + args.mkString("(", " ", ")") + " " + toCode(body) + ")"
+    case Func(label, args, body) =>
+      "(" + toCode(label) + " " + args.map(toCode).mkString("(", " ", ")") + " " + toCode(body) + ")"
 
     // e ::= (let ([x d]) e) | (if v e e) | d
     case Let(x:X, d:D, body:E) => "(let ([" + toCode(x) + " " + toCode(d) + "]) " + toCode(body) + ")"

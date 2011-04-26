@@ -60,9 +60,9 @@ trait L3Parser {
     case 'alen :: arr :: Nil => ALen(arr=parseV(arr))
     case 'print :: v :: Nil => Print(v=parseV(v))
 
-    case Symbol("make-closure") :: (l:Label) :: v :: Nil => MakeClosure(l=parseLabel(l.toString), v=parseV(v))
+    case Symbol("make-closure") :: (l:Symbol) :: v :: Nil => MakeClosure(l=parseLabel(l.toString), v=parseV(v))
     case Symbol("closure-proc") :: v :: Nil => ClosureProc(v=parseV(v))
-    case Symbol("closure-vars") :: v :: Nil => ClosureProc(v=parseV(v))
+    case Symbol("closure-vars") :: v :: Nil => ClosureVars(v=parseV(v))
 
     case n: Int => Num(n)
     case s: Symbol => parseLabelOrRegisterOrVar(s)

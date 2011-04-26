@@ -51,6 +51,7 @@ object L3AST {
 
   case class Num(n: Int) extends V {
     def *(i:Int) = Num(n*i)
+    def +(i:Int) = Num(n+i)
   }
   case class Label(name: String) extends V {
     override def toString = "Label(\"" + name + "\")"

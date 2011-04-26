@@ -69,10 +69,10 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
       List(
         compileD(v, tmp),
         List(CJump(Comp(tmp, L2EqualTo, Num(1)), elseLabel, thenLabel)),
-        List(LabelDeclaration(elseLabel)),
-        compileE(f),
         List(LabelDeclaration(thenLabel)),
-        compileE(t)).flatten
+        compileE(t),
+        List(LabelDeclaration(elseLabel)),
+        compileE(f)).flatten
     }
 
     //3) the e is a d:
@@ -93,7 +93,6 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     case x:X => convertX(x)
     case Label(name) => L2Label(name)
   }
-
 
   def compileFunCall(f:FunCall, destination:X, tailCall:Boolean): List[L2Instruction] = {
     val argAssignments =
@@ -157,13 +156,12 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
       LeftShift(destination, Num(1)),
       Increment(destination, Num(1))
     )
-      
+
     case IsArray(v:V) => List(
       Assignment(destination, encode(v)),
-      Increment(destination, Num(1)),
       BitwiseAnd(destination, Num(1)),
-      LeftShift(destination, Num(1)),
-      Increment(destination, Num(1))
+      Multiply(destination, Num(-2)),
+      Increment(destination, Num(3))
     )
       
     case NewArray(size:V, init:V) => List(
@@ -177,8 +175,26 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     case ARef(arr:V, loc:V) => {
       assert(arr.isInstanceOf[X])
       assert(loc.isInstanceOf[Num])
+      val index = destination
+      val size = temp()
+      val boundsFailLabel = tempLabel()
+      val boundsPassLabel = tempLabel()
+
       List(
-        Assignment(destination, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), loc.asInstanceOf[Num] * 4))))
+        Assignment(index, encode(loc.asInstanceOf[Num])),
+        RightShift(index, Num(1)),
+        Assignment(size, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
+        CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, boundsPassLabel),
+        LabelDeclaration(boundsFailLabel),
+        LeftShift(index, Num(1)),
+        Increment(index, Num(1)),
+        Assignment(eax, ArrayError(arr, index)),
+        LabelDeclaration(boundsPassLabel),
+        Increment(index, Num(1)),
+        Multiply(index, Num(4)),
+        Increment(index, arr),
+        Assignment(destination, MemRead(MemLoc(index, Num(0))))
+      )
     }
 
     case ALen(arr:V) => List(
@@ -187,52 +203,42 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
       Increment(destination, Num(1))
     )
 
-    // TODO: review assertions, particularly x vs variable
     //((mem x n4) <- s)
     //(let ([x (aset v1 v2 v3)]) ...)
     case ASet(arr:V, loc:V, newVal: V) => {
       assert(arr.isInstanceOf[X])
       assert(loc.isInstanceOf[Num])
-      val tmp = temp()
+      val index = destination
+      val size = temp()
       val boundsFailLabel = tempLabel()
       val boundsPassLabel = tempLabel()
       List(
-        //`(,x <- ,(encode v2))
-        Assignment(destination, encode(loc)),
-        // `(,x >>= 1)
-        RightShift(destination, Num(1)),
-        // `(,tmp <- (mem v1))
-        Assignment(tmp, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
-        //`(cjump ,x < ,tmp ,bounds-fail-label ,bounds-pass-label)
-        CJump(Comp(tmp, L2LessThan, destination), boundsFailLabel, boundsPassLabel),
-        //bounds-fail-label
+        Assignment(index, encode(loc)),
+        RightShift(index, Num(1)),
+        Assignment(size, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
+        CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, boundsPassLabel),
         LabelDeclaration(boundsFailLabel),
-        //`(eax <- (array-error v1 x))
-        Assignment(eax, ArrayError(arr, destination)),
-        //bounds-pass-label
+        LeftShift(index, Num(1)),
+        Increment(index, Num(1)),
+        Assignment(eax, ArrayError(arr, index)),
         LabelDeclaration(boundsPassLabel),
-        //`(,x *= 4)
-        Multiply(destination, Num(4)),
-        //`(,x += ,v1)
-        Increment(destination, arr),
-        //`((mem ,x 4) <- ,(encode v3))
-        MemWrite(MemLoc(destination, Num(4)), encode(newVal)),
-        //`(,x <- 1)   ;; put the final result for aset into x (always 0).
+        Increment(index, Num(1)),
+        Multiply(index, Num(4)),
+        Increment(index, arr),
+        MemWrite(MemLoc(index, Num(0)), encode(newVal)),
         Assignment(destination, Num(1))
       )
     }
 
     case NewTuple(vs) => {
-      val setStatemets = vs.zipWithIndex.map{ case (v,i) => ASet(destination, Num(i), v) }
-      val tmp = temp()
-      compileD(NewArray(Num(vs.size), Num(0)), destination) ::: setStatemets.flatMap(compileD(_, tmp))
+      val arr = Assignment(eax, Allocate(encode(Num(vs.size)),Num(1)))
+      val sets = vs.zipWithIndex.map{ case (v,i) => MemWrite(MemLoc(eax, Num((i+1)*4)), encode(v)) }
+      arr :: sets ::: List(Assignment(destination, eax))
     }
 
-    // TODO: make tests for these three
     case MakeClosure(l:Label, v:V) => compileD(NewTuple(List(l, v)), destination)
     case ClosureProc(v:V) => compileD(ARef(v, Num(0)), destination)
     case ClosureVars(v:V) => compileD(ARef(v, Num(1)), destination)
-
     case v:V => List(Assignment(destination, encode(v)))
   }
 

@@ -32,10 +32,10 @@ case class Interpreter(level:Int) {
   def getCompiledCodeInterpreter = Interpreter.interps(level-1)
   def run(file: File): String = {
     val command = "./src/test/compilers/interpreters/" + name+ " " + file.getAbsolutePath
-    println("command: " + command)
+    //println("command: " + command)
     val (out, err) = io.CommandRunner(command)
     if (!(err startsWith "Welcome to " + name)) error(name + " interpreter died with the following errors:\n" + err)
-    out
+    out + (err.split("\n").filter(_.startsWith("attempted")).mkString("\n"))
   }
   def run(code:String): String = {
     val f = new File("/tmp/test." + name)
