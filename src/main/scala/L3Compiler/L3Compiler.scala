@@ -179,16 +179,19 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
       val size = temp()
       val boundsFailLabel = tempLabel()
       val boundsPassLabel = tempLabel()
+      val checkNegativeLabel = tempLabel()
 
       List(
         Assignment(index, encode(loc.asInstanceOf[Num])),
         RightShift(index, Num(1)),
         Assignment(size, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
-        CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, boundsPassLabel),
+        CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, checkNegativeLabel),
         LabelDeclaration(boundsFailLabel),
         LeftShift(index, Num(1)),
         Increment(index, Num(1)),
         Assignment(eax, ArrayError(arr, index)),
+        LabelDeclaration(checkNegativeLabel),
+        CJump(Comp(index, L2LessThan, Num(0)), boundsFailLabel, boundsPassLabel),
         LabelDeclaration(boundsPassLabel),
         Increment(index, Num(1)),
         Multiply(index, Num(4)),
@@ -212,15 +215,19 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
       val size = temp()
       val boundsFailLabel = tempLabel()
       val boundsPassLabel = tempLabel()
+      val checkNegativeLabel = tempLabel()
+
       List(
-        Assignment(index, encode(loc)),
+        Assignment(index, encode(loc.asInstanceOf[Num])),
         RightShift(index, Num(1)),
         Assignment(size, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
-        CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, boundsPassLabel),
+        CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, checkNegativeLabel),
         LabelDeclaration(boundsFailLabel),
         LeftShift(index, Num(1)),
         Increment(index, Num(1)),
         Assignment(eax, ArrayError(arr, index)),
+        LabelDeclaration(checkNegativeLabel),
+        CJump(Comp(index, L2LessThan, Num(0)), boundsFailLabel, boundsPassLabel),
         LabelDeclaration(boundsPassLabel),
         Increment(index, Num(1)),
         Multiply(index, Num(4)),
