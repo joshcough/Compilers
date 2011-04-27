@@ -25,7 +25,7 @@ trait L3Parser {
 
   //e ::= (let ([x d]) e) | (if v e e) | d
   def parseE(a:Any): E = a match {
-    case 'let :: List(List((x:Symbol), d)) :: e :: Nil => Let(parseX(x), parseD(d), parseE(e))
+    case 'let :: List(List((x:Symbol), d)) :: e :: Nil => Let(parseVar(x), parseD(d), parseE(e))
     case 'if :: v :: le :: re :: Nil => IfStatement(parseV(v), parseE(le), parseE(re))
     case _ => parseD(a)
   }
@@ -65,7 +65,7 @@ trait L3Parser {
     case Symbol("closure-vars") :: v :: Nil => ClosureVars(v=parseV(v))
 
     case n: Int => Num(n)
-    case s: Symbol => parseLabelOrRegisterOrVar(s)
+    case s: Symbol => parseLabelOrVar(s)
 
     case v :: vs => FunCall(parseV(v), vs map parseV)
     case _ => parseV(a)
@@ -73,16 +73,16 @@ trait L3Parser {
   
   def parseV(exp:Any) = exp match {
     case n: Int => Num(n)
-    case s: Symbol => parseLabelOrRegisterOrVar(s)
+    case s: Symbol => parseLabelOrVar(s)
   }
 
-  def parseNumOrRegisterOrVar(exp:Any): V = exp match {
+  def parseNumOrVar(exp:Any): V = exp match {
     case n: Int => Num(n)
-    case s: Symbol => parseX(s)
+    case s: Symbol => parseLabelOrVar(s)
   }
 
-  def parseLabelOrRegisterOrVar(s: Symbol): V = {
-    if (s.toString.startsWith("':")) parseLabel(s.toString) else parseX(s)
+  def parseLabelOrVar(s: Symbol): V = {
+    if (s.toString.startsWith("':")) parseLabel(s.toString) else parseVar(s)
   }
 
   // label ::= sequence of alpha-numeric characters or underscore,
@@ -93,7 +93,5 @@ trait L3Parser {
     Label(s.drop(2)) // remove the ' and : from ':label.
   }
 
-  def parseX(s: Symbol): X = {
-    XRegister(s).getOrElse(CXRegister(s).getOrElse(Variable(s.toString.drop(1))))
-  }
+  def parseVar(s: Symbol): X = Variable(s.toString.drop(1))
 }

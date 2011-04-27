@@ -37,7 +37,6 @@ trait L3Printer {
 
     case Num(n) => n.toString
     case Label(name: String) => ":" + name
-    case r:Register => r.name
     case v:Variable => v.name
   }
 }

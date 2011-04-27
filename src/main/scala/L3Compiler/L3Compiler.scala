@@ -2,7 +2,7 @@ package L3Compiler
 
 import L3AST._
 import L2Compiler.L2AST.{
-  eax => l2eax, ebx => l2ebx, ecx => l2ecx, edi => l2edi, edx => l2edx, esi => l2esi,
+ // eax => l2eax, ebx => l2ebx, ecx => l2ecx, edi => l2edi, edx => l2edx, esi => l2esi,
   Func => L2Func,
   LessThan => L2LessThan,
   LessThanOrEqualTo => L2LessThanOrEqualTo,
@@ -12,25 +12,17 @@ import L2Compiler.L2AST.{
   X => L2X,
   Label => L2Label,
   Print => L2Print,
-  Register => L2Register,
   Instruction => L2Instruction, _}
 import L2Compiler.L2Printer
 
 trait L3ToL2Implicits {
-  val registerMappings: Map[Register, L2Register] =
-    Map(eax->l2eax, ebx->l2ebx, ecx->l2ecx, edi->l2edi, edx->l2edx, esi->l2esi)
-
-  implicit def convertReg(r:Register): L2Register = registerMappings(r)
   implicit def convertVar(v:Variable): L2Variable = L2Variable(v.name)
   implicit def convertNum(n:Num): L2Num = L2Num(n.n)
   implicit def convertLabel(l:Label): L2Label = L2Label(l.name)
-  implicit def convertX(x:X): L2X = x match {
-    case r:Register => convertReg(r)
-    case v:Variable => convertVar(v)
-  }
+  implicit def convertX(x:X) = x match { case v: Variable => convertVar(v) }
   implicit def convertVToS(v:V): S = v match {
     case Num(n) => L2Num(n)
-    case x:X => convertX(x)
+    case v:Variable => convertVar(v)
     case Label(name) => L2Label(name)
   }
   def declare(l:Label) = LabelDeclaration(L2Label(l.name))
@@ -94,7 +86,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     case Label(name) => L2Label(name)
   }
 
-  def compileFunCall(f:FunCall, destination:X, tailCall:Boolean): List[L2Instruction] = {
+  def compileFunCall(f:FunCall, destination:L2X, tailCall:Boolean): List[L2Instruction] = {
     val argAssignments =
       for( (r, v) <- List(ecx, edx, eax).zip(f.args map encode) ) yield Assignment(r, v)
     argAssignments ::: (
@@ -103,7 +95,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     )
   }
 
-  def compileD(d:D, destination: X): List[L2Instruction] = d match {
+  def compileD(d:D, destination: L2X): List[L2Instruction] = d match {
     case Print(v) => List(Assignment(eax, L2Print(encode(v))), Assignment(destination, eax))
 
     // TODO...tail-call if last d in the tree??

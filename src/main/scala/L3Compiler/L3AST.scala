@@ -57,39 +57,39 @@ object L3AST {
     override def toString = "Label(\"" + name + "\")"
   }
 
-  // registers
-  sealed trait Register extends V with X {
-    val name: String
-    override def toString = name
-  }
-  object XRegister {
-    def apply(s: Symbol): Option[XRegister] = s match {
-      case 'esi => Some(esi)
-      case 'edi => Some(edi)
-      case 'ebp => Some(ebp)
-      case 'esp => Some(esp)
-      case _ => None
-    }
-  }
-  sealed abstract case class XRegister(name: String) extends Register
-  object esi extends XRegister("esi")
-  object edi extends XRegister("edi")
-  object ebp extends XRegister("ebp")
-  object esp extends XRegister("esp")
-  object CXRegister {
-    def apply(s: Symbol): Option[CXRegister] = s match {
-      case 'eax => Some(eax)
-      case 'ecx => Some(ecx)
-      case 'edx => Some(edx)
-      case 'ebx => Some(ebx)
-      case _ => None
-    }
-  }
-  sealed abstract case class CXRegister(name: String) extends Register {
-    def low8 = "%" + name(1) + "l"
-  }
-  object eax extends CXRegister("eax")
-  object ecx extends CXRegister("ecx")
-  object edx extends CXRegister("edx")
-  object ebx extends CXRegister("ebx")
+//  // registers
+//  sealed trait Register extends V with X {
+//    val name: String
+//    override def toString = name
+//  }
+//  object XRegister {
+//    def apply(s: Symbol): Option[XRegister] = s match {
+//      case 'esi => Some(esi)
+//      case 'edi => Some(edi)
+//      case 'ebp => Some(ebp)
+//      case 'esp => Some(esp)
+//      case _ => None
+//    }
+//  }
+//  sealed abstract case class XRegister(name: String) extends Register
+//  object esi extends XRegister("esi")
+//  object edi extends XRegister("edi")
+//  object ebp extends XRegister("ebp")
+//  object esp extends XRegister("esp")
+//  object CXRegister {
+//    def apply(s: Symbol): Option[CXRegister] = s match {
+//      case 'eax => Some(eax)
+//      case 'ecx => Some(ecx)
+//      case 'edx => Some(edx)
+//      case 'ebx => Some(ebx)
+//      case _ => None
+//    }
+//  }
+//  sealed abstract case class CXRegister(name: String) extends Register {
+//    def low8 = "%" + name(1) + "l"
+//  }
+//  object eax extends CXRegister("eax")
+//  object ecx extends CXRegister("ecx")
+//  object edx extends CXRegister("edx")
+//  object ebx extends CXRegister("ebx")
 }
