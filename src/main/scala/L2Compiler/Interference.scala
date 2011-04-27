@@ -15,6 +15,11 @@ object InterferenceMain {
     val inouts = inoutForTesting(code, None)
     (buildInterferenceSet(inouts).hwView, printAllocation(attemptAllocation(inouts)._1))
   }
+
+  def graphTest(code:String): String = {
+    val (i,a) = interferenceAndAllocation(code)
+    i + "\n" + a
+  }
 }
 
 trait Interference {

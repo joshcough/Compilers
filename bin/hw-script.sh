@@ -15,7 +15,8 @@ cd Interpreters
 # move a few things into place
 cp target/scala_2.8.1/compilers_2.8.1-0.1.jar ./lib/compiler.jar
 cp project/boot/scala-2.8.1/lib/scala-library.jar ./lib
-mv bin/L1 bin/spill bin/liveness bin/graph-color .
+#mv bin/L1 bin/spill bin/liveness bin/graph-color .
+mv bin/liveness bin/graph-color .
 
 # get rid of stuff i dont need to hand in
 rm -rf .git project target out lib_managed test 444-code src/main/scheme Test.class Test.j compilers.iml runtime.o test.S test2.S a.out bin Test.o Test.S src/test
@@ -27,11 +28,11 @@ tar cfvz ../compilers.tar.gz *
 echo "done creating compilers.tar.gz. now run:"
 echo "scp ./build/compilers.tar.gz jdc974@tlab-18.cs.northwestern.edu:./"
 
-tar cfvz ../spill-test.tar.gz spill-test
-echo "done creating ./build/spill-test.tar.gz."
+#tar cfvz ../spill-test.tar.gz spill-test
+#echo "done creating ./build/spill-test.tar.gz."
 
-tar cfvz ../liveness-test.tar.gz liveness-test
-echo "done creating ./build/liveness-test.tar.gz."
+#tar cfvz ../liveness-test.tar.gz liveness-test
+#echo "done creating ./build/liveness-test.tar.gz."
 
-tar cfvz ../cough.graph-test.tar.gz graph-test
-echo "done creating ./build/cough.graph-test.tar.gz."
+#tar cfvz ../cough.graph-test.tar.gz graph-test
+#echo "done creating ./build/cough.graph-test.tar.gz."

@@ -31,6 +31,9 @@ object Dir {
   def livenessTestFestTests = filesInDir(testFest + "liveness-test", "L2f")
   def livenessTestFestResults = filesInDir(testFest + "liveness-test", "lres")
 
+  def graphTestFestTests = filesInDir(testFest + "graph-test", "L2f")
+  def graphTestFestResults = filesInDir(testFest + "graph-test", "gres")
+
   def L2TestFest2010Tests = filesInDir(testFest + "L2-tests-from-2010", "L2")
   def L2TestFest2010Results = filesInDir(testFest + "L2-tests-from-2010", "res")
 

@@ -58,5 +58,13 @@ trait Reader {
       case _ => readSymbol(stream)
     }
   }
+
+  def printSExp(a:Any): String = a match {
+    case s:Symbol => s.toString.drop(1)
+    case s:String => s
+    case i:Int => i.toString
+    case l:List[Any] => l.map(printSExp).mkString("(", " ", ")")
+  }
+
 }
 //  testRead("([xlt2 (< x 2)])", List(Symbol("["), 'xlt2, List('<, 'x, 2), Symbol("]")))
