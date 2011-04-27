@@ -1,0 +1,16 @@
+((eax <- a)
+ (eax <- b)
+ (cjump x < y :label1 :label2)
+ (eax <- c)
+ (eax <- d)
+ :label1
+ (eax <- e)
+ (eax <- f)
+ (goto :done)
+ :label2
+ (eax <- g)
+ (eax <- h)
+ :done
+ (eax <- i)
+ (eax <- j))
+ 

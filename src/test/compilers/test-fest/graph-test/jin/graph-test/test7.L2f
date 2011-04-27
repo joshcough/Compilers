@@ -1,0 +1,9 @@
+(:fun
+(x <- eax)
+(call :fun1)
+((mem ebp -4) <- eax)
+(eax += x)
+(call :fun2)
+(a <- (mem ebp -4))
+(eax += a)
+(return))

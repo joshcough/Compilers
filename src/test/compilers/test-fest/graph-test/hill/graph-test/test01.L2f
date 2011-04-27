@@ -1,0 +1,13 @@
+(:go
+ (s <- eax)
+ (s *= s)
+ (t <- eax)
+ (t += 2)
+ (cjump s < t :yes :no)
+ :yes
+ (eax <- 20)
+ (return)
+ :no
+ (eax <- t)
+ (eax *= ecx)
+ (return))

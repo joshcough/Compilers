@@ -1,0 +1,14 @@
+(:go
+ (s <- eax)
+ (s *= s)
+ (t <- eax)
+ (t += 2)
+ (nextfn <- :fib)
+ (cjump s < t :yes :no)
+ :yes
+ (eax <- 20)
+ (tail-call nextfn)
+ :no
+ (eax <- t)
+ (eax *= ecx)
+ (tail-call nextfn))

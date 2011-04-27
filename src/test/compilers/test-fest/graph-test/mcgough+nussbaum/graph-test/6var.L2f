@@ -1,0 +1,6 @@
+((eax += a)
+(b -= ebx)
+(ecx *= c)
+(edi >>= d)
+(edx <<= e)
+(f &= esi))
