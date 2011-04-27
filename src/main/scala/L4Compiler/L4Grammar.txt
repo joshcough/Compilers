@@ -1,0 +1,22 @@
+p::= (e (l (x ...) e) ...)
+e::= (let ((x e)) e)
+|(if e e e)
+|(e e ...)
+|(new-array e e)
+|(new-tuple e ...)
+|(aref e e)
+|(aset e e e)
+|(alen e)
+|(begin e e)
+|(print e)
+|(make-closure l e)
+|(closure-proc e)
+|(closure-vars e)
+|(biop e e)
+|(pred e)
+|num
+|x
+|l
+biop::= + | - | * | cmpop
+cmpop::= < | <= | =
+pred::= number? | a?
