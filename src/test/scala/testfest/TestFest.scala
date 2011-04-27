@@ -1,13 +1,15 @@
-package L2Compiler
+package testfest
 
 import io.FileHelper._
 import io.Dir._
 import java.io.File
 import util.{TestHelpers, L3Interpreter, L2Interpreter, Interpreter, L1Interpreter}
 import L3Compiler.L3Compiler
+import io.Reader
+import L2Compiler.{L2CompilerTest, L2Compiler, LivenessMain, SpillMain}
 
-class SpillTestFest extends TestFest(spillTestFestTests, spillTestFestResults, SpillMain.spill)
-class LivenessTestFest extends TestFest(livenessTestFestTests, livenessTestFestResults, LivenessMain.liveness)
+class SpillTestFest extends L2TestFest(spillTestFestTests, spillTestFestResults, SpillMain.spill)
+class LivenessTestFest extends L2TestFest(livenessTestFestTests, livenessTestFestResults, LivenessMain.liveness)
 
 //TODO: add L1 here
 
@@ -46,9 +48,13 @@ class TestFest2010(compile: String => String,
   }
 }
 
+abstract class L2TestFest(testFiles:Iterable[File],
+                        resultFiles:Iterable[File],
+                        f: String => String) extends TestFest(testFiles, resultFiles, f) with L2CompilerTest
+
 abstract class TestFest(testFiles:Iterable[File],
                         resultFiles:Iterable[File],
-                        f: String => String) extends L2CompilerTest {
+                        f: String => String) extends Reader with TestHelpers {
   for((testFile, resultFile) <- testFiles.zip(resultFiles)) {
     test(testFile.getAbsolutePath){
       val code = testFile.read
