@@ -6,14 +6,6 @@ import io.FileHelper._
 import io.Reader
 import L2AST._
 
-// TODO: note...after we register allocate, we know how much space we need on the stack
-// then we have to do one more thing...make some space on the stack
-// ex:
-//(:f
-//(esp -= 8)
-// ((mem ebp -4) <- esi)
-// ((mem ebp -8) <- edi)
-// see page 119 in http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture06.pdf
 trait L2Compiler extends Reader with L2Parser with Rewriter {
   def parseProgram(s:String) = parse(read(s))
   def compileFile(filename:String) = compile(new File(filename).read)
