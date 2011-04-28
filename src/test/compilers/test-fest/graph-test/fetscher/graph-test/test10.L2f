@@ -1,8 +1,0 @@
-((a <- 1)
-    :loop
-    (a += 1)
-    (cjump a < 10 :loop :exit)
-    (b <- 1)
-    :exit
-    (eax <- (print a))
-    (eax <- (print b))))

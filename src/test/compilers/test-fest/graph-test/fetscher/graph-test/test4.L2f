@@ -1,4 +1,0 @@
-(:one
-    (call :two)
-    (eax <- (print eax))
-    (return))

@@ -1,8 +1,0 @@
-(:g12
- (y <- eax)
- (goto :end)
- (x <- edx)
- (x += ecx)
- :end
- (eax <- y)
- (return))

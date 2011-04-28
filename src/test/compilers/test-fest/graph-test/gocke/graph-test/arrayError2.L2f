@@ -1,3 +1,0 @@
-((x <- ebx)
- (y <- 8)
- (eax <- (array-error x y)))

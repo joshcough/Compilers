@@ -1,6 +1,0 @@
-((x <- edi)
- (y <- esi)
- (z <- ecx)
- (call x)
- (y += z)
- (eax += y))

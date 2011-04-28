@@ -1,6 +1,0 @@
-((eax <- s1)
- (eax <- s0)
- (eax <- (print s0))
- (eax <- (print s1))
- (s1 <- 0)
- (s0 <- 1))
