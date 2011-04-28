@@ -1,0 +1,18 @@
+(:fib
+  (esp -= 12)   
+  (cjump eax < 2 :base :recur)
+  :base
+  (x <- 1)
+  (eax <- x)
+  (esp += 12)     
+  (return)       
+  :recur        
+  ((mem ebp -4) <- eax) 
+  (x <- 1)
+   (eax -= x)  
+  (call :fib)    
+  ((mem ebp -8) <- eax)   
+  (eax <- (mem ebp -4)) 
+  (x <- 2)
+  (eax -= x)    
+  (return)) 

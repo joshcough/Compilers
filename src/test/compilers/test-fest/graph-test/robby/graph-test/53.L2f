@@ -1,0 +1,9 @@
+(:there
+ :here
+ :anywhere
+ (abc <- 11)
+ (abc <- 11)
+ (abc <- 11)
+ (abc <- 11)
+ (cjump s0 < s1 :here :there)
+ (cjump s2 < s3 :here :anywhere))

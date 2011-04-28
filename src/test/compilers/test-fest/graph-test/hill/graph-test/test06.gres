@@ -1,0 +1,12 @@
+((eax ebx ecx edi edx esi s1 s2 t1 t2)
+ (ebx eax ecx edi edx esi s1 s2 t1 t2)
+ (ecx eax ebx edi edx esi s1 s2 t1 t2)
+ (edi eax ebx ecx edx esi)
+ (edx eax ebx ecx edi esi s1 s2 t1 t2)
+ (esi eax ebx ecx edi edx s1)
+ (s1 eax ebx ecx edx esi s2 t1 t2 t3)
+ (s2 eax ebx ecx edx s1 t1 t2 t3)
+ (t1 eax ebx ecx edx s1 s2 t2 t3)
+ (t2 eax ebx ecx edx s1 s2 t1 t3)
+ (t3 s1 s2 t1 t2))
+#f

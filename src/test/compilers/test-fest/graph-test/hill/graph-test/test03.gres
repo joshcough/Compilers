@@ -1,0 +1,10 @@
+((eax ebx ecx edi edx esi nextfn s)
+ (ebx eax ecx edi edx esi)
+ (ecx eax ebx edi edx esi nextfn s t)
+ (edi eax ebx ecx edx esi nextfn s t)
+ (edx eax ebx ecx edi esi nextfn s t)
+ (esi eax ebx ecx edi edx nextfn s t)
+ (nextfn eax ecx edi edx esi s t)
+ (s eax ecx edi edx esi nextfn t)
+ (t ecx edi edx esi nextfn s))
+#f

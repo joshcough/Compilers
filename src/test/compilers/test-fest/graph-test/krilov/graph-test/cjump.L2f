@@ -1,0 +1,8 @@
+((y <- 3)
+ (z <- y)
+ (cjump y <= z :a :b)
+ :a
+ (eax <- (print y))
+ :b
+ (eax <- (print z))
+ (eax <- (print eax)))

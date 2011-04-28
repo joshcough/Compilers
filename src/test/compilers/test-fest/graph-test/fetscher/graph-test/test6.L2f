@@ -1,0 +1,3 @@
+((a <- ecx)
+    (call :somefunc)
+    (b <- ebx))

@@ -1,0 +1,6 @@
+((x <- 11)
+(cjump x < eax :label1 :label2)
+:label1
+(eax += x)
+:label2
+(eax -= x)) 

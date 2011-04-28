@@ -1,0 +1,13 @@
+(:fun
+ (x <- eax)
+  :loop
+  (a <- 1)
+  (cjump x < a :keep_going :done)
+  
+  :keep_going
+  (a -= 1)
+  (goto :loop)
+  
+  :done
+  (x += 4)
+  (return)) 

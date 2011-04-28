@@ -1,0 +1,1 @@
+((cjump 5 <= 3 :lol :nolol) :lol (eax <- 5) :nolol (eax <- 8))

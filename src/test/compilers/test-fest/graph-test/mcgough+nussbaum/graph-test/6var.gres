@@ -1,0 +1,13 @@
+((a b c d e eax ebx ecx edi edx esi f)
+ (b a c d e eax ebx ecx edi edx esi f)
+ (c a b d e eax ebx ecx edi edx esi f)
+ (d a b c e eax ebx ecx edi edx esi f)
+ (e a b c d eax ebx ecx edi edx esi f)
+ (eax a b c d e ebx ecx edi edx esi f)
+ (ebx a b c d e eax ecx edi edx esi f)
+ (ecx a b c d e eax ebx edi edx esi f)
+ (edi a b c d e eax ebx ecx edx esi f)
+ (edx a b c d e eax ebx ecx edi esi f)
+ (esi a b c d e eax ebx ecx edi edx f)
+ (f a b c d e eax ebx ecx edi edx esi))
+#f

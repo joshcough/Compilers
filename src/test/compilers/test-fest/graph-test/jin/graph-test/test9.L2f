@@ -1,0 +1,16 @@
+(:mul
+ (x <- 3)
+ (cjump eax < x :mul1 :mul2)
+ :mul1
+ (x *= 2)
+ (return)
+ :mul2
+ (ecx <- 1)
+ :loop  
+ (cjump ecx < 5 :times :result)
+ :times
+ (x *= ecx)
+ (ecx += 1)
+ (goto :loop)
+ :result
+ (return))

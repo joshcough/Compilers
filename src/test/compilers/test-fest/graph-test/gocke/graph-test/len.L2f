@@ -1,0 +1,8 @@
+((eax <- (allocate 7 11))
+ (y <- eax)
+ (eax <- (allocate 11 13))
+ (z <- eax)
+ (call :sum)
+ (z *= 2)
+ (z += 1)
+ (eax <- (print z)))

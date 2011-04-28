@@ -1,0 +1,8 @@
+((y <- ebx)
+(y += eax)
+(y += edi)
+(y *= edx)
+(y >>= ecx)
+((mem ebp -4) <- y)
+(eax += ebx)
+(y <<= esi))

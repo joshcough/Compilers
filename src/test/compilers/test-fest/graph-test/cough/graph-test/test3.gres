@@ -1,0 +1,9 @@
+((eax ebx ecx edi edx esi x y5)
+ (ebx eax ecx edi edx esi x)
+ (ecx eax ebx edi edx esi x)
+ (edi eax ebx ecx edx esi x y5)
+ (edx eax ebx ecx edi esi x)
+ (esi eax ebx ecx edi edx x y5)
+ (x eax ebx ecx edi edx esi)
+ (y5 eax edi esi))
+#f

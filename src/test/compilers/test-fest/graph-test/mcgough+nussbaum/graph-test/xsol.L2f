@@ -1,0 +1,5 @@
+((eax <- x)
+(x += ebx)
+(x &= ecx)
+(edx -= x)
+(x += esi))

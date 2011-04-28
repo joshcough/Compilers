@@ -1,0 +1,15 @@
+((x <- 1)
+ (eax <- 3)
+ :loop
+ (cjump x < 5 :keep_going :done)
+ :keep_going
+ (cjump eax = 1 :step_1 :step_2)
+ :step_1 
+ (x += 10)
+ (eax += 1)
+ (goto :loop)
+ :step_2
+ (x += 4)
+ (eax += 1)
+ (goto :loop)
+ :done)

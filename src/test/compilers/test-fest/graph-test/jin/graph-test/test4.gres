@@ -1,0 +1,11 @@
+((b c d eax edi esi x)
+ (c b d eax edi esi x)
+ (d b c eax edi esi x)
+ (eax b c d ebx ecx edi edx esi x)
+ (ebx eax ecx edi edx esi)
+ (ecx eax ebx edi edx esi)
+ (edi b c d eax ebx ecx edx esi x)
+ (edx eax ebx ecx edi esi)
+ (esi b c d eax ebx ecx edi edx x)
+ (x b c d eax edi esi))
+#f
