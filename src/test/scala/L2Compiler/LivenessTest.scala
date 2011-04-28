@@ -429,7 +429,7 @@ class LivenessTest extends L2CompilerTest {
     livenessTest(code, expectedAtEnd, step=End, printStyle = HWStyle)
   }
 
-  test("sodfijsd"){
+  test("2010 failing test"){
     val code = """
       |((a <- 1)
       |(b <- 2)
@@ -462,7 +462,39 @@ class LivenessTest extends L2CompilerTest {
       |(a >>= a)
       |(a += 1)
       |(eax <- (print a)))"""
-    val expectedAtEnd = ""
+    val expectedAtEnd = """
+((a <- 1) () (a))
+((b <- 2) (a) (a b))
+((c <- 3) (a b) (a b c))
+((d <- 4) (a b c) (a b c d))
+((e <- 5) (a b c d) (a b c d e))
+((f <- 6) (a b c d e) (a b c d e f))
+((g <- 7) (a b c d e f) (a b c d e f g))
+((h <- 8) (a b c d e f g) (a b c d e f g h))
+((a <<= h) (a b c d e f g h) (a b c d e f g))
+((a += 1) (a b c d e f g) (a b c d e f g))
+((eax <- (print a)) (a b c d e f g) (a b c d e f g))
+((a >>= g) (a b c d e f g) (a b c d e f))
+((a += 1) (a b c d e f) (a b c d e f))
+((eax <- (print a)) (a b c d e f) (a b c d e f))
+((a <<= f) (a b c d e f) (a b c d e))
+((a += 1) (a b c d e) (a b c d e))
+((eax <- (print a)) (a b c d e) (a b c d e))
+((a >>= e) (a b c d e) (a b c d))
+((a += 1) (a b c d) (a b c d))
+((eax <- (print a)) (a b c d) (a b c d))
+((a <<= d) (a b c d) (a b c))
+((a += 1) (a b c) (a b c))
+((eax <- (print a)) (a b c) (a b c))
+((a >>= c) (a b c) (a b))
+((a += 1) (a b) (a b))
+((eax <- (print a)) (a b) (a b))
+((a <<= b) (a b) (a))
+((a -= 50) (a) (a))
+((a >>= a) (a) (a))
+((a += 1) (a) (a))
+((eax <- (print a)) (a) ())
+"""
     livenessTest(code, expectedAtEnd, step=End, printStyle = TestStyle)
   }
 
@@ -470,7 +502,6 @@ class LivenessTest extends L2CompilerTest {
   object HWStyle extends PrintStyle
   object TestStyle extends PrintStyle
 
-  lazy val count = Iterator.from(0)
   new java.io.File("./liveness-test").mkdir()
 
   def printSteps(code:String) = {

@@ -1,0 +1,4 @@
+(((mem ebp -8) <- 20)
+ (spl_0 <- (mem ebp -8))
+ (spl_0 *= spl_0)
+ ((mem ebp -8) <- spl_0))

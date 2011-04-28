@@ -1,0 +1,4 @@
+;;test case 2
+(((esi <- 9)  
+  (eax <- (allocate esi 3))
+  (eax <- (print eax))))

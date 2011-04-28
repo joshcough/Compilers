@@ -15,6 +15,7 @@ object SpillMain {
   // (s_0 <- (mem ebp -4))
   // (eax += s_0))
   def spill(input:String) = {
+    resetSpillCounter()
     // this is an example input: ((x <- x)) x -4 s_
     // read the program part first, and then deal with the rest.
     val (program, rest) = readWithRest(input)
@@ -30,6 +31,9 @@ object SpillMain {
 
 trait Spill {
 
+  private var varCounter = Iterator.from(0)
+  def resetSpillCounter(){ varCounter = Iterator.from(0) }
+
   def spill(spillVar:Variable, stackOffset: Int, ins: List[Instruction]): List[Instruction] =
     spill(spillVar, stackOffset, "spilled_var_", ins)
 
@@ -38,7 +42,6 @@ trait Spill {
     ///////////// Helper functions //////////////////
     val memLoc = MemLoc(ebp, Num(stackOffset))
     val readSpillVar = MemRead(memLoc)
-    val varCounter = Iterator.from(0)
     def newVar() = Variable(spillPrefix + varCounter.next())
 
     ///////////// Spill for Assignments //////////////////

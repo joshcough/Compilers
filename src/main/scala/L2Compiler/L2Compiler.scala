@@ -6,6 +6,12 @@ import io.FileHelper._
 import io.Reader
 import L2AST._
 
+object L2CompilerMain extends L2CompilerExtras {
+  def main(args:Array[String]) = {
+    
+  }
+}
+
 trait L2Compiler extends Reader with L2Parser with Rewriter {
   def parseProgram(s:String) = parse(read(s))
   def compileFile(filename:String) = compile(new File(filename).read)

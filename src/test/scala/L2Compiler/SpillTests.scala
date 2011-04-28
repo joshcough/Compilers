@@ -94,10 +94,10 @@ class SpillTests extends L2CompilerTest {
   testSpill("(:y)", "(:y)")
 
   new java.io.File("./spill-test").mkdir()
-  val count = Iterator.from(0)
 
   def testSpill(code:String, expected: String) = {
     def doSpill(code: String) = {
+      resetSpillCounter()
       val newProgramList = spill(Variable("x"), -4, "s_", parseListOfInstructions(code))
       newProgramList.map(toCode).mkString("(", " ", ")")
     }

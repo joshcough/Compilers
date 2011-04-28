@@ -2,7 +2,7 @@ package L3Compiler
 
 import util.{L2Interpreter, L3Interpreter, TestHelpers}
 
-class L3CompilerTests extends TestHelpers {
+class L3CompilerTests extends TestHelpers with util.SlowTest {
 
   testCompile("((print 7))")
   testCompile("((:f 10) (:f (x) (print x)))")

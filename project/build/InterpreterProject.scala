@@ -1,6 +1,6 @@
 import sbt._
 
-class IntepreterProject(info: ProjectInfo) extends DefaultProject(info) {
+class IntepreterProject(info: ProjectInfo) extends DefaultProject(info) with SbtTestHelpers {
 
   override def compileOptions = super.compileOptions ++ Seq(Unchecked)
   
@@ -9,4 +9,7 @@ class IntepreterProject(info: ProjectInfo) extends DefaultProject(info) {
   val asm = "asm" % "asm-all" % "3.3.1" % "test"
   val jmock = "org.jmock" % "jmock" % "2.5.1" % "test"
   val jmockLegacy = "org.jmock" % "jmock-legacy" % "2.5.1" % "test"
+
+  lazy val testSlow = runSubclassesOf("util.SlowTest")
+  lazy val testFast = runEverythingButSubclassesOf("util.SlowTest")
 }

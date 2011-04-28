@@ -2,6 +2,97 @@ package L2Compiler
 
 import L2AST._
 import java.io.File
+import io.FileHelper._
+import util.{L1Interpreter, L2Interpreter}
+import io.{CommandRunner, Dir}
+
+class L2CompilerHW extends L2CompilerTest with util.SlowTest {
+  // all L1 files should also work in L2
+  for(f<-Dir.L1TestFiles) { testCompileForHw(f.read) }
+
+  // simple program
+  testCompileForHw("""(((x <- 7) (eax <- (print x))))""")
+
+  // random program...
+  testCompileForHw("""((
+        |(eax <- 7)
+        |(ebx <- 7)
+        |(ecx <- 7)
+        |(edx <- 7)
+        |(r:x <- eax)
+        |(r:x += ebx)
+        |(r:x += ecx)
+        |(r:x += edx)
+        |(r:x += eax)
+        |(eax <- (print r:x))))""")
+
+  // use lots of variables in main
+  testCompileForHw("""((
+        |(a <- 7)(b <- 9)(c <- 11)(d <- 13)
+        |(e <- 15)(f <- 17)(g <- 19)(h <- 21)
+        |(i <- 23)(j <- 25)(k <- 27)(l <- 29)
+        |(eax <- (print a))(eax <- (print b))
+        |(eax <- (print c))(eax <- (print d))
+        |(eax <- (print e))(eax <- (print f))
+        |(eax <- (print g))(eax <- (print h))
+        |(eax <- (print i))(eax <- (print j))
+        |(eax <- (print k))(eax <- (print l))))""")
+
+
+  // use lots of variables in main and call a function
+  testCompileForHw("""((
+        |(a <- 7)(b <- 9)(c <- 11)(d <- 13)
+        |(e <- 15)(f <- 17)(g <- 19)(h <- 21)
+        |(i <- 23)(j <- 25)(k <- 27)(l <- 29)
+        |(call :f)
+        |(eax <- (print a))(eax <- (print b))
+        |(eax <- (print c))(eax <- (print d))
+        |(eax <- (print e))(eax <- (print f))
+        |(eax <- (print g))(eax <- (print h))
+        |(eax <- (print i))(eax <- (print j))
+        |(eax <- (print k))(eax <- (print l)))
+        |(:f
+        |(a <- 29)(b <- 27)(c <- 25)(d <- 13)
+        |(e <- 15)(f <- 17)(g <- 19)(h <- 21)
+        |(i <- 23)(j <- 11)(k <- 9)(l <- 7)
+        |(eax <- (print a))(eax <- (print b))
+        |(eax <- (print c))(eax <- (print d))
+        |(eax <- (print e))(eax <- (print f))
+        |(eax <- (print g))(eax <- (print h))
+        |(eax <- (print i))(eax <- (print j))
+        |(eax <- (print k))(eax <- (print l))(return))
+        |)""")
+
+  // callee save registers are saved
+  // random program...
+  testCompileForHw("""((
+        |(edi <- 7)
+        |(esi <- 9)
+        |(call :f)
+        |(eax <- (print edi))
+        |(eax <- (print esi)))
+        |(:f
+        |(a <- 29)(b <- 27)(c <- 25)(d <- 13)
+        |(e <- 15)(f <- 17)(g <- 19)(h <- 21)
+        |(i <- 23)(j <- 11)(k <- 9)(l <- 7)
+        |(eax <- (print a))(eax <- (print b))
+        |(eax <- (print c))(eax <- (print d))
+        |(eax <- (print e))(eax <- (print f))
+        |(eax <- (print g))(eax <- (print h))
+        |(eax <- (print i))(eax <- (print j))
+        |(eax <- (print k))(eax <- (print l))(return))
+        )""")
+
+  testCompileForHw("""
+        |(((eax <- 1) (call :inc) (eax <- (print eax)))
+        |(:inc
+        |(eax += 1)
+        |(cjump eax < 99 :continue :end)
+        |:continue
+        |(tail-call :inc)
+        |:end
+        |(return)))""")
+}
 
 class L2CompilerTests extends L2CompilerTest {
 
@@ -9,7 +100,7 @@ class L2CompilerTests extends L2CompilerTest {
     input =
     """(((x <- 7)
         |(eax <- (print x))))""",
-  
+
     expected=Some(
     """(((eax <- 7)
         |(eax <- (print eax))))"""))
@@ -58,8 +149,23 @@ class L2CompilerTests extends L2CompilerTest {
         |(edi += ecx)
         |(edi += edx)
         |(edi += eax)))"""))
-
+  // interesting case here.... y isnt in the in or out set anywhere...
+  // why? shouldnt it be in the out set of its own assignment statement? maybe not...
+  // this could possibly be a case where we can whack that entire statement altogether,
+  // because it didnt appear in the in or out set. JC 4/2010
+  // -------------------------------------------------------
+  // JC 4/18/2011 knows the answer. y isn't in its own out set because it is never used.
+  // and yes, we can whack that assignment statement.
+  // TODO: if we have an assignment statement and the variable doesn't appear in its
+  // own out set, the whole statement is dead. this must apply for registers too.
   testCompile(
+    input = "(((x <- 7)(y <- 8)(eax <- (print x))))",
+    expected = Some("""
+        |(((eax <- 7)
+        |(ebx <- 8)
+        |(eax <- (print eax))))"""))
+
+    testCompile(
     """
       |(((a <- 1)
       |(b <- 2)
@@ -93,25 +199,86 @@ class L2CompilerTests extends L2CompilerTest {
       |(a += 1)
       |(eax <- (print a))))""",
     expected = Some(
-    """?"""))
-
-
-  // interesting case here.... y isnt in the in or out set anywhere...
-  // why? shouldnt it be in the out set of its own assignment statement? maybe not...
-  // this could possibly be a case where we can whack that entire statement altogether,
-  // because it didnt appear in the in or out set. JC 4/2010
-  // -------------------------------------------------------
-  // JC 4/18/2011 knows the answer. y isn't in its own out set because it is never used.
-  // and yes, we can whack that assignment statement.
-  // TODO: if we have an assignment statement and the variable doesn't appear in its
-  // own out set, the whole statement is dead. this must apply for registers too.
-  testCompile(
-    input = "(((x <- 7)(y <- 8)(eax <- (print x))))",
-    expected = Some("""
-        |(((eax <- 7)
-        |(ebx <- 8)
-        |(eax <- (print eax))))"""))
-
+    """(((esp -= 28)
+(eax <- edi)
+(eax <- esi)
+((mem ebp -4) <- 1)
+((mem ebp -8) <- 2)
+((mem ebp -12) <- 3)
+((mem ebp -16) <- 4)
+((mem ebp -20) <- 5)
+((mem ebp -24) <- 6)
+((mem ebp -28) <- 7)
+(ecx <- 8)
+(eax <- (mem ebp -4))
+(eax <<= ecx)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax += 1)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax <- (print eax))
+(eax <- (mem ebp -4))
+(ecx <- (mem ebp -28))
+(eax >>= ecx)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax += 1)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax <- (print eax))
+(eax <- (mem ebp -4))
+(ecx <- (mem ebp -24))
+(eax <<= ecx)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax += 1)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax <- (print eax))
+(eax <- (mem ebp -4))
+(ecx <- (mem ebp -20))
+(eax >>= ecx)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax += 1)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax <- (print eax))
+(eax <- (mem ebp -4))
+(ecx <- (mem ebp -16))
+(eax <<= ecx)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax += 1)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax <- (print eax))
+(eax <- (mem ebp -4))
+(ecx <- (mem ebp -12))
+(eax >>= ecx)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax += 1)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax <- (print eax))
+(eax <- (mem ebp -4))
+(ecx <- (mem ebp -8))
+(eax <<= ecx)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax -= 50)
+((mem ebp -4) <- eax)
+(ecx <- (mem ebp -4))
+(ecx >>= ecx)
+((mem ebp -4) <- ecx)
+(eax <- (mem ebp -4))
+(eax += 1)
+((mem ebp -4) <- eax)
+(eax <- (mem ebp -4))
+(eax <- (print eax))
+(esp += 28)))"""))
 }
 
 //((x <- 1) (eax += x)) x -4 s
@@ -133,6 +300,30 @@ trait L2CompilerTest extends util.TestHelpers with L2CompilerExtras {
           case None => throw e
         }
       }
+    }
+  }
+
+  CommandRunner.runAndDieOneErrors("rm -rf ./2-test")
+  new java.io.File("./2-test").mkdir()
+  val count = Iterator.from(0)
+
+  def testCompileForHw(L2Code:String) = {
+    test(L2Code.clean){
+      val L1Code = toCode(compile(L2Code.clean))
+      val L1InterpResult =  L1Interpreter.run(L1Code.clean)
+      val L2InterpResult = L2Interpreter.run(L2Code.clean)
+      verboseAssert(L2Code, L1InterpResult, L2InterpResult)
+
+      //println(L2Code.clean)
+      //println("\nL1 code: " + L1Code)
+      //println("\nresult: " + L1InterpResult)
+
+      // write out the tests files and results.
+      val index = count.next()
+      // write the test
+      new File("./2-test/test" + index + ".L2").write(L2Code)
+      // write the expected result
+      new File("./2-test/test" + index + ".L1").write(L1Code)
     }
   }
 }

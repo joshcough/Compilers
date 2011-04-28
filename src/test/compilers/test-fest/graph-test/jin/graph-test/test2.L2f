@@ -1,0 +1,9 @@
+((x <- 9)
+ :label2
+(cjump x < x :label1 :label2)
+(cjump x <= eax :label1 :label2)
+(x <- eax)
+:label1
+(cjump eax <= x :label1 :label2)
+(eax <- x)) 
+         

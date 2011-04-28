@@ -6,10 +6,25 @@ import java.io.File
 import util.{TestHelpers, L3Interpreter, L2Interpreter, Interpreter, L1Interpreter}
 import L3Compiler.L3Compiler
 import io.Reader
-import L2Compiler.{L2CompilerTest, L2Compiler, LivenessMain, SpillMain}
+import L2Compiler.{InterferenceMain, L2CompilerTest, L2Compiler, LivenessMain, SpillMain}
 
 class SpillTestFest extends L2TestFest(spillTestFestTests, spillTestFestResults, SpillMain.spill)
 class LivenessTestFest extends L2TestFest(livenessTestFestTests, livenessTestFestResults, LivenessMain.liveness)
+
+class GraphTestFest extends L2CompilerTest {
+  for((testFile, resultFile) <- graphTestFestTests.zip(graphTestFestResults).drop(20).take(10)) {
+    test(testFile.getAbsolutePath){
+      val code = testFile.read
+      val (i, a) = InterferenceMain.interferenceAndAllocation(code)
+      val (actualInter, actualAlloc) = (read(i), read(a))
+      val resultFileContents = resultFile.read
+      val (expectedInter, rest) = readWithRest(resultFileContents)
+      val expectedAlloc = read(rest)
+      verboseAssert(code, printSExp(actualInter), printSExp(expectedInter))
+      verboseAssert(code, printSExp(actualAlloc), printSExp(expectedAlloc))
+    }
+  }
+}
 
 //TODO: add L1 here
 
@@ -21,10 +36,10 @@ class L3TestFest2010 extends TestFest2010(
   new L3Compiler().compileToString, L3Interpreter,
   L3TestFest2010Tests, L3TestFest2010Results)
 
-class TestFest2010(compile: String => String,
+abstract class TestFest2010(compile: String => String,
                    language:Interpreter,
                    testFiles:Iterable[File],
-                   resultFiles:Iterable[File]) extends TestHelpers {
+                   resultFiles:Iterable[File]) extends TestHelpers with util.SlowTest{
 
   io.CommandRunner("rm -rf ./tmp/"+language.name+"/")
   new File("./tmp/"+language.name+"/").mkdir

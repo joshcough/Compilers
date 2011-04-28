@@ -1,0 +1,8 @@
+((
+(edx <- 5)
+(ecx <- 7)
+(ecx += edx)
+(ecx -= 1)	;; converts number
+(eax <- (print ecx))
+))
+

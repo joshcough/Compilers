@@ -419,7 +419,6 @@ class InterferenceGraphTests extends L2CompilerTest {
 
 
   new java.io.File("./graph-test").mkdir()
-  val count = Iterator.from(0)
 
   def interferenceAndAllocationTest(name:String, code:String,
                                     expectedInterference:String,
