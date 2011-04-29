@@ -498,6 +498,65 @@ class LivenessTest extends L2CompilerTest {
     livenessTest(code, expectedAtEnd, step=End, printStyle = TestStyle)
   }
 
+
+  test("((a <- ecx) (call :somefunc) (b <- ebx))"){
+    livenessTest(
+      "((a <- ecx) (call :somefunc) (b <- ebx))",
+      """
+((a <- ecx) (eax ecx edx) (eax ecx edx))
+((call :somefunc) (eax ecx edx) (ebx))
+((b <- ebx) (ebx) ())""",
+      step=End)
+  }
+
+  test("""((eax <- s1)
+(eax <- s0)
+(eax <- x1)
+(eax <- x0)
+(x0 <- s0)
+(s1 <- 0)
+(s0 <- 1)
+(x1 <- 2)
+(x0 <- 3))"""){
+    livenessTest("""((eax <- s1)
+(eax <- s0)
+(eax <- x1)
+(eax <- x0)
+(x0 <- s0)
+(s1 <- 0)
+(s0 <- 1)
+(x1 <- 2)
+(x0 <- 3))""", """((eax <- s1) (s0 s1 x0 x1) (s0 x0 x1))
+((eax <- s0) (s0 x0 x1) (s0 x0 x1))
+((eax <- x1) (s0 x0 x1) (s0 x0))
+((eax <- x0) (s0 x0) (s0))
+((x0 <- s0) (s0) ())
+((s1 <- 0) () ())
+((s0 <- 1) () ())
+((x1 <- 2) () ())
+((x0 <- 3) () ())
+""")
+  }
+
+  test("graph-test/hill/test07"){
+    livenessTest("""(:g12
+   (y <- eax)
+   (goto :end)
+   (x <- edx)
+   (x += ecx)
+   :end
+   (eax <- y)
+   (return)))""", """
+(:g12 (eax edi esi) (eax edi esi))
+((y <- eax) (eax edi esi) (edi esi y))
+((goto :end) (edi esi y) (edi esi y))
+((x <- edx) (ecx edi edx esi y) (ecx edi esi x y))
+((x += ecx) (ecx edi esi x y) (edi esi y))
+(:end (edi esi y) (edi esi y))
+((eax <- y) (edi esi y) (eax edi esi))
+((return) (eax edi esi) ())""")
+  }
+
   trait PrintStyle
   object HWStyle extends PrintStyle
   object TestStyle extends PrintStyle

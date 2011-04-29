@@ -26,6 +26,7 @@ trait L2CompilerExtras extends L2Compiler {
   def parseListOfInstructions(a:List[Any]): List[Instruction] = parseInstructionList(a)
   def inoutForTesting(code:String, step:Option[Int]=None):List[InstructionInOutSet] = {
     val result = inout(parseListOfInstructions(code))
+    //result.reverse.map(L2Printer.testView).foreach(x => println(x + "\n---------\n"))
     step.map(result.reverse(_)).getOrElse(result.head)
   }
 }

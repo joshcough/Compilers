@@ -417,6 +417,30 @@ class InterferenceGraphTests extends L2CompilerTest {
 (h a b c d e eax ebx edi edx esi f g))""",
     expectedAllocation="#f")
 
+  interferenceAndAllocationTest(
+    name="first failure from robbys tests",
+    code="""
+      |((eax <- s1)
+      |(eax <- s0)
+      |(eax <- x1)
+      |(eax <- x0)
+      |(x0 <- s0)
+      |(s1 <- 0)
+      |(s0 <- 1)
+      |(x1 <- 2)
+      |(x0 <- 3))""",
+    expectedInterference = """((eax ebx ecx edi edx esi)
+(ebx eax ecx edi edx esi)
+(ecx eax ebx edi edx esi)
+(edi eax ebx ecx edx esi)
+(edx eax ebx ecx edi esi)
+(esi eax ebx ecx edi edx)
+(s0 s1 x0 x1)
+(s1 s0 x0 x1)
+(x0 s0 s1 x1)
+(x1 s0 s1 x0))""",
+    expectedAllocation = "((s0 ecx) (s1 edi) (x0 eax) (x1 ebx))"
+  )
 
   new java.io.File("./graph-test").mkdir()
 

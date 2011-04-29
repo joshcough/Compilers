@@ -36,6 +36,8 @@ trait Interference {
     def addEdge(x1:X, x2:X): InterferenceGraph = {
       // dont bother adding ebp or esp
       if(x1 == ebp || x1 == esp || x2 == ebp || x2 == esp) this
+      // dont bother adding interference edges between a variable or register and itself...duh
+      else if (x1 == x2) this
       else{
         val x1Connections = map.getOrElse(x1, Set()) + x2
         val x2Connections = map.getOrElse(x2, Set()) + x1
@@ -88,12 +90,20 @@ trait Interference {
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
 
-    val interference: List[(X,X)] = iioss.flatMap { iios: InstructionInOutSet =>
-      val in_interference: Set[(X,X)] = for(x <- iios.in; y <- iios.in; if(x!=y)) yield (x,y)
+    // if there is a first instruction (i certainly imagine there should be)
+    // then we have to take the interference from its in set.
+    val firstInstructionInSetInterference: Set[(X,X)] = iioss.headOption match {
+      case Some(iios) => for(x <- iios.in; y <- iios.in; if(x!=y)) yield (x,y)
+      case _ => Set()
+    }
+
+    // we always take the interference from the out sets.
+    val outAndSpecialInterference: List[(X,X)] = iioss.flatMap { iios: InstructionInOutSet =>
       val out_interference: Set[(X,X)] = {
         // add in the kill
         val outsPlusKill = iios.inst match {
-          case Assignment(v1:Variable, v2:Variable) => iios.out
+          case Assignment(v1:Variable, x:X) => iios.out
+          case Assignment(r: Register, v: Variable) => iios.out
           case _ => (iios.out ++ iios.kill)
         }
         for(x <- outsPlusKill; y <- outsPlusKill; if(x!=y)) yield (x,y)
@@ -113,11 +123,13 @@ trait Interference {
         case RightShift(_, x:X) => Set((x, eax), (x, ebx), (x, edi), (x, edx), (x, esi))
         case _ => Set()
       }
-      in_interference ++ out_interference ++ special_interference
+      out_interference ++ special_interference
     }
 
+    val interference = firstInstructionInSetInterference  ++ outAndSpecialInterference.toSet
+
     val vs = iioss.flatMap { iios => variables(iios.inst) }
-    registerInterference.addNodes(vs:_*).addEdges(interference:_*)
+    registerInterference.addNodes(vs:_*).addEdges(interference.toList:_*)
   }
 
   // the second thing returned here is the progress we were actually able to make.

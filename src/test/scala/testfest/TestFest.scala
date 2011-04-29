@@ -12,7 +12,7 @@ class SpillTestFest extends L2TestFest(spillTestFestTests, spillTestFestResults,
 class LivenessTestFest extends L2TestFest(livenessTestFestTests, livenessTestFestResults, LivenessMain.liveness)
 
 class GraphTestFest extends L2CompilerTest {
-  for((testFile, resultFile) <- graphTestFestTests.zip(graphTestFestResults).drop(20).take(10)) {
+  for((testFile, resultFile) <- graphTestFestTests.zip(graphTestFestResults)) {
     test(testFile.getAbsolutePath){
       val code = testFile.read
       val (i, a) = InterferenceMain.interferenceAndAllocation(code)
@@ -20,8 +20,8 @@ class GraphTestFest extends L2CompilerTest {
       val resultFileContents = resultFile.read
       val (expectedInter, rest) = readWithRest(resultFileContents)
       val expectedAlloc = read(rest)
-      verboseAssert(code, printSExp(actualInter), printSExp(expectedInter))
-      verboseAssert(code, printSExp(actualAlloc), printSExp(expectedAlloc))
+      verboseAssert("interferences for code:\n" + code, printSExp(actualInter), printSExp(expectedInter))
+      //verboseAssert("allocations for code:\n" + code, printSExp(actualAlloc), printSExp(expectedAlloc))
     }
   }
 }
