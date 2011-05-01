@@ -2,14 +2,25 @@ package L2Compiler
 
 import L2Compiler.L2AST._
 
+// the allocator brings together everything in L2
+// for each function in the program, it tries to see if it can allocate it as is.
+// if so, its fine, and leaves it alone.
+// if not, it rewrites it so that edi and esi can be spilled.
+// after that, it continuously tries to allocate the function.
+// if it is unable to, it spills a variable, and tries again.
+// it does this until either a) it works, or b) it is out of variables to spill.
+// the last case results in error. 
 trait Allocator extends Spill with Liveness with Interference with L2Printer {
 
+  // allocates all of the functions in the given L2 program
   def allocate(ast: L2): L2 = {
-    val l1Functions = (ast.main :: ast.funs).map(allocateCompletely)
+    val l1Functions = (ast.main :: ast.funs).map(allocate)
     L2(l1Functions.head, l1Functions.tail)
   }
 
-  def allocateCompletely(f: Func): Func = {
+  // gives back a fully allocated function (if its possible to allocate it)
+  // with all of the variables replaced with the assigned registers.
+  def allocate(f: Func): Func = {
     // first, try to see if we can do allocation without any rewriting
     val (finalFunction, allocs) = attemptAllocation(inoutFinalResult(f))._1 match {
       case Some(registerMap) => (f, registerMap)
@@ -41,20 +52,57 @@ trait Allocator extends Spill with Liveness with Interference with L2Printer {
     new VariableToRegisterReplacer(allocs).replaceVarsWithRegisters(finalFunction)
   }
 
+  // the second thing returned here is the progress we were actually able to make.
+  def attemptAllocation(iioss:List[InstructionInOutSet]):
+    (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
+
+    def attemptAllocation(graph:InterferenceGraph):
+      (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
+      val variables: List[Variable] =
+        graph.variables.toList.sortWith(_<_).sortWith(graph.neigborsOf(_).size > graph.neigborsOf(_).size)
+      val registers: Set[Register] = Set(eax, ebx, ecx, edx, edi, esi)
+      val defaultPairings: Map[Variable, Option[Register]] = variables.map(v => (v, None)).toMap
+      val finalPairings = variables.foldLeft(defaultPairings){ (pairs, v) =>
+        val neighbors: Set[X] = graph.neigborsOf(v)
+        val neighborRegisters: Set[Register] = neighbors.collect{ case r: Register => r }
+        val neighborVariables: Set[Variable] = neighbors.collect{ case v: Variable => v }
+        val nonNeighborRegisters: Set[Register] = registers -- neighborRegisters
+        val registersNeighborsVariablesLiveIn: Set[Register] = neighborVariables.flatMap(pairs.get(_)).flatten
+        val availableRegisters: List[Register] =
+          (nonNeighborRegisters -- registersNeighborsVariablesLiveIn).toList.sortWith(_<_)
+        val theRegisterMaybe = availableRegisters.headOption
+        pairs + (v -> theRegisterMaybe)
+      }
+      // see if any variables were unpaired with a register
+      val anyVariablesUnpaired = finalPairings.find{ case (v, or) => ! or.isDefined }
+      // if so, the graph was uncolorable. if not, return the pairings (but strip off the Option wrapper)
+      if(anyVariablesUnpaired.isDefined) (None, finalPairings)
+      else (Some(finalPairings.map{ case (v, or) => (v, or.get)}), finalPairings)
+    }
+    attemptAllocation(buildInterferenceSet(iioss))
+  }
+  
+  // sets up the function so that edi and esi can be spilled.
   def initialRewrite(f:Func): Func = {
     val z1In = Assignment(Variable("__z1"), edi)
     val z2In = Assignment(Variable("__z2"), esi)
     val z1Out = Assignment(edi, Variable("__z1"))
     val z2Out = Assignment(esi, Variable("__z2"))
+    // this business arranges to make sure that edi and esi
+    // get put back properly before a return or a tail-call.
     Func(f.body.head :: List(z1In,z2In) ::: f.body.drop(1).flatMap {
       i => i match {
-        case Return => List(z1Out,z2Out, Return)
-        case t:TailCall => List(z1Out,z2Out, t)
+        case Return => List(z1Out, z2Out, Return)
+        case t:TailCall => List(z1Out, z2Out, t)
         case _ => List(i)
       }
     })
   }
 
+  // chooses the variable to spill.
+  // TODO: currently this works by simply taking the variable with the longest live range.
+  // TODO: it doesnt look at which has the most usages. this should be resolved in the
+  // TODO: event of a tie.
   def chooseSpillVar(liveRanges: List[List[LiveRange]]): Option[Variable] = {
     def maxRange(ranges:List[LiveRange]): Option[LiveRange] = ranges.sorted.headOption
     liveRanges.flatMap(maxRange).sorted.map(_.x)
@@ -62,7 +110,7 @@ trait Allocator extends Spill with Liveness with Interference with L2Printer {
   }
 }
 
-
+// replaces variables with registers in an L2 function.
 class VariableToRegisterReplacer(replacements:Map[Variable, Register]) {
 
   def replaceVarsWithRegisters(f:Func): Func = Func(f.body.map(replaceVarsWithRegisters))
