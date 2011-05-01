@@ -16,12 +16,15 @@ class GraphTestFest extends L2CompilerTest {
     test(testFile.getAbsolutePath){
       val code = testFile.read
       val (i, a) = InterferenceMain.interferenceAndAllocation(code)
-      val (actualInter, actualAlloc) = (read(i), read(a))
+      val (actualInter, actualAlloc) = (read(i), printSExp(read(a)))
       val resultFileContents = resultFile.read
       val (expectedInter, rest) = readWithRest(resultFileContents)
-      val expectedAlloc = read(rest)
+      val expectedAlloc = printSExp(read(rest))
       verboseAssert("interferences for code:\n" + code, printSExp(actualInter), printSExp(expectedInter))
-      //verboseAssert("allocations for code:\n" + code, printSExp(actualAlloc), printSExp(expectedAlloc))
+//      def isFail(s:String) = s contains "#f"
+//      if(isFail(actualAlloc) || isFail(expectedAlloc) ){
+//        verboseAssert("allocations for code:\n" + code, actualAlloc, expectedAlloc)
+//      }
     }
   }
 }

@@ -13,7 +13,11 @@ class L2CompilerHW extends L2CompilerTest with util.SlowTest {
   // simple program
   testCompileForHw("""(((x <- 7) (eax <- (print x))))""")
 
-  // random program...
+  // interesting case. first, we rewrite to make edi, and esi into variables
+  // and then the allocater realizes it can put put esi back into esi!
+  // TODO: i wonder if i can detect that, and clobber that statement.
+  // i should have a clobbering pass that kills instructions like that
+  // and ones where the LHS doesnt appear in the out side. and maybe more.
   testCompileForHw("""((
         |(eax <- 7)
         |(ebx <- 7)
@@ -92,81 +96,8 @@ class L2CompilerHW extends L2CompilerTest with util.SlowTest {
         |(tail-call :inc)
         |:end
         |(return)))""")
-}
 
-class L2CompilerTests extends L2CompilerTest {
-
-  testCompile(
-    input =
-    """(((x <- 7)
-        |(eax <- (print x))))""",
-
-    expected=Some(
-    """(((eax <- 7)
-        |(eax <- (print eax))))"""))
-
-  testCompile(
-    input=
-    """(((eax <- 7)
-        |(ebx <- 7)
-        |(ecx <- 7)
-        |(edx <- 7)
-        |(edi <- 7)
-        |(esi <- 7)
-        |(r:x <- eax)
-        |(r:x += ebx)
-        |(r:x += ecx)
-        |(r:x += edx)
-        |(r:x += edi)
-        |(r:x += esi)
-        |(r:x += eax)
-        |(eax <- (print r:x))))""",
-    error = Some("allocation impossible"))
-
-  // interesting case. first, we rewrite to make edi, and esi into variables
-  // and then the allocater realizes it can put put esi back into esi!
-  // TODO: i wonder if i can detect that, and clobber that statement.
-  // i should have a clobbering pass that kills instructions like that
-  // and ones where the LHS doesnt appear in the out side. and maybe more.
-  testCompile(
-    input=
-    """(((eax <- 7)
-        |(ebx <- 7)
-        |(ecx <- 7)
-        |(edx <- 7)
-        |(r:x <- eax)
-        |(r:x += ebx)
-        |(r:x += ecx)
-        |(r:x += edx)
-        |(r:x += eax)))""",
-    expected = Some(
-    """(((eax <- 7)
-        |(ebx <- 7)
-        |(ecx <- 7)
-        |(edx <- 7)
-        |(edi <- eax)
-        |(edi += ebx)
-        |(edi += ecx)
-        |(edi += edx)
-        |(edi += eax)))"""))
-  // interesting case here.... y isnt in the in or out set anywhere...
-  // why? shouldnt it be in the out set of its own assignment statement? maybe not...
-  // this could possibly be a case where we can whack that entire statement altogether,
-  // because it didnt appear in the in or out set. JC 4/2010
-  // -------------------------------------------------------
-  // JC 4/18/2011 knows the answer. y isn't in its own out set because it is never used.
-  // and yes, we can whack that assignment statement.
-  // TODO: if we have an assignment statement and the variable doesn't appear in its
-  // own out set, the whole statement is dead. this must apply for registers too.
-  testCompile(
-    input = "(((x <- 7)(y <- 8)(eax <- (print x))))",
-    expected = Some("""
-        |(((eax <- 7)
-        |(ebx <- 8)
-        |(eax <- (print eax))))"""))
-
-    testCompile(
-    """
+  testCompileForHw("""
       |(((a <- 1)
       |(b <- 2)
       |(c <- 3)
@@ -197,88 +128,41 @@ class L2CompilerTests extends L2CompilerTest {
       |(a -= 50)
       |(a >>= a)
       |(a += 1)
-      |(eax <- (print a))))""",
-    expected = Some(
-    """(((esp -= 28)
-(eax <- edi)
-(eax <- esi)
-((mem ebp -4) <- 1)
-((mem ebp -8) <- 2)
-((mem ebp -12) <- 3)
-((mem ebp -16) <- 4)
-((mem ebp -20) <- 5)
-((mem ebp -24) <- 6)
-((mem ebp -28) <- 7)
-(ecx <- 8)
-(eax <- (mem ebp -4))
-(eax <<= ecx)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax += 1)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax <- (print eax))
-(eax <- (mem ebp -4))
-(ecx <- (mem ebp -28))
-(eax >>= ecx)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax += 1)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax <- (print eax))
-(eax <- (mem ebp -4))
-(ecx <- (mem ebp -24))
-(eax <<= ecx)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax += 1)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax <- (print eax))
-(eax <- (mem ebp -4))
-(ecx <- (mem ebp -20))
-(eax >>= ecx)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax += 1)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax <- (print eax))
-(eax <- (mem ebp -4))
-(ecx <- (mem ebp -16))
-(eax <<= ecx)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax += 1)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax <- (print eax))
-(eax <- (mem ebp -4))
-(ecx <- (mem ebp -12))
-(eax >>= ecx)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax += 1)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax <- (print eax))
-(eax <- (mem ebp -4))
-(ecx <- (mem ebp -8))
-(eax <<= ecx)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax -= 50)
-((mem ebp -4) <- eax)
-(ecx <- (mem ebp -4))
-(ecx >>= ecx)
-((mem ebp -4) <- ecx)
-(eax <- (mem ebp -4))
-(eax += 1)
-((mem ebp -4) <- eax)
-(eax <- (mem ebp -4))
-(eax <- (print eax))
-(esp += 28)))"""))
+      |(eax <- (print a))))""")
+
+  // interesting case here.... y isnt in the in or out set anywhere...
+  // why? shouldnt it be in the out set of its own assignment statement? maybe not...
+  // this could possibly be a case where we can whack that entire statement altogether,
+  // because it didnt appear in the in or out set. JC 4/2010
+  // -------------------------------------------------------
+  // JC 4/18/2011 knows the answer. y isn't in its own out set because it is never used.
+  // and yes, we can whack that assignment statement.
+  // TODO: if we have an assignment statement and the variable doesn't appear in its
+  // own out set, the whole statement is dead. this must apply for registers too.
+  testCompile(
+    input = "(((x <- 7)(y <- 8)(eax <- (print x))))",
+    expected = Some("""
+        |(((eax <- 7)
+        |(ebx <- 8)
+        |(eax <- (print eax))))"""))
+
+  testCompile(
+    input=
+    """(((eax <- 7)
+        |(ebx <- 7)
+        |(ecx <- 7)
+        |(edx <- 7)
+        |(edi <- 7)
+        |(esi <- 7)
+        |(r:x <- eax)
+        |(r:x += ebx)
+        |(r:x += ecx)
+        |(r:x += edx)
+        |(r:x += edi)
+        |(r:x += esi)
+        |(r:x += eax)
+        |(eax <- (print r:x))))""",
+    error = Some("allocation impossible"))
 }
 
 //((x <- 1) (eax += x)) x -4 s
@@ -313,17 +197,12 @@ trait L2CompilerTest extends util.TestHelpers with L2CompilerExtras {
       val L1InterpResult =  L1Interpreter.run(L1Code.clean)
       val L2InterpResult = L2Interpreter.run(L2Code.clean)
       verboseAssert(L2Code, L1InterpResult, L2InterpResult)
-
-      //println(L2Code.clean)
-      //println("\nL1 code: " + L1Code)
-      //println("\nresult: " + L1InterpResult)
-
       // write out the tests files and results.
       val index = count.next()
       // write the test
-      new File("./2-test/test" + index + ".L2").write(L2Code)
+      new File("./2-test/test" + index + ".L2").write(L2Code.clean)
       // write the expected result
-      new File("./2-test/test" + index + ".L1").write(L1Code)
+      new File("./2-test/test" + index + ".L1").write(L1Code.clean)
     }
   }
 }

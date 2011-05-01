@@ -6,8 +6,11 @@ object L2AST {
 
   object L2{ def apply(main: Func): L2 = L2(main, Nil) }
   case class L2(main: Func, funs:List[Func]) extends L2ASTNode
-  case class Func(body: List[Instruction]) extends L2ASTNode
-  def Main(body: List[Instruction]) = Func(LabelDeclaration(Label("__main")) :: body)
+  val mainLabel = LabelDeclaration(Label("__secret__main__"))
+  case class Func(body: List[Instruction]) extends L2ASTNode {
+    def isMain = body.head == mainLabel
+  }
+  def Main(body: List[Instruction]) = Func(mainLabel :: body)
   case class MemLoc(basePointer:X, offset: Num) extends L2ASTNode
   sealed trait X extends S with L2ASTNode with Ordered[X]{
     val name: String

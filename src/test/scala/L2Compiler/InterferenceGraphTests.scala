@@ -439,8 +439,55 @@ class InterferenceGraphTests extends L2CompilerTest {
 (s1 s0 x0 x1)
 (x0 s0 s1 x1)
 (x1 s0 s1 x0))""",
-    expectedAllocation = "((s0 ecx) (s1 edi) (x0 eax) (x1 ebx))"
+    expectedAllocation = "((s0 eax) (s1 ebx) (x0 ecx) (x1 edi))"
   )
+
+  interferenceAndAllocationTest(
+    name="jin/12",
+    code="""(:fib
+  (esp -= 12)
+  (cjump eax < 2 :base :recur)
+  :base
+  (x <- 1)
+  (eax <- x)
+  (esp += 12)
+  (return)
+  :recur
+  ((mem ebp -4) <- eax)
+  (x <- 1)
+  (eax -= x)
+  (call :fib)
+  ((mem ebp -8) <- eax)
+  (eax <- (mem ebp -4))
+  (x <- 2)
+  (eax -= x)
+  (return))""",
+    expectedInterference="""
+((eax ebx ecx edi edx esi x)
+(ebx eax ecx edi edx esi)
+(ecx eax ebx edi edx esi x)
+(edi eax ebx ecx edx esi x)
+(edx eax ebx ecx edi esi x)
+(esi eax ebx ecx edi edx x)
+(x eax ecx edi edx esi))""",
+    expectedAllocation="((x ebx))"
+  )
+
+  interferenceAndAllocationTest(name="x",
+  code="((abc <- 11) (abc <- 11) (x0 <<= num) (x1 >>= num))",
+  expectedInterference="""
+((abc num x0 x1)
+(eax ebx ecx edi edx esi num)
+(ebx eax ecx edi edx esi num)
+(ecx eax ebx edi edx esi)
+(edi eax ebx ecx edx esi num)
+(edx eax ebx ecx edi esi num)
+(esi eax ebx ecx edi edx num)
+(num abc eax ebx edi edx esi x0 x1)
+(x0 abc num x1)
+(x1 abc num x0))
+""",
+  expectedAllocation = "((abc eax) (num ecx) (x0 ebx) (x1 edi))")
 
   new java.io.File("./graph-test").mkdir()
 
@@ -451,8 +498,9 @@ class InterferenceGraphTests extends L2CompilerTest {
     test(name){
 
       val inouts = inout(parseListOfInstructions(code.clean))
+      val alloc = attemptAllocation(inouts.head)
       val (interference, actualAllocation) =
-        (buildInterferenceSet(inouts.head).hwView, printAllocation(attemptAllocation(inouts.head)._1))
+        (buildInterferenceSet(inouts.head).hwView, printAllocation(alloc._1))
 
       if(dumpAll){
         for(io <- inouts.reverse) {

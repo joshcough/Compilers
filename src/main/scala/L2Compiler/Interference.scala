@@ -138,39 +138,27 @@ trait Interference {
 
     def attemptAllocation(graph:InterferenceGraph):
       (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
-      //println("graph: " + graph.hwView)
-      val variables: Set[Variable] = graph.variables
-      //println("variables: " + variables)
+      val variables: List[Variable] =
+        graph.variables.toList.sortWith(_<_).sortWith(graph.neigborsOf(_).size > graph.neigborsOf(_).size)
       val registers: Set[Register] = Set(eax, ebx, ecx, edx, edi, esi)
       val defaultPairings: Map[Variable, Option[Register]] = variables.map(v => (v, None)).toMap
       val finalPairings = variables.foldLeft(defaultPairings){ (pairs, v) =>
-        //println("--------------------------------------")
-        //println("v=" + v)
         val neighbors: Set[X] = graph.neigborsOf(v)
-        //println("neighbors=" + neighbors)
         val neighborRegisters: Set[Register] = neighbors.collect{ case r: Register => r }
-        //println("neighborRegisters=" + neighborRegisters)
         val neighborVariables: Set[Variable] = neighbors.collect{ case v: Variable => v }
-        //println("neighborVariables=" + neighborVariables)
         val nonNeighborRegisters: Set[Register] = registers -- neighborRegisters
-        //println("nonNeighborRegisters=" + nonNeighborRegisters)
         val registersNeighborsVariablesLiveIn: Set[Register] = neighborVariables.flatMap(pairs.get(_)).flatten
-        //println("registersNeighborsVariablesLiveIn=" + registersNeighborsVariablesLiveIn)
         val availableRegisters: List[Register] =
           (nonNeighborRegisters -- registersNeighborsVariablesLiveIn).toList.sortWith(_<_)
-        //println("availableRegisters=" + availableRegisters)
         val theRegisterMaybe = availableRegisters.headOption
-        //println("theRegisterMaybe=" + theRegisterMaybe)
         pairs + (v -> theRegisterMaybe)
       }
-      //println("finalPairings=" + finalPairings)
       // see if any variables were unpaired with a register
       val anyVariablesUnpaired = finalPairings.find{ case (v, or) => ! or.isDefined }
       // if so, the graph was uncolorable. if not, return the pairings (but strip off the Option wrapper)
       if(anyVariablesUnpaired.isDefined) (None, finalPairings)
       else (Some(finalPairings.map{ case (v, or) => (v, or.get)}), finalPairings)
     }
-    //println("iioss: " + iioss)
     attemptAllocation(buildInterferenceSet(iioss))
   }
 

@@ -17,7 +17,9 @@ object LivenessMain {
 object Liveness extends Liveness
 
 // TODO: probably should fill in the usages variable.
-case class LiveRange(x:X, range:Int, usages:Int=0)
+case class LiveRange(x:X, range:Int, usages:Int=0) extends Ordered[LiveRange] {
+  def compare(that: LiveRange) = this.range compare that.range
+}
 case class InstructionInOutSet(index: Int, inst:Instruction, gen:Set[X], kill:Set[X], in:Set[X], out:Set[X])
 
 trait Liveness {
