@@ -3,7 +3,7 @@ package L2Compiler
 import io.Reader
 import L2AST._
 
-object L2Compiler extends L2Compiler {
+object L2CompilerMain extends L2Compiler {
   import java.io.File
   import io.FileHelper._
   def main(args:Array[String]) = println(compileFile(args(0)))
