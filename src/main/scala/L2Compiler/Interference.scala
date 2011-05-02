@@ -3,7 +3,7 @@ package L2Compiler
 import L2AST._
 
 object InterferenceMain {
-  import L2Compiler._
+  import L2CompilerMain._
   import io.FileHelper._
 
   def main(args:Array[String]){
