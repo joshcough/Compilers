@@ -1,99 +1,65 @@
-//package L4Compiler
-//
-//import L4AST._
-//
-//trait L4Parser {
-//
-//  //p ::= (e (l (x ...) e) ...)
-//  def parse(exp:Any): L4 = exp match {
-//    case e :: funcs => new L4(main=parseE(e), funcs map parseFunction)
-//    case _ => error("bad L4 program: " + exp)
-//  }
-//
-//  //(l (x ...) e)
-//  def parseFunction(exp: Any): Func = exp match {
-//    case (lab:Symbol) :: (args:List[Any]) :: e :: Nil =>
-//      Func(parseLabel(lab.toString), parseArgs(args), parseE(e))
-//    case _ => error("bad function: " + exp)
-//  }
-//
-//  def parseArgs(args:List[Any]) = {
-//    if(args.isInstanceOf[List[Symbol]])
-//      args.asInstanceOf[List[Symbol]].map((s:Symbol) => Variable(s.toString.drop(1)))
-//    else error("bad argument list!")
-//  }
-//
-//  //e ::= (let ([x d]) e) | (if v e e) | d
-//  def parseE(a:Any): E = a match {
-//    case 'let :: List(List((x:Symbol), d)) :: e :: Nil => Let(parseX(x), parseD(d), parseE(e))
-//    case 'if :: v :: le :: re :: Nil => IfStatement(parseV(v), parseE(le), parseE(re))
-//    case _ => parseD(a)
-//  }
-//
-//  //d ::= (biop v v)   where biop ::= + | - | * | < | <= | =
-//  //      (pred v)     where pred ::= number? | a? ;; a? tests to see if the argument is an array or a tuple
-//  //      (v v ...)
-//  //      (new-array v v)
-//  //      (new-tuple v ...)
-//  //      (aref v v)
-//  //      (aset v v v)
-//  //      (alen v)
-//  //      (print v)
-//  //      (make-closure l v)
-//  //      (closure-proc v)
-//  //      (closure-vars v)
-//  //      v where v :: = x | l | num
-//  def parseD(a:Any): D = a match {
-//    case '+  :: left :: right :: Nil => Add(parseV(left), parseV(right))
-//    case '-  :: left :: right :: Nil => Sub(parseV(left), parseV(right))
-//    case '*  :: left :: right :: Nil => Mult(parseV(left), parseV(right))
-//    case '<  :: left :: right :: Nil => LessThan(parseV(left), parseV(right))
-//    case '<= :: left :: right :: Nil => LessThanOrEqualTo(parseV(left), parseV(right))
-//    case '=  :: left :: right :: Nil => EqualTo(parseV(left), parseV(right))
-//    case Symbol("number?") :: v :: Nil => IsNumber(parseV(v))
-//    case Symbol("a?") :: v :: Nil => IsArray(parseV(v))
-//
-//    case Symbol("new-array") :: s :: v :: Nil => NewArray(size = parseV(s), init = parseV(v))
-//    case Symbol("new-tuple") :: xs => NewTuple(xs map parseV)
-//    case 'aref :: arr :: loc :: Nil => ARef(arr=parseV(arr), loc=parseV(loc))
-//    case 'aset :: arr :: loc :: v :: Nil => ASet(arr=parseV(arr), loc=parseV(loc), newVal=parseV(v))
-//    case 'alen :: arr :: Nil => ALen(arr=parseV(arr))
-//    case 'print :: v :: Nil => Print(v=parseV(v))
-//
-//    case Symbol("make-closure") :: (l:Symbol) :: v :: Nil => MakeClosure(l=parseLabel(l.toString), v=parseV(v))
-//    case Symbol("closure-proc") :: v :: Nil => ClosureProc(v=parseV(v))
-//    case Symbol("closure-vars") :: v :: Nil => ClosureVars(v=parseV(v))
-//
-//    case n: Int => Num(n)
-//    case s: Symbol => parseLabelOrRegisterOrVar(s)
-//
-//    case v :: vs => FunCall(parseV(v), vs map parseV)
-//    case _ => parseV(a)
-//  }
-//
-//  def parseV(exp:Any) = exp match {
-//    case n: Int => Num(n)
-//    case s: Symbol => parseLabelOrRegisterOrVar(s)
-//  }
-//
-//  def parseNumOrRegisterOrVar(exp:Any): V = exp match {
-//    case n: Int => Num(n)
-//    case s: Symbol => parseX(s)
-//  }
-//
-//  def parseLabelOrRegisterOrVar(s: Symbol): V = {
-//    if (s.toString.startsWith("':")) parseLabel(s.toString) else parseX(s)
-//  }
-//
-//  // label ::= sequence of alpha-numeric characters or underscore,
-//  // but starting with a colon, ie matching this regexp:
-//  // #rx"^:[a-zA-Z0-9_]$"
-//  def parseLabel(s: String) = {
-//    val chop = s.toString.drop(1) // remove the ' from ':label
-//    Label(s.drop(2)) // remove the ' and : from ':label.
-//  }
-//
-//  def parseX(s: Symbol): X = {
-//    XRegister(s).getOrElse(CXRegister(s).getOrElse(Variable(s.toString.drop(1))))
-//  }
-//}
+package L4Compiler
+
+import L4AST._
+
+trait L4Parser {
+
+  //p ::= (e (l (x ...) e) ...)
+  def parse(exp:Any): L4 = exp match {
+    case e :: funcs => new L4(main=parseE(e), funcs map parseFunction)
+    case _ => error("bad L4 program: " + exp)
+  }
+
+  //(l (x ...) e)
+  def parseFunction(exp: Any): Func = exp match {
+    case (lab:Symbol) :: (args:List[Any]) :: e :: Nil =>
+      Func(parseLabel(lab.toString), parseArgs(args), parseE(e))
+    case _ => error("bad function: " + exp)
+  }
+
+  def parseArgs(args:List[Any]) = {
+    if(args.isInstanceOf[List[Symbol]])
+      args.asInstanceOf[List[Symbol]].map((s:Symbol) => Variable(s.toString.drop(1)))
+    else error("bad argument list!")
+  }
+
+  //e ::= (let ([x d]) e) | (if v e e) | d
+  def parseE(a:Any): E = a match {
+    case 'let :: List(List((x:Symbol), e1)) :: e2 :: Nil => Let(parseVar(x), parseE(e1), parseE(e2))
+    case 'if :: testE :: thenE :: elseE :: Nil => IfStatement(parseE(testE), parseE(thenE), parseE(elseE))
+    case '+  :: left :: right :: Nil => Add(parseE(left), parseE(right))
+    case '-  :: left :: right :: Nil => Sub(parseE(left), parseE(right))
+    case '*  :: left :: right :: Nil => Mult(parseE(left), parseE(right))
+    case '<  :: left :: right :: Nil => LessThan(parseE(left), parseE(right))
+    case '<= :: left :: right :: Nil => LessThanOrEqualTo(parseE(left), parseE(right))
+    case '=  :: left :: right :: Nil => EqualTo(parseE(left), parseE(right))
+    case Symbol("number?") :: e :: Nil => IsNumber(parseE(e))
+    case Symbol("a?") :: e :: Nil => IsArray(parseE(e))
+
+    case Symbol("new-array") :: s :: e :: Nil => NewArray(size = parseE(s), init = parseE(e))
+    case Symbol("new-tuple") :: xs => NewTuple(xs map parseE)
+    case 'aref :: arr :: loc :: Nil => ARef(arr=parseE(arr), loc=parseE(loc))
+    case 'aset :: arr :: loc :: e :: Nil => ASet(arr=parseE(arr), loc=parseE(loc), newVal=parseE(e))
+    case 'alen :: arr :: Nil => ALen(arr=parseE(arr))
+    case 'print :: e :: Nil => Print(e=parseE(e))
+
+    case Symbol("make-closure") :: (l:Symbol) :: e :: Nil => MakeClosure(l=parseLabel(l.toString), e=parseE(e))
+    case Symbol("closure-proc") :: e :: Nil => ClosureProc(e=parseE(e))
+    case Symbol("closure-vars") :: e :: Nil => ClosureVars(e=parseE(e))
+
+    case n: Int => Num(n)
+    case s: Symbol => if (s.toString.startsWith("':")) parseLabel(s.toString) else parseVar(s)
+
+    case e :: es => FunCall(parseE(e), es map parseE)
+  }
+
+  // label ::= sequence of alpha-numeric characters or underscore,
+  // but starting with a colon, ie matching this regexp:
+  // #rx"^:[a-zA-Z0-9_]$"
+  def parseLabel(s: String) = {
+    val chop = s.toString.drop(1) // remove the ' from ':label
+    Label(s.drop(2)) // remove the ' and : from ':label.
+  }
+
+  def parseVar(s: Symbol): X = Variable(s.toString.drop(1))
+}
