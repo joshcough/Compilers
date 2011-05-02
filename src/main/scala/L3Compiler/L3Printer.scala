@@ -23,9 +23,9 @@ trait L3Printer {
     case EqualTo(l:V, r:V)  => "(= " + toCode(l) + " " +  toCode(r) + ")"
 
     case IsNumber(v:V) => "(number? " + toCode(v) +")"
-    case IsArray(v:V) => "(s? " + toCode(v) +")"
+    case IsArray(v:V) => "(a? " + toCode(v) +")"
     case FunCall(v, args) => "("+ (v::args).map(toCode).mkString(" ") + ")"
-    case NewArray(size:V, init:V) => "(new-array v v)"
+    case NewArray(size:V, init:V) => "(new-array "+toCode(size)+" " + toCode(init) + ")"
     case NewTuple(vs) => "(new-tuple "+ vs.map(toCode).mkString(" ") + ")"
     case ARef(arr:V, loc:V) => "(aref " + toCode(arr) +" " + toCode(loc) +")"
     case ASet(arr:V, loc:V, newVal: V) => "(aset " + toCode(arr) +" " + toCode(loc) +" " + toCode(newVal) +")"
