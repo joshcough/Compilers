@@ -1,6 +1,6 @@
 package L2Compiler
 
-import L2Compiler.L2AST._
+import L2AST._
 
 // the allocator brings together everything in L2
 // for each function in the program, it tries to see if it can allocate it as is.
@@ -10,7 +10,7 @@ import L2Compiler.L2AST._
 // if it is unable to, it spills a variable, and tries again.
 // it does this until either a) it works, or b) it is out of variables to spill.
 // the last case results in error. 
-trait Allocator extends Spill with Liveness with Interference with L2Printer {
+trait Allocator extends Spill with Liveness with Interference {
 
   // allocates all of the functions in the given L2 program
   def allocate(ast: L2): L2 = {
@@ -25,31 +25,34 @@ trait Allocator extends Spill with Liveness with Interference with L2Printer {
     val (finalFunction, allocs) = attemptAllocation(inoutFinalResult(f))._1 match {
       case Some(registerMap) => (f, registerMap)
       case _ => {
-        // then if it fails, rewrite until we can color
-        def allocateCompletely(f: Func, offset: Int): ((Func, Map[Variable, Register]), Int) = {
-          attemptAllocation(inoutFinalResult(f))._1 match {
-            case Some(registerMap) => ((f, registerMap), offset)
-            case None => chooseSpillVar(liveRanges(inoutFinalResult(f))) match {
-              case Some(sv) => allocateCompletely(Func(spill(sv, offset - 4, f.body)), offset - 4)
-              case None => error("allocation impossible")
-            }
-          }
-        }
-        val ((allocatedFunction, allocs), espOffset) = allocateCompletely(initialRewrite(f), 0)
+        // we weren't able to allocate right away. rewrite so that esi and edi can be spilled
+        // and then start allocating using spilling
+        val ((allocatedFunction, allocs), espOffset) = allocateCompletely(initialRewrite(f), -4)
         // adjust the stack at the start of the function right here.
-        // if we never spilled, we dont have to do anything
-        if(espOffset == 0) (allocatedFunction, allocs)
-        // but if we did, adjust right after the label.
-        else {
-          val label = allocatedFunction.body.head
-          val bodyWithoutLabel = allocatedFunction.body.tail
-          val decEsp = List(Decrement(esp, Num(- espOffset)))
-          val incEspMaybe = if(allocatedFunction.isMain) List(Increment(esp, Num(- espOffset))) else List()
-          (Func(label :: decEsp ::: bodyWithoutLabel ::: incEspMaybe), allocs)
-        }
+        val label = allocatedFunction.body.head
+        val bodyWithoutLabel = allocatedFunction.body.tail
+        val decEsp = List(Decrement(esp, Num(- espOffset)))
+        val incEspMaybe = if(allocatedFunction.isMain) List(Increment(esp, Num(- espOffset))) else List()
+        (Func(label :: decEsp ::: bodyWithoutLabel ::: incEspMaybe), allocs)
       }
     }
+
+    // the statement above gives as a fully colorable function
+    // along with the registers that each variable maps to.
+    // replacing those variables (right below) results in an L1 program
+    // (an L2 program that uses no variables)
     new VariableToRegisterReplacer(allocs).replaceVarsWithRegisters(finalFunction)
+  }
+
+  // allocateCompletely rewrites (spills) until the function is colorable
+  def allocateCompletely(f: Func, offset: Int): ((Func, Map[Variable, Register]), Int) = {
+    attemptAllocation(inoutFinalResult(f))._1 match {
+      case Some(registerMap) => ((f, registerMap), offset)
+      case None => chooseSpillVar(liveRanges(inoutFinalResult(f))) match {
+        case Some(sv) => allocateCompletely(Func(spill(sv, offset, f.body)), offset - 4)
+        case None => error("allocation impossible")
+      }
+    }
   }
 
   // the second thing returned here is the progress we were actually able to make.

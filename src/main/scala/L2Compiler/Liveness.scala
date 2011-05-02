@@ -5,7 +5,7 @@ import L2AST._
 object LivenessMain {
   import io.FileHelper._
   import java.io.File
-  import L2CompilerExtras._
+  import L2Compiler._
 
   def main(args:Array[String]){ println(liveness(new File(args(0)).read)) }
 

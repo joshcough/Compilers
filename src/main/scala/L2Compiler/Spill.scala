@@ -3,7 +3,7 @@ package L2Compiler
 import L2AST._
 
 object SpillMain {
-  import L2CompilerExtras._
+  import L2Compiler._
   import io.FileHelper._
 
   def main(args:Array[String]){
@@ -22,7 +22,7 @@ object SpillMain {
     // the test has these three things that we read.
     val List(varToSpill, offset, prefix) = read("(" + rest + ")").asInstanceOf[List[Any]]
     // after we have the program and the other arguments
-    val newProgram = L2CompilerExtras.spill(
+    val newProgram = L2Compiler.spill(
       Variable(varToSpill.toString.drop(1)), offset.toString.toInt,
       prefix.toString.drop(1), parseListOfInstructions(program.asInstanceOf[List[Any]]))
     newProgram.map(toCode).mkString("(", " ", ")")

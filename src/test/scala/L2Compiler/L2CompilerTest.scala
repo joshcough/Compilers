@@ -166,7 +166,7 @@ class L2CompilerHW extends L2CompilerTest with util.SlowTest {
 }
 
 //((x <- 1) (eax += x)) x -4 s
-trait L2CompilerTest extends util.TestHelpers with L2CompilerExtras {
+trait L2CompilerTest extends util.TestHelpers with L2Compiler {
 
   def End = None // sort of hacky, but whatever.
   def Just(i:Int) = Some(i)

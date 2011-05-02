@@ -33,7 +33,6 @@ trait L2Printer {
     case v:Variable => v.name
   }
 
-
   def printAllocation(opairs: Option[Map[Variable, Register]]) = opairs match {
     case Some(pairs) =>
       pairs.keys.toList.sortWith(_<_).map(v =>

@@ -3,7 +3,7 @@ package L2Compiler
 import L2AST._
 
 object InterferenceMain {
-  import L2CompilerExtras._
+  import L2Compiler._
   import io.FileHelper._
 
   def main(args:Array[String]){
@@ -32,7 +32,6 @@ trait Interference {
     def addNode(x:X):InterferenceGraph = {
       if(map.contains(x)) this else new InterferenceGraph(map + (x -> Set()))
     }
-    // TODO...I wonder if i should add all nodes first, and fail here if x1 or x2 isnt present...
     def addEdge(x1:X, x2:X): InterferenceGraph = {
       // dont bother adding ebp or esp
       if(x1 == ebp || x1 == esp || x2 == ebp || x2 == esp) this
@@ -161,5 +160,4 @@ trait Interference {
       case LabelDeclaration(_) => Set()
     }
   }
-
 }

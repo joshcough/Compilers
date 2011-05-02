@@ -522,7 +522,6 @@ class InterferenceGraphTests extends L2CompilerTest {
     }
   }
 
-  // TODO: figure out how to remove this  
   test("base graph with some added interference") {
     val x = Variable("x")
     assert(registerInterference.addEdges(eax -> x, edi -> x, esi -> x).hwView === """
