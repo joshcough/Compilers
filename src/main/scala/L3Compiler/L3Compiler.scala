@@ -12,6 +12,7 @@ import L2Compiler.L2AST.{
   X => L2X,
   Label => L2Label,
   Print => L2Print,
+  Main => L2Main,
   Instruction => L2Instruction, _}
 import L2Compiler.L2Printer
 
@@ -35,13 +36,9 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
   def compile(code:String): L2 = compile(parse(read(code)))
 
   def compile(p:L3): L2 = p match {
-    // TODO: think i'll need to strip off the return at the end of main.
-    case L3(main, funcs) => {
-      val secret = Label("__secret__main__")
-      val secretDec = LabelDeclaration(secret)
-      val realMain = L2Func(LabelDeclaration(secret)::compileE(main))
-      L2(main=L2Func(List(Call(secret))), funs = realMain :: (funcs map compileFunction))
-    }
+    case L3(main, funcs) => L2(
+      main=L2Func(List(Call(mainLabel))),
+      funs = L2Main(compileE(main)) :: (funcs map compileFunction))
   }
 
   // (l (x ...) e)
