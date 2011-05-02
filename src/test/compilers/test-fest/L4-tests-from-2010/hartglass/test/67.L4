@@ -1,0 +1,20 @@
+((print (let ((g1878
+       (new-array
+        3
+        (print
+         (let ((g1879
+                (new-array
+                 3
+                 (new-array
+                  3
+                  (+ (- 16 10) 11)))))
+           (begin
+             (print g1879)
+             (let ((g1880
+                    (new-array 3 1)))
+               (begin
+                 (print g1880)
+                 (< (print 5) 16)))))))))
+  (begin
+    (print g1878)
+    (begin 1 (aref g1878 2))))))

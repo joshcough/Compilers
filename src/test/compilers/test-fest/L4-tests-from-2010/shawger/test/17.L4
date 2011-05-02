@@ -1,0 +1,5 @@
+((let ([x (new-tuple (+ 1 2) (+ (+ 3 4) 5))])
+   (begin (aset x 1 (:double 4))
+          (print (aref x 1))))
+ (:double (x)
+   (* x 2)))

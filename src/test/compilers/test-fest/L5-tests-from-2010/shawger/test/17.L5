@@ -1,0 +1,3 @@
+(let ([x (new-array 5 4)])
+  (begin (aset x 2 10)
+         (print (aref x 2))))

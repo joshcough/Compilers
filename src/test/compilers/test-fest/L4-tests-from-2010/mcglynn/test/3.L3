@@ -1,0 +1,1 @@
+((let ((tmp2 (:even 40))) (let ((tmp1 (print tmp2))) (let ((tmp3 (:half 40))) (print tmp3)))) (:even (x) (let ((tmp4 (= x 0))) (if tmp4 1 (let ((tmp5 (- x 1))) (let ((tmp6 (:even tmp5))) (- 1 tmp6)))))) (:half (x) (let ((tmp7 (= x 0))) (if tmp7 0 (let ((tmp8 (- x 2))) (let ((tmp9 (:half tmp8))) (+ 1 tmp9)))))))

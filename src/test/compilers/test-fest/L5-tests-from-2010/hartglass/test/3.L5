@@ -1,0 +1,6 @@
+(letrec ([x (lambda (y)
+              (if (= y 1)
+                  (print y)
+                  (begin (x (- y 1))
+                         (print y))))])
+  (x 10))

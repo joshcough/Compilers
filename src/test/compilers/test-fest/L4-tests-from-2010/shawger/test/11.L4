@@ -1,0 +1,5 @@
+((print (:rec 10))
+ (:rec (x)
+  (if (< x 10)
+      (:rec (+ x 1))
+      x)))

@@ -1,0 +1,21 @@
+((begin
+   (:f 1 2 3)
+   (:f 1
+       (begin 1 (+ 1 (* 2 3)))
+       (+ (begin 3 (:h 1 (begin 5 6) 4))
+          (begin 3 (:h 1 (begin 5 6) 4)))))
+ (:f (a b c)
+     (begin a
+            (begin b (- a (:g a (- b c) (- (begin
+                                             (print c)
+                                             (+ c b))
+                                           (begin
+                                             (print b)
+                                             (+ c a))))))))
+ (:g (a b c)
+     (begin (let ((c 9999)) (begin 2 c))
+            (+ a (begin (print (begin (print b) c))
+                        (* b c)))))
+ (:h (a b c)
+     (* a (* b (begin 2 c))))
+ )

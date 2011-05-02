@@ -1,0 +1,206 @@
+((print (let ((g1466
+       (new-tuple
+        (new-tuple (new-tuple) 7)
+        2
+        (new-tuple (new-tuple) 16)
+        (new-tuple (new-tuple) 3))))
+  (let ((g1467
+         (new-array
+          4
+          (print
+           (begin
+             (-
+              (let ((g1468 (begin 15 9)))
+                (begin
+                  (let ((g1469
+                         (print
+                          (let ((g1470 5))
+                            (let ((g1471
+                                   (print
+                                    (print
+                                     g1470))))
+                              g1470)))))
+                    (-
+                     (let ((g1472
+                            (let ((g1473
+                                   g1469))
+                              g1473)))
+                       (let ((g1474 7))
+                         (*
+                          (let ((g1475
+                                 10))
+                            g1469)
+                          g1472)))
+                     (print g1468)))
+                  g1468))
+              (let ((g1476 4)) g1476))
+             (aref g1466 3))))))
+    (begin
+      (print g1467)
+      (let ((g1477
+             (new-array
+              4
+              (new-array
+               4
+               (begin
+                 (print
+                  (let ((g1478
+                         (new-array
+                          4
+                          (new-array
+                           4
+                           (let ((g1479
+                                  (new-array
+                                   4
+                                   (new-array
+                                    4
+                                    (begin
+                                      (+
+                                       19
+                                       0)
+                                      (aref
+                                       g1466
+                                       0))))))
+                             (begin
+                               (print
+                                g1479)
+                               3))))))
+                    (begin
+                      (print g1478)
+                      (let ((g1480
+                             (new-array
+                              4
+                              (let ((g1481
+                                     (new-array
+                                      4
+                                      (let ((g1482
+                                             (new-array
+                                              4
+                                              1)))
+                                        (begin
+                                          (print
+                                           g1482)
+                                          2)))))
+                                (begin
+                                  (print
+                                   g1481)
+                                  3)))))
+                        (begin
+                          (print g1480)
+                          (new-array
+                           4
+                           (-
+                            (print 16)
+                            (let ((g1483
+                                   3))
+                              (let ((g1484
+                                     g1483))
+                                g1483)))))))))
+                 (aref g1466 1))))))
+        (begin
+          (print g1477)
+          (begin
+            (let ((g1485
+                   (new-array
+                    4
+                    (let ((g1486
+                           (new-array
+                            4
+                            (let ((g1487
+                                   (new-array
+                                    4
+                                    (-
+                                     (begin
+                                       (print
+                                        (let ((g1488
+                                               12))
+                                          g1488))
+                                       (let ((g1489
+                                              (print
+                                               (print
+                                                (+
+                                                 (print
+                                                  4)
+                                                 16)))))
+                                         g1489))
+                                     (*
+                                      (let ((g1490
+                                             17))
+                                        (let ((g1491
+                                               0))
+                                          (let ((g1492
+                                                 16))
+                                            g1492)))
+                                      (let ((g1493
+                                             11))
+                                        (let ((g1494
+                                               (<
+                                                g1493
+                                                g1493)))
+                                          (let ((g1495
+                                                 g1493))
+                                            (let ((g1496
+                                                   4))
+                                              g1496)))))))))
+                              (begin
+                                (print
+                                 g1487)
+                                (begin
+                                  (let ((g1497
+                                         (new-array
+                                          4
+                                          (begin
+                                            (-
+                                             15
+                                             19)
+                                            (aref
+                                             g1487
+                                             2)))))
+                                    (begin
+                                      (print
+                                       g1497)
+                                      2))
+                                  (aref
+                                   g1487
+                                   1)))))))
+                      (begin
+                        (print g1486)
+                        (print
+                         (let ((g1498
+                                (new-array
+                                 4
+                                 3)))
+                           (begin
+                             (print g1498)
+                             (let ((g1499
+                                    (new-array
+                                     4
+                                     (begin
+                                       (begin
+                                         (new-array
+                                          4
+                                          (print
+                                           (print
+                                            (new-array
+                                             4
+                                             2))))
+                                         (aref
+                                          g1486
+                                          3))
+                                       (aref
+                                        g1498
+                                        3)))))
+                               (begin
+                                 (print
+                                  g1499)
+                                 (new-array
+                                  4
+                                  (+
+                                   (< 4 4)
+                                   (let ((g1500
+                                          7))
+                                     g1500)))))))))))))
+              (begin
+                (print g1485)
+                (begin 3 (aref g1466 0))))
+            (aref g1477 1)))))))))

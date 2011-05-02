@@ -1,0 +1,45 @@
+((print
+  (new-tuple
+   (let ((g968 16)) g968)
+   (let ((g969 2))
+     (let ((g970 9))
+       (- g970 (- g969 g969))))
+   (let ((g971
+          (let ((g972
+                 (let ((g973
+                        (* (print 8) 4)))
+                   (print (print g973)))))
+            (= (print g972) g972))))
+     (print
+      (let ((g974 18))
+        (print (print g974)))))
+   (let ((g975 8)) (let ((g976 19)) g976))
+   (new-tuple
+    (new-tuple
+     (new-tuple 0 (new-tuple))
+     17
+     7
+     16)
+    (new-tuple
+     18
+     (new-tuple 9 3)
+     11
+     (print 6))
+    (new-tuple
+     (new-tuple (new-tuple) (new-tuple))
+     3
+     (print 15)
+     7)
+    (print (* 2 3))
+    (let ((g977 (print 5))) g977)
+    (new-tuple
+     (new-tuple (new-tuple) 14)
+     (new-tuple 12 0)
+     7
+     (print 1)))
+   (<
+    (let ((g978 14)) g978)
+    (let ((g979 0))
+      (- g979 (print g979))))
+   (<= 12 16)
+   1)))

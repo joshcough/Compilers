@@ -1,0 +1,5 @@
+((print (let ((g1866
+       (new-array 10 (new-array 10 4))))
+  (begin
+    (print g1866)
+    (begin 2 (aref g1866 8))))))

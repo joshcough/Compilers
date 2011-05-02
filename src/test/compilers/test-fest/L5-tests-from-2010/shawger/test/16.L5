@@ -1,0 +1,2 @@
+(let ([x (new-array 5 4)])
+  (print (alen x)))

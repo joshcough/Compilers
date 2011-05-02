@@ -1,0 +1,2 @@
+(print
+ (let ((x (new-array 10 11))) (begin (aset x 1 202) (aref x 1))))

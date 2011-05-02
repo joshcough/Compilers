@@ -1,0 +1,26 @@
+((print (:f (:g (:h 100 200 300) (:f 400))))
+ (:f
+  (a)
+  (let ((g871
+         (-
+          (let ((g872 a))
+            (*
+             (let ((g873 g872))
+               (let ((g874 g873)) (print g872)))
+             g872))
+          a)))
+    (print
+     (let ((g875
+            (let ((g876 16))
+              (print (* a (let ((g877 g871)) g876))))))
+       (+
+        (print a)
+        (let ((g878 2)) (let ((g879 17)) g875)))))))
+ (:g
+  (a b)
+  (begin
+    (print (let ((g880 (print b))) a))
+    (let ((g881 b)) a)))
+ (:h
+  (a b c)
+  (begin b (let ((g882 (print (let ((g883 1)) g883)))) c))))

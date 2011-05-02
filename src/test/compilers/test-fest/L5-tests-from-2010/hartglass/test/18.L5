@@ -1,0 +1,2 @@
+(print ((lambda (a b c d e f g) (g (a b c) (d e f)))
+        + 2 3 - 7 4 (begin 9999 *)))

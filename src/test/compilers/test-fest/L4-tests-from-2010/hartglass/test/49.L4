@@ -1,0 +1,44 @@
+((print (let ((g1305
+       (new-array
+        3
+        (let ((g1306
+               (new-array 3 (print 1))))
+          (begin
+            (print g1306)
+            (new-array
+             3
+             (print
+              (new-array
+               3
+               (+
+                (- 4 (< 16 (print 17)))
+                (print 2))))))))))
+  (begin
+    (print g1305)
+    (let ((g1307
+           (new-array
+            3
+            (new-array
+             3
+             (let ((g1308
+                    (new-array
+                     3
+                     (new-array
+                      3
+                      (print
+                       (new-array
+                        3
+                        2))))))
+               (begin
+                 (print g1308)
+                 (=
+                  (print 7)
+                  (print
+                   (-
+                    (+
+                     (* 5 15)
+                     (* 17 (print 16)))
+                    18)))))))))
+      (begin
+        (print g1307)
+        (+ 2 (print 11))))))))

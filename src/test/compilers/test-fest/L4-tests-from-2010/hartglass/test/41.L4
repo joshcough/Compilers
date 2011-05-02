@@ -1,0 +1,99 @@
+((print (+
+  (:g6291
+   (+ 9 14)
+   10
+   (print (let ((g6322 3)) g6322)))
+  (<=
+   (:g6290
+    (let ((g6323
+           (let ((g6324 13)) g6324)))
+      g6323)
+    18
+    8)
+   (-
+    (:g6315
+     (<
+      (print 4)
+      (-
+       (* (print 2) 18)
+       (- 2 (print 16))))
+     (+ 9 (+ (- 1 13) (+ 2 17)))
+     16)
+    (:g6315
+     (print 6)
+     (print 11)
+     (print 16))))))
+ (:g6290 (a b c) b)
+ (:g6291
+  (a b c)
+  (let ((g6292 a))
+    (let ((g6293 6))
+      (let ((g6294
+             (+
+              (let ((g6295
+                     (let ((g6296
+                            (print c)))
+                       (+
+                        (print
+                         (print g6293))
+                        (+ b g6292)))))
+                a)
+              (let ((g6297 3))
+                (print c)))))
+        g6292))))
+ (:g6298
+  (a b c)
+  (let ((g6299
+         (let ((g6300 b))
+           (print
+            (begin
+              (print
+               (let ((g6301
+                      (=
+                       (let ((g6302 b)) a)
+                       c)))
+                 g6301))
+              (let ((g6303 c))
+                (<= c b)))))))
+    (+
+     (begin
+       (begin
+         (let ((g6304 c))
+           (let ((g6305 0)) g6304))
+         (let ((g6306 5))
+           (-
+            (print c)
+            (-
+             (let ((g6307 6)) (+ g6299 b))
+             (+ b c)))))
+       (+
+        (let ((g6308 6))
+          (print (let ((g6309 g6299)) a)))
+        g6299))
+     (* c b))))
+ (:g6310
+  (a b c)
+  (let ((g6311 6))
+    (let ((g6312 (print g6311)))
+      (begin
+        (let ((g6313 c)) g6313)
+        (print
+         (let ((g6314 g6311))
+           (print
+            (print
+             (print (print g6314))))))))))
+ (:g6315
+  (a b c)
+  (begin
+    (begin
+      b
+      (let ((g6316 19))
+        (let ((g6317 0)) c)))
+    (+
+     (let ((g6318 c)) (print b))
+     (-
+      (let ((g6319 8)) c)
+      (let ((g6320 6))
+        (print
+         (let ((g6321 (print c)))
+           (* (+ b b) b)))))))))

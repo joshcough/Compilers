@@ -1,0 +1,1 @@
+(print (let ((x (new-tuple 1 2))) (((lambda (x) x) aref) x 0)))

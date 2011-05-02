@@ -1,0 +1,2 @@
+(letrec ([f (lambda (x) (if x (f (- x 1)) (print x)))])
+  (f 10))

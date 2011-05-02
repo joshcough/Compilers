@@ -1,0 +1,41 @@
+((print (:f (:g 200)))
+ (:f (a) a)
+ (:g
+  (b)
+  (let ((g817
+         (let ((g818 4))
+           (let ((g819 (let ((g820 2)) g818))) g819))))
+    (begin
+      (let ((g821
+             (let ((g822 9))
+               (let ((g823 g822))
+                 (let ((g824
+                        (*
+                         (let ((g825 (let ((g826 5)) b)))
+                           (- g825 b))
+                         g817)))
+                   (let ((g827 g822)) g824))))))
+        (let ((g828
+               (let ((g829 13)) (let ((g830 g821)) g830))))
+          (let ((g831 10)) b)))
+      (let ((g832
+             (let ((g833 5))
+               (let ((g834 5))
+                 (let ((g835 6))
+                   (*
+                    g834
+                    (* (print b) (print (print b)))))))))
+        (let ((g836
+               (*
+                (*
+                 (let ((g837 12))
+                   (let ((g838 5)) (print (print g838))))
+                 (+ g832 (let ((g839 b)) g839)))
+                (let ((g840
+                       (let ((g841
+                              (+
+                               (* (- g817 (print g817)) b)
+                               g832)))
+                         (print g841))))
+                  (print (print g832))))))
+          g832))))))

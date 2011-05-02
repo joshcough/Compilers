@@ -1,0 +1,123 @@
+((print (new-array
+ 4
+ (let ((g1289
+        (new-array
+         4
+         (let ((g1290
+                (new-array
+                 4
+                 (print
+                  (new-array
+                   4
+                   (let ((g1291
+                          (new-array
+                           4
+                           (let ((g1292
+                                  (new-array
+                                   4
+                                   (new-array
+                                    4
+                                    (new-array
+                                     4
+                                     (=
+                                      5
+                                      1))))))
+                             (begin
+                               (print
+                                g1292)
+                               (new-array
+                                4
+                                (let ((g1293
+                                       (new-array
+                                        4
+                                        (print
+                                         2))))
+                                  (begin
+                                    (print
+                                     g1293)
+                                    (new-array
+                                     4
+                                     (new-array
+                                      4
+                                      0))))))))))
+                     (begin
+                       (print g1291)
+                       (let ((g1294
+                              (new-array
+                               4
+                               (let ((g1295
+                                      (new-array
+                                       4
+                                       (print
+                                        (new-array
+                                         4
+                                         (new-array
+                                          4
+                                          (new-array
+                                           4
+                                           (print
+                                            2))))))))
+                                 (begin
+                                   (print
+                                    g1295)
+                                   (new-array
+                                    4
+                                    1))))))
+                         (begin
+                           (print g1294)
+                           (new-array
+                            4
+                            (*
+                             (let ((g1296
+                                    11))
+                               g1296)
+                             (let ((g1297
+                                    13))
+                               g1297))))))))))))
+           (begin
+             (print g1290)
+             (let ((g1298
+                    (new-array
+                     4
+                     (let ((g1299
+                            (new-array
+                             4
+                             (let ((g1300
+                                    (new-array
+                                     4
+                                     (print
+                                      (print
+                                       (-
+                                        7
+                                        8))))))
+                               (begin
+                                 (print
+                                  g1300)
+                                 (new-array
+                                  4
+                                  3))))))
+                       (begin
+                         (print g1299)
+                         (new-array
+                          4
+                          3))))))
+               (begin
+                 (print g1298)
+                 (print
+                  (new-array
+                   4
+                   (let ((g1301
+                          (new-array
+                           4
+                           0)))
+                     (begin
+                       (print g1301)
+                       (+
+                        (let ((g1302 14))
+                          g1302)
+                        (let ((g1303 3))
+                          g1303)))))))))))))
+   (begin
+     (print g1289)
+     (let ((g1304 (new-array 4 3)))
+       (begin (print g1304) 2)))))))

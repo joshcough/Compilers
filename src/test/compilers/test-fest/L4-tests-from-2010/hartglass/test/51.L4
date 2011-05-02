@@ -1,0 +1,24 @@
+((print (let ((g1313
+       (new-array
+        15
+        (let ((g1314 (new-array 15 7)))
+          (begin
+            (print g1314)
+            (let ((g1315
+                   (new-array
+                    15
+                    (new-array
+                     15
+                     (new-array
+                      15
+                      (print
+                       (print
+                        (new-array
+                         15
+                         (print
+                          (print
+                           5))))))))))
+              (begin
+                (print g1315)
+                (new-array 15 3))))))))
+  (begin (print g1313) 2))))

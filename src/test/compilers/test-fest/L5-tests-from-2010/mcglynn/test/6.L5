@@ -1,0 +1,7 @@
+(let ([f (lambda (op1 op2 op3)
+           (op1 1 (op2 2 (op3 3 4))))])
+  (letrec ([pow (lambda (a b)
+                  (if (= b 0)
+                      1
+                      (* a (pow a (- b 1)))))])
+    (print (f + pow *))))

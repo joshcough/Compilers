@@ -1,0 +1,3 @@
+(print (letrec ([a (letrec ([b 5])
+                     (+ b 1))])
+         (letrec ([c 6]) (+ c a))))

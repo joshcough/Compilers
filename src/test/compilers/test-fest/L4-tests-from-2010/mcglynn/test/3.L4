@@ -1,0 +1,12 @@
+((begin (print (:even 40))
+        (print (:half 40)))
+
+ (:even (x)
+   (if (= x 0)
+       1
+       (- 1 (:even (- x 1)))))
+
+ (:half (x)
+   (if (= x 0)
+       0
+       (+ 1 (:half (- x 2))))))

@@ -1,0 +1,4 @@
+((((lambda (f) (lambda (x) (lambda (y) ((f x) y))))
+   (lambda (x) (lambda (y) (x y))))
+  number?)
+ 11)

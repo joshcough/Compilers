@@ -1,0 +1,1 @@
+((print (let ((a (new-tuple (+ 1 2) 4 (new-tuple 4 (new-tuple 5 6 7)) 6))) a)))

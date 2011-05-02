@@ -1,0 +1,28 @@
+((print
+ (let ((p 85))
+   (let ((g3612
+          (begin
+            p
+            (begin
+              (let ((g3613 17)) g3613)
+              (print
+               (begin
+                 p
+                 (begin
+                   p
+                   (let ((g3614 13))
+                     (print
+                      (let ((g3615 g3614))
+                        g3614))))))))))
+     (let ((g3616
+            (begin
+              g3612
+              (let ((g3617
+                     (begin
+                       p
+                       (print
+                        (let ((g3618 14))
+                          (let ((g3619 g3618))
+                            (print g3618)))))))
+                (print g3612)))))
+       g3612)))))

@@ -1,0 +1,1 @@
+((let ((tmp2 (:fib 10))) (print tmp2)) (:fib (tmp1) (let ((tmp3 (<= tmp1 1))) (if tmp3 1 (let ((tmp4 (- tmp1 1))) (let ((tmp5 (:fib tmp4))) (let ((tmp6 (- tmp1 2))) (let ((tmp7 (:fib tmp6))) (+ tmp5 tmp7)))))))))

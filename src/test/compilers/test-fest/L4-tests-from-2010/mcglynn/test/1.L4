@@ -1,0 +1,6 @@
+((print (:fib 10))
+
+ (:fib (tmp1)
+   (if (<= tmp1 1)
+       1
+       (+ (:fib (- tmp1 1)) (:fib (- tmp1 2))))))

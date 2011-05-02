@@ -1,0 +1,11 @@
+(let ([construct_object (lambda (initial_data)
+                          (letrec ([object (new-tuple initial_data
+                                                      (lambda () (aref object 0))
+                                                      (lambda (new_data) (aset object 0 new_data)))])
+                            object))])
+  (let ([access_object (lambda (object) ((aref object 1)))])
+    (let ([mutate_object (lambda (object new_data) ((aref object 2) new_data))])
+      (let ([my_object (construct_object 5)])
+        (begin (print (access_object my_object))
+        (begin (mutate_object my_object 6)
+               (print (access_object my_object))))))))

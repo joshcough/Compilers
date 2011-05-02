@@ -1,0 +1,14 @@
+((print (let ((g1867
+       (new-array
+        10
+        (new-array
+         10
+         (print
+          (new-array
+           10
+           (new-array
+            10
+            (new-array
+             10
+             (print 2)))))))))
+  (begin (print g1867) 0))))

@@ -1,0 +1,10 @@
+((print (let ((cl (begin (+ 2 3)
+			 (let ((z (begin (print 8)
+					 (print 9))))
+			   (begin (print 10) 
+				  (make-closure :fun
+						(new-tuple (print 4)
+							   (begin 5 (+ 3 4)))))))))
+          (print ((closure-proc (begin (print 2000) cl)) 5 6))))
+ (:fun (a b)
+       (begin (print a) (print b))))

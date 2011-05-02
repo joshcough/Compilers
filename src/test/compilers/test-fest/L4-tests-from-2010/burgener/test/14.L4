@@ -1,0 +1,3 @@
+((let ((x (+ 2 4))) (begin (:fun2 x 1 2) :fun1)) 
+ (:fun1 () (print 1)) 
+ (:fun2 (a b c) (if a (print b) (print c))))

@@ -1,0 +1,5 @@
+(print ((lambda (a b c d) (+ (aref a 0)
+                             (+ (aref b 0)
+                                (+ (aref c 0)
+                                   (aref d 0)))))
+        (new-tuple 1) (new-tuple 2) (new-array 3 3) (new-array 4 4)))

@@ -1,0 +1,23 @@
+((:go 5 5)
+ 
+ (:go (a b)
+   (begin 
+     ((if (= a 1) :f1
+       (if (= a 2) :f2
+        (if (= a 3) :f3
+         (if (= a 4) :f4
+                     :f5)))) b)
+     (if (* (= a b) (= a 1))
+         99
+         (:go (if (= b 1) (- a 1) a)
+              (if (= b 1) 5 (- b 1))))))
+
+ (:f1 (n) (print (+ n 1)))
+
+ (:f2 (n) (print (+ n 2)))
+
+ (:f3 (n) (print (+ n 3)))
+
+ (:f4 (n) (print (+ n 4)))
+
+ (:f5 (n) (print (+ n 5))))

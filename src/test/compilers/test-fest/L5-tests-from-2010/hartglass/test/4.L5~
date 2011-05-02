@@ -1,0 +1,6 @@
+(letrec ([x (lambda (y)
+              (if (< y 2)
+                  0
+                  (begin (print ((if (< y 5) + -) y 5))
+                         (x (- y 1)))))]
+         (x 11)))

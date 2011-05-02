@@ -1,0 +1,31 @@
+((print
+  (:f
+   (new-tuple
+    4
+    (new-tuple
+     (new-tuple 16 3)
+     (new-tuple (new-tuple) (new-tuple))
+     (new-tuple 12 (new-tuple))
+     (print 7))
+    6
+    (+ (- 10 19) (print 6))
+    (print 16)
+    (print 19))
+   (new-array
+    (- 10 2)
+    (new-tuple
+     14
+     (new-tuple
+      11
+      (new-tuple 15 (new-tuple))
+      15
+      10)
+     (print (+ 11 19))
+     19
+     4
+     7))))
+ (:f
+  (a b)
+  (begin
+    (begin (print a) (print b))
+    (print (+ (alen a) (alen b))))))

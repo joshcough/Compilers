@@ -1,0 +1,81 @@
+((print (:f (:g (:h 100 200 300) (:f 400))))
+ (:f
+  (a)
+  (let ((g5428
+         (begin
+           (begin
+             (let ((g5429
+                    (let ((g5430
+                           (let ((g5431
+                                  (let ((g5432
+                                         a))
+                                    g5432)))
+                             (let ((g5433 g5431))
+                               (print
+                                (let ((g5434
+                                       g5433))
+                                  g5433))))))
+                      g5430)))
+               (+
+                (let ((g5435
+                       (let ((g5436 7)) g5436)))
+                  (let ((g5437 6))
+                    (print g5429)))
+                (let ((g5438 19))
+                  (let ((g5439 8)) g5438))))
+             (let ((g5440 3))
+               (let ((g5441
+                      (let ((g5442
+                             (print
+                              (let ((g5443
+                                     g5440))
+                                (print g5440)))))
+                        (<
+                         (print g5440)
+                         (let ((g5444 2))
+                           g5442)))))
+                 a)))
+           (+
+            (let ((g5445 a)) a)
+            (begin
+              a
+              (print
+               (let ((g5446 1))
+                 (let ((g5447 (print g5446)))
+                   (let ((g5448 (- g5446 g5446)))
+                     g5447)))))))))
+    (begin
+      (let ((g5449
+             (begin
+               (print
+                (print
+                 (let ((g5450
+                        (<=
+                         (print
+                          (print (print g5428)))
+                         g5428)))
+                   (let ((g5451 19))
+                     (*
+                      (= g5450 g5450)
+                      (print a))))))
+               (let ((g5452 8)) g5428))))
+        a)
+      a)))
+ (:g
+  (a b)
+  (begin
+    b
+    (let ((g5453
+           (let ((g5454
+                  (print
+                   (let ((g5455
+                          (let ((g5456 11))
+                            (+ b (- b g5456)))))
+                     (let ((g5457 (< a b)))
+                       (print
+                        (print
+                         (let ((g5458 6))
+                           a))))))))
+             (let ((g5459 7)) g5459))))
+      g5453)))
+ (:h (a b c) c))

@@ -1,0 +1,2 @@
+(let ([x (lambda (y) y)])
+  (print (x 4)))

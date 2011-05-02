@@ -1,0 +1,8 @@
+(let ([test_unary (lambda (x a b c)
+                    (begin (print (x a))
+                    (begin (print (x b))
+                           (print (x c)))))])
+  (begin (test_unary number? 1 (new-tuple 5 6 7 8 9) (new-array 5 5))
+  (begin (test_unary a?      1 (new-tuple 5 6 7 8 9) (new-array 5 5))
+  (begin (test_unary alen    (new-tuple) (new-tuple 5 6 7 8 9) (new-array 5 5))
+         (test_unary print   1 (new-tuple 5 6 7 8 9) (new-array 5 5))))))

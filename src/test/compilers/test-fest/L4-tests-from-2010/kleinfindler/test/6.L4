@@ -1,0 +1,5 @@
+((print (:f1 1 2 3))
+ (:f1 (a b d) (let ((a (let ((b (:c d))) (:b b)))) (:a a)))
+ (:c (x) x)
+ (:b (x) x)
+ (:a (x) x))

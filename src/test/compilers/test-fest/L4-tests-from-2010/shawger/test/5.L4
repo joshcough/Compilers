@@ -1,0 +1,4 @@
+((let ([x (+ 1 2)])
+  (:double (let ([y x]) (+ y 2))))
+ (:double (x)
+  (print (* 2 x))))  

@@ -1,0 +1,9 @@
+(let ([Y (lambda (fun)
+           ((lambda (x) (x x))
+            (lambda (x) (lambda (y) ((fun (x x)) y)))))])
+  (let ([fact (lambda (f)
+                (lambda (x)
+                  (if (<= x 1)
+                      1
+                      (* x (f (- x 1))))))])
+    (print ((Y fact) 5))))

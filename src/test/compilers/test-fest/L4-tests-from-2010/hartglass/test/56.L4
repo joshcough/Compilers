@@ -1,0 +1,11 @@
+((print
+  (closure-vars (begin 1
+                       (make-closure :f
+                                     (begin 1
+                                            (if 1
+                                                (new-tuple 3 4)
+                                                16)))))
+  )
+ (:f (a b)
+     (begin (print (+ a b))
+            (+ a (+ a b)))))

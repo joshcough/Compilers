@@ -1,0 +1,64 @@
+((print (:g5801 (print (print 15)) 19 11))
+ (:g5801
+  (a b c)
+  (begin
+    (let ((g5802 5)) c)
+    (=
+     c
+     (let ((g5803
+            (let ((g5804 7)) g5804)))
+       (let ((g5805 11))
+         (let ((g5806 18))
+           (let ((g5807 g5806))
+             g5803)))))))
+ (:g5808
+  (a b c)
+  (let ((g5809
+         (let ((g5810 9))
+           (let ((g5811
+                  (let ((g5812
+                         (let ((g5813 3))
+                           (print
+                            (let ((g5814
+                                   (let ((g5815
+                                          g5813))
+                                     g5810)))
+                              (let ((g5816
+                                     (=
+                                      g5810
+                                      c)))
+                                a))))))
+                    a)))
+             (let ((g5817 2))
+               (let ((g5818
+                      (let ((g5819 c))
+                        b)))
+                 g5818))))))
+    (let ((g5820 4))
+      (begin
+        (begin
+          (let ((g5821 16)) a)
+          (let ((g5822 13))
+            (- c (print (print g5809)))))
+        (begin
+          a
+          (let ((g5823 15))
+            (print
+             (let ((g5824 18))
+               (let ((g5825 8))
+                 g5823)))))))))
+ (:g5826
+  (a b c)
+  (begin
+    (begin a (let ((g5827 14)) a))
+    (*
+     (+
+      (let ((g5828 b))
+        (let ((g5829 (print a)))
+          (print
+           (let ((g5830
+                  (print (print g5829))))
+             (= g5829 a)))))
+      (let ((g5831 10)) a))
+     b)))
+ (:g5832 (a b c) c))

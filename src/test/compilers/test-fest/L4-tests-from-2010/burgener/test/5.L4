@@ -1,0 +1,3 @@
+((if 8 (:print1 1) (:print2 1)) 
+ (:print1 (x) (print 1)) 
+ (:print2 (x) (print 2)))

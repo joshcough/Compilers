@@ -1,0 +1,33 @@
+((print
+  (print
+   (print
+    (print
+     (print
+      (print
+       (print
+        (<
+         (begin
+           17
+           (let ((g6325 2))
+             (print
+              (let ((g6326
+                     (let ((g6327 0))
+                       (<=
+                        g6325
+                        (print g6325)))))
+                g6325))))
+         (begin
+           (let ((g6328
+                  (let ((g6329 16))
+                    (-
+                     (let ((g6330 17))
+                       (print g6330))
+                     g6329))))
+             (*
+              g6328
+              (let ((g6331
+                     (print
+                      (print g6328))))
+                (let ((g6332 g6328))
+                  g6331))))
+           19))))))))))

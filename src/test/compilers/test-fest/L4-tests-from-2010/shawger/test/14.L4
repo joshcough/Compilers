@@ -1,0 +1,3 @@
+((print (:twoarg 1 2))
+ (:twoarg (x y)
+  (* x y)))

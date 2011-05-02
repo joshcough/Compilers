@@ -1,0 +1,100 @@
+((:g852
+  (begin
+    17
+    (print
+     (let ((g876 9))
+       (let ((g877
+              (let ((g878
+                     (let ((g879 2))
+                       g876)))
+                (let ((g880
+                       (<= g876 g876)))
+                  (print (print g878))))))
+         (let ((g881
+                (let ((g882 g877))
+                  (print
+                   (+
+                    g882
+                    (print g876))))))
+           g877)))))
+  (let ((g883 4)) (begin g883 g883))
+  (let ((g884 5))
+    (begin
+      g884
+      (let ((g885
+             (-
+              (let ((g886 (+ g884 g884)))
+                g886)
+              (let ((g887 2))
+                (- g887 g887)))))
+        (let ((g888 14))
+          (*
+           g888
+           (let ((g889
+                  (let ((g890 9)) g888)))
+             (let ((g891 11))
+               (print g888)))))))))
+ (:g845
+  (a b c)
+  (begin
+    (print a)
+    (begin
+      (let ((g846 6)) (let ((g847 17)) b))
+      (let ((g848 10)) c))))
+ (:g849
+  (a b c)
+  (begin
+    (let ((g850 3)) c)
+    (let ((g851 b)) a)))
+ (:g852 (a b c) a)
+ (:g853
+  (a b c)
+  (let ((g854 b))
+    (begin
+      (- b (print c))
+      (begin
+        (let ((g855 c)) g854)
+        (begin
+          (let ((g856 16))
+            (let ((g857 13)) c))
+          (let ((g858 17))
+            (let ((g859 11))
+              (let ((g860 5)) c))))))))
+ (:g861
+  (a b c)
+  (let ((g862
+         (begin
+           a
+           (=
+            (begin
+              (let ((g863 9))
+                (let ((g864 b))
+                  (print
+                   (+
+                    (<= (print b) g863)
+                    (= (print g864) c)))))
+              (let ((g865 17))
+                (let ((g866 3)) g865)))
+            c))))
+    (let ((g867
+           (=
+            (+
+             (let ((g868 11)) c)
+             (let ((g869
+                    (<
+                     (print
+                      (let ((g870 7)) b))
+                     c)))
+               (+
+                g862
+                (let ((g871 18))
+                  (print c)))))
+            a)))
+      g867)))
+ (:g872
+  (a b c)
+  (let ((g873 5))
+    (begin
+      (+ b (print a))
+      (let ((g874 (let ((g875 g873)) a)))
+        a)))))

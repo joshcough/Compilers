@@ -1,0 +1,6 @@
+((print (:sum_of_squares 5 15))
+
+ (:sum_of_squares (lower upper)
+   (if (= lower upper)
+       (* lower lower)
+       (+ (* lower lower) (:sum_of_squares (+ lower 1) upper)))))

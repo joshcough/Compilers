@@ -1,0 +1,4 @@
+((let ((b 1))
+   (let ((c 2)) (let ((d 3)) (print (let ((d ((:a b) c))) d)))))
+ (:a (x) :i)
+ (:i (x) x))

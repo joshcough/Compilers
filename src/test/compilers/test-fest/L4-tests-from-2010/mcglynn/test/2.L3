@@ -1,0 +1,1 @@
+((let ((tmp1 (:sum_of_squares 5 15))) (print tmp1)) (:sum_of_squares (lower upper) (let ((tmp2 (= lower upper))) (if tmp2 (* lower lower) (let ((tmp3 (* lower lower))) (let ((tmp4 (+ lower 1))) (let ((tmp5 (:sum_of_squares tmp4 upper))) (+ tmp3 tmp5))))))))

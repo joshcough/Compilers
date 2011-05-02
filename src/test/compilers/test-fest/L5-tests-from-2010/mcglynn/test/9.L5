@@ -1,0 +1,5 @@
+(let ([test_ternary (lambda (x a b c)
+                      (x a b c))])
+  (let ([arr (new-tuple 4 5 6)])
+    (begin (test_ternary aset arr 0 9)
+           (print arr))))

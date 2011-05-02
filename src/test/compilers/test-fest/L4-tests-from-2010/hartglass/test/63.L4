@@ -1,0 +1,84 @@
+((print
+  (-
+   (:g1840
+    (let ((g1865 0)) g1865)
+    (print (print 3))
+    (* (+ 17 (print 4)) 15))
+   (<
+    (=
+     (:g1856 3 5 3)
+     (:g1838 5 (print 7) (print 10)))
+    (:g1840
+     (print 14)
+     (print 9)
+     (* 9 (print 16))))))
+ (:g1838 (a b c) (let ((g1839 8)) c))
+ (:g1840
+  (a b c)
+  (let ((g1841
+         (begin
+           (let ((g1842
+                  (let ((g1843 16))
+                    (let ((g1844
+                           (let ((g1845
+                                  (=
+                                   a
+                                   (<=
+                                    (*
+                                     b
+                                     b)
+                                    a))))
+                             (let ((g1846
+                                    g1845))
+                               (print
+                                (print
+                                 c))))))
+                      (let ((g1847
+                             (let ((g1848
+                                    12))
+                               g1843)))
+                        g1847)))))
+             (begin
+               g1842
+               (let ((g1849 c))
+                 (let ((g1850
+                        (+
+                         c
+                         (let ((g1851 12))
+                           (print c)))))
+                   (let ((g1852 10))
+                     g1842)))))
+           a)))
+    (-
+     c
+     (let ((g1853
+            (begin
+              b
+              (let ((g1854 1))
+                (print
+                 (+
+                  g1841
+                  (let ((g1855 11))
+                    g1855)))))))
+       g1841))))
+ (:g1856 (a b c) c)
+ (:g1857
+  (a b c)
+  (begin
+    (let ((g1858
+           (+
+            (let ((g1859
+                   (let ((g1860 2))
+                     (let ((g1861
+                            (print a)))
+                       (print a)))))
+              b)
+            (begin
+              c
+              (-
+               b
+               (let ((g1862 6))
+                 (- b g1862)))))))
+      (let ((g1863 (let ((g1864 3)) c)))
+        g1863))
+    (print b))))

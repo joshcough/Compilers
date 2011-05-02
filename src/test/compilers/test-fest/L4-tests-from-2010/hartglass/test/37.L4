@@ -1,0 +1,78 @@
+((print (:g5865 12 10 (= 1 4)))
+ (:g5833
+  (a b c)
+  (let ((g5834
+         (begin
+           (let ((g5835 11))
+             (let ((g5836
+                    (let ((g5837
+                           (let ((g5838
+                                  1))
+                             c)))
+                      (<= b b))))
+               (let ((g5839 13))
+                 (print
+                  (<=
+                   a
+                   (print
+                    (+ g5835 a)))))))
+           (+
+            a
+            (*
+             (*
+              (let ((g5840
+                     (let ((g5841 0)) b)))
+                b)
+              (let ((g5842
+                     (let ((g5843
+                            (- a c)))
+                       (let ((g5844 14))
+                         c))))
+                (print (print c))))
+             (let ((g5845 5)) a))))))
+    b))
+ (:g5846
+  (a b c)
+  (begin
+    (let ((g5847 2)) c)
+    (begin
+      (let ((g5848 17))
+        (begin
+          (let ((g5849 c))
+            (let ((g5850
+                   (let ((g5851 g5848))
+                     (=
+                      (print g5849)
+                      (print
+                       (print g5851))))))
+              g5850))
+          (let ((g5852 19))
+            (-
+             (<=
+              (let ((g5853 g5852)) a)
+              (let ((g5854 2)) g5854))
+             b))))
+      (begin
+        (let ((g5855 c))
+          (let ((g5856 17))
+            (let ((g5857 18))
+              (let ((g5858 12))
+                (- a (print g5855))))))
+        (let ((g5859
+               (let ((g5860 14))
+                 (let ((g5861 (print a)))
+                   (-
+                    (let ((g5862 15))
+                      (print a))
+                    b)))))
+          (let ((g5863
+                 (<=
+                  b
+                  (let ((g5864 19))
+                    (- c b)))))
+            c))))))
+ (:g5865
+  (a b c)
+  (let ((g5866 a))
+    (let ((g5867 c)) (:g5846 1 2 3))))
+ (:g5868 (a b c) (print (begin a c))))

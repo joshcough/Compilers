@@ -1,0 +1,4 @@
+((let ((arr (new-array 1 (make-closure :fun (new-tuple 5 6)))))
+  ((closure-proc (aref arr 0)) (+ 1 (print 7)) 2))
+ (:fun (a b)
+       (begin (print a) (print (* b a)))))

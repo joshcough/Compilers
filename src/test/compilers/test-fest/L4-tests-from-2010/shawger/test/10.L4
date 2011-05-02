@@ -1,0 +1,7 @@
+((print (:double (:triple (:quad 1))))
+ (:double (x)
+  (* 2 x))
+ (:triple (x)
+  (* 3 x))
+ (:quad (x)
+  (* 4 x)))

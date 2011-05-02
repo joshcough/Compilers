@@ -1,0 +1,1 @@
+(print (let ((z 5)) ((lambda () (print z)))))

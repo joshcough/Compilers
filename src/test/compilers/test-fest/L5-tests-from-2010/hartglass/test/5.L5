@@ -1,0 +1,2 @@
+((lambda (x) (begin (print x)
+                    (let ([x 8]) (print x)))) 10)

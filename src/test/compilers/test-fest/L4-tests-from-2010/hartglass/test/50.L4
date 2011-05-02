@@ -1,0 +1,19 @@
+((print
+ (print
+  (print
+   (let ((g1309
+          (new-array
+           3
+           (+
+            (let ((g1310
+                   (let ((g1311
+                          (print 15)))
+                     (print
+                      (print
+                       (print g1311))))))
+              (let ((g1312 g1310))
+                (print (print g1310))))
+            (-
+             (* (print (print 0)) 2)
+             9)))))
+     (begin (print g1309) 1))))))

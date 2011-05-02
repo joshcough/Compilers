@@ -1,0 +1,1 @@
+(letrec ((g (lambda (x) 1))) (print (g 2)))

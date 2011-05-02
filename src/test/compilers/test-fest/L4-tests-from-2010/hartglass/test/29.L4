@@ -1,0 +1,7 @@
+((print (new-array
+ (let ((g4132 (print 9)))
+   (let ((g4133 g4132))
+     (* g4133 (let ((g4134 13)) g4134))))
+ (+
+  (print (- 17 (print 5)))
+  (let ((g4135 1)) (print g4135))))))

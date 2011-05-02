@@ -1,0 +1,565 @@
+((print (if (+ 1 1)
+  (print
+   (let ((g1501
+          (new-tuple
+           12
+           (new-tuple
+            (+ 9 (print (< 9 16)))
+            (let ((g1502 6))
+              (print
+               (let ((g1503 g1502))
+                 (print g1502))))
+            12
+            (let ((g1504 8))
+              (-
+               g1504
+               (+
+                (-
+                 (print g1504)
+                 (print g1504))
+                g1504)))
+            (new-tuple
+             (new-tuple
+              14
+              (new-tuple 9 (new-tuple))
+              (new-tuple
+               (new-tuple)
+               (new-tuple))
+              9)
+             (new-tuple
+              (print 19)
+              14
+              7
+              (new-tuple 13 12))
+             (<=
+              (print 5)
+              (* (print 4) 7))
+             (print 2)
+             11
+             (new-tuple
+              (new-tuple
+               (new-tuple)
+               (new-tuple))
+              13
+              6
+              (new-tuple 3 6)))
+            12
+            (new-tuple
+             (new-tuple
+              (new-tuple (new-tuple) 14)
+              3
+              19
+              15)
+             2
+             (= 17 (print 14))
+             (new-tuple
+              9
+              2
+              (new-tuple (new-tuple) 11)
+              (new-tuple (new-tuple) 18))
+             (print 14)
+             16)
+            (let ((g1505
+                   (let ((g1506 10))
+                     g1506)))
+              g1505))
+           (new-tuple
+            (let ((g1507
+                   (let ((g1508 9))
+                     g1508)))
+              (print g1507))
+            (let ((g1509 11)) g1509)
+            4
+            16
+            (let ((g1510 10)) g1510)
+            (new-tuple
+             (new-tuple
+              (print 0)
+              (print 6)
+              (print 2)
+              (new-tuple 14 11))
+             (new-tuple
+              (print 5)
+              16
+              (new-tuple 17 (new-tuple))
+              (new-tuple
+               (new-tuple)
+               (new-tuple)))
+             (new-tuple
+              9
+              9
+              (new-tuple 6 10)
+              (print 18))
+             (let ((g1511
+                    (<
+                     (print 1)
+                     (print 2))))
+               g1511)
+             (+ (+ 10 0) 15)
+             (new-tuple
+              2
+              12
+              (new-tuple 11 15)
+              (new-tuple 1 14)))
+            (let ((g1512 6))
+              (let ((g1513 g1512)) g1513))
+            (new-tuple
+             (print 19)
+             (new-tuple 16 9 4 12)
+             (new-tuple
+              16
+              1
+              (new-tuple 13 (new-tuple))
+              (print 0))
+             (let ((g1514 1))
+               (print g1514))
+             (print (- 18 (print 10)))
+             9))
+           8
+           (begin
+             (let ((g1515 7))
+               (let ((g1516 g1515))
+                 (+
+                  (let ((g1517 2)) g1515)
+                  (let ((g1518 3))
+                    g1516))))
+             (let ((g1519 19))
+               (let ((g1520 15))
+                 (let ((g1521
+                        (+
+                         (print g1520)
+                         (print g1520))))
+                   (let ((g1522 g1520))
+                     (print g1522))))))
+           (new-tuple
+            0
+            (let ((g1523
+                   (let ((g1524 9))
+                     (let ((g1525 7))
+                       g1525))))
+              (print
+               (print (print g1523))))
+            (new-tuple
+             (new-tuple
+              7
+              (print 7)
+              (new-tuple 14 15)
+              (print 2))
+             16
+             (new-tuple
+              (new-tuple 14 0)
+              19
+              (print 17)
+              3)
+             (new-tuple
+              17
+              1
+              (print 3)
+              (new-tuple (new-tuple) 3))
+             (new-tuple
+              (print 7)
+              (new-tuple 11 18)
+              (new-tuple 8 16)
+              (print 6))
+             (new-tuple
+              (new-tuple (new-tuple) 4)
+              (print 16)
+              (new-tuple 14 0)
+              1))
+            (new-tuple
+             8
+             13
+             (let ((g1526 1)) g1526)
+             (print 16)
+             (let ((g1527 17)) g1527)
+             1)
+            (*
+             (* (print (print 15)) 15)
+             (let ((g1528 10)) g1528))
+            15
+            (print
+             (-
+              (let ((g1529 (print 9)))
+                (- (print g1529) g1529))
+              (print (+ 4 (print 18)))))
+            1)
+           5
+           (let ((g1530 5))
+             (let ((g1531
+                    (let ((g1532
+                           (print
+                            (print
+                             (print
+                              (print
+                               g1530))))))
+                      g1532)))
+               g1530))
+           (new-tuple
+            (let ((g1533
+                   (let ((g1534 15))
+                     g1534)))
+              g1533)
+            (print 18)
+            (new-tuple
+             (new-tuple
+              (print 0)
+              (print 7)
+              2
+              (new-tuple (new-tuple) 7))
+             (new-tuple
+              3
+              2
+              12
+              (new-tuple
+               (new-tuple)
+               (new-tuple)))
+             (+ 11 2)
+             (< (print 0) 16)
+             3
+             (+ 13 (print 12)))
+            (+ 2 (print 6))
+            (let ((g1535 12))
+              (-
+               g1535
+               (<
+                (* g1535 (print g1535))
+                (print g1535))))
+            6
+            (new-tuple
+             (new-tuple
+              8
+              2
+              7
+              (new-tuple 15 (new-tuple)))
+             (print 8)
+             10
+             (< 17 (< (print 6) 16))
+             (new-tuple
+              (new-tuple 2 19)
+              (new-tuple (new-tuple) 12)
+              12
+              (new-tuple 1 (new-tuple)))
+             (let ((g1536 7))
+               (print (print g1536))))
+            18)
+           (new-tuple
+            8
+            (new-tuple
+             (new-tuple
+              (new-tuple 9 (new-tuple))
+              3
+              12
+              (print 2))
+             (- 18 19)
+             12
+             (- 14 (- 3 11))
+             (print (< (print 4) 6))
+             5)
+            (let ((g1537 11))
+              (- g1537 g1537))
+            7
+            (let ((g1538 15))
+              (<
+               (<
+                (+ g1538 (print g1538))
+                g1538)
+               (print g1538)))
+            (print (print (print 10)))
+            (new-tuple
+             (print (- 14 0))
+             (new-tuple
+              17
+              17
+              (new-tuple 6 6)
+              17)
+             (new-tuple
+              13
+              (new-tuple 3 (new-tuple))
+              8
+              (new-tuple 4 (new-tuple)))
+             9
+             9
+             3)
+            1))))
+     (let ((g1539 (new-array 10 4)))
+       (begin
+         (print g1539)
+         (begin
+           (new-array
+            10
+            (begin 2 (aref g1501 2)))
+           (aref g1501 5))))))
+  (print
+   (let ((g1540
+          (new-array
+           10
+           (let ((g1541
+                  (new-tuple
+                   (-
+                    (print 8)
+                    (let ((g1542 0))
+                      g1542))
+                   (begin
+                     (let ((g1543
+                            (let ((g1544
+                                   (let ((g1545
+                                          19))
+                                     (print
+                                      (print
+                                       g1545)))))
+                              g1544)))
+                       (print
+                        (let ((g1546
+                               (-
+                                (print
+                                 g1543)
+                                g1543)))
+                          g1546)))
+                     (let ((g1547 16))
+                       g1547))
+                   (new-tuple
+                    17
+                    11
+                    (let ((g1548 3))
+                      (print g1548))
+                    2
+                    (new-tuple
+                     (new-tuple
+                      17
+                      (new-tuple
+                       (new-tuple)
+                       17)
+                      (new-tuple 4 9)
+                      14)
+                     (*
+                      10
+                      (print (print 6)))
+                     (print (print 8))
+                     12
+                     (new-tuple
+                      (new-tuple 17 3)
+                      (print 1)
+                      (print 13)
+                      2)
+                     (new-tuple
+                      11
+                      9
+                      (print 8)
+                      (print 8)))
+                    (let ((g1549 14))
+                      (let ((g1550
+                             (let ((g1551
+                                    5))
+                               g1549)))
+                        g1549))
+                    (print 4)
+                    (print
+                     (print
+                      (let ((g1552 11))
+                        g1552))))
+                   8
+                   16
+                   (new-tuple
+                    0
+                    (let ((g1553 14))
+                      g1553)
+                    (new-tuple
+                     (let ((g1554 9))
+                       (=
+                        g1554
+                        (print g1554)))
+                     0
+                     3
+                     19
+                     (print 19)
+                     (new-tuple
+                      (new-tuple 12 12)
+                      (print 14)
+                      3
+                      2))
+                    (print
+                     (let ((g1555 19))
+                       g1555))
+                    1
+                    (let ((g1556 0))
+                      (+
+                       g1556
+                       (<
+                        g1556
+                        (+ g1556 g1556))))
+                    (let ((g1557 4))
+                      (print
+                       (-
+                        (=
+                         (print g1557)
+                         g1557)
+                        g1557)))
+                    (new-tuple
+                     (new-tuple
+                      12
+                      10
+                      (print 6)
+                      (new-tuple 9 7))
+                     19
+                     (new-tuple
+                      9
+                      8
+                      (new-tuple 13 6)
+                      14)
+                     (new-tuple
+                      (print 19)
+                      10
+                      19
+                      12)
+                     (new-tuple
+                      (new-tuple 17 6)
+                      14
+                      (print 12)
+                      (new-tuple 8 0))
+                     0))
+                   (let ((g1558 9)) g1558)
+                   (let ((g1559
+                          (let ((g1560 3))
+                            g1560)))
+                     g1559)
+                   (new-tuple
+                    6
+                    (new-tuple
+                     (new-tuple
+                      (new-tuple 14 5)
+                      4
+                      (new-tuple 7 17)
+                      7)
+                     (let ((g1561 11))
+                       g1561)
+                     (new-tuple
+                      7
+                      8
+                      18
+                      (new-tuple
+                       2
+                       (new-tuple)))
+                     13
+                     2
+                     13)
+                    (print
+                     (let ((g1562 18))
+                       g1562))
+                    8
+                    (new-tuple
+                     0
+                     (let ((g1563
+                            (<
+                             (print 0)
+                             19)))
+                       g1563)
+                     6
+                     (print (- 6 15))
+                     (new-tuple 9 6 14 13)
+                     (new-tuple
+                      (new-tuple
+                       (new-tuple)
+                       8)
+                      (new-tuple
+                       (new-tuple)
+                       12)
+                      (new-tuple 2 18)
+                      (print 8)))
+                    (-
+                     (- 10 (= 8 0))
+                     (let ((g1564 5))
+                       g1564))
+                    (let ((g1565
+                           (let ((g1566
+                                  16))
+                             (+
+                              g1566
+                              (*
+                               g1566
+                               g1566)))))
+                      (print
+                       (- g1565 g1565)))
+                    (let ((g1567 6))
+                      (print g1567)))
+                   13)))
+             (if (+ 0 1)
+               (print 2)
+               (print
+                (let ((g1568
+                       (new-array
+                        10
+                        (new-array
+                         10
+                         0))))
+                  (begin
+                    (print g1568)
+                    (begin
+                      (begin
+                        (let ((g1569
+                               (new-array
+                                10
+                                5)))
+                          (begin
+                            (print g1569)
+                            (new-array
+                             10
+                             (new-array
+                              10
+                              (new-array
+                               10
+                               (new-array
+                                10
+                                (new-array
+                                 10
+                                 (print
+                                  7))))))))
+                        (aref g1568 7))
+                      (aref
+                       g1568
+                       1))))))))))
+     (begin
+       (print g1540)
+       (new-array
+        10
+        (begin
+          (let ((g1570
+                 (new-array
+                  10
+                  (let ((g1571
+                         (new-array
+                          10
+                          3)))
+                    (begin
+                      (print g1571)
+                      (new-array
+                       10
+                       (let ((g1572
+                              (new-array
+                               10
+                               7)))
+                         (begin
+                           (print g1572)
+                           5))))))))
+            (begin
+              (print g1570)
+              (let ((g1573
+                     (new-array 10 3)))
+                (begin
+                  (print g1573)
+                  (print
+                   (new-array
+                    10
+                    (begin
+                      (new-array
+                       10
+                       (new-array
+                        10
+                        (print
+                         (print
+                          (new-array
+                           10
+                           (print 0))))))
+                      (aref
+                       g1573
+                       2))))))))
+          (aref g1540 3)))))))))
