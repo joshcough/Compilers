@@ -39,7 +39,13 @@ class L4CompilerTests extends TestHelpers{
   compileETest("((b c) (+ (- c d) (* 1 2)))",
     "(let ((__x0 (b c))) (let ((__x1 (- c d))) (let ((__x2 (* 1 2))) (let ((__x3 (+ __x1 __x2))) (__x0 __x3)))))")
 
+  compileETest("(number? 7)", "(number? 7)")
+  compileETest("(number? c)", "(number? c)")
+  compileETest("(number? (b c))", "(let ((__x0 (b c))) (number? __x0))")
 
+  compileETest("(a? 7)", "(a? 7)")
+  compileETest("(a? c)", "(a? c)")
+  compileETest("(a? (b c))", "(let ((__x0 (b c))) (a? __x0))")
 
   def compileETest(code:String, expected:String) = {
     test(code){

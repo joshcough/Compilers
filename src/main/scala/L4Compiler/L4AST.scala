@@ -10,11 +10,14 @@ object L4AST {
   case class Func(label:Label, args:List[Variable], body: E) extends L4ASTNode
 
   sealed trait E extends L4ASTNode
+  sealed trait E1 extends E{ val e1: E; val rebuild: E => E }
+  sealed trait E2 extends E{ val e1: E; val e2: E; val rebuild: (E, E) => E }
+
   //(let ((x e)) e)
   case class Let(v:Variable, e:E, body:E) extends E
   case class IfStatement(e:E, truePath:E, falsePath:E) extends E
 
-  trait Biop extends E{ val left:E; val right:E; val rebuild:(E, E) => Biop }
+  trait Biop extends E2 { val left:E; val right:E; val e1 = left; val e2 = right }
   case class Add(left:E, right:E) extends Biop{ val rebuild = Add.apply _ }
   case class Sub(left:E, right:E) extends Biop{ val rebuild = Sub.apply _ }
   case class Mult(left:E, right:E) extends Biop{ val rebuild = Mult.apply _ }
@@ -24,9 +27,10 @@ object L4AST {
 
   case class Begin(l:E, r:E) extends E
 
-  sealed trait Pred extends E
-  case class IsNumber(e:E) extends Pred
-  case class IsArray(e:E) extends Pred
+
+  sealed trait Pred extends E1{ val e1: E }
+  case class IsNumber(e1:E) extends Pred{ val rebuild = IsNumber.apply _ }
+  case class IsArray(e1:E) extends Pred{ val rebuild = IsArray.apply _ }
 
   case class FunCall(e:E, args:List[E]) extends E
 
@@ -36,7 +40,7 @@ object L4AST {
   case class ASet(arr:E, loc:E, newVal: E) extends E
   case class ALen(arr:E) extends E
 
-  case class Print(e:E) extends E
+  case class Print(e1:E) extends E1{ val rebuild = Print.apply _ }
   case class MakeClosure(l:Label, e:E) extends E
   case class ClosureProc(e:E) extends E
   case class ClosureVars(e:E) extends E
