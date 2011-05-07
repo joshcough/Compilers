@@ -14,13 +14,13 @@ object L4AST {
   case class Let(v:Variable, e:E, body:E) extends E
   case class IfStatement(e:E, truePath:E, falsePath:E) extends E
 
-  sealed trait Biop extends E { val left:E; val right:E }
-  case class Add(left:E, right:E) extends Biop
-  case class Sub(left:E, right:E) extends Biop
-  case class Mult(left:E, right:E) extends Biop
-  case class LessThan(left:E, right:E) extends Biop
-  case class LessThanOrEqualTo(left:E, right:E) extends Biop
-  case class EqualTo(left:E, right:E) extends Biop
+  trait Biop extends E{ val left:E; val right:E; val rebuild:(E, E) => Biop }
+  case class Add(left:E, right:E) extends Biop{ val rebuild = Add.apply _ }
+  case class Sub(left:E, right:E) extends Biop{ val rebuild = Sub.apply _ }
+  case class Mult(left:E, right:E) extends Biop{ val rebuild = Mult.apply _ }
+  case class LessThan(left:E, right:E) extends Biop{ val rebuild = LessThan.apply _ }
+  case class LessThanOrEqualTo(left:E, right:E) extends Biop{ val rebuild = LessThanOrEqualTo.apply _ }
+  case class EqualTo(left:E, right:E) extends Biop{ val rebuild = EqualTo.apply _ }
 
   case class Begin(l:E, r:E) extends E
 
