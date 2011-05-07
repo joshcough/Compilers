@@ -25,7 +25,7 @@ trait L4Parser {
 
   //e ::= (let ([x d]) e) | (if v e e) | d
   def parseE(a:Any): E = a match {
-    case 'let :: List(List((x:Symbol), e1)) :: e2 :: Nil => Let(parseVar(x), parseE(e1), parseE(e2))
+    case 'let :: rest => parseLet(rest)
     case 'if :: testE :: thenE :: elseE :: Nil => IfStatement(parseE(testE), parseE(thenE), parseE(elseE))
     case '+  :: left :: right :: Nil => Add(parseE(left), parseE(right))
     case '-  :: left :: right :: Nil => Sub(parseE(left), parseE(right))
@@ -51,6 +51,14 @@ trait L4Parser {
     case s: Symbol => if (s.toString.startsWith("':")) parseLabel(s.toString) else parseVar(s)
 
     case e :: es => FunCall(parseE(e), es map parseE)
+  }
+
+  def parseLet(rest:List[Any]) = {
+    val argList = rest.head.asInstanceOf[List[Any]].head.asInstanceOf[List[Any]]
+    val x = parseVar(argList.head.asInstanceOf[Symbol])
+    val e1 = parseE(argList.last)
+    val body = parseE(rest.tail.head)
+    Let(x, e1, body)
   }
 
   // label ::= sequence of alpha-numeric characters or underscore,
