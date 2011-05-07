@@ -11,7 +11,7 @@ trait L4Printer {
       "(" + toCode(label) + " " + args.map(toCode).mkString("(", " ", ")") + " " + toCode(body) + ")"
 
     // e ::= (let ([x d]) e) | (if v e e) | d
-    case Let(x:X, e:E, body:E) => "(let ((" + toCode(x) + " " + toCode(e) + ")) " + toCode(body) + ")"
+    case Let(v:Variable, e:E, body:E) => "(let ((" + toCode(v) + " " + toCode(e) + ")) " + toCode(body) + ")"
     case IfStatement(e:E, t:E, f:E) => "(if " + toCode(e) + " " + toCode(t) + " " + toCode(f) + ")"
 
     //biop ::= + | - | * | < | <= | =

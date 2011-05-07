@@ -2,7 +2,6 @@ package L3Compiler
 
 import L3AST._
 import L2Compiler.L2AST.{
- // eax => l2eax, ebx => l2ebx, ecx => l2ecx, edi => l2edi, edx => l2edx, esi => l2esi,
   Func => L2Func,
   LessThan => L2LessThan,
   LessThanOrEqualTo => L2LessThanOrEqualTo,
@@ -20,7 +19,6 @@ trait L3ToL2Implicits {
   implicit def convertVar(v:Variable): L2Variable = L2Variable(v.name)
   implicit def convertNum(n:Num): L2Num = L2Num(n.n)
   implicit def convertLabel(l:Label): L2Label = L2Label(l.name)
-  implicit def convertX(x:X) = x match { case v: Variable => convertVar(v) }
   implicit def convertVToS(v:V): S = v match {
     case Num(n) => L2Num(n)
     case v:Variable => convertVar(v)
@@ -50,7 +48,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
 
   def compileE(e:E): List[L2Instruction] = e match {
     // e ::= (let ([x d]) e) | (if v e e) | d
-    case Let(x:X, d:D, body:E) => compileD(d=d, destination=x) ::: compileE(body)
+    case Let(v:Variable, d:D, body:E) => compileD(d=d, destination=v) ::: compileE(body)
     case IfStatement(v:V, t:E, f:E) => {
       val tmp = temp()
       val thenLabel = tempLabel()
@@ -79,7 +77,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
 
   def encode(v:V): S = v match {
     case Num(n) => L2Num(n*2+1)
-    case x:X => convertX(x)
+    case v:Variable => convertVar(v)
     case Label(name) => L2Label(name)
   }
 
@@ -162,7 +160,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     // TODO...does this loc definitly have to be a num????
     //(x <- (mem s n4))
     case ARef(arr:V, loc:V) => {
-      assert(arr.isInstanceOf[X])
+      assert(arr.isInstanceOf[Variable])
       assert(loc.isInstanceOf[Num])
       val index = destination
       val size = temp()
@@ -173,7 +171,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
       List(
         Assignment(index, encode(loc.asInstanceOf[Num])),
         RightShift(index, Num(1)),
-        Assignment(size, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
+        Assignment(size, MemRead(MemLoc(convertVar(arr.asInstanceOf[Variable]), Num(0)))),
         CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, checkNegativeLabel),
         LabelDeclaration(boundsFailLabel),
         LeftShift(index, Num(1)),
@@ -190,7 +188,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     }
 
     case ALen(arr:V) => List(
-      Assignment(destination, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
+      Assignment(destination, MemRead(MemLoc(convertVar(arr.asInstanceOf[Variable]), Num(0)))),
       LeftShift(destination, Num(1)),
       Increment(destination, Num(1))
     )
@@ -198,7 +196,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
     //((mem x n4) <- s)
     //(let ([x (aset v1 v2 v3)]) ...)
     case ASet(arr:V, loc:V, newVal: V) => {
-      assert(arr.isInstanceOf[X])
+      assert(arr.isInstanceOf[Variable])
       assert(loc.isInstanceOf[Num])
       val index = destination
       val size = temp()
@@ -209,7 +207,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
       List(
         Assignment(index, encode(loc.asInstanceOf[Num])),
         RightShift(index, Num(1)),
-        Assignment(size, MemRead(MemLoc(convertX(arr.asInstanceOf[X]), Num(0)))),
+        Assignment(size, MemRead(MemLoc(convertVar(arr.asInstanceOf[Variable]), Num(0)))),
         CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, checkNegativeLabel),
         LabelDeclaration(boundsFailLabel),
         LeftShift(index, Num(1)),

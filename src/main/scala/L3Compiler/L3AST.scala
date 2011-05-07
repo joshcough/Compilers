@@ -10,7 +10,7 @@ object L3AST {
   case class Func(label:Label, args:List[Variable], body: E) extends L3ASTNode
 
   sealed trait E extends L3ASTNode
-  case class Let(x:X, d:D, body:E) extends E
+  case class Let(v:Variable, d:D, body:E) extends E
   case class IfStatement(v:V, truePath:E, falsePath:E) extends E
   sealed trait D extends E
 
@@ -42,12 +42,7 @@ object L3AST {
   // v's (registers, numbers, labels)
   sealed trait V extends D
 
-  sealed trait X extends V with L3ASTNode with Ordered[X]{
-    val name: String
-    def compare(that:X) = this.name.compare(that.name)
-  }
-
-  case class Variable(name: String) extends X
+  case class Variable(name: String) extends V
 
   case class Num(n: Int) extends V {
     def *(i:Int) = Num(n*i)
@@ -57,39 +52,5 @@ object L3AST {
     override def toString = "Label(\"" + name + "\")"
   }
 
-//  // registers
-//  sealed trait Register extends V with X {
-//    val name: String
-//    override def toString = name
-//  }
-//  object XRegister {
-//    def apply(s: Symbol): Option[XRegister] = s match {
-//      case 'esi => Some(esi)
-//      case 'edi => Some(edi)
-//      case 'ebp => Some(ebp)
-//      case 'esp => Some(esp)
-//      case _ => None
-//    }
-//  }
-//  sealed abstract case class XRegister(name: String) extends Register
-//  object esi extends XRegister("esi")
-//  object edi extends XRegister("edi")
-//  object ebp extends XRegister("ebp")
-//  object esp extends XRegister("esp")
-//  object CXRegister {
-//    def apply(s: Symbol): Option[CXRegister] = s match {
-//      case 'eax => Some(eax)
-//      case 'ecx => Some(ecx)
-//      case 'edx => Some(edx)
-//      case 'ebx => Some(ebx)
-//      case _ => None
-//    }
-//  }
-//  sealed abstract case class CXRegister(name: String) extends Register {
-//    def low8 = "%" + name(1) + "l"
-//  }
-//  object eax extends CXRegister("eax")
-//  object ecx extends CXRegister("ecx")
-//  object edx extends CXRegister("edx")
-//  object ebx extends CXRegister("ebx")
+  def isV(d:D) = d.isInstanceOf[V]
 }

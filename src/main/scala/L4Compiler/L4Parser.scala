@@ -61,5 +61,5 @@ trait L4Parser {
     Label(s.drop(2)) // remove the ' and : from ':label.
   }
 
-  def parseVar(s: Symbol): X = Variable(s.toString.drop(1))
+  def parseVar(s: Symbol): Variable = Variable(s.toString.drop(1))
 }

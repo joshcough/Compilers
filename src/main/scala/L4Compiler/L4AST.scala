@@ -11,7 +11,7 @@ object L4AST {
 
   sealed trait E extends L4ASTNode
   //(let ((x e)) e)
-  case class Let(x:X, e:E, body:E) extends E
+  case class Let(v:Variable, e:E, body:E) extends E
   case class IfStatement(e:E, truePath:E, falsePath:E) extends E
 
   sealed trait Biop extends E { val left:E; val right:E }
@@ -41,18 +41,17 @@ object L4AST {
   case class ClosureProc(e:E) extends E
   case class ClosureVars(e:E) extends E
 
-  sealed trait X extends E with L4ASTNode with Ordered[X]{
-    val name: String
-    def compare(that:X) = this.name.compare(that.name)
+  trait V extends E
+
+  case class Variable(name: String) extends V with Ordered[Variable] {
+    def compare(that:Variable) = this.name.compare(that.name)
   }
 
-  case class Variable(name: String) extends X
-
-  case class Num(n: Int) extends E {
+  case class Num(n: Int) extends V {
     def *(i:Int) = Num(n*i)
     def +(i:Int) = Num(n+i)
   }
-  case class Label(name: String) extends E {
+  case class Label(name: String) extends V {
     override def toString = "Label(\"" + name + "\")"
   }
 }
