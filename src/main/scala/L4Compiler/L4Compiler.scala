@@ -2,9 +2,14 @@ package L4Compiler
 
 import L4AST._
 
-trait L4Compiler extends io.Reader with L4Parser with L4Printer with FunctionLifters {
+trait L4Compiler extends io.Reader with L4Parser with L4Printer {
 
-  def compileE(code:String) = L4Printer.toCode(find(parseE(read(code)), NoContext))
+  def compile(code:String) = {
+    val ast = parse(read(code))
+    L4Printer.toCode(L4(find(ast.main), ast.funs.map(find)))
+  }
+
+  def compileE(code:String) = L4Printer.toCode(find(parseE(read(code))))
   def isV(e:E): Boolean = e.isInstanceOf[V]
 
   trait Context
@@ -12,6 +17,9 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer with FunctionLif
   case class IfContext(thenPart:E, elsePart:E, k:Context) extends Context
   case class NAryContext(vs:List[V], rest:List[E], f: List[V] => E, k:Context) extends Context
   case object NoContext extends Context
+
+  def find(f:Func): Func = f.copy(body=find(f.body))
+  def find(e:E): E = find(e, NoContext)
 
   // find: L4-e context -> L3-e
   def find(e:E, k:Context): E = e match {
@@ -33,27 +41,9 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer with FunctionLif
   }
 
   def next(d:E, k:Context, f: V => E): E = {
-    if(isV(d)) f(d.asInstanceOf[V])
-    else { val x = newVar(); Let(x, d, f(x)) }
+    if(isV(d)) f(d.asInstanceOf[V]) else { val x = newVar(); Let(x, d, f(x)) }
   }
 
   private val count = Iterator.from(0)
   def newVar() = Variable("__x" + count.next())
-}
-
-trait FunctionLifters {
-  def lift1[T, U](f: T => U): (List[T]) => U = (ts:List[T]) => ts match {
-    case x::Nil => f(x)
-    case _ => error("expected 1 arg, but got: " + ts)
-  }
-
-  def lift2[T, U](f: (T, T) => U): (List[T]) => U = (ts:List[T]) => ts match {
-    case x::y::Nil => f(x, y)
-    case _ => error("expected 2 args, but got: " + ts)
-  }
-
-  def lift3[T, U](f: (T, T, T) => U): (List[T]) => U = (ts:List[T]) => ts match {
-    case x::y::z::Nil => f(x, y, z)
-    case _ => error("expected 3 args, but got: " + ts)
-  }
 }

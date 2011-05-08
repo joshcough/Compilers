@@ -16,7 +16,7 @@ object L4AST extends FunctionLifters{
     def e: E; def first = e; def rest = Nil; def rebuild1: E => E; def rebuild = lift1(rebuild1)
   }
   sealed trait E2 extends EN {
-    def e1: E; def e2: E; def first = e1; def rest = List(e2);
+    def e1: E; def e2: E; def first = e1; def rest = List(e2)
     def rebuild2: (E, E) => E; def rebuild = lift2(rebuild2)
   }
   sealed trait E3 extends EN {
@@ -27,7 +27,9 @@ object L4AST extends FunctionLifters{
   case class Let(v:Variable, e:E, body:E) extends E
   case class IfStatement(e:E, truePath:E, falsePath:E) extends E
   // TODO: find/fill for begin
-  case class Begin(l:E, r:E) extends E
+  case class Begin(e1:E, e2:E) extends E2 {
+    val rebuild2 = Begin.apply _
+  }
   case class FunCall(f:E, args:List[E]) extends EN {
     def first = f; def rest = args; def rebuild = (es:List[E]) => new FunCall(es.head, es.tail)
   }
@@ -58,7 +60,7 @@ object L4AST extends FunctionLifters{
   case class ASet(arr:E, loc:E, newVal: E) extends E3{
     val e1 = arr; val e2 = loc; val e3 = newVal; val rebuild3 = ASet.apply _
   }
-  case class ALen(arr:E)  extends E1{ val e = arr; val rebuild1= ALen.apply _ }
+  case class ALen(arr:E)  extends E1{ val e = arr; val rebuild1 = ALen.apply _ }
   case class Print(e:E) extends E1{ val rebuild1 = Print.apply _ }
   case class MakeClosure(l:Label, e:E) extends E1{ val rebuild1 = (e:E) => MakeClosure.apply(l, e) }
   case class ClosureProc(e:E) extends E1{ val rebuild1 = ClosureProc.apply _ }
@@ -76,5 +78,22 @@ object L4AST extends FunctionLifters{
   }
   case class Label(name: String) extends V {
     override def toString = "Label(\"" + name + "\")"
+  }
+}
+
+trait FunctionLifters {
+  def lift1[T, U](f: T => U): (List[T]) => U = (ts:List[T]) => ts match {
+    case x::Nil => f(x)
+    case _ => error("expected 1 arg, but got: " + ts)
+  }
+
+  def lift2[T, U](f: (T, T) => U): (List[T]) => U = (ts:List[T]) => ts match {
+    case x::y::Nil => f(x, y)
+    case _ => error("expected 2 args, but got: " + ts)
+  }
+
+  def lift3[T, U](f: (T, T, T) => U): (List[T]) => U = (ts:List[T]) => ts match {
+    case x::y::z::Nil => f(x, y, z)
+    case _ => error("expected 3 args, but got: " + ts)
   }
 }
