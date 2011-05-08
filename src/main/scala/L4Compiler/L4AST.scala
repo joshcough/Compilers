@@ -1,6 +1,6 @@
 package L4Compiler
 
-object L4AST {
+object L4AST extends FunctionLifters{
 
   sealed trait L4ASTNode
   //p::= (e (l (x ...) e) ...)
@@ -10,45 +10,59 @@ object L4AST {
   case class Func(label:Label, args:List[Variable], body: E) extends L4ASTNode
 
   sealed trait E extends L4ASTNode
-  sealed trait E1 extends E{ val e: E; val rebuild: E => E }
-  sealed trait E2 extends E{ val e1: E; val e2: E; val rebuild: (E, E) => E }
 
+  trait EN extends E { def first: E; def rest: List[E]; def rebuild: (List[E]) => E }
+  sealed trait E1 extends EN{
+    def e: E; def first = e; def rest = Nil; def rebuild1: E => E; def rebuild = lift1(rebuild1)
+  }
+  sealed trait E2 extends EN {
+    def e1: E; def e2: E; def first = e1; def rest = List(e2);
+    def rebuild2: (E, E) => E; def rebuild = lift2(rebuild2)
+  }
+  sealed trait E3 extends EN {
+    def e1: E; def e2: E; def e3: E; def first = e1; def rest = List(e2, e3);
+    def rebuild3: (E, E, E) => E; def rebuild = lift3(rebuild3)
+  }
   //(let ((x e)) e)
   case class Let(v:Variable, e:E, body:E) extends E
   case class IfStatement(e:E, truePath:E, falsePath:E) extends E
   // TODO: find/fill for begin
   case class Begin(l:E, r:E) extends E
-  case class FunCall(f:E, args:List[E]) extends E {
-    def rebuild = (vs:List[V]) => new FunCall(vs.head, vs.tail)
+  case class FunCall(f:E, args:List[E]) extends EN {
+    def first = f; def rest = args; def rebuild = (es:List[E]) => new FunCall(es.head, es.tail)
   }
 
   trait Biop extends E2 { val left:E; val right:E; val e1 = left; val e2 = right }
-  case class Add(left:E, right:E) extends Biop{ val rebuild = Add.apply _ }
-  case class Sub(left:E, right:E) extends Biop{ val rebuild = Sub.apply _ }
-  case class Mult(left:E, right:E) extends Biop{ val rebuild = Mult.apply _ }
-  case class LessThan(left:E, right:E) extends Biop{ val rebuild = LessThan.apply _ }
-  case class LessThanOrEqualTo(left:E, right:E) extends Biop{ val rebuild = LessThanOrEqualTo.apply _ }
-  case class EqualTo(left:E, right:E) extends Biop{ val rebuild = EqualTo.apply _ }
+  case class Add(left:E, right:E) extends Biop{ val rebuild2 = Add.apply _ }
+  case class Sub(left:E, right:E) extends Biop{ val rebuild2 = Sub.apply _ }
+  case class Mult(left:E, right:E) extends Biop{ val rebuild2 = Mult.apply _ }
+  case class LessThan(left:E, right:E) extends Biop{ val rebuild2 = LessThan.apply _ }
+  case class LessThanOrEqualTo(left:E, right:E) extends Biop{ val rebuild2 = LessThanOrEqualTo.apply _ }
+  case class EqualTo(left:E, right:E) extends Biop{ val rebuild2 = EqualTo.apply _ }
 
-  sealed trait Pred extends E1{ val e: E }
-  case class IsNumber(e:E) extends Pred{ val rebuild = IsNumber.apply _ }
-  case class IsArray(e:E) extends Pred{ val rebuild = IsArray.apply _ }
+  sealed trait Pred extends E1
+  case class IsNumber(e:E) extends Pred{ val rebuild1 = IsNumber.apply _ }
+  case class IsArray(e:E) extends Pred{ val rebuild1 = IsArray.apply _ }
 
-  case class NewArray(size:E, init:E) extends E2{
-    val e1 = size; val e2 = init; val rebuild = NewArray.apply _
+  case class NewArray(size:E, init:E) extends E2 {
+    val e1 = size; val e2 = init; val rebuild2 = NewArray.apply _
   }
   // TODO: takes N args
-  case class NewTuple(vs:List[E]) extends E
-  case class ARef(arr:E, loc:E) extends E2{
-    val e1 = arr; val e2 = loc; val rebuild = ARef.apply _
+  case class NewTuple(vs:List[E]) extends EN{
+    def first = vs.head; def rest = vs.tail; def rebuild = NewTuple.apply _
+  }
+  case class ARef(arr:E, loc:E) extends E2 {
+    val e1 = arr; val e2 = loc; val rebuild2 = ARef.apply _
   }
   // TODO: takes 3 args
-  case class ASet(arr:E, loc:E, newVal: E) extends E
-  case class ALen(arr:E)  extends E1{  val e = arr; val rebuild = ALen.apply _ }
-  case class Print(e:E) extends E1{ val rebuild = Print.apply _ }
-  case class MakeClosure(l:Label, e:E) extends E1{ val rebuild = (e:E) => MakeClosure.apply(l, e) }
-  case class ClosureProc(e:E) extends E1{ val rebuild = ClosureProc.apply _ }
-  case class ClosureVars(e:E) extends E1{ val rebuild = ClosureVars.apply _ }
+  case class ASet(arr:E, loc:E, newVal: E) extends E3{
+    val e1 = arr; val e2 = loc; val e3 = newVal; val rebuild3 = ASet.apply _
+  }
+  case class ALen(arr:E)  extends E1{ val e = arr; val rebuild1= ALen.apply _ }
+  case class Print(e:E) extends E1{ val rebuild1 = Print.apply _ }
+  case class MakeClosure(l:Label, e:E) extends E1{ val rebuild1 = (e:E) => MakeClosure.apply(l, e) }
+  case class ClosureProc(e:E) extends E1{ val rebuild1 = ClosureProc.apply _ }
+  case class ClosureVars(e:E) extends E1{ val rebuild1 = ClosureVars.apply _ }
 
   trait V extends E
 

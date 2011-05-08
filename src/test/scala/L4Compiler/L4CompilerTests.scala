@@ -53,10 +53,7 @@ class L4CompilerTests extends TestHelpers{
   def compileETest(code:String, expected:String) = {
     test(code){
       val compiler = new L4Compiler{}
-//      println(compiler.read(code))
-//      println(compiler.parseE(compiler.read(code)))
       verboseAssert(code, compiler.compileE(code), expected)
     }
   }
-
 }
