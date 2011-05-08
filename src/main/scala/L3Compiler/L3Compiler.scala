@@ -15,19 +15,14 @@ import L2Compiler.L2AST.{
   Instruction => L2Instruction, _}
 import L2Compiler.L2Printer
 
-trait L3ToL2Implicits {
-  implicit def convertVar(v:Variable): L2Variable = L2Variable(v.name)
-  implicit def convertNum(n:Num): L2Num = L2Num(n.n)
-  implicit def convertLabel(l:Label): L2Label = L2Label(l.name)
-  implicit def convertVToS(v:V): S = v match {
-    case Num(n) => L2Num(n)
-    case v:Variable => convertVar(v)
-    case Label(name) => L2Label(name)
-  }
-  def declare(l:Label) = LabelDeclaration(L2Label(l.name))
+object L3CompilerMain extends L3Compiler {
+  import java.io.File
+  import io.FileHelper._
+  def main(args:Array[String]) = println(compileFile(args(0)))
+  def compileFile(filename:String): String = L2Printer.toCode(compile(new File(filename).read))
 }
 
-class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
+class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits {
 
   def compileToString(code:String): String = L2Printer.toCode(compile(code))
 
@@ -239,4 +234,16 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits{
   private val count = Iterator.from(0)
   def temp() = Variable("__temp" + count.next())
   def tempLabel() = Label("__temp" + count.next())
+}
+
+trait L3ToL2Implicits {
+  implicit def convertVar(v:Variable): L2Variable = L2Variable(v.name)
+  implicit def convertNum(n:Num): L2Num = L2Num(n.n)
+  implicit def convertLabel(l:Label): L2Label = L2Label(l.name)
+  implicit def convertVToS(v:V): S = v match {
+    case Num(n) => L2Num(n)
+    case v:Variable => convertVar(v)
+    case Label(name) => L2Label(name)
+  }
+  def declare(l:Label) = LabelDeclaration(L2Label(l.name))
 }
