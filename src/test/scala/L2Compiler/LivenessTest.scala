@@ -557,6 +557,13 @@ class LivenessTest extends L2CompilerTest {
 ((return) (eax edi esi) ())""")
   }
 
+  test("wewe"){
+    livenessTest("((a <- ecx) (call :somefunc) (b <- ebx))", """
+((a <- ecx) (eax ecx edx) (eax ecx edx))
+((call :somefunc) (eax ecx edx) (ebx))
+((b <- ebx) (ebx) ())""")
+  }
+
   trait PrintStyle
   object HWStyle extends PrintStyle
   object TestStyle extends PrintStyle

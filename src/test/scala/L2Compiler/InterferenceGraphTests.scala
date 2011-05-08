@@ -429,17 +429,18 @@ class InterferenceGraphTests extends L2CompilerTest {
       |(s0 <- 1)
       |(x1 <- 2)
       |(x0 <- 3))""",
-    expectedInterference = """((eax ebx ecx edi edx esi)
+    expectedInterference = """
+((eax ebx ecx edi edx esi s0 x0 x1)
 (ebx eax ecx edi edx esi)
 (ecx eax ebx edi edx esi)
 (edi eax ebx ecx edx esi)
 (edx eax ebx ecx edi esi)
 (esi eax ebx ecx edi edx)
-(s0 s1 x0 x1)
+(s0 eax s1 x0 x1)
 (s1 s0 x0 x1)
-(x0 s0 s1 x1)
-(x1 s0 s1 x0))""",
-    expectedAllocation = "((s0 eax) (s1 ebx) (x0 ecx) (x1 edi))"
+(x0 eax s0 s1 x1)
+(x1 eax s0 s1 x0))""",
+    expectedAllocation = "((s0 ebx) (s1 eax) (x0 ecx) (x1 edi))"
   )
 
   interferenceAndAllocationTest(
@@ -488,6 +489,21 @@ class InterferenceGraphTests extends L2CompilerTest {
 (x1 abc num x0))
 """,
   expectedAllocation = "((abc eax) (num ecx) (x0 ebx) (x1 edi))")
+
+  interferenceAndAllocationTest(name="((a <- ecx) (call :somefunc) (b <- ebx))",
+    code="((a <- ecx) (call :somefunc) (b <- ebx))",
+    expectedInterference="""
+((a eax edx)
+(b)
+(eax a ebx ecx edi edx esi)
+(ebx eax ecx edi edx esi)
+(ecx eax ebx edi edx esi)
+(edi eax ebx ecx edx esi)
+(edx a eax ebx ecx edi esi)
+(esi eax ebx ecx edi edx))
+  """,
+    expectedAllocation = "((a ebx) (b eax))")
+
 
   new java.io.File("./graph-test").mkdir()
 

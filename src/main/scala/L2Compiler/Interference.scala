@@ -82,9 +82,9 @@ trait Interference {
 
   /**
     Build interference graph from the liveness information
-      Two variable live at the same time interfere with each other
-      Killed variables interferes with all live variables at that point,
-      unless it is a (x <- y) instruction (in which case it is fine if x and y share a register)
+      Two variables live at the same time interfere with each other
+      Killed variables interfere with variables in the out set
+      Except that the variables x and y do not interfere if the instruction was (x <- y)
       All real registers interfere with each other
    */
   def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
@@ -100,12 +100,17 @@ trait Interference {
     val outAndSpecialInterference: List[(X,X)] = iioss.flatMap { iios: InstructionInOutSet =>
       val out_interference: Set[(X,X)] = {
         // add in the kill
-        val outsPlusKill = iios.inst match {
-          case Assignment(v1:Variable, x:X) => iios.out
-          case Assignment(r: Register, v: Variable) => iios.out
-          case _ => (iios.out ++ iios.kill)
+        val outsPlusKill = (iios.out ++ iios.kill)
+        val initial = for(x <- outsPlusKill; y <- outsPlusKill; if(x<y)) yield (x,y)
+        val assignmentRemovals = iios.inst match {
+          case Assignment(v1:Variable, x:X) if(v1 != x) => Some(if(v1<x) (v1, x) else (x, v1))
+          case Assignment(r: Register, v: Variable) => Some(if(r<v) (r, v) else (v, r))
+          case _ => None
         }
-        for(x <- outsPlusKill; y <- outsPlusKill; if(x!=y)) yield (x,y)
+        assignmentRemovals match {
+          case Some(r) => initial -- Set(r)
+          case _ => initial
+        }
       }
       //  Constrained arithmetic operators
       //  Add interference edges to disallow the illegal registers
