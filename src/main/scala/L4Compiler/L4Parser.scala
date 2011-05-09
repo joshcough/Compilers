@@ -2,7 +2,7 @@ package L4Compiler
 
 import L4AST._
 
-trait L4Parser {
+trait L4Parser { this: L4Compiler =>
 
   //p ::= (e (l (x ...) e) ...)
   def parse(exp:Any): L4 = exp match {
@@ -35,7 +35,7 @@ trait L4Parser {
     case '=  :: left :: right :: Nil => EqualTo(parseE(left), parseE(right))
     case Symbol("number?") :: e :: Nil => IsNumber(parseE(e))
     case Symbol("a?") :: e :: Nil => IsArray(parseE(e))
-
+    case 'begin :: e1 :: e2 :: Nil => Begin(e1=parseE(e1), e2=parseE(e2))
     case Symbol("new-array") :: s :: e :: Nil => NewArray(size = parseE(s), init = parseE(e))
     case Symbol("new-tuple") :: xs => NewTuple(xs map parseE)
     case 'aref :: arr :: loc :: Nil => ARef(arr=parseE(arr), loc=parseE(loc))
@@ -69,5 +69,9 @@ trait L4Parser {
     Label(s.drop(2)) // remove the ' and : from ':label.
   }
 
-  def parseVar(s: Symbol): Variable = Variable(s.toString.drop(1))
+  def parseVar(s: Symbol): Variable = {
+    val varname = s.toString.drop(1)
+    //Variable("_" + s.toString.drop(1))
+    Variable(varname)
+  }
 }

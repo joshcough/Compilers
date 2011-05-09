@@ -26,10 +26,7 @@ object L4AST extends FunctionLifters{
   //(let ((x e)) e)
   case class Let(v:Variable, e:E, body:E) extends E
   case class IfStatement(e:E, truePath:E, falsePath:E) extends E
-  // TODO: find/fill for begin
-  case class Begin(e1:E, e2:E) extends E2 {
-    val rebuild2 = Begin.apply _
-  }
+  case class Begin(e1:E, e2:E) extends E
   case class FunCall(f:E, args:List[E]) extends EN {
     def first = f; def rest = args; def rebuild = (es:List[E]) => new FunCall(es.head, es.tail)
   }

@@ -15,14 +15,14 @@ trait L4Printer {
     case IfStatement(e:E, t:E, f:E) => "(if " + toCode(e) + " " + toCode(t) + " " + toCode(f) + ")"
 
     //biop ::= + | - | * | < | <= | =
-    case Add(l:E, r:E)  => "(+ " + toCode(l) + " " +  toCode(r) + ")"
-    case Sub(l:E, r:E)  => "(- " + toCode(l) + " " +  toCode(r) + ")"
-    case Mult(l:E, r:E)  => "(* " + toCode(l) + " " +  toCode(r) + ")"
+    case Add(l:E, r:E)  => "(+ " + toCode(l) + " " + toCode(r) + ")"
+    case Sub(l:E, r:E)  => "(- " + toCode(l) + " " + toCode(r) + ")"
+    case Mult(l:E, r:E)  => "(* " + toCode(l) + " " + toCode(r) + ")"
     case LessThan(l:E, r:E)  => "(< " + toCode(l) + " " +  toCode(r) + ")"
-    case LessThanOrEqualTo(l:E, r:E)  => "(<= " + toCode(l) + " " +  toCode(r) + ")"
+    case LessThanOrEqualTo(l:E, r:E)  => "(<= " + toCode(l) + " " + toCode(r) + ")"
     case EqualTo(l:E, r:E)  => "(= " + toCode(l) + " " +  toCode(r) + ")"
 
-    case Begin(l:E, r:E) => "(begin " +l+ " " +r+ ")"
+    case Begin(l:E, r:E) => "(begin " +toCode(l)+ " " +toCode(r)+ ")"
 
     case IsNumber(e:E) => "(number? " + toCode(e) +")"
     case IsArray(e:E) => "(a? " + toCode(e) +")"

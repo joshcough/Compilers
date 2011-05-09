@@ -55,6 +55,15 @@ class L4CompilerTests extends TestHelpers{
   compileETest("(new-tuple a b c (+ d d) e f g h i j k)", "(let ((__x0 (+ d d))) (new-tuple a b c __x0 e f g h i j k))")
   compileETest("(new-tuple a b c d e f g h i j (+ k k))", "(let ((__x0 (+ k k))) (new-tuple a b c d e f g h i j __x0))")
 
+  compileETest("(begin x y)", "(let ((__x0 x)) y)")
+  compileETest("(begin (+ 1 2) y)", "(let ((__x0 (+ 1 2))) y)")
+  compileETest("(begin y (+ 1 2))", "(let ((__x0 y)) (+ 1 2))")
+  compileETest("(begin (+ 1 2) (+ 1 2))", "(let ((__x0 (+ 1 2))) (+ 1 2))")
+
+  compileETest("(let ((x0 (+ 1 2))) y)", "(let ((x0 (+ 1 2))) y)")
+  compileETest("(let ((x0 y)) (+ 1 2))", "(let ((x0 y)) (+ 1 2))")
+  compileETest("(let ((x0 (+ 1 2))) (+ 1 2))", "(let ((x0 (+ 1 2))) (+ 1 2))")
+
   def compileETest(code:String, expected:String) = {
     test(code){
       val compiler = new L4Compiler{}

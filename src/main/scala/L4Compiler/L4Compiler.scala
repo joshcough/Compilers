@@ -25,6 +25,7 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
   def find(e:E, k:Context): E = e match {
     case Let(x, r, body) => find(r, LetContext(x, body, k))
     case IfStatement(c, tp, fp) => find(c, IfContext(tp, fp, k))
+    case Begin(e1, e2) => find(Let(newVar(), e1, e2), k)
     case e: EN => find(e.first, NAryContext(Nil, e.rest, e.rebuild, k))
     case v:V => fill(e, k)
   }
@@ -32,15 +33,15 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
   // fill: L3-d context -> L3-e
   def fill(d:E, k:Context): E = k match {
     case LetContext(v, b, k) => Let(v, d, find(b, k))
-    case IfContext(t, e, k) => next(d, k, v => IfStatement(v, find(t, k), find(e, k)))
+    case IfContext(t, e, k) => rebuild(d, k, v => IfStatement(v, find(t, k), find(e, k)))
     case NAryContext(vs, rest, f, k) => rest match {
-      case Nil => next(d, k, v => fill(f(vs :+ v), k))
-      case (x::xs) => next(d, k, v => find(x, NAryContext(vs :+ v, xs, f, k)))
+      case Nil => rebuild(d, k, v => fill(f(vs :+ v), k))
+      case (x::xs) => rebuild(d, k, v => find(x, NAryContext(vs :+ v, xs, f, k)))
     }
     case NoContext => d
   }
 
-  def next(d:E, k:Context, f: V => E): E = {
+  def rebuild(d:E, k:Context, f: V => E): E = {
     if(isV(d)) f(d.asInstanceOf[V]) else { val x = newVar(); Let(x, d, f(x)) }
   }
 
