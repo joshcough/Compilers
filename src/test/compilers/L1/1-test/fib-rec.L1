@@ -11,11 +11,13 @@
   (eax += 1)
   (eax <- (print eax)))
  (:fib
-  (esp -= 8)    ;; save space on the stack for 2 temporaries
+  (esp -= 12)    ;; save space on the stack for 2 temporaries
+  ((mem ebp -12) <- esi)
   (cjump eax < 2 :base :recur)
   :base         ;; non-recursive case
   (eax <- 1)    ;; store result
-  (esp += 8)    ;; free local space (unused in this case)
+  (esp += 12)    ;; free local space (unused in this case)
+  (esi <- (mem ebp -12)) 
   (return)      ;; return
   :recur        ;; recursive case
   ((mem ebp -4) <- eax)  ;; save the argument
@@ -27,5 +29,6 @@
   (call :fib)   ;; call
   (esi <- (mem ebp -8))  ;; get the saved result from first call
   (eax += esi)  ;; sum the two results
-  (esp += 8)    ;; free the local storage
+  (esi <- (mem ebp -12)) 
+  (esp += 12)    ;; free the local storage
   (return)))    ;; and we're done.

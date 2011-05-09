@@ -37,6 +37,9 @@ object Dir {
   def L2TestFest2010Tests = filesInDir(testFest + "L2-tests-from-2010", "L2")
   def L2TestFest2010Results = filesInDir(testFest + "L2-tests-from-2010", "res")
 
+  def L2TestFest2011Tests = filesInDir(testFest + "2-test", "L2")
+  def L2TestFest2011Results = filesInDir(testFest + "2-test", "L1")
+
   def L3TestFest2010Tests = filesInDir(testFest + "L3-tests-from-2010", "L3")
   def L3TestFest2010Results = filesInDir(testFest + "L3-tests-from-2010", "res")
 

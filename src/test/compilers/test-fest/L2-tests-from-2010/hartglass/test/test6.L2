@@ -6,8 +6,10 @@
   (p <- 8)
   (c <- 7)
   (c -= 2)
+  (josh <- esi)
   (esi <- c)
   (eax <- (print esi))
+  (esi <- josh)
   (return)
   )
  (:g

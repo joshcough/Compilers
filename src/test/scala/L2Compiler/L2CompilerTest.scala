@@ -9,6 +9,7 @@ import io.{CommandRunner, Dir}
 class L2CompilerHW extends L2CompilerTest with util.SlowTest {
   // all L1 files should also work in L2
   for(f<-Dir.L1TestFiles) { testCompileForHw(f.read) }
+  for(f<-Dir.L2TestFest2011Tests) { testCompileForHw(f.read) }
 
   // simple program
   testCompileForHw("""(((x <- 7) (eax <- (print x))))""")
@@ -192,13 +193,13 @@ trait L2CompilerTest extends util.TestHelpers with L2Compiler {
   val count = Iterator.from(0)
 
   def testCompileForHw(L2Code:String) = {
-    test(L2Code.clean){
+    val index = count.next()
+    test(index + " - " + L2Code.clean){
       val L1Code = toCode(compile(L2Code.clean))
       val L1InterpResult =  L1Interpreter.run(L1Code.clean)
       val L2InterpResult = L2Interpreter.run(L2Code.clean)
       verboseAssert(L2Code, L1InterpResult, L2InterpResult)
       // write out the tests files and results.
-      val index = count.next()
       // write the test
       new File("./2-test/test" + index + ".L2").write(L2Code.clean)
       // write the expected result
