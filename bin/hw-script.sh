@@ -16,7 +16,7 @@ cd Interpreters
 cp target/scala_2.8.1/compilers_2.8.1-0.1.jar ./lib/compiler.jar
 cp project/boot/scala-2.8.1/lib/scala-library.jar ./lib
 #mv bin/L1 bin/spill bin/liveness bin/graph-color .
-mv bin/graph-color bin/L2c .
+mv bin/graph-color bin/L3c .
 
 # get rid of stuff i dont need to hand in
 rm -rf .git project target out lib_managed test 444-code src/main/scheme Test.class Test.j compilers.iml runtime.o test.S test2.S a.out bin Test.o Test.S src/test

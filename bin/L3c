@@ -1,3 +1,3 @@
 #!/bin/bash
 
-java -cp "$(dirname $0)/lib/compiler.jar:$(dirname $0)/lib/scala-library.jar" L2Compiler.L2CompilerMain "$@"
+java -cp "$(dirname $0)/lib/compiler.jar:$(dirname $0)/lib/scala-library.jar" L3Compiler.L3CompilerMain "$@"
