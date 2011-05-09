@@ -59,15 +59,39 @@ class L4CompilerTests extends TestHelpers{
   compileETest("(begin (+ 1 2) y)", "(let ((__x0 (+ 1 2))) y)")
   compileETest("(begin y (+ 1 2))", "(let ((__x0 y)) (+ 1 2))")
   compileETest("(begin (+ 1 2) (+ 1 2))", "(let ((__x0 (+ 1 2))) (+ 1 2))")
+  compileETest("(begin (a (b c)) 7)", "(let ((__x1 (b c))) (let ((__x0 (a __x1))) 7))")
 
-  compileETest("(let ((x0 (+ 1 2))) y)", "(let ((x0 (+ 1 2))) y)")
-  compileETest("(let ((x0 y)) (+ 1 2))", "(let ((x0 y)) (+ 1 2))")
-  compileETest("(let ((x0 (+ 1 2))) (+ 1 2))", "(let ((x0 (+ 1 2))) (+ 1 2))")
+  // these are just to show that what the begin code translates to is good.
+  compileETest("(let ((__x0 (+ 1 2))) y)", "(let ((__x0 (+ 1 2))) y)")
+  compileETest("(let ((__x0 y)) (+ 1 2))", "(let ((__x0 y)) (+ 1 2))")
+  compileETest("(let ((__x0 (+ 1 2))) (+ 1 2))", "(let ((__x0 (+ 1 2))) (+ 1 2))")
+  compileETest("(let ((__x1 (b c))) (let ((__x0 (a __x1))) 7))", "(let ((__x1 (b c))) (let ((__x0 (a __x1))) 7))")
+
+  //(let ((passed (aref 0 results))) (new-tuple (if pass? (+ 1 passed) passed) (+ 1 (aref 1 results))))
+  compileETest("""
+(new-tuple
+(let ((passed (aref 0 results)))
+(if pass? (+ 1 passed) passed))
+(+ 1 (aref 1 results)))""",
+"""
+(let ((passed (aref 0 results)))
+(if pass?
+(let ((__x0 (+ 1 passed)))
+(let ((__x1 (aref 1 results)))
+(let ((__x2 (+ 1 __x1)))
+(new-tuple __x0 __x2))))
+(let ((__x3 (aref 1 results)))
+(let ((__x4 (+ 1 __x3)))
+(new-tuple passed __x4)))))""")
+
+
+  compileETest("((let ((c a)) (b c)) c))", "?")
 
   def compileETest(code:String, expected:String) = {
-    test(code){
+    test(code.clean){
       val compiler = new L4Compiler{}
-      verboseAssert(code, compiler.compileE(code), expected)
+      val res = compiler.compileE(code.clean)
+      verboseAssert(code, L4Printer.toCode(res), expected.clean.replace("\n", " "))
     }
   }
 }

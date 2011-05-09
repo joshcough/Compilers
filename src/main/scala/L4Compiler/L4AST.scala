@@ -11,7 +11,7 @@ object L4AST extends FunctionLifters{
 
   sealed trait E extends L4ASTNode
 
-  trait EN extends E { def first: E; def rest: List[E]; def rebuild: (List[E]) => E }
+  trait EN extends E { def first: E; def rest: List[E]; def es = first :: rest; def rebuild: (List[E]) => E }
   sealed trait E1 extends EN{
     def e: E; def first = e; def rest = Nil; def rebuild1: E => E; def rebuild = lift1(rebuild1)
   }
