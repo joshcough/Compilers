@@ -6,7 +6,7 @@ object L4CompilerMain extends L4Compiler {
   import java.io.File
   import io.FileHelper._
   def main(args:Array[String]) = println(compileFile(args(0)))
-  def compileFile(filename:String): String = L4Printer.toCode(compile(new File(filename).read))
+  def compileFile(filename:String): String = compileToString(new File(filename).read)
 }
 
 trait L4Compiler extends io.Reader with L4Parser with L4Printer {
@@ -21,7 +21,7 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
   trait Context
   case class LetContext(v:Variable, body:E, k:Context) extends Context
   case class IfContext(thenPart:E, elsePart:E, k:Context) extends Context
-  case class NAryContext(remainingEs:List[E], vs:List[V], f: List[V] => E, k:Context) extends Context
+  case class ENContext(remainingEs:List[E], vs:List[V], f: List[V] => E, k:Context) extends Context
   case object NoContext extends Context
 
   def find(f:Func): Func = f.copy(body=find(f.body))
@@ -33,7 +33,7 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
     case IfStatement(c, tp, fp) => find(c, IfContext(tp, fp, k))
     case Begin(e1, e2) => find(Let(newVar(), e1, e2), k)
     case en: EN => en.es match {
-      case e :: es => find(e, NAryContext(es, Nil, en.rebuild, k))
+      case e :: es => find(e, ENContext(es, Nil, en.rebuild, k))
       case Nil => fill(en, k) // for empty (new-tuple) expressions.
     }
     case v:V => fill(e, k)
@@ -43,16 +43,15 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
   def fill(d:E, k:Context): E = k match {
     case LetContext(v, b, k) => Let(v, d, find(b, k))
     case IfContext(t, e, k) => maybeLet(d, k, v => IfStatement(v, find(t, k), find(e, k)))
-    case nc@NAryContext(remainingEs, vs, rebuild, k) => remainingEs match {
+    case enc@ENContext(remainingEs, vs, rebuild, k) => remainingEs match {
       case Nil => maybeLet(d, k, v => fill(rebuild(vs :+ v), k))
-      case (e::es) => maybeLet(d, k, v => find(e, nc.copy(remainingEs=es, vs=vs :+ v)))
+      case (e::es) => maybeLet(d, k, v => find(e, enc.copy(remainingEs=es, vs=vs :+ v)))
     }
     case NoContext => d
   }
 
-  def maybeLet(d:E, k:Context, f: V => E): E = {
+  def maybeLet(d:E, k:Context, f: V => E): E =
     if(d.isInstanceOf[V]) f(d.asInstanceOf[V]) else { val x = newVar(); Let(x, d, f(x)) }
-  }
 
   private val count = Iterator.from(0)
   def newVar() = Variable("__x" + count.next())

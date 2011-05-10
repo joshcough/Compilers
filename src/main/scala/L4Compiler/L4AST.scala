@@ -15,7 +15,7 @@ object L4AST extends FunctionLifters {
   }
   sealed trait E2 extends EN {
     def e1: E; def e2: E; def es = e1 :: List(e2)
-    def rebuild2: (E, E) => E; def rebuild = lift2(rebuild2)
+    def rebuild2: (E, E) => E; def rebuild = rebuild2
   }
   case class Let(v:Variable, e:E, body:E) extends E
   case class IfStatement(e:E, truePath:E, falsePath:E) extends EN {
@@ -26,17 +26,15 @@ object L4AST extends FunctionLifters {
     def es = f :: args; def rebuild = (es:List[E]) => new FunCall(es.head, es.tail)
   }
 
-  trait Biop extends E2 { val left:E; val right:E; val e1 = left; val e2 = right }
-  case class Add(left:E, right:E) extends Biop{ val rebuild2 = Add.apply _ }
-  case class Sub(left:E, right:E) extends Biop{ val rebuild2 = Sub.apply _ }
-  case class Mult(left:E, right:E) extends Biop{ val rebuild2 = Mult.apply _ }
-  case class LessThan(left:E, right:E) extends Biop{ val rebuild2 = LessThan.apply _ }
-  case class LessThanOrEqualTo(left:E, right:E) extends Biop{ val rebuild2 = LessThanOrEqualTo.apply _ }
-  case class EqualTo(left:E, right:E) extends Biop{ val rebuild2 = EqualTo.apply _ }
+  case class Add(e1:E, e2:E) extends E2{ val rebuild2 = Add.apply _ }
+  case class Sub(e1:E, e2:E) extends E2{ val rebuild2 = Sub.apply _ }
+  case class Mult(e1:E, e2:E) extends E2{ val rebuild2 = Mult.apply _ }
+  case class LessThan(e1:E, e2:E) extends E2{ val rebuild2 = LessThan.apply _ }
+  case class LessThanOrEqualTo(e1:E, e2:E) extends E2{ val rebuild2 = LessThanOrEqualTo.apply _ }
+  case class EqualTo(e1:E, e2:E) extends E2{ val rebuild2 = EqualTo.apply _ }
 
-  sealed trait Pred extends E1
-  case class IsNumber(e:E) extends Pred{ val rebuild1 = IsNumber.apply _ }
-  case class IsArray(e:E) extends Pred{ val rebuild1 = IsArray.apply _ }
+  case class IsNumber(e:E) extends E1{ val rebuild1 = IsNumber.apply _ }
+  case class IsArray(e:E) extends E1{ val rebuild1 = IsArray.apply _ }
 
   case class NewArray(size:E, init:E) extends E2 {
     val e1 = size; val e2 = init; val rebuild2 = NewArray.apply _
@@ -66,7 +64,7 @@ trait FunctionLifters {
     case x::Nil => f(x)
     case _ => error("expected 1 arg, but got: " + ts)
   }
-  def lift2[T, U](f: (T, T) => U): (List[T]) => U = (ts:List[T]) => ts match {
+  implicit def lift2[T, U](f: (T, T) => U): (List[T]) => U = (ts:List[T]) => ts match {
     case x::y::Nil => f(x, y)
     case _ => error("expected 2 args, but got: " + ts)
   }
