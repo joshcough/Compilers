@@ -1,6 +1,7 @@
 package L4Compiler
 
 import util.TestHelpers
+import L4Compiler.L4AST.E
 
 class L4CompilerTests extends TestHelpers{
 
@@ -84,13 +85,69 @@ class L4CompilerTests extends TestHelpers{
 (let ((__x4 (+ 1 __x3)))
 (new-tuple passed __x4)))))""")
 
+  // this demonstrates the let renaming error from
+  // http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture09.pdf (pg 25)
+  // c is free outside the let, but becomes captured by it!
+  compileETest("((let ((c a)) (b c)) c)", "(let ((c a)) (let ((__x0 (b c))) (__x0 c)))", changeVarNames = false)
+  // to avoid this, we rename all the variables first
+  compileETest("((let ((d a)) (b d)) d)", "(let ((__x0 a)) (let ((__x1 (b __x0))) (__x1 d)))",
+    changeVarNames = true)
 
-  compileETest("((let ((c a)) (b c)) c))", "?")
+  def compileETest(code:String, expected:String, changeVarNames:Boolean = false) = {
+    test(code.clean){
+      val res = compileE(code.clean, changeVarNames = changeVarNames)
+      //println("compileETest(\"" + code + "\", " + "\"" + L4Printer.toCode(res) + "\")")
+      verboseAssert(code, L4Printer.toCode(res), expected.clean.replace("\n", " "))
+    }
+  }
 
-  def compileETest(code:String, expected:String) = {
+  def compileE(code:String, changeVarNames:Boolean = true, allowFrees:Boolean = false): E = {
+    val compiler = new L4Compiler{}
+    import compiler._
+    val ast = parseE(read(code))
+    if(changeVarNames) find(changeVarNamesInE(ast, allowFrees = true)) else find(ast)
+  }
+}
+
+class ChangeVarNamesTests extends TestHelpers {
+
+  // renames the let bound c only. the rest are free and this call allows frees.
+  changeVarNamesInE("((let ((c a)) (b c)) c)", "((let ((__x0 a)) (b __x0)) c)", allowFrees = true)
+
+  changeVarNamesInE("(let ((c 7)) (print c))", "(let ((__x0 7)) (print __x0))")
+
+  changeVarNamesInE(
+    "(let ((c 7)) (let ((c 7)) (print c)))",
+    "(let ((__x0 7)) (let ((__x1 7)) (print __x1)))")
+
+  changeVarNamesInE(
+    "(let ((c 7)) (begin (let ((c 7)) (print c)) (print c)))",
+    "(let ((__x0 7)) (begin (let ((__x1 7)) (print __x1)) (print __x0)))")
+
+  changeVarNamesInE(
+    "(let ((c 7)) (begin (let ((c c)) (print c)) (print c)))",
+    "(let ((__x0 7)) (begin (let ((__x1 __x0)) (print __x1)) (print __x0)))")
+
+  changeVarNamesInFunc(
+    "(:f (x) (let ((c x)) (begin (let ((c x)) (print c)) (print c))))",
+    "(:f (__x0) (let ((__x1 __x0)) (begin (let ((__x2 __x0)) (print __x2)) (print __x1))))")
+
+  changeVarNamesInFunc(
+    "(:f (x y z) (x y z))",
+    "(:f (__x0 __x1 __x2) (__x0 __x1 __x2))")
+
+  def changeVarNamesInE(code:String, expected:String, allowFrees:Boolean=false) = {
     test(code.clean){
       val compiler = new L4Compiler{}
-      val res = compiler.compileE(code.clean)
+      val res = compiler.changeVarNamesInE(compiler.parseE(compiler.read(code.clean)), allowFrees=allowFrees)
+      verboseAssert(code, L4Printer.toCode(res), expected.clean.replace("\n", " "))
+    }
+  }
+
+  def changeVarNamesInFunc(code:String, expected:String) = {
+    test(code.clean){
+      val compiler = new L4Compiler{}
+      val res = compiler.changeVarNamesInFunc(compiler.parseFunction(compiler.read(code.clean)))
       verboseAssert(code, L4Printer.toCode(res), expected.clean.replace("\n", " "))
     }
   }

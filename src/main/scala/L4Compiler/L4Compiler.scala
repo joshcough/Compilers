@@ -2,19 +2,26 @@ package L4Compiler
 
 import L4AST._
 
+object L4CompilerMain extends L4Compiler {
+  import java.io.File
+  import io.FileHelper._
+  def main(args:Array[String]) = println(compileFile(args(0)))
+  def compileFile(filename:String): String = L4Printer.toCode(compile(new File(filename).read))
+}
+
 trait L4Compiler extends io.Reader with L4Parser with L4Printer {
 
   def compile(code:String): L4 = {
     val ast = parse(read(code))
-    L4(find(ast.main), ast.funs.map(find))
+    L4(find(changeVarNamesInE(ast.main)), ast.funs.map(f => find(changeVarNamesInFunc(f))))
   }
 
-  def compileE(code:String): E = find(parseE(read(code)))
+  def compileToString(code:String) = L4Printer.toCode(compile(code))
 
   trait Context
   case class LetContext(v:Variable, body:E, k:Context) extends Context
   case class IfContext(thenPart:E, elsePart:E, k:Context) extends Context
-  case class NAryContext(vs:List[V], rest:List[E], f: List[V] => E, k:Context) extends Context
+  case class NAryContext(remainingEs:List[E], vs:List[V], f: List[V] => E, k:Context) extends Context
   case object NoContext extends Context
 
   def find(f:Func): Func = f.copy(body=find(f.body))
@@ -25,7 +32,10 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
     case Let(x, r, body) => find(r, LetContext(x, body, k))
     case IfStatement(c, tp, fp) => find(c, IfContext(tp, fp, k))
     case Begin(e1, e2) => find(Let(newVar(), e1, e2), k)
-    case e: EN => find(e.first, NAryContext(Nil, e.rest, e.rebuild, k))
+    case en: EN => en.es match {
+      case e :: es => find(e, NAryContext(es, Nil, en.rebuild, k))
+      case Nil => fill(en, k) // for empty (new-tuple) expressions.
+    }
     case v:V => fill(e, k)
   }
 
@@ -33,9 +43,9 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
   def fill(d:E, k:Context): E = k match {
     case LetContext(v, b, k) => Let(v, d, find(b, k))
     case IfContext(t, e, k) => maybeLet(d, k, v => IfStatement(v, find(t, k), find(e, k)))
-    case NAryContext(vs, rest, f, k) => rest match {
-      case Nil => maybeLet(d, k, v => fill(f(vs :+ v), k))
-      case (x::xs) => maybeLet(d, k, v => find(x, NAryContext(vs :+ v, xs, f, k)))
+    case nc@NAryContext(remainingEs, vs, rebuild, k) => remainingEs match {
+      case Nil => maybeLet(d, k, v => fill(rebuild(vs :+ v), k))
+      case (e::es) => maybeLet(d, k, v => find(e, nc.copy(remainingEs=es, vs=vs :+ v)))
     }
     case NoContext => d
   }
@@ -47,25 +57,24 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
   private val count = Iterator.from(0)
   def newVar() = Variable("__x" + count.next())
 
-  def changeVarNames(f:Func): Func = {
-    val newNames = f.args.map(x => newVar())
-    Func(f.label, newNames, changeVarNames(f.body, f.args.zip(newNames)))
+  def changeVarNamesInFunc(f:Func): Func = {
+    val newArgNames = f.args.map(x => newVar())
+    Func(f.label, newArgNames, newNames(f.body, f.args.zip(newArgNames)))
   }
-  def changeVarNames(e:E): E = changeVarNames(e, Nil)
-  def changeVarNames(e:E, swaps:List[(Variable, Variable)]): E = e match {
-    case v:Variable => swaps.find(vv => vv._1 == v) match {
-      case Some(vv) => vv._2
-      case None => error("free variable")
+  def changeVarNamesInE(e:E, allowFrees:Boolean=false): E = newNames(e, Nil, allowFrees)
+  def newNames(e:E, context:List[(Variable, Variable)], allowFrees:Boolean=false): E = {
+    def inner(e:E, context:List[(Variable, Variable)]): E = e match {
+      case v:Variable => context.find(vv => vv._1 == v) match {
+        case Some(vv) => vv._2
+        case None => if(allowFrees) v else error("free variable: " + v)
+      }
+      case Let(x, r, body) => {
+        val newX = newVar()
+        Let(newX, inner(r, context), inner(body, ((x, newX) :: context)))
+      }
+      case en: EN =>  en.rebuild(en.es.map(e => inner(e, context)))
+      case v:V => v // number or label. variable was handled above.
     }
-    case Let(x, r, body) => {
-      val newX = newVar()
-      Let(newX, changeVarNames(r, swaps), changeVarNames(r, ((x, newX) :: swaps)))
-    }
-    case IfStatement(c, tp, fp) =>
-      IfStatement(changeVarNames(c, swaps), changeVarNames(tp, swaps), changeVarNames(fp, swaps))
-    case Begin(e1, e2) => Begin(changeVarNames(e1, swaps), changeVarNames(e2, swaps))
-    case en: EN =>  en.rebuild(en.es.map(e => changeVarNames(e, swaps)))
-    case v:V => v
+    inner(e, context)
   }
-
 }

@@ -3,10 +3,11 @@ package testfest
 import io.FileHelper._
 import io.Dir._
 import java.io.File
-import util.{TestHelpers, L3Interpreter, L2Interpreter, Interpreter, L1Interpreter}
 import L3Compiler.L3Compiler
 import io.Reader
 import L2Compiler.{InterferenceMain, L2CompilerTest, L2Compiler, LivenessMain, SpillMain}
+import L4Compiler.L4Compiler
+import util.{L4Interpreter, TestHelpers, L3Interpreter, L2Interpreter, Interpreter, L1Interpreter}
 
 class SpillTestFest extends L2TestFest(spillTestFestTests, spillTestFestResults, SpillMain.spill)
 class LivenessTestFest extends L2TestFest(livenessTestFestTests, livenessTestFestResults, LivenessMain.liveness)
@@ -38,6 +39,10 @@ class L2TestFest2010 extends TestFest2010(
 class L3TestFest2010 extends TestFest2010(
   new L3Compiler().compileToString, L3Interpreter,
   L3TestFest2010Tests, L3TestFest2010Results)
+
+class L4TestFest2010 extends TestFest2010(
+  new L4Compiler{}.compileToString, L4Interpreter,
+  L4TestFest2010Tests, L4TestFest2010Results)
 
 abstract class TestFest2010(compile: String => String,
                    language:Interpreter,
