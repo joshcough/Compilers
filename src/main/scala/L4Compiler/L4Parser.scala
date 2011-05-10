@@ -69,9 +69,5 @@ trait L4Parser { this: L4Compiler =>
     Label(s.drop(2)) // remove the ' and : from ':label.
   }
 
-  def parseVar(s: Symbol): Variable = {
-    val varname = s.toString.drop(1)
-    //Variable("_" + s.toString.drop(1))
-    Variable(varname)
-  }
+  def parseVar(s: Symbol): Variable = Variable(s.toString.drop(1))
 }

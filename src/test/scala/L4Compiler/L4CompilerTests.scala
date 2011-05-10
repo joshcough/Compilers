@@ -1,7 +1,6 @@
 package L4Compiler
 
 import util.TestHelpers
-import L4Compiler.L4AST.E
 
 class L4CompilerTests extends TestHelpers{
 
@@ -97,15 +96,15 @@ class L4CompilerTests extends TestHelpers{
     test(code.clean){
       val res = compileE(code.clean, changeVarNames = changeVarNames)
       //println("compileETest(\"" + code + "\", " + "\"" + L4Printer.toCode(res) + "\")")
-      verboseAssert(code, L4Printer.toCode(res), expected.clean.replace("\n", " "))
+      verboseAssert(code, res, expected.clean.replace("\n", " "))
     }
   }
 
-  def compileE(code:String, changeVarNames:Boolean = true, allowFrees:Boolean = false): E = {
+  def compileE(code:String, changeVarNames:Boolean = true, allowFrees:Boolean = false): String = {
     val compiler = new L4Compiler{}
     import compiler._
     val ast = parseE(read(code))
-    if(changeVarNames) find(changeVarNamesInE(ast, allowFrees = true)) else find(ast)
+    L4Printer.toCode(if(changeVarNames) find(changeVarNamesInE(ast, allowFrees = true)) else find(ast))
   }
 }
 
