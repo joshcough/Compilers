@@ -23,9 +23,10 @@ object L1Interpreter extends Interpreter(1)
 object L2Interpreter extends Interpreter(2)
 object L3Interpreter extends Interpreter(3)
 object L4Interpreter extends Interpreter(4)
+object L5Interpreter extends Interpreter(5)
 
 object Interpreter{
-  val interps = Map(1->L1Interpreter, 2->L2Interpreter, 3->L3Interpreter)
+  val interps = Map(1->L1Interpreter, 2->L2Interpreter, 3->L3Interpreter, 4->L4Interpreter, 5->L5Interpreter)
 }
 
 case class Interpreter(level:Int) {

@@ -1,0 +1,22 @@
+((
+  (ebx <- 7 < 8) ;; puts a 1 in ebx.
+  (eax <- (print ebx)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (ebx <- 8 < 7) ;; puts a zero in ebx.
+  (ebx += 1) ;; add one because zero isnt a number in our encoding scheme.
+  (eax <- (print ebx)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (ebx <- 7 <= 8) ;; puts a 1 in ebx.
+  (eax <- (print ebx)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (ebx <- 8 <= 7) ;; puts a zero in ebx.
+  (ebx += 1) ;; add one because zero isnt a number in our encoding scheme.
+  (eax <- (print ebx)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (ebx <- 7 = 7) ;; puts a 1 in ebx.
+  (eax <- (print ebx)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (ebx <- 8 = 7) ;; puts a zero in ebx.
+  (ebx += 1) ;; add one because zero isnt a number in our encoding scheme.
+  (eax <- (print ebx)) ;; 1 is printed as 0 because of our number encoding scheme.
+))

@@ -1,0 +1,10 @@
+
+(((x <- 9)
+  (eax <- x)
+  (call :fib)
+  (y <- eax)
+  
+  (eax <- (print y)))
+ (:fib
+  (eax += 8)
+  (return)))

@@ -1,0 +1,32 @@
+((
+  (esi <- 7)
+  (edi <- 8)
+  (eax <- esi < edi) ;; puts a 1 in eax.
+  (eax <- (print eax)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (eax <- edi < esi) ;; puts a zero in eax.
+  (eax += 1) ;; add one because zero isnt a number in our encoding scheme.
+  (eax <- (print eax)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (eax <- esi <= edi) ;; puts a 1 in eax.
+  (eax <- (print eax)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (eax <- edi <= esi) ;; puts a zero in eax.
+  (eax += 1) ;; add one because zero isnt a number in our encoding scheme.
+  (eax <- (print eax)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (eax <- esi = esi) ;; puts a 1 in eax.
+  (eax <- (print eax)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (eax <- edi = esi) ;; puts a zero in eax.
+  (eax += 1) ;; add one because zero isnt a number in our encoding scheme.
+  (eax <- (print eax)) ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (eax <- esi < 9)  ;; puts a 1 in eax.
+  (eax <- (print eax))  ;; 1 is printed as 0 because of our number encoding scheme.
+
+  (eax <- 9 < esi)  ;; puts a 0 in eax.
+  (eax += 1) ;; add one because zero isnt a number in our encoding scheme.
+  (eax <- (print eax))  ;; 1 is printed as 0 because of our number encoding scheme.
+
+))

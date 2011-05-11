@@ -1,0 +1,7 @@
+((:w
+(edi <- :w)
+(eax <- (allocate 5 1))
+((mem eax 4) <- :w)
+((mem eax 8) <- edi)
+(esi <- eax)
+(eax <- (mem esi 8))))

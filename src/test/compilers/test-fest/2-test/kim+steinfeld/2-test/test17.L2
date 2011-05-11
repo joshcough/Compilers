@@ -1,0 +1,25 @@
+((
+ (eax <- 0)
+ (ecx <- 5)
+ (ebx <- 7)
+ (call :mult)
+ (eax <- (print eax))
+)
+ (:mult
+ (x <- ecx)
+ (y <- ebx)
+ (result <- eax)
+ (cjump y = 0 :end :loop)
+
+ :loop
+ (result += x)
+ (y -= 1)
+ (ecx <- x)
+ (ebx <- y)
+ (eax <- result)
+ (tail-call :mult)
+
+ :end
+ (eax <- result)
+ (return)
+))

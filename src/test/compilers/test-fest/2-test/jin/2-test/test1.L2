@@ -1,0 +1,13 @@
+(((eax <- 7)
+  (call :f)
+  (eax <- (print eax))) 
+ (:f
+  (x <- 9)
+  (cjump x <= eax :label1 :label2)
+  :label1
+  (x <- eax)
+  (return)
+  :label2
+  (eax <- x)
+  (return))) 
+

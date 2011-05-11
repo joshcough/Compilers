@@ -1,0 +1,9 @@
+(((x <- 1)
+  (y <- 2)
+  (c:x <- x < y)
+  (call :donothing)
+  (c:x <<= 1)
+  (c:x += 1)
+  (eax <- (print c:x)))
+ (:donothing
+  (return)))

@@ -1,0 +1,9 @@
+((
+ (ebx <- :middle)
+ (call ebx)
+ (eax <- (print eax))
+)
+ (:middle
+ (eax <- 37)
+ (return)
+))

@@ -1,0 +1,18 @@
+((
+  (call :func2)  
+  (call :func3)
+  (call :func1)
+  )
+ (:func1
+   (x <- 3)
+   (eax <- (print x))
+   (return))
+ (:func2
+   (x <- 5)
+   (eax <- (print x))
+   (return))
+ (:func3
+   (x <- 7)
+   (eax <- (print x))
+   (return))
+)

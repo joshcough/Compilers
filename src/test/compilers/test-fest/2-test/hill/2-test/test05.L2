@@ -1,0 +1,22 @@
+;; subroutine call with arguments
+(((ecx <- 38)
+  (edx <- 1)
+  (call :_g54)
+  (eax <- 0))
+ (:_g54
+  (var_0 <- ecx)
+  (incr_0 <- edx)
+  :loop_0
+  (var_0 += incr_0)
+  (var_1 <- var_0)
+  (var_1 <<= 1)
+  (var_1 += 1)
+  (eax <- (print var_1))
+  (cjump var_0 <= 47 :loop_0 :end_0)
+  :end_0
+  (var_2 <- -41)
+  (var_2 <<= 1)
+  (var_2 += 1)
+  (eax <- (print var_2))
+  (eax <- 0)
+  (return)))

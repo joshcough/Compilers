@@ -1,0 +1,24 @@
+((
+  (call :func1)
+  (y <- eax)
+  (eax <- (print y))
+  )
+ (:func1
+   (eax <- (print 3))
+   (call :func3)
+   (return))
+ (:func2
+   (y <- 7)
+   (eax <- 5)
+   (return))
+ (:func3
+   (eax <- (print 7))
+   (call :func2)
+   (return))
+ (:not_called
+   (x <- 2)
+   (y <- 3)
+   (eax <- (print y))
+   (eax <- 9)
+   (return))
+)

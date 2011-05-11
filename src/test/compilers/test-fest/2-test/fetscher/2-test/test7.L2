@@ -1,0 +1,18 @@
+(((a <- 10)
+  (a <<= 1)
+  (a += 1)
+  (eax <- (allocate a 0))
+  (a <- eax)
+  (c <- 1)
+  :loop
+  (d <- c)
+  (d *= 4)
+  (d += a)
+  (b <- c)
+  (b *= 2)
+  (b += 1)
+  ((mem d 0) <- b)
+  (c += 1)
+  (cjump c <= 10 :loop :exit)
+  :exit
+  (eax <- (print a))))

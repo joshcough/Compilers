@@ -1,0 +1,5 @@
+((
+  (eax <- 3) ; set eax to 1
+  (eax += 2) ; increment eax by 1. 11 + 10 = 101 = 5 = 2
+  (eax <- (print eax))
+))

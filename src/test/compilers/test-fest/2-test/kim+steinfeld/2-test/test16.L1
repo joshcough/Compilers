@@ -1,0 +1,12 @@
+((
+ (ebx <- 20)
+ (ecx <- 20)
+ (eax <- ebx < ecx)
+ (ecx <- ecx <= ebx)
+ (ecx <- ebx = ebx)
+ (ebx <- eax <= ebx)
+ (ebx <- ebx = eax)
+ (ebx *= 2)
+ (ebx += 1)
+ (eax <- (print ebx))
+))

@@ -1,0 +1,6 @@
+((
+  (eax <- (print 7))
+  (eax <- (print 25))
+  (eax <- (print 3))
+  (eax <- (print 1))
+))

@@ -1,0 +1,6 @@
+(((x <- 13)
+  (cjump x < 1 :dontgo :end)
+  :dontgo
+  (x += 15)
+  :end
+  (eax <- (print x))))

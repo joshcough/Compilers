@@ -7,7 +7,8 @@ import L3Compiler.L3Compiler
 import io.Reader
 import L2Compiler.{InterferenceMain, L2CompilerTest, L2Compiler, LivenessMain, SpillMain}
 import L4Compiler.L4Compiler
-import util.{L4Interpreter, TestHelpers, L3Interpreter, L2Interpreter, Interpreter, L1Interpreter}
+import L5Compiler.L5Compiler
+import util.{L5Interpreter, L4Interpreter, TestHelpers, L3Interpreter, L2Interpreter, Interpreter, L1Interpreter}
 
 class SpillTestFest extends L2TestFest(spillTestFestTests, spillTestFestResults, SpillMain.spill)
 class LivenessTestFest extends L2TestFest(livenessTestFestTests, livenessTestFestResults, LivenessMain.liveness)
@@ -31,7 +32,6 @@ class GraphTestFest extends L2CompilerTest {
 }
 
 //TODO: add L1 here
-
 class L2TestFest2010 extends TestFest2010(
         new L2Compiler{}.compileToString, L2Interpreter,
         L2TestFest2010Tests, L2TestFest2010Results)
@@ -43,6 +43,10 @@ class L3TestFest2010 extends TestFest2010(
 class L4TestFest2010 extends TestFest2010(
   new L4Compiler{}.compileToString, L4Interpreter,
   L4TestFest2010Tests, L4TestFest2010Results)
+
+class L5TestFest2010 extends TestFest2010(
+  new L5Compiler{}.compileToString, L5Interpreter,
+  L5TestFest2010Tests, L5TestFest2010Results)
 
 abstract class TestFest2010(compile: String => String,
                    language:Interpreter,

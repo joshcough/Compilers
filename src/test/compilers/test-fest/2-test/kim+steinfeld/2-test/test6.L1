@@ -1,0 +1,11 @@
+((
+(eax <- 40)
+(ebx <- eax)
+(eax <- 2)
+(eax += ebx)
+(ecx <- 6)
+(ecx += ebx)
+(eax += ebx)
+(eax -= 1)
+(eax <- (print eax))
+))

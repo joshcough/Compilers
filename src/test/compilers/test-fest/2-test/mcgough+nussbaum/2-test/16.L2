@@ -1,0 +1,15 @@
+;;5
+(((w <- 3)
+ (imavar <- 4)
+ (cjump 3 < 1 :good :bad)
+ (eax += 2)
+ :good
+ (w += imavar)
+ (goto :result)
+ :bad
+ (w += imavar)
+ (w += imavar)
+ (goto :result)
+ :result
+ (u <- w)
+ (eax <- (print u))))

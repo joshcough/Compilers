@@ -1,0 +1,11 @@
+(((x <- 5)
+  (goto :skip)
+  (ebp += 100)
+  (esp += 200)
+  :skip
+  (eax <- x)
+  (call :printstuff))
+ (:printstuff
+  (stuff <- eax)
+  (eax <- (print stuff))
+  (return)))

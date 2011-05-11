@@ -1,0 +1,9 @@
+(((y <- 45)
+  (eax <- (allocate y 3))
+  (z <- eax)
+  ((mem z 0) <- 11)
+  ((mem z 4) <- 13)
+  ((mem z 8) <- 15)
+  (a <- (mem z 4))
+  (eax <- (print a))))
+  

@@ -1,0 +1,16 @@
+((
+ (edi <- :label)
+ (esi <- 3)
+ (ecx <- 5)
+ (ebx <- edi)
+ (edi <- esi)
+ (eax <- ecx)
+ (call ebx)
+ (edi += eax)
+ (eax += edi)
+ (eax <- (print eax))
+)
+ (:label
+ (eax <<= 4)
+ (return)
+))

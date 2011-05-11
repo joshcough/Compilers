@@ -1,0 +1,15 @@
+((
+ (eax <- 23)
+ (ebx <- 15)
+ (cjump eax = ebx :first :second)
+
+ :first
+ (ebx <- 10)
+ (goto :end)
+
+ :second
+ (ebx <- 5)
+
+ :end
+ (eax <- (print ebx))
+))

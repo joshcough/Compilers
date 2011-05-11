@@ -1,0 +1,4 @@
+(((t <- 5)
+ (eax <- (allocate 5 0))
+ (u <- t)
+ (eax <- (print u))))

@@ -1,0 +1,11 @@
+(((a <- -1)
+  (c <- a)
+  (c >>= 1)
+  (a &= c)
+  (cjump a < 0 :yes :no)
+  :yes
+  (eax <- (print a))
+  (goto :end)
+  :no
+  (eax <- (print c))
+  :end))

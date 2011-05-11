@@ -1,0 +1,73 @@
+(((call :L_1))
+ (:L_1
+  (esi <- esi)
+  (edi <- edi)
+  (ecx <- 3)
+  (edx <- 3)
+  (eax <- 3)
+  (call :f)
+  (ebx <- eax)
+  (eax <- (print ebx))
+  (eax <- eax)
+  (esi <- esi)
+  (edi <- edi)
+  (return))
+ (:f
+  (ebx <- esi)
+  (edi <- edi)
+  (esi <- ecx)
+  (edx <- edx)
+  (eax <- eax)
+  (cjump esi = 1 :L_3 :L_2)
+  :L_3
+  (cjump edx = 1 :L_5 :L_4)
+  :L_5
+  (cjump eax = 1 :L_7 :L_6)
+  :L_7
+  (eax <- 15)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)
+  :L_6
+  (eax <- 13)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)
+  :L_4
+  (cjump eax = 1 :L_9 :L_8)
+  :L_9
+  (eax <- 11)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)
+  :L_8
+  (eax <- 9)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)
+  :L_2
+  (cjump edx = 1 :L_11 :L_10)
+  :L_11
+  (cjump eax = 1 :L_13 :L_12)
+  :L_13
+  (eax <- 7)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)
+  :L_12
+  (eax <- 5)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)
+  :L_10
+  (cjump eax = 1 :L_15 :L_14)
+  :L_15
+  (eax <- 3)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)
+  :L_14
+  (eax <- 1)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)))

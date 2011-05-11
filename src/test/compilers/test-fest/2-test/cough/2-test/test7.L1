@@ -1,0 +1,9 @@
+(((esi <- -1)
+(eax <- (print esi))
+(edi <- -3)
+(eax <- (print edi))
+(cjump edi < esi :end :bad)
+:bad
+(eax <- (print esi))
+:end
+(eax <- (print edi))))

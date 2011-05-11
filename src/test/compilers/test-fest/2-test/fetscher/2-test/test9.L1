@@ -1,0 +1,14 @@
+(((call :alloc)
+  (esi <- eax)
+  (eax <- (mem esi 0))
+  (call :printnum)
+  (eax <- (mem esi 4))
+  (call :printnum))
+ (:alloc
+  (eax <- (allocate 7 7))
+  (return))
+ (:printnum
+  (eax *= 2)
+  (eax += 1)
+  (eax <- (print eax))
+  (return)))

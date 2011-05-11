@@ -1,0 +1,7 @@
+(((x <- 93)
+(y <- 93)
+(z <- 93)
+(eax <- (print x))
+(eax <- (print y))
+(eax <- (print z))  
+))

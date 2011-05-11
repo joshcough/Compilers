@@ -1,0 +1,18 @@
+(((eax <- (allocate 101 3))
+(edi <- eax)
+(ebx <- 50)
+(edx <- 1)
+:filler
+(ecx <- ebx)
+(ecx *= 4)
+(ecx += edi)
+(esi <- edx)
+(esi *= 2)
+(esi += 1)
+((mem ecx 0) <- esi)
+(ebx -= 1)
+(edx += 1)
+(cjump ebx < 1 :printer :filler)
+:printer
+(eax <- (print edi))
+:end))

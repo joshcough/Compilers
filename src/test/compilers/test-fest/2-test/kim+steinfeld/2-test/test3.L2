@@ -1,0 +1,9 @@
+((
+ (eax <- 5)
+ (z <- 10)
+ (eax += z)
+ (ebx <- 5)
+ (ebx += z)
+ (eax <- (print ebx))
+ ))
+

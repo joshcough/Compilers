@@ -1,0 +1,7 @@
+(((goto :keep_going)
+:keep_going
+(eax <- (print 3))
+(goto :end)
+(eax <- (print 5))
+:end
+(eax <- (print 7))))

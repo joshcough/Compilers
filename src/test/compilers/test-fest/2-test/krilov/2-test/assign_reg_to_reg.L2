@@ -1,0 +1,145 @@
+(( 
+  (eax <- 1)
+  (eax <- eax)
+  (eax <- (print eax))
+  
+  (eax <- 3)
+  (ebx <- eax)
+  (eax <- (print ebx))
+  
+  (eax <- 5)
+  (ecx <- eax)
+  (eax <- (print ecx))
+  
+  (eax <- 7)
+  (edi <- eax)
+  (eax <- (print edi))
+  
+  (eax <- 9)
+  (edx <- eax)
+  (eax <- (print edx))
+  
+  (eax <- 11)
+  (esi <- eax)
+  (eax <- (print esi))
+  
+  (ebx <- 13)
+  (eax <- ebx)
+  (eax <- (print eax))
+  
+  (ebx <- 15)
+  (ebx <- ebx)
+  (eax <- (print ebx))
+  
+  (ebx <- 17)
+  (ecx <- ebx)
+  (eax <- (print ecx))
+  
+  (ebx <- 19)
+  (edi <- ebx)
+  (eax <- (print edi))
+  
+  (ebx <- 21)
+  (edx <- ebx)
+  (eax <- (print edx))
+  
+  (ebx <- 23)
+  (esi <- ebx)
+  (eax <- (print esi))
+  
+  (ecx <- 25)
+  (eax <- ecx)
+  (eax <- (print eax))
+  
+  (ecx <- 27)
+  (ebx <- ecx)
+  (eax <- (print ebx))
+  
+  (ecx <- 29)
+  (ecx <- ecx)
+  (eax <- (print ecx))
+  
+  (ecx <- 31)
+  (edi <- ecx)
+  (eax <- (print edi))
+  
+  (ecx <- 33)
+  (edx <- ecx)
+  (eax <- (print edx))
+  
+  (ecx <- 35)
+  (esi <- ecx)
+  (eax <- (print esi))
+  
+  (edi <- 37)
+  (eax <- edi)
+  (eax <- (print eax))
+  
+  (edi <- 39)
+  (ebx <- edi)
+  (eax <- (print ebx))
+  
+  (edi <- 41)
+  (ecx <- edi)
+  (eax <- (print ecx))
+  
+  (edi <- 43)
+  (edi <- edi)
+  (eax <- (print edi))
+  
+  (edi <- 45)
+  (edx <- edi)
+  (eax <- (print edx))
+  
+  (edi <- 47)
+  (esi <- edi)
+  (eax <- (print esi))
+  
+  (edx <- 49)
+  (eax <- edx)
+  (eax <- (print eax))
+  
+  (edx <- 51)
+  (ebx <- edx)
+  (eax <- (print ebx))
+  
+  (edx <- 53)
+  (ecx <- edx)
+  (eax <- (print ecx))
+  
+  (edx <- 55)
+  (edi <- edx)
+  (eax <- (print edi))
+  
+  (edx <- 57)
+  (edx <- edx)
+  (eax <- (print edx))
+  
+  (edx <- 59)
+  (esi <- edx)
+  (eax <- (print esi))
+  
+  (esi <- 61)
+  (eax <- esi)
+  (eax <- (print eax))
+  
+  (esi <- 63)
+  (ebx <- esi)
+  (eax <- (print ebx))
+  
+  (esi <- 65)
+  (ecx <- esi)
+  (eax <- (print ecx))
+  
+  (esi <- 67)
+  (edi <- esi)
+  (eax <- (print edi))
+  
+  (esi <- 69)
+  (edx <- esi)
+  (eax <- (print edx))
+  
+  (esi <- 71)
+  (esi <- esi)
+  (eax <- (print esi))
+))

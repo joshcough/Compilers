@@ -1,0 +1,9 @@
+((
+ (x <- 3)
+ (y <- 4)
+ (x *= x)
+ (y *= y)
+ (eax <- x)
+ (eax += y)
+ (eax <- (print eax))
+ ))

@@ -1,0 +1,8 @@
+((
+(eax <- 3)
+(ebx <- 4)
+(eax *= eax)
+(ebx *= ebx)
+(eax += ebx)
+(eax <- (print eax))
+))

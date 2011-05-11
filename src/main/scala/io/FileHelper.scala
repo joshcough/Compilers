@@ -46,6 +46,9 @@ object Dir {
   def L4TestFest2010Tests = filesInDir(testFest + "L4-tests-from-2010", "L4")
   def L4TestFest2010Results = filesInDir(testFest + "L4-tests-from-2010", "res")
 
+  def L5TestFest2010Tests = filesInDir(testFest + "L5-tests-from-2010", "L5")
+  def L5TestFest2010Results = filesInDir(testFest + "L5-tests-from-2010", "res")
+
   def filesInDir(dir:String, ending:String): Iterable[File] = filesInDir(new File(dir), ending)
   def filesInDir(parent:File, endingWith:String): Iterable[File] = {
     filesInDir(parent).filter(_.getName.endsWith(endingWith))

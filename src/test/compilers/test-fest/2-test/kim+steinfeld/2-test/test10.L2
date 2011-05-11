@@ -1,0 +1,22 @@
+((
+ (z <- 10)
+ (esi <- 3)
+ (x <- 23)
+ (y <- 15)
+ (cjump x = y :first :second)
+
+ :first
+ (y <- x)
+ (z <- y)
+ (goto :end)
+
+ :second
+ (y += y)
+
+ :end
+ (x += y)
+ (z *= x)
+ (eax <- (allocate esi x))
+ (edx <- (mem eax 4))
+ (eax <- (print edx))
+ ))

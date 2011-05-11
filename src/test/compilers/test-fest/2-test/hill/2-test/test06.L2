@@ -1,0 +1,31 @@
+;; tail-recursive subroutine call
+(((call :r0)
+  (eax <- 0))
+ (:r0
+  (v0 <- 39)
+  (v1 <- 48)
+  (ecx <- v0)
+  (edx <- v1)
+  (call :r1)
+  (eax <- 0)
+  (return))
+ (:r1
+  (current <- ecx)
+  (top <- edx)
+  (v1 <- current)
+  (v1 <<= 1)
+  (v1 += 1)
+  (eax <- (print v1))
+  (cjump current = top :end :continue)
+  :continue
+  (current += 1)
+  (ecx <- current)
+  (edx <- top)
+  (tail-call :r1)
+  :end
+  (t_2 <- -41)
+  (t_2 <<= 1)
+  (t_2 += 1)
+  (eax <- (print t_2))
+  (eax <- 0)
+  (return)))

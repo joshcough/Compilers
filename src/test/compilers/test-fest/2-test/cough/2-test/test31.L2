@@ -1,0 +1,20 @@
+((
+  ; to multiply an encoded number
+  (eax <- 5) ; 2, 101
+  (eax *= 2) ; first mult by 2; 5*2 = 10 (1010)
+  (eax -= 1) ; then subtract 1 (1010 - 1 = 1001) 
+  (eax <- (print eax))
+
+  ; mult by 3
+  (eax <- 5) ; 2, 101
+  (eax *= 3) ; first mult by 3; 5*3 = 15 (1111)
+  ; but that is 7! not 6... 
+  (eax -= 2) ; then subtract 2 (1111 - 10 = 1101, or 6) 
+  (eax <- (print eax))
+
+  ; hmmm
+  (eax <- 5) ; 2, 101
+  (eax *= 4) ; first mult by 4; 5*4 = 20 (10100)
+  (eax -= 3) ; then subtract 3 (10100 - 3 = 10001, or 8) 
+  (eax <- (print eax))
+))

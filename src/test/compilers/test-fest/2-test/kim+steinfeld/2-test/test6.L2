@@ -1,0 +1,13 @@
+((
+ (eax <- 40)
+ (abba <- eax)
+ (x <- 2)
+ (x += abba)
+ (y <- 6)
+ (y += abba)
+ (eax <- x)
+ (eax += abba)
+ (eax -= 1)
+ (eax <- (print eax))
+ ))
+

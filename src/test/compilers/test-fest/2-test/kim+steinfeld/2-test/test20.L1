@@ -1,0 +1,26 @@
+((
+ (eax <- 19)
+ (call :f)
+ (eax <- (print eax))
+)
+ (:f
+ (esp += -8)
+ ((mem ebp -8) <- eax)
+ (call :g)
+ ((mem ebp -4) <- eax)
+ (ebx <- (mem ebp -8))
+ (eax += ebx)
+ (call :h)
+ (ebx <- (mem ebp -4))
+ (ebx *= 5)
+ (eax += ebx)
+ (return)
+)
+ (:g
+ (eax *= eax)
+ (return)
+)
+ (:h
+ (eax += eax)
+ (return)
+))

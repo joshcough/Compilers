@@ -1,0 +1,22 @@
+((
+ (eax <- 30)
+ (cjump eax <= 31 :first :second)
+
+ :first
+ (eax >>= 1)
+ (cjump eax <= 15 :third :fourth)
+
+ :second
+ (eax <- 4 < 5)
+ (goto :end)
+
+ :third
+ (goto :end)
+ 
+ :fourth
+ (eax <- 5 < 4)
+
+ :end
+ (eax <- (print eax))
+))
+

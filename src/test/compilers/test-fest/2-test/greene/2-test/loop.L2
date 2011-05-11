@@ -1,0 +1,14 @@
+(((x <- 65)
+  (y <- 15)
+  (goto :loop2)
+  :loop1
+  (x += 327)
+  (x -= 1)
+  :loop2
+  (x -= 3)
+  (x += 1)
+  (y -= 3)
+  (y += 1)
+  (cjump 1 = y :end :loop2)
+  :end
+  (eax <- (print x))))

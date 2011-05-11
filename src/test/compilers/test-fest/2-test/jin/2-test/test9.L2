@@ -1,0 +1,13 @@
+(((a <- 9)
+ (b <- 11)
+
+ (eax <- (allocate a b))
+  (eax <- (print eax))
+   (x <- 13)
+ (y <- 15)
+ (eax <- (allocate x y))
+ (eax <- (print eax))
+ (eax <- (allocate y x))
+ (eax <- (print eax))
+ (eax <- (allocate x x))
+ (eax <- (print eax))))

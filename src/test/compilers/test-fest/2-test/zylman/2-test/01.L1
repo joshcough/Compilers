@@ -1,0 +1,2 @@
+(((eax <- 7)
+(eax <- (print eax))))

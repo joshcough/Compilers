@@ -1,0 +1,12 @@
+((
+(edi <- 5)
+(eax <- 20)
+(edi += eax)
+(call :g)
+(eax += edi)
+(eax <- (print eax))
+)
+(:g
+(eax += eax)
+(return)
+))

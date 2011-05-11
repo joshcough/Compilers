@@ -1,0 +1,16 @@
+((
+  (x1 <- 1)
+  (eax <- (print x1))
+  
+  (x2 <- 3)
+  (x3 <- 5)
+  (eax <- (print x2))
+  (x4 <- 7)
+  (eax <- (print x3))
+  (eax <- (print x4))
+  
+  (not_used <- 9)
+  
+  (eax <- (print x1))
+))
+  

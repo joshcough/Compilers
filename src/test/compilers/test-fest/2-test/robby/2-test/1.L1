@@ -1,0 +1,11 @@
+(((call :L_1))
+ (:L_1
+  (ebx <- esi)
+  (edi <- edi)
+  (esi <- 5)
+  (esi -= 6)
+  (eax <- (print esi))
+  (eax <- eax)
+  (esi <- ebx)
+  (edi <- edi)
+  (return)))

@@ -1,0 +1,12 @@
+((
+ (eax <- 30)
+ (ebx <- 15)
+ (ebx += eax)
+ (eax <- ebx)
+ (call :f1)
+)
+ (:f1
+ (eax *= eax)
+ (eax <- (print eax))
+ (return)
+))

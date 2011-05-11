@@ -1,0 +1,11 @@
+(((x <- 9)
+  (eax <- 11)
+  :loop
+  (cjump x < eax :keep_going :done)
+  
+  :keep_going  
+  (x += 1)
+  (goto :loop)
+  
+  :done
+  (eax <- (print x))) )

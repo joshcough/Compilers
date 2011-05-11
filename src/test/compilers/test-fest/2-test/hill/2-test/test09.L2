@@ -1,0 +1,22 @@
+;; allocate
+((:mainfn
+  (ecx <- 13)
+  (edx <- 19)
+  (eax <- 3)
+  (t1 <- :subfn)
+  (call t1)
+  (eax <- 0))
+ (:subfn
+  (r0 <- ecx)
+  (r1 <- edx)
+  (y0 <- eax)
+  (eax <- (allocate r0 1))
+  (z0 <- eax)
+  (eax <- (allocate r1 1))
+  (z1 <- eax)
+  ((mem z0 8) <- 27)
+  ((mem z1 8) <- y0)
+  (eax <- (print z1))
+  (eax <- (print z0))
+  (eax <- y0)
+  (return)))

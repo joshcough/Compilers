@@ -1,0 +1,15 @@
+((
+  (esi <- -1)
+  (eax <- (print esi))
+
+  (edi <- -3)
+  (eax <- (print edi))
+
+  (cjump edi < esi :end :bad)
+
+  :bad
+  (eax <- (print esi)) ; shouldnt happen
+  
+  :end
+  (eax <- (print edi)) ; should print -2 (since -3 is -2 encoded)
+))

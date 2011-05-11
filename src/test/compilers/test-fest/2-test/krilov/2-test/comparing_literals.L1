@@ -1,0 +1,9 @@
+((
+  (eax <- (print 1))
+  (eax <- (print 11))
+  (eax <- (print 1))
+  (eax <- (print 1))
+  (eax <- (print 11))
+  (eax <- (print 11))
+  (eax <- (print 1))
+))

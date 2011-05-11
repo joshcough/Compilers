@@ -1,0 +1,12 @@
+(((call :subroutine)
+  (eax <- 0))
+ (:subroutine
+  (t_0 <- 43)
+  (t_0 *= 3)
+  (t_0 += 10)
+  (t_0 -= 28)
+  (t_0 <<= 1)
+  (t_0 += 1)
+  (eax <- (print t_0))
+  (eax <- 0)
+  (return)))

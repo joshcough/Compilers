@@ -1,0 +1,29 @@
+((
+  (one <- 3)
+  (two <- 5)
+  (three <- 7)
+  (four <- 9)
+  (five <- 11)
+
+  :print1
+  (eax <- (print one))
+  (goto :print3)
+  
+  :print2
+  (eax <- (print two))
+  (goto :print5)
+  
+  :print3
+  (eax <- (print three))
+  (goto :print2)
+  
+  :print4
+  (eax <- (print four))
+  (goto :done)
+  
+  :print5
+  (eax <- (print five))
+  (goto :print4)
+  
+  :done
+))

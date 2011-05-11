@@ -1,0 +1,17 @@
+((
+  (eax <- 15)
+  (eax <- 17)
+  (eax <- 1)
+  (ebx <- -1)
+  (ecx <- -7)
+  (edx <- -2147483647)
+  (edi <- -1)
+  (esi <- 5)
+  
+  (eax <- (print eax))
+  (eax <- (print ebx))
+  (eax <- (print edi))
+  (eax <- (print esi))
+  (eax <- (print ebx))
+  (eax <- (print esi))
+))

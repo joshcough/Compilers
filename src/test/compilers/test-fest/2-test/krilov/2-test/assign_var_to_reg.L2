@@ -1,0 +1,25 @@
+((
+  (x1 <- 3)
+  (eax <- x1)
+  (eax <- (print eax))
+  
+  (x2 <- 5)
+  (ebx <- x2)
+  (eax <- (print ebx))
+  
+  (x3 <- 7)
+  (ecx <- x3)
+  (eax <- (print ecx))
+  
+  (x4 <- 9)
+  (edi <- x4)
+  (eax <- (print edi))
+  
+  (x5 <- 11)
+  (edx <- x5)
+  (eax <- (print edx))
+  
+  (x6 <- 13)
+  (esi <- x6)
+  (eax <- (print esi))
+))

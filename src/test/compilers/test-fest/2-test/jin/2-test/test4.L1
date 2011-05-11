@@ -1,0 +1,16 @@
+(((eax <- 9)
+  (call :fac)
+  (eax <- (print eax)))
+ (:fac
+  (ebx <- eax)
+  (cjump ebx = 1 :base :recure)
+  :base
+  (eax *= 1)
+  (return)
+  :recure
+  (edx <- eax)
+  (eax -= 1)
+  (eax *= edx)
+  (ebx -= 1)
+  (eax -= 1)
+  (return))) 

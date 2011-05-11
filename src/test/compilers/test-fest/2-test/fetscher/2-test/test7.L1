@@ -1,0 +1,17 @@
+(((eax <- 10)
+  (eax <<= 1)
+  (eax += 1)
+  (eax <- (allocate eax 0))
+  (ecx <- 1)
+  :loop
+  (edx <- ecx)
+  (edx *= 4)
+  (edx += eax)
+  (ebx <- ecx)
+  (ebx *= 2)
+  (ebx += 1)
+  ((mem edx 0) <- ebx)
+  (ecx += 1)
+  (cjump ecx <= 10 :loop :exit)
+  :exit
+  (eax <- (print eax))))
