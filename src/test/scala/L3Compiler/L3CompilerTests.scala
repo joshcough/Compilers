@@ -92,6 +92,9 @@ class L3CompilerTests extends TestHelpers with util.SlowTest {
 (:myFun (x y q) (let ([z (+ x y)]) (+ z q))))
 """)
 
+  import io.FileHelper._
+  new java.io.File("./3-test").mkdir()
+  val testcount = Iterator.from(0)
 
   def testCompile(l3Code:String, expected:String="na") = {
     test(l3Code.clean){
@@ -106,6 +109,13 @@ class L3CompilerTests extends TestHelpers with util.SlowTest {
 //      println("l3InterpResult: "+ l3InterpResult)
 //      println("l2InterpResult: "+ l2InterpResult)
       verboseAssert("l3 vs l2 interps", l3InterpResult, l2InterpResult)
+
+      // write out the tests files and results.
+      val index = testcount.next()
+      // write the test
+      new java.io.File("./3-test/test" + index + ".L3").write(l3Code.clean)
+      // write the expected result
+      new java.io.File("./3-test/test" + index + ".L2").write(l2Code.clean)
     }
   }
 }
