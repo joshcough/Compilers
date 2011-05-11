@@ -33,16 +33,19 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer {
     inner(e, Nil).distinct
   }
 
-  def sub(e:E, oldV:Variable, newE:E): E = {
+  // TODO: the prim cases are actually messed up here...goodnight moon
+  def sub(e:E, oldE:E, newE:E): E = {
     def inner(e:E): E = e match {
-      case l@Lambda(args, body) => Lambda(args, if(args.contains(oldV)) body else inner(body))
-      case v: Variable => if (oldV == v) newE else v
-      case Let(x, r, body) => Let(x, inner(r), if (oldV == x) body else inner(body))
+      case l@Lambda(args, body) => Lambda(args, if(args.contains(oldE)) body else inner(body))
+      case v: Variable => if (oldE == v) newE else v
+      case Let(x, r, body) => Let(x, inner(r), if (oldE == x) body else inner(body))
       case IfStatement(e, t, f) => IfStatement(inner(e), inner(t), inner(f))
       case Begin(e1, e2) => Begin(inner(e1), inner(e2))
       case NewTuple(es) => NewTuple(es.map(inner))
       case App(f, args) => App(inner(f), args.map(inner))
-      case e => e
+      case p:Prim => if (oldE == p) newE else p
+      case n:Num => n
+      // TODO: LetRec
     }
     inner(e)
   }
