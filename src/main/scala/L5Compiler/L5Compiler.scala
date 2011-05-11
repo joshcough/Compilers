@@ -17,4 +17,33 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer {
   }
 
   def compileToString(code:String) = L5Printer.toCode(compile(code))
+
+  def freeVars(e:E): List[Variable] = {
+    def inner(e:E, bound:List[Variable]): List[Variable] = e match {
+      case Lambda(args, body) => inner(body, args ::: bound)
+      case v:Variable => bound.find(_==v).toList
+      case Let(x, r, body) => inner(r, bound) ::: inner(body, x :: bound)
+      case LetRec(x, r, body) => inner(r, x :: bound) ::: inner(body, x :: bound)
+      case IfStatement(e, t, f) => inner(e, bound) ::: inner(t, bound) ::: inner(f, bound)
+      case Begin(e1, e2) => inner(e1, bound) ::: inner(e2, bound)
+      case NewTuple(es) => es.flatMap(e => inner(e, bound))
+      case App(f, args) => inner(f, bound) ::: args.flatMap(e => inner(e, bound))
+      case _ => Nil
+    }
+    inner(e, Nil).distinct
+  }
+
+  def sub(e:E, oldV:Variable, newE:E): E = {
+    def inner(e:E): E = e match {
+      case l@Lambda(args, body) => Lambda(args, if(args.contains(oldV)) body else inner(body))
+      case v: Variable => if (oldV == v) newE else v
+      case Let(x, r, body) => Let(x, inner(r), if (oldV == x) body else inner(body))
+      case IfStatement(e, t, f) => IfStatement(inner(e), inner(t), inner(f))
+      case Begin(e1, e2) => Begin(inner(e1), inner(e2))
+      case NewTuple(es) => NewTuple(es.map(inner))
+      case App(f, args) => App(inner(f), args.map(inner))
+      case e => e
+    }
+    inner(e)
+  }
 }
