@@ -568,7 +568,7 @@ class LivenessTest extends L2CompilerTest {
   object HWStyle extends PrintStyle
   object TestStyle extends PrintStyle
 
-  new java.io.File("./liveness-test").mkdir()
+  new java.io.File("./test/liveness-test").mkdir()
 
   def printSteps(code:String) = {
      inout(parseListOfInstructions(code.clean)).reverse.map(L2Printer.hwView).foreach(println)
@@ -585,10 +585,10 @@ class LivenessTest extends L2CompilerTest {
       // write out the tests files and results.
       val index = count.next()
       // write the test
-      new File("./liveness-test/test" + index + ".L2f").write(code.clean)
+      new File("./test/liveness-test/test" + index + ".L2f").write(code.clean)
       // write the expected result
       assert(LivenessMain.liveness(code.clean) === L2Printer.hwView(insAndOuts))
-      new File("./liveness-test/test" + index + ".lres").write(L2Printer.hwView(insAndOuts))
+      new File("./test/liveness-test/test" + index + ".lres").write(L2Printer.hwView(insAndOuts))
     }
   }
 }

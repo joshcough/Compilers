@@ -188,8 +188,8 @@ trait L2CompilerTest extends util.TestHelpers with L2Compiler {
     }
   }
 
-  CommandRunner.runAndDieOneErrors("rm -rf ./2-test")
-  new java.io.File("./2-test").mkdir()
+  CommandRunner.runAndDieOneErrors("rm -rf ./test/2-test")
+  new java.io.File("./test/2-test").mkdir()
   val count = Iterator.from(0)
 
   def testCompileForHw(L2Code:String) = {
@@ -201,9 +201,9 @@ trait L2CompilerTest extends util.TestHelpers with L2Compiler {
       verboseAssert(L2Code, L1InterpResult, L2InterpResult)
       // write out the tests files and results.
       // write the test
-      new File("./2-test/test" + index + ".L2").write(L2Code.clean)
+      new File("./test/2-test/test" + index + ".L2").write(L2Code.clean)
       // write the expected result
-      new File("./2-test/test" + index + ".L1").write(L1Code.clean)
+      new File("./test/2-test/test" + index + ".L1").write(L1Code.clean)
     }
   }
 }

@@ -93,7 +93,7 @@ class L3CompilerTests extends TestHelpers with util.SlowTest {
 """)
 
   import io.FileHelper._
-  new java.io.File("./3-test").mkdir()
+  new java.io.File("./test/3-test").mkdir()
   val testcount = Iterator.from(0)
 
   def testCompile(l3Code:String, expected:String="na") = {
@@ -113,9 +113,9 @@ class L3CompilerTests extends TestHelpers with util.SlowTest {
       // write out the tests files and results.
       val index = testcount.next()
       // write the test
-      new java.io.File("./3-test/test" + index + ".L3").write(l3Code.clean)
+      new java.io.File("./test/3-test/test" + index + ".L3").write(l3Code.clean)
       // write the expected result
-      new java.io.File("./3-test/test" + index + ".L2").write(l2Code.clean)
+      new java.io.File("./test/3-test/test" + index + ".L2").write(l2Code.clean)
     }
   }
 }

@@ -505,7 +505,7 @@ class InterferenceGraphTests extends L2CompilerTest {
     expectedAllocation = "((a ebx) (b eax))")
 
 
-  new java.io.File("./graph-test").mkdir()
+  new java.io.File("./test/graph-test").mkdir()
 
   def interferenceAndAllocationTest(name:String, code:String,
                                     expectedInterference:String,
@@ -532,9 +532,9 @@ class InterferenceGraphTests extends L2CompilerTest {
       import io.FileHelper._
       val index = count.next()
       // write the test
-      new File("./graph-test/test" + index + ".L2f").write(code.clean)
+      new File("./test/graph-test/test" + index + ".L2f").write(code.clean)
       // write the expected result
-      new File("./graph-test/test" + index + ".gres").write(interference + "\n" + actualAllocation)
+      new File("./test/graph-test/test" + index + ".gres").write(interference + "\n" + actualAllocation)
     }
   }
 
