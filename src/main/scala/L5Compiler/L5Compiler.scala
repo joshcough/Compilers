@@ -21,7 +21,7 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer {
   def freeVars(e:E): List[Variable] = {
     def inner(e:E, bound:List[Variable]): List[Variable] = e match {
       case Lambda(args, body) => inner(body, args ::: bound)
-      case v:Variable => bound.find(_==v).toList
+      case v:Variable => bound.find(_==v) match { case None => List(v); case _ => Nil}
       case Let(x, r, body) => inner(r, bound) ::: inner(body, x :: bound)
       case LetRec(x, r, body) => inner(r, x :: bound) ::: inner(body, x :: bound)
       case IfStatement(e, t, f) => inner(e, bound) ::: inner(t, bound) ::: inner(f, bound)

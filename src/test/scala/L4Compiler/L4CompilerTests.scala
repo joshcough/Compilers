@@ -1,79 +1,155 @@
 package L4Compiler
 
-import util.{L3Interpreter, L4Interpreter, TestHelpers}
+import util.{SlowTest, L3Interpreter, L4Interpreter, TestHelpers}
 
-class L4CompilerTests extends TestHelpers{
+class L4CompilerTests extends TestHelpers with SlowTest {
 
-  testCompile("(print 7)")
-  testCompile("(print (new-tuple))")
-  testCompile("(print (new-tuple 5 6 7))")
-  testCompile("(print (new-tuple (+ 5 6) (+ 6 7) 7))")
-  testCompile("(print (new-tuple (+ 5 6) 7 (+ 6 7)))")
-  testCompile("(print (new-array 5 5))")
-  testCompile("(print (let ((x (new-array 7 7))) x))")
-  testCompile("(print (< 3 4))")
-  testCompile("(print (< 4 3))")
-  testCompile("(print (if (< 3 4) 5 6))")
-  testCompile("(print (if (< 4 3) 5 6))")
-  testCompile("(:f 5)", "(:f (x) (print x)))")
-  testCompile("(print (+ (:f (+ 5 5)) (:f (+ 5 5))))", "(:f (x) (+ (+ x x) (+ x x))))")
-  testCompile("(print (- (:f (+ 7 5)) (:f (* 2 (+ 1 0)))))", "(:f (x) (+ (+ x x) (= x x))))")
-  testCompile("(print (let ((x (let ((x 5)) x))) x))")
-  testCompile("(print (let ((x 4)) (let ((y x)) (let ((x 3)) (+ (:sq y) (:sq x))))))")
+  testCompile("(:test (:eq (new-tuple) (new-tuple)) 1)")
+  testCompile("(:test (:eq 1 2) 0)")
+  testCompile("(:test 5 5)")
+  testCompile("(:test (:nil) (new-tuple))")
+  testCompile("(:test (:nil) (:nil))")
+  testCompile("(:test (:none) (:none))")
+  testCompile("(:test (:some 7) (:some 7))")
+  testCompile("(:test (:option_get (:some 7)) 7)")
+  testCompile("(:test (:tolist (new-tuple (+ 5 6) (+ 6 7) 7)) (:tolist (new-tuple 11 13 7)))")
+  testCompile("(:test (< 3 4) 1)")
+  testCompile("(:test (< 4 3) 0)")
+  testCompile("(:test (if (< 3 4) 5 6) 5)")
+  testCompile("(:test (if (< 4 3) 5 6) 6)")
+  testCompile("(:test (let ((x (let ((x 5)) x))) x) 5)")
+  testCompile("(:test (let ((x 4)) (let ((y x)) (let ((x 3)) (+ (:sq y) (:sq x))))) 25)")
   testCompile("""
-    (print
+    (:test
       (let ((x (make-closure :sq 7)))
         (let ((y (make-closure :double 7)))
           (+ ((closure-proc x) (closure-vars x)) ((closure-proc y) (closure-vars y)))
         )
       )
+      63
     )
     """)
   testCompile("""
-    (print
+    (:test
       (let ((x (make-closure :sq 7)))
         (let ((y (make-closure :double 7)))
           (:sqdouble (+ ((closure-proc x) (closure-vars x)) ((closure-proc y) (closure-vars y))))
         )
       )
-    )
+    15876)
   """)
+  testCompile("(:test (:f 5) 5)", "(:f (x) (:identity x))")
+  testCompile("(:test (:cons 1 (:cons 2 (:cons 3 (:nil)))) (:tolist (new-tuple 1 2 3)))")
+  testCompile("(:test (:cons 1 (:cons 2 (:cons 3 (:cons 4 (:nil))))) (:tolist (new-tuple 1 2 3 4)))")
   testCompile("""
-    (begin
-      (print
+    (:test
+      (:cons 1 (:cons 2 (:cons 3 (:cons 4 (:cons 5 (:cons 6 (:cons 7 (:cons 8 (:nil)))))))))
+      (:tolist (new-tuple 1 2 3 4 5 6 7 8)))""")
+
+  testCompile("(:test (:map (:nil) :sq) (:nil))")
+  testCompile("(:test (:map (:tolist (new-tuple 1 2 3 4)) :sq) (:tolist (new-tuple 1 4 9 16)))")
+  testCompile("(:test (:filter (:nil) :greaterthan3) (:nil))")
+  testCompile("(:test (:filter (:tolist (new-tuple 1 2 3 4 5 6 7)) :greaterthan3) (:tolist (new-tuple 4 5 6 7)))")
+  testCompile("(:test (:and 1 1) 1)")
+  testCompile("(:test (:and 1 0) 0)")
+  testCompile("(:test (:and 0 1) 0)")
+  testCompile("(:test (:and 0 0) 0)")
+  testCompile("(:test (:or 1 1) 1)")
+  testCompile("(:test (:or 1 0) 1)")
+  testCompile("(:test (:or 0 1) 1)")
+  testCompile("(:test (:or 0 0) 0)")
+  testCompile("(:test (:foldl :add 0 (:tolist (new-tuple 1 2 3 4 5 6))) 21)")
+  testCompile("(:test (:foldl :mult 1 (:tolist (new-tuple 1 2 3 4 5 6))) 720)")
+  testCompile("(:test (:find (:tolist (new-tuple 1 2 3 4 5 6 7)) :greaterthan3) (:some 4))")
+  testCompile("(:test (:find (:tolist (new-tuple 1 2 2 2 2 2 2)) :greaterthan3) (:none))")
+  testCompile("""
+    (:test
+      (:zip (:tolist (new-tuple 1 2 3)) (:tolist (new-tuple 1 2 3)))
+      (:tolist (new-tuple (:tolist (new-tuple 1 1)) (:tolist (new-tuple 2 2)) (:tolist (new-tuple 3 3))))
+    )""")
+  testCompile("(:test (:eq_arr (new-tuple 1 2 3 4) (new-tuple 1 2 3 4)) 1)")
+  testCompile("(:test (:eq_arr (new-array 5 5) (new-array 5 5)) 1)")
+  testCompile("(:test (:eq_arr (new-array 5 5) (new-tuple 5 5 5 5 5)) 1)")
+  testCompile("(:test (:foreach (:tolist (new-tuple 1 2 3 4 5 6 7)) :sq) 1)")
+  testCompile("(:test (+ (:f (+ 5 5)) (:f (+ 5 5))) 80)", "(:f (x) (+ (+ x x) (+ x x)))")
+  testCompile("(:test (- (:f (+ 7 5)) (:f (* 2 (+ 1 0)))) 20)", "(:f (x) (+ (+ x x) (= x x)))")
+  testCompile("(:test (let ((c 5)) (let ((a 10)) (let ((c a)) (let ((b :b)) (b c))))) 6)", "(:b (x) 6)")
+  testCompile("""
+    (:test
+      (begin
         (let ((x (make-closure :sq 7)))
           (let ((y (make-closure :double 7)))
             (:sqdouble (+ ((closure-proc x) (closure-vars x)) ((closure-proc y) (closure-vars y))))
           )
         )
+        (+ (+ 2 3) (+ 3 3))
       )
-      (print (+ 5 6))
+      11
     )
   """)
-  testCompile("(print (:nil))")
-  testCompile("(print (:cons 1 (:cons 2 (:cons 3 (:nil)))))")
-  testCompile("(print (:cons 1 (:cons 2 (:cons 3 (:cons 4 (:nil))))))")
-  testCompile("(print (:cons 1 (:cons 2 (:cons 3 (:cons 4 (:cons 5 (:cons 6 (:cons 7 (:cons 8 (:nil))))))))))")
-  testCompile("(print (:tolist (new-tuple 1 2 3 4)))")
-  testCompile("(print (:map (:nil) :sq))")
-  testCompile("(print (:map (:tolist (new-tuple 1 2 3 4)) :sq))")
-  testCompile("(print (:filter (:tolist (new-tuple 1 2 3 4 5 6 7)) :greaterthan3))")
-  testCompile("(print (:foldl :add 0 (:tolist (new-tuple 1 2 3 4 5 6))))")
-  testCompile("(print (:foldl :mult 1 (:tolist (new-tuple 1 2 3 4 5 6))))")
-  testCompile("(print (:some 7))")
-  testCompile("(print (:none))")
-  testCompile("(print (:find (:tolist (new-tuple 1 2 3 4 5 6 7)) :greaterthan3))")
-  testCompile("(print (:find (:tolist (new-tuple 1 2 2 2 2 2 2)) :greaterthan3))")
+  testCompile("""
+    (:test
+      (begin
+        (begin 6 7)
+        (begin 8 9))
+      9
+    )""")
+  testCompile("""
+    (:test
+      (begin
+        (begin (begin
+        (begin (begin
+        (begin (begin
+        (begin (:and 1 1) 7)
+        (begin (begin
+        (begin 6 7)
+        (begin 8 9)) 9)) (:map (:nil) :sq))
+        (begin 8 9)) (begin
+        (begin (:foldl :add 0 (:tolist (new-tuple 1 2 3 4 5 6))) 7)
+        (begin (:sq 7) 9)))
+        (begin (begin
+        (begin 6 7)
+        (begin (begin
+        (begin (:cons 1 (:cons 2 (:cons 3 (:nil)))) 7)
+        (begin (if (< 4 3) 5 6) 9)) 9)) (begin
+        (begin 6 7)
+        (begin 8 9)))) (begin
+        (begin (:eq_arr (new-array 5 5) (new-tuple 5 5 5 5 5)) 7)
+        (begin (begin
+        (begin (:nil) (< 7 7))
+        (begin (= 5 6) (<= 7 8))) 9)))
+        (begin (begin
+        (begin (= 5 (= 5 (= 5 6))) 7)
+        (begin (new-tuple (new-tuple (new-tuple)) (new-tuple (new-tuple)) (new-tuple)) 9))
+        (begin (begin (begin
+        (begin (< 7 (= 7 (<= 7 (alen (new-array 5 5))))) (new-tuple))
+        (begin 8 9)) (begin
+        (begin (:eq_arr (new-tuple 1 2 3 4) (new-tuple 1 2 3 4)) 7)
+        (begin (make-closure :sq 7) 9)))
+        (begin (begin
+        (begin (closure-vars (make-closure :sq 7)) (:tolist (new-tuple 1 2 3)))
+        (begin (closure-proc (make-closure :sq 7)) 9)) (begin
+        (begin 6 7)
+        (begin 8 (:identity (let ((x (:double (:sq 3)))) x)))))))
+      )
+      18
+    )""")
 
-  def program(e:String) = "(" + e + "\n" + functions + ")"
+  def program(e:String) = "(" + e + "\n" + library + ")"
 
-  def functions = """
+  def library = """
   (:tolist (arr) (:tolisthelper arr 0))
   (:tolisthelper (arr index)
     (if
       (<= (alen arr) index)
       (:nil)
       (:cons (aref arr index) (:tolisthelper arr (+ 1 index)))
+    )
+  )
+  (:foreach (list f)
+    (if (:empty list)
+      1
+      (begin (f (:head list)) (:foreach (:tail list) f))
     )
   )
   (:map (list f)
@@ -86,8 +162,8 @@ class L4CompilerTests extends TestHelpers{
     (if (:empty list)
       (new-tuple)
       (if (p (:head list))
-        (:nil (:head list) (:filter (:tail list) p))
-        (:cons (:tail list) p)
+        (:cons (:head list) (:filter (:tail list) p))
+        (:filter (:tail list) p)
       )
     )
   )
@@ -95,6 +171,15 @@ class L4CompilerTests extends TestHelpers{
     (if (:empty list)
       init
       (:foldl f (f init (:head list)) (:tail list))
+    )
+  )
+  (:zip (list1 list2)
+    (if (:empty list1)
+      (:nil)
+      (if (:empty list2)
+        (:nil)
+        (:cons (:cons (:head list1) (:cons (:head list2) (:nil))) (:zip (:tail list1) (:tail list2)))
+      )
     )
   )
   (:find (list p)
@@ -112,13 +197,69 @@ class L4CompilerTests extends TestHelpers{
   (:greaterthan3 (x) (< 3 x))
   (:add (x y) (+ x y))
   (:mult (x y) (* x y))
-  (:some (x) (new-tuple x))
+  (:some (x) (:tolist (new-tuple x)))
   (:none () (new-tuple))
+  (:option_get (op) (aref op 0))
   (:nil () (new-tuple))
   (:cons (x list) (new-tuple x list))
   (:head (list) (aref list 0))
   (:tail (list) (aref list 1))
   (:empty (list) (= 0 (alen list)))
+  (:size (list) (if (:empty list) 0 (+ 1 (:size (:tail list)))))
+  (:contains (item list)
+    (if (:empty list)
+      0
+      (if (= item (:head list))
+        1
+        (:contains item (:tail list))
+      )
+    )
+  )
+  (:not (x) (if x 0 1))
+  (:and (x y) (if x (if y 1 0) 0))
+  (:or (x y) (if x 1 (if y 1 0)))
+  (:eq (x y)
+    (if (:and (a? x) (a? y))
+      (:eq_list x y)
+      (if (:and (number? x) (number? y))
+        (= x y)
+        0
+      )
+    )
+  )
+  (:eq_num (x y) (= x y))
+  (:eq_list (x y)
+    (if (:and (:empty x) (:empty y))
+      1
+      (if (:or (:empty x) (:empty y))
+        0
+        (:and (:eq (:head x) (:head y)) (:eq_list (:tail x) (:tail y)))
+      )
+    )
+  )
+  (:eq_arr (x y)
+    (if (= (alen x) (alen y))
+      (:eq_arr_helper x y 0)
+      0
+    )
+  )
+  (:eq_arr_helper (x y index)
+    (if (:and (= (alen x) index) (= (alen y) index))
+      1
+      (:and
+        (:eq (aref x index) (aref y index))
+        (:eq_arr_helper x y (+ 1 index))
+      )
+    )
+  )
+  (:test (actual expected)
+    (if (:eq actual expected)
+      (:print 1)
+      (begin (:print actual) (:print expected))
+    )
+  )
+  (:print (x) (print x))
+  (:identity (x) x)
 """
 
   import io.FileHelper._
@@ -126,27 +267,24 @@ class L4CompilerTests extends TestHelpers{
   lazy val testcount = Iterator.from(0)
 
   def testCompile(L4E:String, extraFunctions: String = "") = {
-    test(L4E){
+    val index = testcount.next()
+    test(index + "-" + L4E){
       val L4Code = program(L4E + "\n" + extraFunctions)
       val compiler = new L4Compiler{}
       import compiler._
       val L3Code = compileToString(L4Code.clean)
-//      println(L4Code.clean)
-//      println("L3 Code: " + L3Code.clean)
-//      verboseAssert(L4Code, read(L3Code.clean).toString, read(expected.clean).toString)
       val L4InterpResult = L4Interpreter.run(L4Code.clean)
       val L3InterpResult = L3Interpreter.run(L3Code.clean)
-      println("L4InterpResult: "+ L4InterpResult)
-      println("L3InterpResult: "+ L3InterpResult)
-
-      if(L4InterpResult.trim == "") error("nothing happened in: " + L4Code)
-      verboseAssert("L4 vs L3 interps", L4InterpResult, L3InterpResult)
-
-      val index = testcount.next()
+//      println("L4InterpResult: "+ L4InterpResult)
+//      println("L3InterpResult: "+ L3InterpResult)
       // write the test
       new java.io.File("./4-test/test" + index + ".L4").write(L4Code.clean)
       // write the expected result
       new java.io.File("./4-test/test" + index + ".L3").write(L3Code.clean)
+
+      if(L4InterpResult.trim == "") error("nothing happened in: " + L4Code)
+      verboseAssert("L4 vs L3 interps", L4InterpResult, L3InterpResult)
+      verboseAssert(L4E, L4InterpResult, "1")
     }
   }
 }
