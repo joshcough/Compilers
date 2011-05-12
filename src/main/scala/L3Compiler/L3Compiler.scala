@@ -1,6 +1,6 @@
 package L3Compiler
 
-import L3AST._
+import L4Compiler.L4AST._
 import L2Compiler.L2AST.{
   Func => L2Func,
   LessThan => L2LessThan,

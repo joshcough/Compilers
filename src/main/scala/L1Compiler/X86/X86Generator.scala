@@ -1,6 +1,6 @@
 package L1Compiler.X86
 
-import L1Compiler.L1AST.{Instruction => L1Instruction, _}
+import L2Compiler.L2AST.{L2 => L1, _}
 
 object X86Inst {
   type X86Inst = String
@@ -61,7 +61,7 @@ trait X86Generator extends L1Compiler.BackEnd {
 
   def gen(loc:MemLoc): X86Inst = loc.offset.n + "(" + gen(loc.basePointer) + ")"
 
-  def genInst(inst: L1Instruction): List[X86Inst] = {
+  def genInst(inst: Instruction): List[X86Inst] = {
 
     def jump(s:S) = s match {
       case Label(name) => "jmp L1_" + name

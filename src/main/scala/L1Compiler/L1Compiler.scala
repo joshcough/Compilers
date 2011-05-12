@@ -1,12 +1,13 @@
 package L1Compiler
 
 import java.io.File
-import L1AST._
-import io.{CommandRunner, Reader}
+import io.Reader
 import io.FileHelper._
 import io.Dir._
+import L2Compiler.{L2Parser, L2AST}
+import L2AST.{L2 => L1}
 
-trait L1Compiler extends Reader with L1Parser with BackEnd {
+trait L1Compiler extends Reader with L2Parser with BackEnd {
   def compile(code:String, unitName:String): String = generateCode(parse(read(code)), unitName)
 }
 
