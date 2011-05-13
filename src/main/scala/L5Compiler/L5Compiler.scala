@@ -6,7 +6,8 @@ import L4Compiler.L4AST
 import L4Compiler.L4Printer
 import L4Compiler.L4AST.{
   ClosureVars, ClosureProc, L4, E => L4E, Func, MakeClosure, Label,
-  NewTuple => L4NewTuple, Variable => L4Variable, Let => L4Let, ARef => L4Aref, Num => L4Num, IfStatement => L4If}
+  NewTuple => L4NewTuple, Variable => L4Variable, Let => L4Let, ARef => L4Aref,
+  Num => L4Num, IfStatement => L4If, Begin => L4Begin }
 
 object L5CompilerMain extends L5Compiler {
   import java.io.File
@@ -35,16 +36,16 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
   }
 
   /**
-    e ::= (lambda (x ...) e) *
-    | x *
+    e ::= (lambda (x ...) e)
+    | x
     | (let ([x e]) e) TODO
     | (letrec ([x e]) e) TODO
-    | (if e e e) TODO
-    | (new-tuple e ...) TODO
-    | (begin e e) TODO
-    | (e e ...) ;; application expression *
-    | prim *
-    | num *
+    | (if e e e)
+    | (new-tuple e ...)
+    | (begin e e)
+    | (e e ...)
+    | prim
+    | num
    */
   def compile(e:E): (L4E, List[Func]) = e match {
     case Lambda(args, body) => {
@@ -158,9 +159,35 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
         })
       )
     }
+
+    case IfStatement(e, t, f) => {
+      val (es, fs) = compileEs(List(e,t,f))
+      (L4If(es(0), es(1), es(2)), fs)
+    }
+    case Begin(e1, e2) => {
+      val (es, fs) = compileEs(List(e1,e2))
+      (L4Begin(es(0), es(1)), fs)
+    }
+    case NewTuple(es) => {
+      val (compiledEs, fs) = compileEs(es)
+      (L4NewTuple(compiledEs), fs)
+    }
+    case Let(x, e1, e2) => {
+      val (es, fs) = compileEs(List(e1,e2))
+      (L4Let(convertVar(x), es(0), es(1)), fs)
+    }
+    /*
+    (letrec ([x e1]) e2)
+    =>
+    (let ([x (new-tuple 0)])
+      (begin (aset x 0 e1[x:=(aref x 0)])
+             e2[x:=(aref x 0)]))
+     */
+    case LetRec(x, e1, e2) => {
+      error("implement me")
+    }
     case Num(n) => (L4Num(n), Nil)
     case Variable(v) => (L4Variable(v), Nil)
-    case _ => error("implement me: " + e)
   }
 
   private val count = Iterator.from(0)
