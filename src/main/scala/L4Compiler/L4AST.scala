@@ -57,6 +57,14 @@ object L4AST extends FunctionLifters {
   case class Label(name: String) extends V {
     override def toString = "Label(\"" + name + "\")"
   }
+
+
+  def sub(x:Variable, replacee:E, replacer:E): E = replacee match {
+    case v:Variable => if(v == x) replacer else v
+    case Let(v, r, body) => Let(v, sub(x, r, replacer), if(v==x) body else sub(x, body, replacer))
+    case en: EN =>  en.rebuild(en.es.map(e => sub(x, e, replacer)))
+    case v:V => v // number or label. variable was handled above.
+  }
 }
 
 trait FunctionLifters {

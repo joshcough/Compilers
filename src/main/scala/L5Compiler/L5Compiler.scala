@@ -7,7 +7,7 @@ import L4Compiler.L4Printer
 import L4Compiler.L4AST.{
   ClosureVars, ClosureProc, L4, E => L4E, Func, MakeClosure, Label,
   NewTuple => L4NewTuple, Variable => L4Variable, Let => L4Let, ARef => L4Aref,
-  Num => L4Num, IfStatement => L4If, Begin => L4Begin }
+  Num => L4Num, IfStatement => L4If, Begin => L4Begin, sub }
 
 object L5CompilerMain extends L5Compiler {
   import java.io.File
@@ -177,14 +177,17 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       (L4Let(convertVar(x), es(0), es(1)), fs)
     }
     /*
-    (letrec ([x e1]) e2)
-    =>
+    (letrec ([x e1]) e2) =>
     (let ([x (new-tuple 0)])
       (begin (aset x 0 e1[x:=(aref x 0)])
              e2[x:=(aref x 0)]))
      */
     case LetRec(x, e1, e2) => {
-      error("implement me")
+      val (es, fs) = compileEs(List(e1,e2))
+      (L4Let(x, L4NewTuple(List(L4Num(0))), L4Begin(
+        L4AST.ASet(x, L4Num(0), sub(x, es(0), L4Aref(x, L4Num(0)))),
+        sub(x, es(1), L4Aref(x, L4Num(0)))
+      )), fs)
     }
     case Num(n) => (L4Num(n), Nil)
     case Variable(v) => (L4Variable(v), Nil)
@@ -210,33 +213,8 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
   }
 
   def nrArgs(p: Prim) = p match {
-    case Print => 1
-    case ALen => 1
-    case IsNumber => 1
-    case IsArray => 1
+    case Print | ALen | IsNumber | IsArray => 1
     case ASet => 3
-    case NewArray => 2
-    case ARef => 2
     case _ => 2
   }
 }
-
-//  def sub(e:E, oldE:E, newE:E): E = {
-//    def inner(e:E): E = e match {
-//      case l@Lambda(args, body) => Lambda(args, if(args.contains(oldE)) body else inner(body))
-//      case v: Variable => if (oldE == v) newE else v
-//      case Let(x, r, body) => Let(x, inner(r), if (oldE == x) body else inner(body))
-//      // TODO: LetRec
-//      //case LetRed(x, r, body) => Let(x, inner(r), if (oldE == x) body else inner(body))
-//      case IfStatement(e, t, f) => IfStatement(inner(e), inner(t), inner(f))
-//      case Begin(e1, e2) => Begin(inner(e1), inner(e2))
-//      case NewTuple(es) => NewTuple(es.map(inner))
-//      //(+ x y z)  => (+ x y z)
-//      case App(p:Prim, args) => App(p, args.map(inner))
-//      case App(f, args) => App(inner(f), args.map(inner))
-//      //(f +) => (f (lambda (x y) (+ x y)))
-//      case p:Prim => if (oldE == p) newE else p
-//      case n:Num => n
-//    }
-//    inner(e)
-//  }
