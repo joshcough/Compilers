@@ -10,7 +10,7 @@ class L5CompilerTests extends TestHelpers {
 
   // one arg, no frees
   testCompile("(lambda (x) x)", """
-((make-closure :f0 1)
+(:f0
 (:f0 (x) x))""")
 
   // one arg, one free
@@ -28,7 +28,7 @@ class L5CompilerTests extends TestHelpers {
 
   // three args, none free (dont need frees or args!)
   testCompile("(lambda (a b c) a)", """
-((make-closure :f0 1)
+(:f0
 (:f0 (a b c) a))
 """)
 
@@ -40,58 +40,58 @@ class L5CompilerTests extends TestHelpers {
 
   // four args, none free (over the limit, but notice we dont have 'frees', just 'args')
   testCompile("(lambda (a b c d) a)", """
-((make-closure :f0 1)
+(:f0
 (:f0 (args) (let ((a (aref args 0))) (let ((b (aref args 1))) (let ((c (aref args 2))) (let ((d (aref args 3))) a))))))
 """)
 
   // inner lambda
   testCompile("(lambda (x) (lambda (y) y))", """
-((make-closure :f0 1)
-(:f0 (x) (make-closure :f1 1))
+(:f0
+(:f0 (x) :f1)
 (:f1 (y) y))
 """)
 
   testCompile("(+ 5 6)", "((+ 5 6))")
 
   testCompile("(+ 5 (lambda (x) x))", """
-((+ 5 (make-closure :f0 1))
+((+ 5 :f0)
 (:f0 (x) x))""")
 
   // no frees in the lambda. one arg.
   testCompile("((lambda (x) x) 5)", """
-((let ((x0 (make-closure :f1 1))) (if (number? (closure-vars x0)) ((closure-proc x0) 5) ((closure-proc x0) (closure-vars x0) 5)))
+((let ((x0 :f1)) (if (a? x0) ((closure-proc x0) (closure-vars x0) 5) (x0 5)))
 (:f1 (x) x))""")
 
   // no frees in the lambda. two args.
   testCompile("((lambda (x y) x) 5 6)", """
-((let ((x0 (make-closure :f1 1))) (if (number? (closure-vars x0)) ((closure-proc x0) 5 6) ((closure-proc x0) (closure-vars x0) 5 6)))
+((let ((x0 :f1)) (if (a? x0) ((closure-proc x0) (closure-vars x0) 5 6) (x0 5 6)))
 (:f1 (x y) x))""")
 
   // no frees in the lambda, three args.
   testCompile("((lambda (x y z) z) 5 6 7)", """
-((let ((x0 (make-closure :f1 1))) (if (number? (closure-vars x0)) ((closure-proc x0) 5 6 7) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7))))
+((let ((x0 :f1)) (if (a? x0) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7)) (x0 5 6 7)))
 (:f1 (x y z) z))""")
 
   // no frees in the lambda, four args.
   testCompile("((lambda (a b c d) a) 5 6 7 8)", """
-((let ((x0 (make-closure :f1 1))) (if (number? (closure-vars x0)) ((closure-proc x0) (new-tuple 5 6 7 8)) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7 8))))
+((let ((x0 :f1)) (if (a? x0) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7 8)) (x0 (new-tuple 5 6 7 8))))
 (:f1 (args) (let ((a (aref args 0))) (let ((b (aref args 1))) (let ((c (aref args 2))) (let ((d (aref args 3))) a))))))""")
 
   // one free in the lambda, four args.
   testCompile("((lambda (a b c d) x) 5 6 7 8)", """
-((let ((x0 (make-closure :f1 (new-tuple x)))) (if (number? (closure-vars x0)) ((closure-proc x0) (new-tuple 5 6 7 8)) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7 8))))
+((let ((x0 (make-closure :f1 (new-tuple x)))) (if (a? x0) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7 8)) (x0 (new-tuple 5 6 7 8))))
 (:f1 (frees args) (let ((a (aref args 0))) (let ((b (aref args 1))) (let ((c (aref args 2))) (let ((d (aref args 3))) (let ((x (aref frees 0))) x)))))))""")
 
 
   testCompile("((lambda (x) +) 6 7)", """
-((let ((x0 (make-closure :f1 1))) (if (number? (closure-vars x0)) ((closure-proc x0) 6 7) ((closure-proc x0) (closure-vars x0) 6 7)))
-(:f1 (x) (make-closure :f2 1))
+((let ((x0 :f1)) (if (a? x0) ((closure-proc x0) (closure-vars x0) 6 7) (x0 6 7)))
+(:f1 (x) :f2)
 (:f2 (x y) (+ x y)))
 """)
 
   testCompile("(((lambda (x) print) 7) 7)", """
-((let ((x0 (let ((x1 (make-closure :f2 1))) (if (number? (closure-vars x1)) ((closure-proc x1) 7) ((closure-proc x1) (closure-vars x1) 7))))) (if (number? (closure-vars x0)) ((closure-proc x0) 7) ((closure-proc x0) (closure-vars x0) 7)))
-(:f2 (x) (make-closure :f3 1))
+((let ((x0 (let ((x1 :f2)) (if (a? x1) ((closure-proc x1) (closure-vars x1) 7) (x1 7))))) (if (a? x0) ((closure-proc x0) (closure-vars x0) 7) (x0 7)))
+(:f2 (x) :f3)
 (:f3 (x) (print x)))
 """)
 

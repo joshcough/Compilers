@@ -79,10 +79,9 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
         }
         (finalLets, funcs)
       }
-      val closure =
-        if(frees.isEmpty) MakeClosure(label, L4Num(1))
-        else MakeClosure(label, L4NewTuple(frees.map(convertVar)))
-      (closure, Func(label, fArgs, fBody) :: moreFunctions)
+      val labelOrClosure =
+        if(frees.isEmpty) label else MakeClosure(label, L4NewTuple(frees.map(convertVar)))
+      (labelOrClosure, Func(label, fArgs, fBody) :: moreFunctions)
     }
 
     case App(p:Prim, args) => {
@@ -118,22 +117,21 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       val (compiledF, extraFunctions) = compile(f)
       val (compiledArgs, moreExtraFunctions) = compileEs(args)
       (L4Let(v, compiledF, {
-        // if a number is in the closures argument position
-        // then we know it didnt have any free variables.
-        L4If(L4AST.IsNumber(L4AST.ClosureVars(v)),
-          // so we can call it with just the arguments
-          L4AST.FunCall(ClosureProc(v),
-            // if we can fit those arguments in, then great
-            if(compiledArgs.size <= 3) compiledArgs
-            // if not, create a new tuple and
-            else List(L4NewTuple(compiledArgs))
-          ),
-          // the function must have had free variables, so those must go in the first argument.
+        // if we get back an actual closure in the argument position
+        // then we know we had free variables.
+        L4If(L4AST.IsArray(v),
+          // those free variables go in the first argument.
           L4AST.FunCall(ClosureProc(v), ClosureVars(v) ::
             // if we can fit the rest of the arguments in, then great
             (if(compiledArgs.size <= 2) compiledArgs
             // if not, they must also go into another tuple.
-            else List(L4NewTuple(compiledArgs)))
+            else List(L4NewTuple(compiledArgs)))),
+          // we didnt get a closure, so we must have a raw label.
+          L4AST.FunCall(v,
+            // if we can fit those arguments in, then great
+            if(compiledArgs.size <= 3) compiledArgs
+            // if not, create a new tuple and
+            else List(L4NewTuple(compiledArgs))
           )
         )
       }), extraFunctions ::: moreExtraFunctions)
