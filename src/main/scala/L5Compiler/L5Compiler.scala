@@ -18,6 +18,7 @@ object L5CompilerMain extends L5Compiler {
 
 trait L5ToL4Implicits {
   implicit def convertVar(v:Variable) = L4Variable(v.name)
+  implicit def convertVarList(vs:List[Variable]) = vs.map(convertVar)
 }
 
 trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Implicits{
@@ -51,19 +52,16 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
                   (let ([y-n (aref vars-tup n)])
                     e))))
       */
-      val label = newLabel()
       val frees = freeVars(e)
-      val freesVar = L4Variable("frees")
-      val argsVar = L4Variable("args")
-
       val usingFreesTuple = frees.nonEmpty
       val usingArgsTuple = if(usingFreesTuple) args.size > 2 else args.size > 3
+      val (freesVar, argsVar) = (L4Variable("frees"), L4Variable("args"))
 
       val fArgs: List[L4Variable] =
         if(usingFreesTuple && usingArgsTuple) List(freesVar, argsVar)
         else if(usingFreesTuple && ! usingArgsTuple) freesVar :: args.map(convertVar)
         else if(!usingFreesTuple && usingArgsTuple) List(argsVar)
-        else args.map(convertVar)
+        else args
 
       val (fBody, moreFunctions) = {
         val (inner, funcs) = compile(body)
@@ -76,8 +74,9 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
         (finalLets, funcs)
       }
 
+      val label = newLabel()
       val labelOrClosure =
-        if(frees.isEmpty) label else MakeClosure(label, L4NewTuple(frees.map(convertVar)))
+        if(frees.isEmpty) label else MakeClosure(label, L4NewTuple(frees))
       (labelOrClosure, Func(label, fArgs, fBody) :: moreFunctions)
     }
     case App(p:Prim, args) => {
@@ -123,7 +122,7 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
             else List(L4NewTuple(compiledArgs)))),
           // we didnt get a closure, so we must have a raw label.
           L4AST.FunCall(v,
-            // if we can fit those arguments in, then great
+            // if we can fit the arguments in, then great
             if(compiledArgs.size <= 3) compiledArgs
             // if not, create a new tuple and
             else List(L4NewTuple(compiledArgs))
@@ -150,7 +149,7 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
     }
     case Let(x, e1, e2) => {
       val (es, fs) = compileEs(List(e1,e2))
-      (L4Let(convertVar(x), es(0), es(1)), fs)
+      (L4Let(x, es(0), es(1)), fs)
     }
     case LetRec(x, e1, e2) => compile(
       Let(x, NewTuple(List(Num(0))),
@@ -161,7 +160,7 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       )
     )
     case Num(n) => (L4Num(n), Nil)
-    case Variable(v) => (L4Variable(v), Nil)
+    case v:Variable => (v, Nil)
   }
 
   private val labelCount = Iterator.from(0)

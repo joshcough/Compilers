@@ -300,19 +300,3 @@ class L5FreeVarTests extends TestHelpers {
     }
   }
 }
-
-
-
-//  testCompile("(print (empty nil))")
-//  testCompile("(print (size nil))")
-//  testCompile("(print (size (cons 1 nil)))")
-//
-//  def wrapLibrary(code:String) = """
-//  (let ((nil (new-tuple)))
-//  (let ((cons (lambda (x y) (new-tuple x y))))
-//  (let ((empty (lambda (xs) (= 0 (alen xs)))))
-//  (let ((tail (lambda (xs) (aref xs 1))))
-//  (letrec ((size (lambda (xs) (if (empty xs) 0 (+ 1 (size (tail xs)))))))
-//  """+ code + """
-//  )))))
-//"""
