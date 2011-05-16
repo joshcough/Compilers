@@ -1,0 +1,5 @@
+((let ([x (:fun 7)])
+  (let ([y (new-array 3 x)])
+     (print y)))
+  (:fun (x)
+    (print x)))

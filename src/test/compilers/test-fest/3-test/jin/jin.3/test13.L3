@@ -1,0 +1,8 @@
+((let ([x (:fun 3)])
+  (let ([y (new-tuple x 3)])
+   (print y)))
+ (:fun (x)
+  (let ([y (a? x)])
+  (if y
+      1
+      2))))

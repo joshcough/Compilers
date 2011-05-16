@@ -1,0 +1,7 @@
+((:print10 1)
+ (:print10 (x)
+  (let ([xle10 (< x 10)])
+    (if xle10
+      (let ([xp1 (+ x 1)])
+        (:print10 xp1))
+      (print x)))))

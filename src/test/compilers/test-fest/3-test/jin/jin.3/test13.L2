@@ -1,0 +1,17 @@
+(((eax <- 7)
+  (call :fun)
+  (x <- eax)
+  (eax <- (allocate 5 x))
+  ((mem eax 8) <- 7)
+  (y <- eax)
+  (eax <- (print y)))
+  (:fun
+  (x <- eax)
+  (y <- 1)
+  (cjump y = 3 :then :else)
+  :then
+  (eax <- 3)
+  (return)
+  :else
+  (eax <- 5)
+  (return)))

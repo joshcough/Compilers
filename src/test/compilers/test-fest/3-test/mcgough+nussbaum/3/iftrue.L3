@@ -1,0 +1,1 @@
+((let ([truth (number? 6)]) (if truth (print 4) (print 5))))

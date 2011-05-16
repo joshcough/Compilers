@@ -1,0 +1,6 @@
+((let ([x (new-array 10 5)])
+	(let ([y (aset x 2 15)])
+		(let ([z (aref x 2)])
+			(print z)))))
+	
+	

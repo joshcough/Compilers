@@ -1,0 +1,5 @@
+((let ((t_1 (new-tuple 1 2)))
+   (let ((x_2 (aref t_1 0)))
+     (let ((x_5 (aref t_1 1)))
+       (let ((__3 (aset t_1 0 x_5)))
+         (let ((__4 (aset t_1 1 x_2))) (print t_1)))))))

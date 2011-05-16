@@ -1,0 +1,4 @@
+(((eax <- (allocate 9 15))
+  (y <- eax)
+
+  (eax <- (print 9))))

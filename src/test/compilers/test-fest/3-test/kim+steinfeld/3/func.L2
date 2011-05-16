@@ -1,0 +1,15 @@
+((
+  (eax <- 11)
+  (call :square)
+  (res <- eax)
+  (eax <- (print res))
+ )
+ (:square
+  (x <- eax)
+  (x >>= 1)
+  (x *= x)
+  (eax <- x)
+  (eax <<= 1)
+  (eax += 1)
+  (return))
+)

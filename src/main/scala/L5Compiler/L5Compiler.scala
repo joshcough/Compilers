@@ -7,7 +7,7 @@ import L4Compiler.L4Printer
 import L4Compiler.L4AST.{
   ClosureVars, ClosureProc, L4, E => L4E, Func, MakeClosure, Label,
   NewTuple => L4NewTuple, Variable => L4Variable, Let => L4Let, ARef => L4Aref,
-  Num => L4Num, IfStatement => L4If, Begin => L4Begin, sub }
+  Num => L4Num, IfStatement => L4If, Begin => L4Begin }
 
 object L5CompilerMain extends L5Compiler {
   import java.io.File
@@ -35,18 +35,6 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
     (l4es, funs.flatten)
   }
 
-  /**
-    e ::= (lambda (x ...) e)
-    | x
-    | (let ([x e]) e) TODO
-    | (letrec ([x e]) e) TODO
-    | (if e e e)
-    | (new-tuple e ...)
-    | (begin e e)
-    | (e e ...)
-    | prim
-    | num
-   */
   def compile(e:E): (L4E, List[Func]) = e match {
     case Lambda(args, body) => {
       /**
@@ -65,26 +53,33 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       */
       val label = newLabel()
       val frees = freeVars(e)
-      val vars = L4Variable("frees")
-      val fArgsV = L4Variable("args")
+      val freesVar = L4Variable("frees")
+      val argsVar = L4Variable("args")
+
+      val usingFreesTuple = frees.nonEmpty
+      val usingArgsTuple = if(usingFreesTuple) args.size > 2 else args.size > 3
+
       val fArgs: List[L4Variable] =
-        (if(frees.isEmpty) Nil else List(vars)) :::
-        (if(args.size + frees.size <= 3) args.map(convertVar) else List(fArgsV))
+        if(usingFreesTuple && usingArgsTuple) List(freesVar, argsVar)
+        else if(usingFreesTuple && ! usingArgsTuple) freesVar :: args.map(convertVar)
+        else if(!usingFreesTuple && usingArgsTuple) List(argsVar)
+        else args.map(convertVar)
+
       val (fBody, moreFunctions) = {
         val (inner, funcs) = compile(body)
-        val freeLets = if(frees.isEmpty) inner else {
-          frees.zipWithIndex.foldRight(inner){ case ((v,i), b) => L4Let(v, L4Aref(vars, L4Num(i)), b) }
+        val freeLets = if(!usingFreesTuple) inner else {
+          frees.zipWithIndex.foldRight(inner){ case ((v,i), b) => L4Let(v, L4Aref(freesVar, L4Num(i)), b) }
         }
-        val finalLets = if(args.size + frees.size <= 3) freeLets else {
-          args.zipWithIndex.foldRight(freeLets){ case ((v,i), b) => L4Let(v, L4Aref(fArgsV, L4Num(i)), b) }
+        val finalLets = if(! usingArgsTuple) freeLets else {
+          args.zipWithIndex.foldRight(freeLets){ case ((v,i), b) => L4Let(v, L4Aref(argsVar, L4Num(i)), b) }
         }
         (finalLets, funcs)
       }
+
       val labelOrClosure =
         if(frees.isEmpty) label else MakeClosure(label, L4NewTuple(frees.map(convertVar)))
       (labelOrClosure, Func(label, fArgs, fBody) :: moreFunctions)
     }
-
     case App(p:Prim, args) => {
       assert(args.size == nrArgs(p))
       /**
@@ -97,22 +92,21 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
        */
       val (l4es, moreFuns) = compileEs(args)
       (p match {
-        case Print => L4AST.Print(l4es(0))
+        case Print    => L4AST.Print(l4es(0))
         case NewArray => L4AST.NewArray(l4es(0), l4es(1))
-        case ARef => L4AST.ARef(l4es(0), l4es(1))
-        case ASet => L4AST.ASet(l4es(0), l4es(1), l4es(2))
-        case ALen => L4AST.ALen(l4es(0))
-        case Add => L4AST.Add(l4es(0), l4es(1))
-        case Sub => L4AST.Sub(l4es(0), l4es(1))
-        case Mult => L4AST.Mult(l4es(0), l4es(1))
+        case ARef     => L4AST.ARef(l4es(0), l4es(1))
+        case ASet     => L4AST.ASet(l4es(0), l4es(1), l4es(2))
+        case ALen     => L4AST.ALen(l4es(0))
+        case Add      => L4AST.Add(l4es(0), l4es(1))
+        case Sub      => L4AST.Sub(l4es(0), l4es(1))
+        case Mult     => L4AST.Mult(l4es(0), l4es(1))
         case LessThan => L4AST.LessThan(l4es(0), l4es(1))
         case LessThanOrEqualTo => L4AST.LessThanOrEqualTo(l4es(0), l4es(1))
-        case EqualTo => L4AST.EqualTo(l4es(0), l4es(1))
+        case EqualTo  => L4AST.EqualTo(l4es(0), l4es(1))
         case IsNumber => L4AST.IsNumber(l4es(0))
-        case IsArray => L4AST.IsArray(l4es(0))
+        case IsArray  => L4AST.IsArray(l4es(0))
       }, moreFuns)
     }
-
     case App(f, args) => {
       val v = newVar()
       val (compiledF, extraFunctions) = compile(f)
@@ -137,29 +131,11 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
         )
       }), extraFunctions ::: moreExtraFunctions)
     }
-
     // (f +) => (f (lambda (x y) (+ x y)))
     case p:Prim => {
       val vars = List("x", "y", "z").map(Variable(_)).take(nrArgs(p))
-      compile(
-        Lambda(vars, p match {
-          case Print => App(Print, vars)
-          case NewArray => App(NewArray,vars)
-          case ARef => App(ARef, vars)
-          case ASet => App(ASet, vars)
-          case ALen => App(ALen, vars)
-          case Add => App(Add, vars)
-          case Sub => App(Sub, vars)
-          case Mult => App(Mult, vars)
-          case LessThan => App(LessThan, vars)
-          case LessThanOrEqualTo => App(LessThanOrEqualTo, vars)
-          case EqualTo => App(EqualTo, vars)
-          case IsNumber => App(IsNumber, vars)
-          case IsArray => App(IsArray, vars)
-        })
-      )
+      compile(Lambda(vars, App(p, vars)))
     }
-
     case IfStatement(e, t, f) => {
       val (es, fs) = compileEs(List(e,t,f))
       (L4If(es(0), es(1), es(2)), fs)
@@ -176,26 +152,22 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       val (es, fs) = compileEs(List(e1,e2))
       (L4Let(convertVar(x), es(0), es(1)), fs)
     }
-    /*
-    (letrec ([x e1]) e2) =>
-    (let ([x (new-tuple 0)])
-      (begin (aset x 0 e1[x:=(aref x 0)])
-             e2[x:=(aref x 0)]))
-     */
-    case LetRec(x, e1, e2) => {
-      val (es, fs) = compileEs(List(e1,e2))
-      (L4Let(x, L4NewTuple(List(L4Num(0))), L4Begin(
-        L4AST.ASet(x, L4Num(0), sub(x, es(0), L4Aref(x, L4Num(0)))),
-        sub(x, es(1), L4Aref(x, L4Num(0)))
-      )), fs)
-    }
+    case LetRec(x, e1, e2) => compile(
+      Let(x, NewTuple(List(Num(0))),
+        Begin(
+          App(ASet, List(x, Num(0), sub(x, e1, App(ARef, List(x, Num(0)))))),
+          sub(x, e2, App(ARef, List(x, Num(0))))
+        )
+      )
+    )
     case Num(n) => (L4Num(n), Nil)
     case Variable(v) => (L4Variable(v), Nil)
   }
 
-  private val count = Iterator.from(0)
-  def newLabel() = Label("f" + count.next())
-  def newVar() = L4Variable("x" + count.next())
+  private val labelCount = Iterator.from(0)
+  private val varCount = Iterator.from(0)
+  def newLabel() = Label("f" + labelCount.next())
+  def newVar() = L4Variable("x" + varCount.next())
 
   def freeVars(e:E): List[Variable] = {
     def inner(e:E, bound:List[Variable]): List[Variable] = e match {
@@ -210,6 +182,21 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       case _ => Nil
     }
     inner(e, Nil).distinct
+  }
+
+  def sub(x:Variable, replacee:E, replacer:E): E = {
+    def inner(e:E): E = e match {
+      case Lambda(args, body) => Lambda(args, if(args.contains(x)) body else inner(body))
+      case v:Variable => if(v==x) replacer else v
+      case Let(v, e1, body) => Let(v, inner(e1), if(v==x) body else inner(body))
+      case LetRec(v, e1, body) => LetRec(v, if(v==x) e1 else inner(e1), if(v==x) body else inner(body))
+      case IfStatement(e, t, f) => IfStatement(inner(e), inner(t), inner(f))
+      case Begin(e1, e2) => Begin(inner(e1), inner(e2))
+      case NewTuple(es) => NewTuple(es.map(inner))
+      case App(f, args) => App(inner(f), args.map(inner))
+      case _ => e
+    }
+    inner(replacee)
   }
 
   def nrArgs(p: Prim) = p match {

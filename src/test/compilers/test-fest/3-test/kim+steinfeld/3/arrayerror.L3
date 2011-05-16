@@ -1,0 +1,4 @@
+((let ([x (new-array 10 5)])
+	(aref x 11)))
+
+	

@@ -1,0 +1,3 @@
+((let ([x 6])
+   (let ([y (new-tuple 1 4 5 x)])
+     (print y))))

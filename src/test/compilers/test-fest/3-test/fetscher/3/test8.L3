@@ -1,0 +1,11 @@
+((:printone 1)
+ (:printone (x)
+  (let ([xp1 (+ x 1)])
+    (let ([z (print x)])
+      (:skipone xp1))))
+ (:skipone (x)
+  (let ([xL10 (< x 10)])
+    (if xL10
+      (let ([xp1 (+ x 1)])
+        (:printone xp1))
+      x))))

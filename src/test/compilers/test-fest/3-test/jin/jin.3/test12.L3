@@ -1,0 +1,10 @@
+((let ([x :fun])
+  (let ([y (x 3 4)])
+ (print y)))
+(:fun (x y)
+(let ([z (number? x)])
+(if z
+y
+(:fun1 x))))
+(:fun1 (x)
+2)))

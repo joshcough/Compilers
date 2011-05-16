@@ -1,5 +1,0 @@
-(((cjump 1 < 2 :keep_going :done)
-  :keep_going
-  (eax <- (print 3))
-  :done
-  (eax <- (print 5))))

@@ -1,0 +1,13 @@
+(((eax <- 15)
+  (call :fun)
+  (x <- eax)
+  (eax <- (allocate 7 x))
+  (y <- eax)
+  (eax <- (print y))
+)
+ (:fun 
+  (x <- eax)
+(eax <- (print eax))
+(return)
+
+))

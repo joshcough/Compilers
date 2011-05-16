@@ -9,7 +9,6 @@ import io.{CommandRunner, Dir}
 class L2CompilerHW extends L2CompilerTest with util.SlowTest {
   // all L1 files should also work in L2
   for(f<-Dir.L1TestFiles) { testCompileForHw(f.read) }
-  for(f<-Dir.L2TestFest2011Tests) { testCompileForHw(f.read) }
 
   // simple program
   testCompileForHw("""(((x <- 7) (eax <- (print x))))""")

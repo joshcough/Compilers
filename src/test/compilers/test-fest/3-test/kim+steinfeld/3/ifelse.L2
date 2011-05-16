@@ -1,0 +1,10 @@
+((
+  (temp <- 1)
+  (cjump 3 = temp :then :else)
+  :then
+  (eax <- (print 11))
+  (goto :done)
+  :else
+  (eax <- (print 21))
+  :done
+))

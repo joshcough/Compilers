@@ -1,0 +1,28 @@
+((
+  (eax <- 11)
+  (call :encode)
+  (res <- eax)
+  (eax <- (print res))
+  )
+ (:encode
+  (x <- eax)
+  (eax <- x)
+  (call :times2)
+  (t <- eax)
+  (eax <- t)
+  (tail-call :add1))
+ (:times2
+  (x <- eax)
+  (x >>= 1)
+  (x *= 2)
+  (x <<= 1)
+  (x += 1)
+  (eax <- x)
+  (return))
+ (:add1
+  (x <- eax)
+  (x += 3)
+  (x -= 1)
+  (eax <- x)
+  (return))
+)

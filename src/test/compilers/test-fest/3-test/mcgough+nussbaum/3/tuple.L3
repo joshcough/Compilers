@@ -1,0 +1,1 @@
+((let ([tup (new-tuple 6 7 8)]) (let ([t (aref tup 1)]) (print t))))

@@ -1,0 +1,10 @@
+((let ([res (:encode 5)])
+   (print res))
+ (:encode (x)
+          (let ([t (:times2 x)])
+            (:add1 t)))
+ (:times2 (x)
+          (* 2 x))
+ (:add1 (x)
+        (+ 1 x)))
+	

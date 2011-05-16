@@ -1,0 +1,7 @@
+((let ([res (:squareAdd 4 5)])
+   (print res))
+ (:squareAdd (x y)
+             (let ([sq1 (* x x)])
+               (let ([sq2 (* y y)])
+                 (+ sq1 sq2))))
+)

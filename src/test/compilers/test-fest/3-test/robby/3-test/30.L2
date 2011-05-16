@@ -1,0 +1,67 @@
+(((call :L_7))
+ (:L_7
+  (eax <- (allocate 5 0))
+  ((mem eax 4) <- 3)
+  ((mem eax 8) <- 5)
+  (t_1 <- eax)
+  (x_8 <- 1)
+  (bnds_9 <- (mem t_1 0))
+  (bnds_9 <<= 1)
+  (bnds_9 += 1)
+  (cjump x_8 < bnds_9 :oka_11 :die_10)
+  :oka_11
+  (cjump 0 <= x_8 :okb_12 :die_10)
+  :die_10
+  (eax <- (array-error t_1 1))
+  :okb_12
+  (x_8 >>= 1)
+  (x_8 *= 4)
+  (x_8 += t_1)
+  (x_2 <- (mem x_8 4))
+  (x_13 <- 3)
+  (bnds_14 <- (mem t_1 0))
+  (bnds_14 <<= 1)
+  (bnds_14 += 1)
+  (cjump x_13 < bnds_14 :oka_16 :die_15)
+  :oka_16
+  (cjump 0 <= x_13 :okb_17 :die_15)
+  :die_15
+  (eax <- (array-error t_1 3))
+  :okb_17
+  (x_13 >>= 1)
+  (x_13 *= 4)
+  (x_13 += t_1)
+  (x_5 <- (mem x_13 4))
+  (x_18 <- 1)
+  (bnds_19 <- (mem t_1 0))
+  (bnds_19 <<= 1)
+  (bnds_19 += 1)
+  (cjump x_18 < bnds_19 :oka_21 :die_20)
+  :oka_21
+  (cjump 0 <= x_18 :okb_22 :die_20)
+  :die_20
+  (eax <- (array-error t_1 1))
+  :okb_22
+  (x_18 >>= 1)
+  (x_18 *= 4)
+  (x_18 += t_1)
+  ((mem x_18 4) <- x_5)
+  (__3 <- 1)
+  (x_23 <- 3)
+  (bnds_24 <- (mem t_1 0))
+  (bnds_24 <<= 1)
+  (bnds_24 += 1)
+  (cjump x_23 < bnds_24 :oka_26 :die_25)
+  :oka_26
+  (cjump 0 <= x_23 :okb_27 :die_25)
+  :die_25
+  (eax <- (array-error t_1 3))
+  :okb_27
+  (x_23 >>= 1)
+  (x_23 *= 4)
+  (x_23 += t_1)
+  ((mem x_23 4) <- x_2)
+  (__4 <- 1)
+  (eax <- (print t_1))
+  (eax <- eax)
+  (return)))

@@ -23,10 +23,6 @@ class GraphTestFest extends L2CompilerTest {
       val (expectedInter, rest) = readWithRest(resultFileContents)
       val expectedAlloc = printSExp(read(rest))
       verboseAssert("interferences for code:\n" + code, printSExp(actualInter), printSExp(expectedInter))
-//      def isFail(s:String) = s contains "#f"
-//      if(isFail(actualAlloc) || isFail(expectedAlloc) ){
-//        verboseAssert("allocations for code:\n" + code, actualAlloc, expectedAlloc)
-//      }
     }
   }
 }
@@ -36,9 +32,17 @@ class L2TestFest2010 extends TestFest2010(
         new L2Compiler{}.compileToString, L2Interpreter,
         L2TestFest2010Tests, L2TestFest2010Results)
 
+class L2TestFest2011 extends TestFest2011(
+        new L2Compiler{}.compileToString, L2Interpreter,
+        L2TestFest2011Tests, L2TestFest2011Results)
+
 class L3TestFest2010 extends TestFest2010(
   new L3Compiler().compileToString, L3Interpreter,
   L3TestFest2010Tests, L3TestFest2010Results)
+
+class L3TestFest2011 extends TestFest2011(
+  new L3Compiler().compileToString, L3Interpreter,
+  L3TestFest2011Tests, L3TestFest2011Results)
 
 class L4TestFest2010 extends TestFest2010(
   new L4Compiler{}.compileToString, L4Interpreter,
@@ -62,12 +66,40 @@ abstract class TestFest2010(compile: String => String,
       val fileContainingCompilationResults =
         new File("./tmp/"+language.name+"/" + index + "." + language.getCompiledCodeInterpreter.name)
       val compilationResult = compile(code)
-      val commentedOutCode = code.split("\n").map("; " + _).mkString("\n") + "\n\n"
+      val commentedOutCode = (t.getAbsolutePath :: code.split("\n").toList).map("; " + _).mkString("\n") + "\n\n"
       val commentedOutResult = r.read.split("\n").map("; " + _).mkString("\n") + "\n\n"
       fileContainingCompilationResults.write(commentedOutCode + commentedOutResult + compilationResult)
       val interpreterResults = language.getCompiledCodeInterpreter.run(fileContainingCompilationResults)
       //println(interpreterResults)
       verboseAssert(t.getAbsolutePath, interpreterResults, r.read)
+      // if we make it this far, delete the file.
+      // the ones remaining are failures.
+      fileContainingCompilationResults.delete()
+    }
+  }
+}
+
+abstract class TestFest2011(compile: String => String,
+                   language:Interpreter,
+                   testFiles:Iterable[File],
+                   resultFiles:Iterable[File]) extends TestHelpers with util.SlowTest{
+
+  io.CommandRunner("rm -rf ./tmp/"+language.name+"/")
+  new File("./tmp/"+language.name+"/").mkdir
+
+  for(((t, r), index) <- testFiles.zip(resultFiles).zipWithIndex){
+    test(index + "-" + t.getAbsolutePath){
+      val code = t.read
+      val fileContainingCompilationResults =
+        new File("./tmp/"+language.name+"/" + index + "." + language.getCompiledCodeInterpreter.name)
+      val compilationResult = compile(code)
+      val commentedOutCode = (t.getAbsolutePath :: code.split("\n").toList).map("; " + _).mkString("\n") + "\n\n"
+      val commentedOutResult = r.read.split("\n").map("; " + _).mkString("\n") + "\n\n"
+      fileContainingCompilationResults.write(commentedOutCode + commentedOutResult + compilationResult)
+      val interp = language.getCompiledCodeInterpreter
+      val interpreterResultsForMyCode = interp.run(fileContainingCompilationResults)
+      val interpreterResultsExpected = interp.run(r)
+      verboseAssert(t.getAbsolutePath, interpreterResultsForMyCode, interpreterResultsExpected)
       // if we make it this far, delete the file.
       // the ones remaining are failures.
       fileContainingCompilationResults.delete()

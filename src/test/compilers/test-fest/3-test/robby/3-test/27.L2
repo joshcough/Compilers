@@ -1,0 +1,18 @@
+(((call :L_1))
+ (:L_1 (ecx <- 401) (tail-call :f))
+ (:f
+  (x <- ecx)
+  (done <- x <= 1)
+  (done += done)
+  (done += 1)
+  (cjump done = 1 :L_3 :L_2)
+  :L_3
+  (eax <- (print x))
+  (z <- eax)
+  (x1 <- x)
+  (x1 -= 2)
+  (ecx <- x1)
+  (tail-call :f)
+  :L_2
+  (eax <- 23)
+  (return)))

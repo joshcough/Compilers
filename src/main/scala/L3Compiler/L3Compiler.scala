@@ -156,7 +156,6 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits {
     //(x <- (mem s n4))
     case ARef(arr:V, loc:V) => {
       assert(arr.isInstanceOf[Variable])
-      assert(loc.isInstanceOf[Num])
       val index = destination
       val size = temp()
       val boundsFailLabel = tempLabel()
@@ -164,7 +163,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits {
       val checkNegativeLabel = tempLabel()
 
       List(
-        Assignment(index, encode(loc.asInstanceOf[Num])),
+        Assignment(index, encode(loc)),
         RightShift(index, Num(1)),
         Assignment(size, MemRead(MemLoc(convertVar(arr.asInstanceOf[Variable]), Num(0)))),
         CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, checkNegativeLabel),
@@ -192,7 +191,6 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits {
     //(let ([x (aset v1 v2 v3)]) ...)
     case ASet(arr:V, loc:V, newVal: V) => {
       assert(arr.isInstanceOf[Variable])
-      assert(loc.isInstanceOf[Num])
       val index = destination
       val size = temp()
       val boundsFailLabel = tempLabel()
@@ -200,7 +198,7 @@ class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits {
       val checkNegativeLabel = tempLabel()
 
       List(
-        Assignment(index, encode(loc.asInstanceOf[Num])),
+        Assignment(index, encode(loc)),
         RightShift(index, Num(1)),
         Assignment(size, MemRead(MemLoc(convertVar(arr.asInstanceOf[Variable]), Num(0)))),
         CJump(Comp(size, L2LessThanOrEqualTo, index), boundsFailLabel, checkNegativeLabel),

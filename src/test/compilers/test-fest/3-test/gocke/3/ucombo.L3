@@ -1,0 +1,3 @@
+((:u :one)
+ (:one (x) (print 1))
+ (:u (x) (x x)))

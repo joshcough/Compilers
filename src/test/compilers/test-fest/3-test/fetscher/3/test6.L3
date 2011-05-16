@@ -1,0 +1,10 @@
+((let ([a (new-array 10 0)])
+  (let ([c 0])
+    (:filla a c)))
+ (:filla (a c)
+  (let ([cg10 (< 9 c)])
+    (if cg10
+      (print a)
+      (let ([cp1 (+ c 1)])
+        (let ([newa (aset a c cp1)])
+	  (:filla a cp1)))))))

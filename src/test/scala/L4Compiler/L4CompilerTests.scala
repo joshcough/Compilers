@@ -263,7 +263,7 @@ class L4CompilerTests extends TestHelpers with SlowTest {
 """
 
   import io.FileHelper._
-  new java.io.File("./test/4-test").mkdir()
+  new java.io.File("./4-test").mkdir()
   lazy val testcount = Iterator.from(0)
 
   def testCompile(L4E:String, extraFunctions: String = "") = {
@@ -278,9 +278,9 @@ class L4CompilerTests extends TestHelpers with SlowTest {
 //      println("L4InterpResult: "+ L4InterpResult)
 //      println("L3InterpResult: "+ L3InterpResult)
       // write the test
-      new java.io.File("./test/4-test/test" + index + ".L4").write(L4Code.clean)
+      new java.io.File("./4-test/test" + index + ".L4").write(L4Code.clean)
       // write the expected result
-      new java.io.File("./test/4-test/test" + index + ".L3").write(L3Code.clean)
+      new java.io.File("./4-test/test" + index + ".L3").write(L3Code.clean)
 
       if(L4InterpResult.trim == "") error("nothing happened in: " + L4Code)
       verboseAssert("L4 vs L3 interps", L4InterpResult, L3InterpResult)

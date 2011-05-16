@@ -1,0 +1,12 @@
+((let ([ans (:fib 10)])
+  (print ans))
+ (:fib (x)
+       (let ([xlt2 (< x 2)])
+         (if xlt2
+             1
+             (let ([x1 (- x 1)])
+               (let ([f1 (:fib x1)])
+                 (let ([x2 (- x 2)])
+                   (let ([f2 (:fib x2)])
+                     (+ f1 f2)))))))))
+ 

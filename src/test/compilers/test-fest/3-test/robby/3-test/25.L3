@@ -1,0 +1,4 @@
+((:f 21)
+ (:f (x) (:g x x))
+ (:g (x y) (:h x y y))
+ (:h (x y z) (let ((d1 (print x))) (let ((d2 (print y))) (print z)))))

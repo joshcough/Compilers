@@ -1,0 +1,11 @@
+((let ((n_1 10))
+   (let ((a_2 (new-array n_1 0)))
+     (let ((x_7 (- n_1 1)))
+       (let ((__3 (:fill_and_print a_2 x_7))) (print a_2)))))
+ (:fill_and_print
+  (a_4 n_5)
+  (let ((x_8 (= n_5 0)))
+    (if x_8
+      0
+      (let ((__6 (aset a_4 n_5 n_5)))
+        (let ((x_9 (- n_5 1))) (:fill_and_print a_4 x_9)))))))

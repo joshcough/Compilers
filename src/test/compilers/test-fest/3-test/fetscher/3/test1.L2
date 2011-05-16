@@ -1,0 +1,9 @@
+(((a <- 1)
+  (b <- 10)
+  :loop
+  (a += 1)
+  (cjump a < b :loop :end)
+  :end
+  (a <<= 1)
+  (a += 1)
+  (eax <- (print a))))

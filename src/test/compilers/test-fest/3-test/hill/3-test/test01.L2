@@ -1,0 +1,5 @@
+(((var_x <- 3)
+  (var_x <<= 1)
+  (var_x += 1)
+  (eax <- (print var_x))))
+

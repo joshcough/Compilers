@@ -1,0 +1,8 @@
+(
+ (let ([x (new-array 5 3)])
+   (let ([y (a? x)])
+     (print y)))
+)
+
+	
+	

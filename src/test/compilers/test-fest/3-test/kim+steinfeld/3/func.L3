@@ -1,0 +1,4 @@
+((let ([res (:square 5)])
+   (print res))
+ (:square (x)
+          (* x x)))

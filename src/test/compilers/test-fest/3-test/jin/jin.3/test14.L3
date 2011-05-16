@@ -1,0 +1,3 @@
+((let ([y (new-array 3 4)])
+(let ([x (aset y 2 5)])
+  (print y))))

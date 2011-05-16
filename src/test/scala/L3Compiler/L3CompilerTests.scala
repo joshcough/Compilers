@@ -92,6 +92,30 @@ class L3CompilerTests extends TestHelpers with util.SlowTest {
 (:myFun (x y q) (let ([z (+ x y)]) (+ z q))))
 """)
 
+  // two failures i had:
+  testCompile("""((let ([a (new-array 10 0)])
+    (let ([c 0])
+      (:filla a c)))
+   (:filla (a c)
+    (let ([cg10 (< 9 c)])
+      (if cg10
+        (print a)
+        (let ([cp1 (+ c 1)])
+          (let ([newa (aset a c cp1)])
+      (:filla a cp1)))))))""")
+
+  testCompile("""((let ((n_1 10))
+     (let ((a_2 (new-array n_1 0)))
+       (let ((x_7 (- n_1 1)))
+         (let ((__3 (:fill_and_print a_2 x_7))) (print a_2)))))
+  (:fill_and_print
+    (a_4 n_5)
+    (let ((x_8 (= n_5 0)))
+      (if x_8
+        0
+        (let ((__6 (aset a_4 n_5 n_5)))
+          (let ((x_9 (- n_5 1))) (:fill_and_print a_4 x_9)))))))""")
+  
   import io.FileHelper._
   new java.io.File("./test/3-test").mkdir()
   val testcount = Iterator.from(0)

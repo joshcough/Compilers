@@ -1,0 +1,22 @@
+(((x <- :fun)
+  (ecx <- 7)
+  (edx <- 9)
+  (call x)
+  (y <- eax) 
+  (eax <- (print y)))
+ (:fun
+  (x <- ecx)
+  (y <- edx)
+  (z <- 3)
+  (cjump z = 3 :then :else)
+  :then 
+  (eax <- y)
+  (return)
+  :else
+  (eax <- x)
+  (call :fun1)
+  (return))
+ (:fun1
+  (x <- eax)
+  (eax <- 5)
+  (return)))

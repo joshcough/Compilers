@@ -1,0 +1,1 @@
+((let ([ar (new-array 4 5)]) (let ([val (aref ar 3)]) (print val))))

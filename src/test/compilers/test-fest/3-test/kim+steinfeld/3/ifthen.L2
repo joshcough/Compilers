@@ -1,0 +1,23 @@
+((
+  (x <- 7 <= 9)
+  (temp <- x)
+  (temp <<= 1)
+  (temp += 1)
+  (cjump 3 = temp :then :else)
+  :then
+  (y <- 25)
+  (z <- 5)
+  (res <- y)
+  (res += z)
+  (res -= 1)
+  (eax <- (print res))
+  (goto :done)
+  :else
+  (y <- 23)
+  (z <- 3)
+  (res <- y)
+  (res -= z)
+  (res += 1)
+  (eax <- (print res))
+  :done
+))

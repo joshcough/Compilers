@@ -1,0 +1,8 @@
+((:printrecur 1)
+ (:printrecur (x)
+   (let ([xl8 (< x 8)])
+     (if xl8
+       (let ([xp1 (+ x 1)])
+         (let ([z (print x)])
+	   (:printrecur xp1)))
+       xl8))))

@@ -1,0 +1,11 @@
+((let ([res (:exp 5 3 1)])
+   (print res))
+ (:exp (x y r)
+       (let ([test (= y 0)])
+         (if test
+             r
+             (let ([newr (* r x)])
+               (let ([newy (- y 1)])
+                 (:exp x newy newr)))))))
+	
+	
