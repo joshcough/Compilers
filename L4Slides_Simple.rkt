@@ -28,7 +28,7 @@
             (t "Josh Cough")))
 
 (slide
- #:title "Compiler Function"
+ #:title "Compile Function"
  (item (t "compile :: String -> String"))
  'next
  (subitem (t "read :: String -> Any  ;; an s-expression"))
@@ -45,7 +45,7 @@
  )
 
 (slide
- #:title "Compiler Function"
+ #:title "Compile Function"
  (item (t "compile :: String -> String"))
  (subitem (colorize (t "read :: String -> Any  ;; an s-expression") "red" ))
  (subitem (colorize (t "parse :: Any -> L4") "red" ))
@@ -61,10 +61,10 @@
  )
 
 (slide
- (para #:align 'center 
-       (large-text "Contexts"))
- (blank 50)
- (item (t "LetContext, IfContext, ENContext, NoContext"))
+ #:title "Contexts"
+ (item (t "LetContext, IfContext, NoContext"))
+ 'next
+ (item (t "ENContext"))
 )
 
 (slide
@@ -84,9 +84,13 @@
  'next
  (item (t "case ENContext:"))
  'next
- (subitem (t "If we can go right, go right and then down."))
+ (subitem (t "If we can go right, go right (and then down)."))
  'next
- (subitem (t "If there are no expressions left, go up."))
+ 'alts
+ (list 
+  (list (subitem (t "If we can go wrong, go wrong.")))
+  (list (subitem (t "If there are no expressions left, go up.")))
+  )
  'next
  (item (t "case LetContext, IfContext NoContext:"))
  'next
