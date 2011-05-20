@@ -11,11 +11,10 @@ object L4CompilerMain extends L4Compiler {
 
 trait L4Compiler extends io.Reader with L4Parser with L4Printer {
 
-  def compile(code:String): L4 = {
-    val ast = parse(read(code))
+  def compile(code:String): L4 = compile(parse(read(code)))
+  def compile(ast:L4) = {
     L4(find(changeVarNamesInE(ast.main)), ast.funs.map(f => find(changeVarNamesInFunc(f))))
   }
-
   def compileToString(code:String) = L4Printer.toCode(compile(code))
 
   trait Context
@@ -42,15 +41,15 @@ trait L4Compiler extends io.Reader with L4Parser with L4Printer {
   // fill: L3-d context -> L3-e
   def fill(d:E, k:Context): E = k match {
     case LetContext(v, b, k) => Let(v, d, find(b, k))
-    case IfContext(t, e, k) => maybeLet(d, k, v => IfStatement(v, find(t, k), find(e, k)))
+    case IfContext(t, e, k) => maybeLet(d, v => IfStatement(v, find(t, k), find(e, k)))
     case enc@ENContext(remainingEs, vs, rebuild, k) => remainingEs match {
+      case (e::es) => maybeLet(d, v => find(e, enc.copy(remainingEs=es, vs=vs :+ v)))
       case Nil => maybeLet(d, k, v => fill(rebuild(vs :+ v), k))
-      case (e::es) => maybeLet(d, k, v => find(e, enc.copy(remainingEs=es, vs=vs :+ v)))
     }
     case NoContext => d
   }
 
-  def maybeLet(d:E, k:Context, f: V => E): E =
+  def maybeLet(d:E, f: V => E): E =
     if(d.isInstanceOf[V]) f(d.asInstanceOf[V]) else { val x = newVar(); Let(x, d, f(x)) }
 
   private val count = Iterator.from(0)

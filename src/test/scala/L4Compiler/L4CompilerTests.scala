@@ -270,19 +270,17 @@ class L4CompilerTests extends TestHelpers with SlowTest {
     val index = testcount.next()
     test(index + "-" + L4E){
       val L4Code = program(L4E + "\n" + extraFunctions)
-      val compiler = new L4Compiler{}
-      import compiler._
-      val L3Code = compileToString(L4Code.clean)
-      val L4InterpResult = L4Interpreter.run(L4Code.clean)
-      val L3InterpResult = L3Interpreter.run(L3Code.clean)
-//      println("L4InterpResult: "+ L4InterpResult)
-//      println("L3InterpResult: "+ L3InterpResult)
       // write the test
       new java.io.File("./test/4-test/test" + index + ".L4").write(L4Code.clean)
+      // compile the code
+      val L3Code = new L4Compiler{}.compileToString(L4Code.clean)
       // write the expected result
       new java.io.File("./test/4-test/test" + index + ".L3").write(L3Code.clean)
-
+      // run the interepters
+      val L4InterpResult = L4Interpreter.run(L4Code.clean)
+      val L3InterpResult = L3Interpreter.run(L3Code.clean)
       if(L4InterpResult.trim == "") error("nothing happened in: " + L4Code)
+      // verify the results
       verboseAssert("L4 vs L3 interps", L4InterpResult, L3InterpResult)
       verboseAssert(L4E, L4InterpResult, "1")
     }

@@ -1,5 +1,0 @@
-((let ([x (make-closure :fun 3)])
- (let ([y (:fun 1)])
-  (print y)))
- (:fun (x)
-  6))
