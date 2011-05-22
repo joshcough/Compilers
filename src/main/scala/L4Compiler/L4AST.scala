@@ -1,156 +1,68 @@
 package L4Compiler
 
+import L3Compiler.{L3AST => L3}
+
 object L4AST extends FunctionLifters {
 
-  sealed trait L4ASTNode
+  object L4 { def apply(main: E): L4 = L4(main, Nil) }
+  case class L4(main: E, funs: List[Func])
+  case class Func(label: Label, args: List[Variable], body: E)
+  sealed trait KeywordOrE
+  sealed trait KeywordOrV extends KeywordOrE
+  sealed trait E extends KeywordOrE
 
-  //p::= (e (l (x ...) e) ...)
-  object L4 {
-    def apply(main: E): L4 = L4(main, Nil)
-  }
+  case class Keyword(name:String, toD: List[L3.V] => L3.D) extends KeywordOrE with KeywordOrV
 
-  case class L4(main: E, funs: List[Func]) extends L4ASTNode
+  val keywords@List(add, sub, mult, lt, lteq, eq, num_?, a_?,
+    newarr, newtup, aref, aset, alen, print, makeclosure, closureproc, closurevars) = List(
+    Keyword("+", lift2(L3.Add(_, _))),
+    Keyword("-", lift2(L3.Sub(_, _))),
+    Keyword("*", lift2(L3.Mult(_, _))),
+    Keyword("<", lift2(L3.LessThan(_, _))),
+    Keyword("<=", lift2(L3.LessThanOrEqualTo(_, _))),
+    Keyword("=", lift2(L3.EqualTo(_, _))),
+    Keyword("number?", lift1(L3.IsNumber(_))),
+    Keyword("a?", lift1(L3.IsArray(_))),
+    Keyword("new-array", lift2(L3.NewArray(_, _))),
+    Keyword("new-tuple", (vs => L3.NewTuple(vs))),
+    Keyword("aref", lift2(L3.ARef(_, _))),
+    Keyword("aset", lift3(L3.ASet(_, _, _))),
+    Keyword("alen", lift1(L3.ALen(_))),
+    Keyword("print", lift1(L3.Print(_))),
+    Keyword("make-closure", lift2((l, v) => L3.MakeClosure(l.asInstanceOf[L3.Label], v))),
+    Keyword("closure-proc", lift1(L3.ClosureProc(_))),
+    Keyword("closure-vars", lift1(L3.ClosureVars(_))))
+  val keywordsMap: Map[String, Keyword] = keywords.map(k => (k.name, k)).toMap
 
-  case class Func(label: Label, args: List[Variable], body: E) extends L4ASTNode
-
-  sealed trait E extends L4ASTNode
-
-  trait EN extends E {
-    def es: List[E];
-    def rebuild: (List[E]) => E
-  }
-
-  sealed trait E1 extends EN {
-    def e: E;
-    def es = List(e);
-    def rebuild1: E => E;
-    def rebuild = lift1(rebuild1)
-  }
-
-  sealed trait E2 extends EN {
-    def e1: E;
-    def e2: E;
-    def es = e1 :: List(e2)
-    def rebuild2: (E, E) => E;
-    def rebuild = rebuild2
-  }
+  def ARef(arr:E, index:E) = FunCall(aref, arr, index)
+  def IsArray(arr:E) = FunCall(a_?, arr)
+  def MakeClosure(l:Label, e:E) = FunCall(makeclosure, l, e)
+  def NewTuple(es:List[E]) = FunCall(newtup, es)
+  def ClosureProc(e:E) = FunCall(closureproc, e)
+  def ClosureVars(e:E) = FunCall(closurevars, e)
 
   case class Let(v: Variable, e: E, body: E) extends E
-
-  case class IfStatement(e: E, truePath: E, falsePath: E) extends EN {
+  case class Begin(e1: E, e2: E) extends E
+  case class IfStatement(e: E, truePath: E, falsePath: E) extends E {
     def es = List(e, truePath, falsePath);
     def rebuild = lift3(IfStatement.apply _)
   }
-
-  case class Begin(e1: E, e2: E) extends E2 {
-    val rebuild2 = Begin.apply _
-  }
-
-  case class FunCall(f: E, args: List[E]) extends EN {
-    def es = f :: args;
-    def rebuild = (es: List[E]) => new FunCall(es.head, es.tail)
-  }
-
-  case class Add(e1: E, e2: E) extends E2 {
-    val rebuild2 = Add.apply _
-  }
-
-  case class Sub(e1: E, e2: E) extends E2 {
-    val rebuild2 = Sub.apply _
-  }
-
-  case class Mult(e1: E, e2: E) extends E2 {
-    val rebuild2 = Mult.apply _
-  }
-
-  case class LessThan(e1: E, e2: E) extends E2 {
-    val rebuild2 = LessThan.apply _
-  }
-
-  case class LessThanOrEqualTo(e1: E, e2: E) extends E2 {
-    val rebuild2 = LessThanOrEqualTo.apply _
-  }
-
-  case class EqualTo(e1: E, e2: E) extends E2 {
-    val rebuild2 = EqualTo.apply _
-  }
-
-  case class IsNumber(e: E) extends E1 {
-    val rebuild1 = IsNumber.apply _
-  }
-
-  case class IsArray(e: E) extends E1 {
-    val rebuild1 = IsArray.apply _
-  }
-
-  case class NewArray(size: E, init: E) extends E2 {
-    val e1 = size;
-    val e2 = init;
-    val rebuild2 = NewArray.apply _
-  }
-
-  case class NewTuple(vs: List[E]) extends EN {
-    def es = vs;
-    def rebuild = NewTuple.apply _
-  }
-
-  case class ARef(arr: E, loc: E) extends E2 {
-    val e1 = arr;
-    val e2 = loc;
-    val rebuild2 = ARef.apply _
-  }
-
-  case class ASet(arr: E, loc: E, newVal: E) extends EN {
-    val es = List(arr, loc, newVal);
-    val rebuild = lift3(ASet.apply _)
-  }
-
-  case class ALen(arr: E) extends E1 {
-    val e = arr;
-    val rebuild1 = ALen.apply _
-  }
-
-  case class MakeClosure(l: Label, e: E) extends E1 {
-    val rebuild1 = (e: E) => MakeClosure.apply(l, e)
-  }
-
-  case class ClosureProc(e: E) extends E1 {
-    val rebuild1 = ClosureProc.apply _
-  }
-
-  case class ClosureVars(e: E) extends E1 {
-    val rebuild1 = ClosureVars.apply _
-  }
-
-  case class Print(e: E) extends E1 {
-    val rebuild1 = Print.apply _
-  }
-
-  trait V extends E
-
+  object FunCall{ def apply(f:KeywordOrE, args: E*) = new FunCall(f, args.toList) }
+  case class FunCall(f: KeywordOrE, args: List[E]) extends E
+  trait V extends E with KeywordOrV
   case class Variable(name: String) extends V
-
   case class Num(n: Int) extends V
-
-  case class Label(name: String) extends V {
-    override def toString = "Label(\"" + name + "\")"
-  }
-
+  case class Label(name: String) extends V
 }
 
 trait FunctionLifters {
   def lift1[T, U](f: T => U): (List[T]) => U = (ts: List[T]) => ts match {
-    case x :: Nil => f(x)
-    case _ => error("expected 1 arg, but got: " + ts)
+    case x :: Nil => f(x); case _ => error("expected 1 arg, but got: " + ts)
   }
-
-  implicit def lift2[T, U](f: (T, T) => U): (List[T]) => U = (ts: List[T]) => ts match {
-    case x :: y :: Nil => f(x, y)
-    case _ => error("expected 2 args, but got: " + ts)
+  def lift2[T, U](f: (T, T) => U): (List[T]) => U = (ts: List[T]) => ts match {
+    case x :: y :: Nil => f(x, y); case _ => error("expected 2 args, but got: " + ts)
   }
-
   def lift3[T, U](f: (T, T, T) => U): (List[T]) => U = (ts: List[T]) => ts match {
-    case x :: y :: z :: Nil => f(x, y, z)
-    case _ => error("expected 3 args, but got: " + ts)
+    case x :: y :: z :: Nil => f(x, y, z); case _ => error("expected 3 args, but got: " + ts)
   }
 }

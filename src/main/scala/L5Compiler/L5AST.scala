@@ -10,21 +10,21 @@ object L5AST {
   case class NewTuple(vs:List[E]) extends E
   case class Begin(e1:E, e2:E) extends E
   case class App(f:E, args:List[E]) extends E
-  trait Prim extends E
+  class Prim(val name:String) extends E
   case class Num(n: Int) extends E
-  trait Biop extends Prim
-  trait Pred extends Prim
-  case object Print extends Prim
-  case object NewArray extends Prim
-  case object ARef extends Prim
-  case object ASet extends Prim
-  case object ALen extends Prim
-  case object Add extends Biop
-  case object Sub extends Biop
-  case object Mult extends Biop
-  case object LessThan extends Biop
-  case object LessThanOrEqualTo extends Biop
-  case object EqualTo extends Biop
-  case object IsNumber extends Pred
-  case object IsArray extends Pred
+  class Biop(override val name:String) extends Prim(name)
+  class Pred(override val name:String) extends Prim(name)
+  case object Print extends Prim("print")
+  case object NewArray extends Prim("new-array")
+  case object ARef extends Prim("aref")
+  case object ASet extends Prim("aset")
+  case object ALen extends Prim("alen")
+  case object Add extends Biop("+")
+  case object Sub extends Biop("-")
+  case object Mult extends Biop("*")
+  case object LessThan extends Biop("<")
+  case object LessThanOrEqualTo extends Biop("<=")
+  case object EqualTo extends Biop("=")
+  case object IsNumber extends Pred("number?")
+  case object IsArray extends Pred("a?")
 }

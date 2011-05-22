@@ -27,30 +27,15 @@ trait L4Parser { this: L4Compiler =>
   def parseE(a:Any): E = a match {
     case 'let :: rest => parseLet(rest)
     case 'if :: testE :: thenE :: elseE :: Nil => IfStatement(parseE(testE), parseE(thenE), parseE(elseE))
-    case '+  :: left :: right :: Nil => Add(parseE(left), parseE(right))
-    case '-  :: left :: right :: Nil => Sub(parseE(left), parseE(right))
-    case '*  :: left :: right :: Nil => Mult(parseE(left), parseE(right))
-    case '<  :: left :: right :: Nil => LessThan(parseE(left), parseE(right))
-    case '<= :: left :: right :: Nil => LessThanOrEqualTo(parseE(left), parseE(right))
-    case '=  :: left :: right :: Nil => EqualTo(parseE(left), parseE(right))
-    case Symbol("number?") :: e :: Nil => IsNumber(parseE(e))
-    case Symbol("a?") :: e :: Nil => IsArray(parseE(e))
-    case 'begin :: e1 :: e2 :: Nil => Begin(e1=parseE(e1), e2=parseE(e2))
-    case Symbol("new-array") :: s :: e :: Nil => NewArray(size = parseE(s), init = parseE(e))
-    case Symbol("new-tuple") :: xs => NewTuple(xs map parseE)
-    case 'aref :: arr :: loc :: Nil => ARef(arr=parseE(arr), loc=parseE(loc))
-    case 'aset :: arr :: loc :: e :: Nil => ASet(arr=parseE(arr), loc=parseE(loc), newVal=parseE(e))
-    case 'alen :: arr :: Nil => ALen(arr=parseE(arr))
-    case 'print :: e :: Nil => Print(e=parseE(e))
-
-    case Symbol("make-closure") :: (l:Symbol) :: e :: Nil => MakeClosure(l=parseLabel(l.toString), e=parseE(e))
-    case Symbol("closure-proc") :: e :: Nil => ClosureProc(e=parseE(e))
-    case Symbol("closure-vars") :: e :: Nil => ClosureVars(e=parseE(e))
-
+    case 'begin :: e1 :: e2 :: elseE => Begin(parseE(e1), parseE(e2))
+    case e :: es => FunCall(parseKeywordOrE(e), (es map parseE):_*)
     case n: Int => Num(n)
     case s: Symbol => if (s.toString.startsWith("':")) parseLabel(s.toString) else parseVar(s)
+  }
 
-    case e :: es => FunCall(parseE(e), es map parseE)
+  def parseKeywordOrE(a:Any): KeywordOrE = a match {
+    case s: Symbol => if (s.toString.startsWith("':")) parseLabel(s.toString) else parseKeywordOrVar(s)
+    case _ => parseE(a)
   }
 
   def parseLet(rest:List[Any]) = {
@@ -61,13 +46,11 @@ trait L4Parser { this: L4Compiler =>
     Let(x, e1, body)
   }
 
-  // label ::= sequence of alpha-numeric characters or underscore,
-  // but starting with a colon, ie matching this regexp:
-  // #rx"^:[a-zA-Z0-9_]$"
   def parseLabel(s: String) = {
     val chop = s.toString.drop(1) // remove the ' from ':label
     Label(s.drop(2)) // remove the ' and : from ':label.
   }
 
+  def parseKeywordOrVar(s: Symbol) = keywordsMap.getOrElse(s.toString.drop(1), parseVar(s))
   def parseVar(s: Symbol): Variable = Variable(s.toString.drop(1))
 }

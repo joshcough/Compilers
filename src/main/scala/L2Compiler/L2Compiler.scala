@@ -11,7 +11,7 @@ object L2CompilerMain extends L2Compiler {
 }
 
 trait L2Compiler extends Reader with L2Parser with Allocator with L2Printer {
-  def parseProgram(s:String):L2 = parse(read(s))
+  def parseProgram(s:String): L2 = parse(read(s))
   def compile(code: String): L2 = compile(parseProgram(code))
   def compile(ast:L2): L2 = {
     val l1 = allocate(ast)
