@@ -7,7 +7,6 @@ trait L5Parser {
   def parse = parseE _
 
   def parseE(a:Any): E = a match {
-    case '? :: rest => parseLambda(rest)
     case 'lambda :: rest => parseLambda(rest)
     case 'let :: rest => parseLet(rest, Let.apply _)
     case 'letrec :: rest => parseLet(rest, LetRec.apply _)

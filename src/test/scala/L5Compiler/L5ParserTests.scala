@@ -17,5 +17,5 @@ class L5ParserTests extends TestHelpers with L5Compiler {
     }
   }
 
-  testParse("(? (x) x)", expected=Some("(lambda (x) x)"))
+  testParse("(lambda (x) x)", expected=Some("(lambda (x) x)"))
 }

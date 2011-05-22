@@ -3,7 +3,6 @@ package L5Compiler
 import util.{L5Interpreter, L4Interpreter, TestHelpers}
 import L5Compiler.L5AST.{E, Num, Variable}
 
-// hi.
 class L5CompilerTests extends TestHelpers {
 
   testCompile("(test 5 5)")
@@ -31,64 +30,64 @@ class L5CompilerTests extends TestHelpers {
   testCompile("(test (tolist (new-tuple 1)) (cons 1 nil))")
   testCompile("(test (tolist (new-tuple 1 2 3 4)) (cons 1 (cons 2 (cons 3 (cons 4 nil)))))")
   testCompile("(test (map identity nil) nil)")
-  testCompile("(test (map (? (x) (+ x 5)) nil) nil)")
+  testCompile("(test (map (lambda (x) (+ x 5)) nil) nil)")
   testCompile("(test (map identity (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 1 2 3 4)))")
-  testCompile("(test (map (? (x) (+ x 5)) (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 6 7 8 9)))")
+  testCompile("(test (map (lambda (x) (+ x 5)) (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 6 7 8 9)))")
   testCompile("(test (reduce + 0 (tolist (new-tuple 1 2 3 4))) 10)")
   testCompile("(test (reduce * 1 (tolist (new-tuple 1 2 3 4))) 24)")
-  testCompile("(test (mapreduce (? (x) (* x x)) + 0 (tolist (new-tuple 1 2 3 4))) 30)")
-  testCompile("(test (filter (? (x) (< 2 x)) (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 3 4)))")
-  testCompile("(test (find (? (x) (= 4 x)) (tolist (new-tuple 1 2 3 4))) (some 4))")
-  testCompile("(test (get (find (? (x) (= 4 x)) (tolist (new-tuple 1 2 3 4)))) 4)")
-  testCompile("(test (find (? (x) (= 5 x)) (tolist (new-tuple 1 2 3 4))) none)")
+  testCompile("(test (mapreduce (lambda (x) (* x x)) + 0 (tolist (new-tuple 1 2 3 4))) 30)")
+  testCompile("(test (filter (lambda (x) (< 2 x)) (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 3 4)))")
+  testCompile("(test (find (lambda (x) (= 4 x)) (tolist (new-tuple 1 2 3 4))) (some 4))")
+  testCompile("(test (get (find (lambda (x) (= 4 x)) (tolist (new-tuple 1 2 3 4)))) 4)")
+  testCompile("(test (find (lambda (x) (= 5 x)) (tolist (new-tuple 1 2 3 4))) none)")
 
 
   def wrapLibrary(code:String) = """
-  (let ([identity (? (x) x)])
+  (let ([identity (lambda (x) x)])
 
   ;;;;;;;;;;;;;;;;;;
   ;; Booleans
   ;;;;;;;;;;;;;;;;;;
   (let ([true 1])
   (let ([false 0])
-  (let ([not (? (x) (if (= true x) false true))])
-  (let ([and (? (x y) (if (= false x) false (if (= false y) false true)))])
-  (let ([or  (? (x y) (if (= false x) (if (= false y) false true) true))])
+  (let ([not (lambda (x) (if (= true x) false true))])
+  (let ([and (lambda (x y) (if (= false x) false (if (= false y) false true)))])
+  (let ([or  (lambda (x y) (if (= false x) (if (= false y) false true) true))])
 
   ;;;;;;;;;;;;;;;;;;
   ;; Options
   ;;;;;;;;;;;;;;;;;;
   (let ([none (new-tuple)])
-  (let ([some (? (x) (new-tuple x (new-tuple)))])
-  (let ([get (? (o) (aref o 0))])
+  (let ([some (lambda (x) (new-tuple x (new-tuple)))])
+  (let ([get (lambda (o) (aref o 0))])
 
   ;;;;;;;;;;;;;;;;;;
   ;; Lists
   ;;;;;;;;;;;;;;;;;;
   (let ([nil (new-tuple)])
-  (let ([cons (? (x y) (new-tuple x y))])
-  (let ([head (? (xs) (aref xs 0))])
-  (let ([tail (? (xs) (aref xs 1))])
-  (let ([empty (? (xs) (= 0 (alen xs)))])
-  (letrec ([size (? (xs) (if (empty xs) 0 (+ 1 (size (tail xs)))))])
-  (letrec ([mapreduce (? (f g id xs)
+  (let ([cons (lambda (x y) (new-tuple x y))])
+  (let ([head (lambda (xs) (aref xs 0))])
+  (let ([tail (lambda (xs) (aref xs 1))])
+  (let ([empty (lambda (xs) (= 0 (alen xs)))])
+  (letrec ([size (lambda (xs) (if (empty xs) 0 (+ 1 (size (tail xs)))))])
+  (letrec ([mapreduce (lambda (f g id xs)
     (if (empty xs) id (g (f (head xs)) (mapreduce f g id (tail xs)))))])
-  (let ([map (? (f xs) (mapreduce f cons nil xs))])
-  (let ([reduce (? (f id xs) (mapreduce identity f id xs))])
-  (let ([tolist (? (arr)
-    (letrec ((helper (? (index)
+  (let ([map (lambda (f xs) (mapreduce f cons nil xs))])
+  (let ([reduce (lambda (f id xs) (mapreduce identity f id xs))])
+  (let ([tolist (lambda (arr)
+    (letrec ((helper (lambda (index)
       (if (<= (alen arr) index) nil (cons (aref arr index) (helper (+ 1 index)))))))
     (helper 0))
   )])
-  (let ([filter (? (p xs) (mapreduce identity (? (x y) (if (p x) (cons x y) y)) nil xs))])
-  (letrec ([find (? (p xs)
+  (let ([filter (lambda (p xs) (mapreduce identity (lambda (x y) (if (p x) (cons x y) y)) nil xs))])
+  (letrec ([find (lambda (p xs)
     (if (empty xs) none (if (p (head xs)) (some (head xs)) (find p (tail xs))))
   )])
 
   ;;;;;;;;;;;;;;;;;;
   ;; Equality
   ;;;;;;;;;;;;;;;;;;
-  (letrec ([eqlist (? (x y)
+  (letrec ([eqlist (lambda (x y)
     (if (and (empty x) (empty y))
       true
       (if (or (empty x) (empty y))
@@ -105,12 +104,12 @@ class L5CompilerTests extends TestHelpers {
         )
       )
     ))])
-  (let ([eq (? (x y) (if (and (number? x) (number? y)) (= x y) (eqlist x y)))])
+  (let ([eq (lambda (x y) (if (and (number? x) (number? y)) (= x y) (eqlist x y)))])
 
   ;;;;;;;;;;;;;;;;;;
   ;; test function
   ;;;;;;;;;;;;;;;;;;
-  (let ([test (?(x y) (if (eq x y) (print 1) (begin (print x) (print y))))])
+  (let ([test (lambda (x y) (if (eq x y) (print 1) (begin (print x) (print y))))])
 """ + code + """
   ))))))))))))))))))))))))
 """
