@@ -1,5 +1,5 @@
 import L2Compiler.{L2Printer, L2Compiler}
-import L3Compiler.L3Compiler
+import L3Compiler.{L3Printer, L3Compiler}
 import L4Compiler.{L4Printer, L4Compiler}
 import L5Compiler.{L5CompilerTests, L5Compiler}
 import util.{L2Interpreter, L3Interpreter, L4Interpreter, L1Interpreter, L5Interpreter, TestHelpers}
@@ -19,13 +19,13 @@ object TheMainCompiler {
 
     val l4 = l5c.compile(code)
 //    println("l4: " + L4Printer.toCode(l4))
-    val l3String = L4Printer.toCode(l4c.compile(l4))
-//    println("l3: " + l3String)
-    val l2 = l3c.compile(l3String)
+    val l3 = l4c.compile(l4)
+//    println("l3: " + l3)
+    val l2 = l3c.compile(l3)
 //    println("l2: " + L2Printer.toCode(l2))
     val l1String = L2Printer.toCode(l2c.compile(l2))
 //    println("l1: " + l1String)
-    val result = (L4Printer.toCode(l4), l3String, L2Printer.toCode(l2), l1String)
+    val result = (L4Printer.toCode(l4), L3Printer.toCode(l3), L2Printer.toCode(l2), l1String)
     println("done compiling!")
     result
   }

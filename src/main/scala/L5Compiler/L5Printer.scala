@@ -13,19 +13,7 @@ trait L5Printer {
     case NewTuple(vs) => "(new-tuple "+ vs.map(toCode).mkString(" ") + ")"
     case Begin(l:E, r:E) => "(begin " +toCode(l)+ " " +toCode(r)+ ")"
     case App(e, args) => "("+ (e::args).map(toCode).mkString(" ") + ")"
-    case a@Add => "+"
-    case s@Sub => "-"
-    case m@Mult  => "*"
-    case l@LessThan  => "<"
-    case l@LessThanOrEqualTo  => "<="
-    case e@EqualTo  => "="
-    case i@IsNumber => "number?"
-    case i@IsArray => "a?"
-    case n@NewArray => "new-array"
-    case ARef => "aref"
-    case ASet => "aset"
-    case ALen => "alen"
-    case Print => "print"
     case Num(n) => n.toString
+    case p:Prim => p.keyword.name
   }
 }
