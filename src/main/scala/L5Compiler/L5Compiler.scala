@@ -86,7 +86,7 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
           (f +) => (f (lambda (x y) (+ x y)))
        */
       val (l4es, moreFuns) = compileEs(args)
-      (L4.FunCall(L4.keywordsMap.getOrElse(p.name, error("unknown prim: " + p.name)), l4es), moreFuns)
+      (L4.FunCall(L4.keywordsMap(p.name), l4es), moreFuns)
     }
     case App(f, args) => {
       val v = newVar()

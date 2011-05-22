@@ -267,28 +267,27 @@ class L5FreeVarTests extends TestHelpers {
   testFreeVariables("x", List("x"))
   testFreeVariables("7", Nil)
 
-  testFreeVariables("(let ([x 6)) x)", Nil)
-  testFreeVariables("(let ([x y)) x)", List("y"))
-  testFreeVariables("(let ([y 6)) x)", List("x"))
-  testFreeVariables("(let ([y 6)) (x (y z)))", List("x", "z"))
+  testFreeVariables("(let ([x 6]) x)", Nil)
+  testFreeVariables("(let ([x y]) x)", List("y"))
+  testFreeVariables("(let ([y 6]) x)", List("x"))
+  testFreeVariables("(let ([y 6]) (x (y z)))", List("x", "z"))
 
-  testFreeVariables("(let ([x x)) 7)", List("x"))
-  testFreeVariables("(letrec ((x x)) 7)", Nil)
-  testFreeVariables("(let ([x x)) x)", List("x"))
-  testFreeVariables("(letrec ((x x)) x)", Nil)
+  testFreeVariables("(let ([x x]) 7)", List("x"))
+  testFreeVariables("(letrec ([x x]) 7)", Nil)
+  testFreeVariables("(let ([x x]) x)", List("x"))
+  testFreeVariables("(letrec ([x x]) x)", Nil)
 
   testFreeVariables("(if 1 7 8)", Nil)
   testFreeVariables("(if 1 7 z)", List("z"))
   testFreeVariables("(if 1 y 8)", List("y"))
   testFreeVariables("(if x y z)", List("x", "y", "z"))
-  testFreeVariables("(let ([y 6)) (if 1 y 7))", Nil)
+  testFreeVariables("(let ([y 6]) (if 1 y 7))", Nil)
   testFreeVariables("(begin 1 2)", Nil)
   testFreeVariables("(begin 1 y)", List("y"))
   testFreeVariables("(begin x 2)", List("x"))
   testFreeVariables("(begin x y)", List("x", "y"))
   testFreeVariables("(new-tuple x 2 3 4 5 6 y)", List("x", "y"))
   testFreeVariables("(x y)", List("x", "y"))
-
 
   def testFreeVariables(e:String, expected:List[String]){
     test("free variables in: " + e){
