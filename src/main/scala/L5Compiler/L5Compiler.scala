@@ -49,21 +49,15 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
                     e))))
       */
       val frees = freeVars(e)
-      val usingFreesTuple = frees.nonEmpty
-      val usingArgsTuple = if(usingFreesTuple) args.size > 2 else args.size > 3
+      val usingArgsTuple = args.size > 2
       val (freesVar, argsVar) = (L4.Variable("frees"), L4.Variable("args"))
-
       val fArgs: List[L4.Variable] =
-        if(usingFreesTuple && usingArgsTuple) List(freesVar, argsVar)
-        else if(usingFreesTuple && ! usingArgsTuple) freesVar :: args.map(convertVar)
-        else if(!usingFreesTuple && usingArgsTuple) List(argsVar)
-        else args
+        if(usingArgsTuple) List(freesVar, argsVar) else freesVar :: args.map(convertVar)
 
       val (fBody, moreFunctions) = {
         val (inner, funcs) = compile(body)
-        val freeLets = if(!usingFreesTuple) inner else {
+        val freeLets =
           frees.zipWithIndex.foldRight(inner){ case ((v,i), b) => L4.Let(v, L4.ARef(freesVar, L4.Num(i)), b) }
-        }
         val finalLets = if(! usingArgsTuple) freeLets else {
           args.zipWithIndex.foldRight(freeLets){ case ((v,i), b) => L4.Let(v, L4.ARef(argsVar, L4.Num(i)), b) }
         }
@@ -71,9 +65,7 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       }
 
       val label = newLabel()
-      val labelOrClosure =
-        if(frees.isEmpty) label else L4.MakeClosure(label, L4.NewTuple(frees))
-      (labelOrClosure, L4.Func(label, fArgs, fBody) :: moreFunctions)
+      (L4.MakeClosure(label, L4.NewTuple(frees)), L4.Func(label, fArgs, fBody) :: moreFunctions)
     }
     case App(p:Prim, args) => {
       assert(args.size == nrArgs(p))
@@ -92,25 +84,14 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       val v = newVar()
       val (compiledF, extraFunctions) = compile(f)
       val (compiledArgs, moreExtraFunctions) = compileEs(args)
-      (L4.Let(v, compiledF, {
-        // if we get back an actual closure in the argument position
-        // then we know we had free variables.
-        L4.IfStatement(L4.IsArray(v),
-          // those free variables go in the first argument.
-          L4.FunCall(L4.ClosureProc(v), L4.ClosureVars(v) ::
-            // if we can fit the rest of the arguments in, then great
-            (if(compiledArgs.size <= 2) compiledArgs
-            // if not, they must also go into another tuple.
-            else List(L4.NewTuple(compiledArgs)))),
-          // we didnt get a closure, so we must have a raw label.
-          L4.FunCall(v,
-            // if we can fit the arguments in, then great
-            if(compiledArgs.size <= 3) compiledArgs
-            // if not, create a new tuple and
-            else List(L4.NewTuple(compiledArgs))
-          )
-        )
-      }), extraFunctions ::: moreExtraFunctions)
+      (L4.Let(v, compiledF,
+        // free variables go in the first argument.
+        L4.FunCall(L4.ClosureProc(v), L4.ClosureVars(v) ::
+        // if we can fit the rest of the arguments in, then great
+        (if (compiledArgs.size <= 2) compiledArgs
+        // if not, they must also go into another tuple.
+        else List(L4.NewTuple(compiledArgs))))),
+      extraFunctions ::: moreExtraFunctions)
     }
     // (f +) => (f (lambda (x y) (+ x y)))
     case p:Prim => {

@@ -148,8 +148,8 @@ class L5CompileETests extends TestHelpers {
 
   // one arg, no frees
   testCompile("(lambda (x) x)", """
-(:f0
-(:f0 (x) x))""")
+((make-closure :f0 (new-tuple))
+(:f0 (frees x) x))""")
 
   // one arg, one free
   testCompile("(lambda (x) y)", """
@@ -166,8 +166,8 @@ class L5CompileETests extends TestHelpers {
 
   // three args, none free (dont need frees or args!)
   testCompile("(lambda (a b c) a)", """
-(:f0
-(:f0 (a b c) a))
+((make-closure :f0 (new-tuple))
+(:f0 (frees args) (let ([a (aref args 0)]) (let ([b (aref args 1)]) (let ([c (aref args 2)]) a)))))
 """)
 
   // three args, one free (we need both frees and args here.)
@@ -178,59 +178,61 @@ class L5CompileETests extends TestHelpers {
 
   // four args, none free (over the limit, but notice we dont have 'frees', just 'args')
   testCompile("(lambda (a b c d) a)", """
-(:f0
-(:f0 (args) (let ([a (aref args 0)]) (let ([b (aref args 1)]) (let ([c (aref args 2)]) (let ([d (aref args 3)]) a))))))
+((make-closure :f0 (new-tuple))
+(:f0 (frees args) (let ([a (aref args 0)]) (let ([b (aref args 1)]) (let ([c (aref args 2)]) (let ([d (aref args 3)]) a))))))
 """)
 
   // inner lambda
   testCompile("(lambda (x) (lambda (y) y))", """
-(:f1
-(:f1 (x) :f0)
-(:f0 (y) y))
+((make-closure :f1 (new-tuple))
+(:f1 (frees x) (make-closure :f0 (new-tuple)))
+(:f0 (frees y) y))
 """)
 
   testCompile("(+ 5 6)", "((+ 5 6))")
 
   testCompile("(+ 5 (lambda (x) x))", """
-((+ 5 :f0)
-(:f0 (x) x))""")
+((+ 5 (make-closure :f0 (new-tuple)))
+(:f0 (frees x) x))""")
 
   // no frees in the lambda. one arg.
   testCompile("((lambda (x) x) 5)", """
-((let ([x0 :f0]) (if (a? x0) ((closure-proc x0) (closure-vars x0) 5) (x0 5)))
-(:f0 (x) x))""")
+((let ([x0 (make-closure :f0 (new-tuple))]) ((closure-proc x0) (closure-vars x0) 5))
+(:f0 (frees x) x))""")
 
   // no frees in the lambda. two args.
   testCompile("((lambda (x y) x) 5 6)", """
-((let ([x0 :f0]) (if (a? x0) ((closure-proc x0) (closure-vars x0) 5 6) (x0 5 6)))
-(:f0 (x y) x))""")
+((let ([x0 (make-closure :f0 (new-tuple))]) ((closure-proc x0) (closure-vars x0) 5 6))
+(:f0 (frees x y) x))""")
 
   // no frees in the lambda, three args.
   testCompile("((lambda (x y z) z) 5 6 7)", """
-((let ([x0 :f0]) (if (a? x0) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7)) (x0 5 6 7)))
-(:f0 (x y z) z))""")
+((let ([x0 (make-closure :f0 (new-tuple))]) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7)))
+(:f0 (frees args) (let ([x (aref args 0)]) (let ([y (aref args 1)]) (let ([z (aref args 2)]) z)))))
+""")
 
   // no frees in the lambda, four args.
   testCompile("((lambda (a b c d) a) 5 6 7 8)", """
-((let ([x0 :f0]) (if (a? x0) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7 8)) (x0 (new-tuple 5 6 7 8))))
-(:f0 (args) (let ([a (aref args 0)]) (let ([b (aref args 1)]) (let ([c (aref args 2)]) (let ([d (aref args 3)]) a))))))""")
+((let ([x0 (make-closure :f0 (new-tuple))]) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7 8)))
+(:f0 (frees args) (let ([a (aref args 0)]) (let ([b (aref args 1)]) (let ([c (aref args 2)]) (let ([d (aref args 3)]) a))))))""")
 
   // one free in the lambda, four args.
   testCompile("((lambda (a b c d) x) 5 6 7 8)", """
-((let ([x0 (make-closure :f0 (new-tuple x))]) (if (a? x0) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7 8)) (x0 (new-tuple 5 6 7 8))))
-(:f0 (frees args) (let ([a (aref args 0)]) (let ([b (aref args 1)]) (let ([c (aref args 2)]) (let ([d (aref args 3)]) (let ([x (aref frees 0)]) x)))))))""")
+((let ([x0 (make-closure :f0 (new-tuple x))]) ((closure-proc x0) (closure-vars x0) (new-tuple 5 6 7 8)))
+(:f0 (frees args) (let ([a (aref args 0)]) (let ([b (aref args 1)]) (let ([c (aref args 2)]) (let ([d (aref args 3)]) (let ([x (aref frees 0)]) x)))))))
+""")
 
 
   testCompile("((lambda (x) +) 6 7)", """
-((let ([x0 :f1]) (if (a? x0) ((closure-proc x0) (closure-vars x0) 6 7) (x0 6 7)))
-(:f1 (x) :f0)
-(:f0 (x y) (+ x y)))
+((let ([x0 (make-closure :f1 (new-tuple))]) ((closure-proc x0) (closure-vars x0) 6 7))
+(:f1 (frees x) (make-closure :f0 (new-tuple)))
+(:f0 (frees x y) (+ x y)))
 """)
 
   testCompile("(((lambda (x) print) 7) 7)", """
-((let ([x0 (let ([x1 :f1]) (if (a? x1) ((closure-proc x1) (closure-vars x1) 7) (x1 7)))]) (if (a? x0) ((closure-proc x0) (closure-vars x0) 7) (x0 7)))
-(:f1 (x) :f0)
-(:f0 (x) (print x)))
+((let ([x0 (let ([x1 (make-closure :f1 (new-tuple))]) ((closure-proc x1) (closure-vars x1) 7))]) ((closure-proc x0) (closure-vars x0) 7))
+(:f1 (frees x) (make-closure :f0 (new-tuple)))
+(:f0 (frees x) (print x)))
 """)
 
   def testCompile(e:String, expected:String){
