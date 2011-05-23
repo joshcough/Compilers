@@ -2,6 +2,7 @@ package L2Compiler
 
 import io.Reader
 import L2AST._
+import util.Timer
 
 object L2CompilerMain extends L2Compiler {
   import java.io.File
@@ -10,11 +11,11 @@ object L2CompilerMain extends L2Compiler {
   def compileFile(filename:String): String = toCode(compile(new File(filename).read))
 }
 
-trait L2Compiler extends Reader with L2Parser with Allocator with L2Printer {
+trait L2Compiler extends Reader with L2Parser with Allocator with L2Printer with Timer {
   def parseProgram(s:String): L2 = parse(read(s))
   def compile(code: String): L2 = compile(parseProgram(code))
   def compile(ast:L2): L2 = {
-    val l1 = allocate(ast)
+    val l1 = timed("allocate", allocate(ast))
     val mainWithoutLabel = l1.main.body.headOption match {
       case Some(l) if l == mainLabel => Func(l1.main.body.tail)
       case _ => l1.main

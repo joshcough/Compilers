@@ -10,6 +10,10 @@ object L2AST {
   val mainLabelDec = LabelDeclaration(mainLabel)
   case class Func(body: List[Instruction]) extends L2ASTNode {
     def isMain = body.head == mainLabelDec
+    def name = body.headOption match {
+      case Some(LabelDeclaration(Label(name))) => name
+      case _ => body.headOption
+    }
   }
   def Main(body: List[Instruction]) = Func(mainLabelDec :: body)
   case class MemLoc(basePointer:X, offset: Num) extends L2ASTNode

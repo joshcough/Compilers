@@ -12,4 +12,7 @@ class IntepreterProject(info: ProjectInfo) extends DefaultProject(info) with Sbt
 
   lazy val testSlow = runSubclassesOf("util.SlowTest")
   lazy val testFast = runEverythingButSubclassesOf("util.SlowTest")
+
+  lazy val timerOn  = task { System.setProperty("timer.display", "true"); None }
+  lazy val timerOff = task { System.setProperty("timer.display", "false"); None  }
 }

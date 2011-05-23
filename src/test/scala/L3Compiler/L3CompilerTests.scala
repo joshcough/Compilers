@@ -115,7 +115,8 @@ class L3CompilerTests extends TestHelpers with util.SlowTest {
         0
         (let ((__6 (aset a_4 n_5 n_5)))
           (let ((x_9 (- n_5 1))) (:fill_and_print a_4 x_9)))))))""")
-  
+  testCompile("((let ([x (a? :f)]) (print x)) (:f () 5)))")
+
   import io.FileHelper._
   new java.io.File("./test/3-test").mkdir()
   val testcount = Iterator.from(0)
@@ -128,11 +129,6 @@ class L3CompilerTests extends TestHelpers with util.SlowTest {
 //      println(l3Code.clean)
 //      println("L2 Code: " + l2Code.clean)
 //      verboseAssert(l3Code, read(l2Code.clean).toString, read(expected.clean).toString)
-      val l3InterpResult = L3Interpreter.run(l3Code.clean)
-      val l2InterpResult = L2Interpreter.run(l2Code.clean)
-//      println("l3InterpResult: "+ l3InterpResult)
-//      println("l2InterpResult: "+ l2InterpResult)
-      verboseAssert("l3 vs l2 interps", l3InterpResult, l2InterpResult)
 
       // write out the tests files and results.
       val index = testcount.next()
@@ -140,6 +136,12 @@ class L3CompilerTests extends TestHelpers with util.SlowTest {
       new java.io.File("./test/3-test/test" + index + ".L3").write(l3Code.clean)
       // write the expected result
       new java.io.File("./test/3-test/test" + index + ".L2").write(l2Code.clean)
+
+      val l3InterpResult = L3Interpreter.run(l3Code.clean)
+      val l2InterpResult = L2Interpreter.run(l2Code.clean)
+//      println("l3InterpResult: "+ l3InterpResult)
+//      println("l2InterpResult: "+ l2InterpResult)
+      verboseAssert("l3 vs l2 interps", l3InterpResult, l2InterpResult)
     }
   }
 }

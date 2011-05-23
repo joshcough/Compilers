@@ -1,6 +1,7 @@
 package L2Compiler
 
 import L2AST._
+import util.Timer
 
 // the allocator brings together everything in L2
 // for each function in the program, it tries to see if it can allocate it as is.
@@ -10,11 +11,11 @@ import L2AST._
 // if it is unable to, it spills a variable, and tries again.
 // it does this until either a) it works, or b) it is out of variables to spill.
 // the last case results in error. 
-trait Allocator extends Spill with Liveness with Interference {
+trait Allocator extends Spill with Liveness with Interference with Timer {
 
   // allocates all of the functions in the given L2 program
   def allocate(ast: L2): L2 = {
-    val l1Functions = (ast.main :: ast.funs).map(allocate)
+    val l1Functions = (ast.main :: ast.funs).map(f => timed("allocating function: " + f.name, allocate(f)))
     L2(l1Functions.head, l1Functions.tail)
   }
 
@@ -46,13 +47,21 @@ trait Allocator extends Spill with Liveness with Interference {
 
   // allocateCompletely rewrites (spills) until the function is colorable
   def allocateCompletely(f: Func, offset: Int): ((Func, Map[Variable, Register]), Int) = {
-    attemptAllocation(inoutFinalResult(f))._1 match {
-      case Some(registerMap) => ((f, registerMap), offset)
-      case None => chooseSpillVar(liveRanges(inoutFinalResult(f))) match {
-        case Some(sv) => allocateCompletely(Func(spill(sv, offset, f.body)), offset - 4)
-        case None => error("allocation impossible")
+    timed("allocating completely function: " + f.name,
+      attemptAllocation(inoutFinalResult(f))._1 match {
+        case Some(registerMap) => ((f, registerMap), offset)
+        case None => {
+          // bottle next is inoutFinalResult(f)
+          val io = timed("inoutFinalResult("+f.name+")", inoutFinalResult(f))
+          val lr = timed("liveRanges("+f.name+")", liveRanges(io))
+          val sp = timed("chooseSpillVar("+f.name+")", chooseSpillVar(lr))
+          sp match {
+           case Some(sv) => allocateCompletely(Func(spill(sv, offset, f.body)), offset - 4)
+            case None => error("allocation impossible")
+          }
+        }
       }
-    }
+    )
   }
 
   // the second thing returned here is the progress we were actually able to make.
@@ -82,7 +91,7 @@ trait Allocator extends Spill with Liveness with Interference {
       if(anyVariablesUnpaired.isDefined) (None, finalPairings)
       else (Some(finalPairings.map{ case (v, or) => (v, or.get)}), finalPairings)
     }
-    attemptAllocation(buildInterferenceSet(iioss))
+    timed("attemping allocation: ", attemptAllocation(buildInterferenceSet(iioss)))
   }
   
   // sets up the function so that edi and esi can be spilled.
