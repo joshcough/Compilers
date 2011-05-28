@@ -36,24 +36,18 @@ class TheMainCompilerTests extends TestHelpers with Timer {
   (let ([or  (lambda (x y) (if (= 0 x) (if (= 0 y) 0 1) 1))])
 
   ;;;;;;;;;;;;;;;;;;
-  ;; Test Functions
+  ;; Equality
   ;;;;;;;;;;;;;;;;;;
   (let ([eq (lambda (x y) (= x y))])
+
+  ;;;;;;;;;;;;;;;;;;
+  ;; Test Function
+  ;;;;;;;;;;;;;;;;;;
   (let ([test (lambda (x y) (if (eq x y) (print 1) (begin (print x) (print y))))])
 
 """ + code + """
-  ))))))))
+  ))))))))))
 """
-
-//  def wrapLibrary(code:String) = """
-//  ;;;;;;;;;;;;;;;;;;
-//  ;; Test Functions
-//  ;;;;;;;;;;;;;;;;;;
-//  ;(let ([eq (lambda (x y) (= x y))])
-//  (let ([test (lambda (x y) (if (= x y) (print 1) (begin (print x) (print y))))])
-//""" + code + """
-//  )
-//"""
 
   def testCompile(L5E:String) = {
     val index = testcount.next()
@@ -62,37 +56,37 @@ class TheMainCompilerTests extends TestHelpers with Timer {
       //val l5 = L5E.clean
       val (l4, l3, l2, l1) = alwaysTimed("compiling", TheMainCompiler.compileToStrings(l5))
 
-//      // write the test
-//      new java.io.File("./test/the-test/test" + index + ".L5").write(l5)
-//      new java.io.File("./test/the-test/test" + index + ".L4").write(l4)
-//      new java.io.File("./test/the-test/test" + index + ".L3").write(l3)
-//      new java.io.File("./test/the-test/test" + index + ".L2").write(l2)
-//      new java.io.File("./test/the-test/test" + index + ".L1").write(l1)
-//
-//      def die(level:String, otherResult:String, codes:String*){
-//        println(codes.mkString("\n============\n"))
-//        fail(level + "\nother result: " + otherResult)
-//      }
-//
-//      val L5InterpResult = L5Interpreter.run(l5)
-//      val L1InterpResult = L1Interpreter.run(l1)
-//
-//      verboseAssert(L5E, L5InterpResult, "1")
-//      if(L5InterpResult != L1InterpResult) {
-//        val L4InterpResult = L4Interpreter.run(l4)
-//        if(L5InterpResult == L4InterpResult) {
-//          val L3InterpResult = L3Interpreter.run(l3)
-//          if(L5InterpResult == L3InterpResult) {
-//            val L2InterpResult = L2Interpreter.run(l2)
-//            if(L5InterpResult == L2InterpResult) {
-//              die("L5 != L1", L1InterpResult, l5, l4, l3, l2, l1)
-//            }
-//            else die("L5 != L2", L2InterpResult, l5, l4, l3, l2)
-//          }
-//          else die("L5 != L3", L3InterpResult, l5, l4, l3)
-//        }
-//        else die("L5 != L4", L4InterpResult, l5, l4)
-//      }
+      // write the test
+      new java.io.File("./test/the-test/test" + index + ".L5").write(l5)
+      new java.io.File("./test/the-test/test" + index + ".L4").write(l4)
+      new java.io.File("./test/the-test/test" + index + ".L3").write(l3)
+      new java.io.File("./test/the-test/test" + index + ".L2").write(l2)
+      new java.io.File("./test/the-test/test" + index + ".L1").write(l1)
+
+      def die(level:String, otherResult:String, codes:String*){
+        println(codes.mkString("\n============\n"))
+        fail(level + "\nother result: " + otherResult)
+      }
+
+      val L5InterpResult = L5Interpreter.run(l5)
+      val L1InterpResult = L1Interpreter.run(l1)
+
+      verboseAssert(L5E, L5InterpResult, "1")
+      if(L5InterpResult != L1InterpResult) {
+        val L4InterpResult = L4Interpreter.run(l4)
+        if(L5InterpResult == L4InterpResult) {
+          val L3InterpResult = L3Interpreter.run(l3)
+          if(L5InterpResult == L3InterpResult) {
+            val L2InterpResult = L2Interpreter.run(l2)
+            if(L5InterpResult == L2InterpResult) {
+              die("L5 != L1", L1InterpResult, l5, l4, l3, l2, l1)
+            }
+            else die("L5 != L2", L2InterpResult, l5, l4, l3, l2)
+          }
+          else die("L5 != L3", L3InterpResult, l5, l4, l3)
+        }
+        else die("L5 != L4", L4InterpResult, l5, l4)
+      }
     }
   }
 }

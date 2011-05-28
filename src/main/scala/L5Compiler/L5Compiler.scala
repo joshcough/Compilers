@@ -1,7 +1,6 @@
 package L5Compiler
 
 import L5AST._
-
 import L4Compiler.{ L4AST => L4 }
 import L4Compiler.L4Printer
 
@@ -19,67 +18,23 @@ trait L5ToL4Implicits {
 
 trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Implicits{
 
+  def compileToString(code:String) = L4Printer.toCode(compile(code))
   def compile(code:String): L4.L4 = {
-    val ast = parse(read(code))
-    val (e,fs) = compile(ast)
+    val (e,fs) = compile(parse(read(code)))
     L4.L4(e, fs)
   }
 
-  def compileToString(code:String) = L4Printer.toCode(compile(code))
-
-  def compileEs(es:List[E]): (List[L4.E], List[L4.Func]) = {
-    val (l4es, funs) = es.map(compile).unzip
-    (l4es, funs.flatten)
-  }
-
   def compile(e:E): (L4.E, List[L4.Func]) = e match {
-    case Lambda(args, body) => {
-      /**
-        Specifically, if we see
-          (lambda (x ...) e)
-        in the program, we replace it with
-          (make-closure :f (new-tuple y1 y2 ... y-n))
-        where (y1 y2 ... y-n) are the free variables in (lambda (x ...) e),
-        and we create a new procedure:
-          (:f (vars-tup x ...)
-              (let ([y1 (aref vars-tup 0)])
-                (let ([y2 (aref vars-tup 1)])
-                  ...
-                  (let ([y-n (aref vars-tup n)])
-                    e))))
-      */
-      val frees = freeVars(e)
-      val usingArgsTuple = args.size > 2
-      val (freesVar, argsVar) = (L4.Variable("frees"), L4.Variable("args"))
-      val fArgs: List[L4.Variable] =
-        if(usingArgsTuple) List(freesVar, argsVar) else freesVar :: args.map(convertVar)
-
-      val (fBody, moreFunctions) = {
-        val (inner, funcs) = compile(body)
-        val freeLets =
-          frees.zipWithIndex.foldRight(inner){ case ((v,i), b) => L4.Let(v, L4.ARef(freesVar, L4.Num(i)), b) }
-        val finalLets = if(! usingArgsTuple) freeLets else {
-          args.zipWithIndex.foldRight(freeLets){ case ((v,i), b) => L4.Let(v, L4.ARef(argsVar, L4.Num(i)), b) }
-        }
-        (finalLets, funcs)
-      }
-
-      val label = newLabel()
-      (L4.MakeClosure(label, L4.NewTuple(frees)), L4.Func(label, fArgs, fBody) :: moreFunctions)
-    }
-    case App(p:Prim, args) => {
-      assert(args.size == nrArgs(p))
-      /**
-       - when a primitive operation shows up in the function position of an
-         application, we need to just leave it there. But when it shows up
-         in some other place, we just turn it into lambda expression and
-         then closure convert it. For example:
-          (+ x y z)  => (+ x y z)
-          (f +) => (f (lambda (x y) (+ x y)))
-       */
-      val (l4es, moreFuns) = compileEs(args)
-      (L4.FunCall(L4.keywordsMap(p.name), l4es), moreFuns)
-    }
+    case Num(n) => (L4.Num(n), Nil)
+    case v:Variable => (v, Nil)
+    case IfStatement(e, t, f) => compileMore(e,t,f){ es => L4.IfStatement(es(0), es(1), es(2)) }
+    case Begin(e1, e2) => compileMore(e1,e2){ es => L4.Begin(es(0), es(1)) }
+    case NewTuple(es) =>  compileMore(es:_*){ es => L4.NewTuple(es) }
+    case Let(x, e1, e2) => compileMore(e1,e2){ es => L4.Let(x, es(0), es(1)) }
+    // (f +) => (f (lambda (x y) (+ x y)))
+    case p:Prim => compile(Lambda(p.vars, App(p, p.vars)))
+    // (+ x y z)  => (+ x y z)
+    case App(p:Prim, args) => compileMore(args:_*){ es => L4.FunCall(L4.keywordsMap(p.name), es) }
     case App(f, args) => {
       val v = newVar()
       val (compiledF, extraFunctions) = compile(f)
@@ -88,31 +43,9 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
         // free variables go in the first argument.
         L4.FunCall(L4.ClosureProc(v), L4.ClosureVars(v) ::
         // if we can fit the rest of the arguments in, then great
-        (if (compiledArgs.size <= 2) compiledArgs
         // if not, they must also go into another tuple.
-        else List(L4.NewTuple(compiledArgs))))),
+        (if (compiledArgs.size <= 2) compiledArgs else List(L4.NewTuple(compiledArgs))))),
       extraFunctions ::: moreExtraFunctions)
-    }
-    // (f +) => (f (lambda (x y) (+ x y)))
-    case p:Prim => {
-      val vars = List("x", "y", "z").map(Variable(_)).take(nrArgs(p))
-      compile(Lambda(vars, App(p, vars)))
-    }
-    case IfStatement(e, t, f) => {
-      val (es, fs) = compileEs(List(e,t,f))
-      (L4.IfStatement(es(0), es(1), es(2)), fs)
-    }
-    case Begin(e1, e2) => {
-      val (es, fs) = compileEs(List(e1,e2))
-      (L4.Begin(es(0), es(1)), fs)
-    }
-    case NewTuple(es) => {
-      val (compiledEs, fs) = compileEs(es)
-      (L4.NewTuple(compiledEs), fs)
-    }
-    case Let(x, e1, e2) => {
-      val (es, fs) = compileEs(List(e1,e2))
-      (L4.Let(x, es(0), es(1)), fs)
     }
     case LetRec(x, e1, e2) => compile(
       Let(x, NewTuple(List(Num(0))),
@@ -122,8 +55,45 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
         )
       )
     )
-    case Num(n) => (L4.Num(n), Nil)
-    case v:Variable => (v, Nil)
+    case Lambda(args, body) => {
+      /**
+        (lambda (x ...) e) => (make-closure :f (new-tuple y1 y2 ... y-n))
+        where (y1 y2 ... y-n) are the free variables in (lambda (x ...) e),
+        and we create a new procedure:
+        (:f (vars-tup x ...)
+          (let ([y1 (aref vars-tup 0)])
+            (let ([y2 (aref vars-tup 1)])
+              ...
+                (let ([y-n (aref vars-tup n)])
+                   e))))
+      */
+      val frees = freeVars(e)
+      val usingArgsTuple = args.size > 2
+      val (freesVar, argsVar) = (L4.Variable("frees"), L4.Variable("args"))
+      val fArgs: List[L4.Variable] =
+        if(usingArgsTuple) List(freesVar, argsVar) else freesVar :: args.map(convertVar)
+
+      val (fBody, moreFunctions) = {
+        val (inner, funcs) = compile(body)
+        def fold(tup:L4.Variable, vars:List[L4.Variable], init:L4.E) =
+          vars.zipWithIndex.foldRight(init){ case ((v,i), b) => L4.Let(v, L4.ARef(tup, L4.Num(i)), b) }
+        val freeLets = fold(freesVar, frees, inner)
+        val finalLets = if(! usingArgsTuple) freeLets else fold(argsVar, args, freeLets)
+        (finalLets, funcs)
+      }
+      val label = newLabel()
+      (L4.MakeClosure(label, L4.NewTuple(frees)), L4.Func(label, fArgs, fBody) :: moreFunctions)
+    }
+  }
+
+  def compileMore(es:E*)(f: List[L4.E] => L4.E) = {
+    val (l4es, fs) = compileEs(es.toList)
+    (f(l4es), fs)
+  }
+
+  def compileEs(es:List[E]): (List[L4.E], List[L4.Func]) = {
+    val (l4es, fs) = es.map(compile).unzip
+    (l4es, fs.flatten)
   }
 
   private val labelCount = Iterator.from(0)
@@ -159,11 +129,5 @@ trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Impli
       case _ => e
     }
     inner(replacee)
-  }
-
-  def nrArgs(p: Prim) = p match {
-    case Print | ALen | IsNumber | IsArray => 1
-    case ASet => 3
-    case _ => 2
   }
 }

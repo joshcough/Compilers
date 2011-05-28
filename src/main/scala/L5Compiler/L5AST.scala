@@ -12,15 +12,18 @@ object L5AST {
   case class NewTuple(vs:List[E]) extends E
   case class Begin(e1:E, e2:E) extends E
   case class App(f:E, args:List[E]) extends E
-  class Prim(val keyword:Keyword) extends E{ def name = keyword.name }
+  class Prim(val keyword:Keyword, val nrArgs:Int) extends E{
+    def name = keyword.name
+    def vars = List("x", "y", "z").map(Variable(_)).take(nrArgs)
+  }
   case class Num(n: Int) extends E
-  class Biop(k:Keyword) extends Prim(k)
-  class Pred(k:Keyword) extends Prim(k)
-  case object Print extends Prim(print)
-  case object NewArray extends Prim(newarr)
-  case object ARef extends Prim(aref)
-  case object ASet extends Prim(aset)
-  case object ALen extends Prim(alen)
+  class Biop(k:Keyword) extends Prim(k, 2)
+  class Pred(k:Keyword) extends Prim(k, 1)
+  case object Print extends Prim(print, 1)
+  case object NewArray extends Prim(newarr, 2)
+  case object ARef extends Prim(aref, 2)
+  case object ASet extends Prim(aset, 3)
+  case object ALen extends Prim(alen, 1)
   case object Add extends Biop(add)
   case object Sub extends Biop(sub)
   case object Mult extends Biop(mult)
