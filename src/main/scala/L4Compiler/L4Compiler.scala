@@ -15,7 +15,9 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
 
   def compile(code:String): L3.L3 = compile(parse(read(code)))
   def compile(ast:L4): L3.L3 = {
-    L3.L3(find(changeVarNamesInE(ast.main)), ast.funs.map(f => find(changeVarNamesInFunc(f))))
+    val (main, extraFuncsFromMain) = find(changeVarNamesInE(ast.main))
+    val (funs, moreFuns) = ast.funs.map(f => find(changeVarNamesInFunc(f))).unzip
+    L3.L3(main, extraFuncsFromMain ::: funs ::: moreFuns.flatten)
   }
   def compileToString(code:String) = L3Printer.toCode(compile(code))
 
@@ -25,11 +27,14 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
   case class FunCallContext(remainingEs:List[E], keyword: Option[Keyword], vs:List[L3.V], k:Context) extends Context
   case object NoContext extends Context
 
-  def find(f:Func): L3.Func = L3.Func(f.label, f.args.map(convertVar), find(f.body, NoContext))
-  def find(e:E): L3.E = find(e, NoContext)
+  def find(f:Func): (L3.Func, List[L3.Func]) = {
+    val (fBody, extraFunsFromFBody) = find(f.body, NoContext)
+    (L3.Func(f.label, f.args.map(convertVar), fBody), extraFunsFromFBody)
+  }
+  def find(e:E): (L3.E, List[L3.Func]) = find(e, NoContext)
 
   // find: L4-e context -> L3-e
-  def find(e:E, k:Context): L3.E = e match {
+  def find(e:E, k:Context): (L3.E, List[L3.Func]) = e match {
     case Let(x, r, body) => find(r, LetContext(x, body, k))
     case IfStatement(c, tp, fp) => find(c, IfContext(tp, fp, k))
     case Begin(e1, e2) => find(Let(newVar(), e1, e2), k)
@@ -40,9 +45,35 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
   }
 
   // fill: L3-d context -> L3-e
-  def fill(d:L3.D, k:Context): L3.E = k match {
-    case LetContext(v, b, k) => L3.Let(v, d, find(b, k))
-    case IfContext(t, e, k) => maybeLet(d, v => L3.IfStatement(v, find(t, k), find(e, k)))
+  def fill(d:L3.D, k:Context): (L3.E, List[L3.Func]) = k match {
+    case LetContext(v, b, k) => {
+      val (letBody, extraFuncs) = find(b, k)
+      (L3.Let(v, d, letBody), extraFuncs)
+    }
+    /**
+     * (+ (if v e_1 e_2) e_big) =>
+     *   (let ((ctxt
+     *     (lambda (ret-val) (+ ret-val e_big))))
+     *       (if v (ctxt e_1) (ctxt e_2)))
+     **/
+    case IfContext(t, e, k) => maybeLet(d, v => {
+      val fLabel = newLabel()
+      val fArg = newVar()
+      val (fBody, extraFuncsFromFBody) = fill(fArg, k)
+
+      val freeVariables = freeVars(fBody).filterNot(_==convertVar(fArg))
+      val freesTup = L3.Variable("_frees_L3")
+      val fbodyWithFrees = freeVariables.zipWithIndex.foldRight(fBody){
+        case ((v,i), b) => L3.Let(v, L3.ARef(freesTup, L3.Num(i)), b)
+      }
+
+      val func = L3.Func(fLabel, List(fArg, freesTup), fbodyWithFrees)
+      val tup = NewTuple(freeVariables.map(l3Var2L4Var))
+      val (tt, tef) = find(FunCall(fLabel, List(t, tup)), NoContext)
+      val (ee, eef) = find(FunCall(fLabel, List(e, tup)), NoContext)
+      (L3.IfStatement(v, tt, ee), func :: (extraFuncsFromFBody ::: tef ::: eef))
+    })
+
     case fcc@FunCallContext(remainingEs, kw, vs, k) => remainingEs match {
       case (e::es) => maybeLet(d, v => find(e, fcc.copy(remainingEs=es, vs=vs:+v)))
       case Nil => kw match {
@@ -53,14 +84,21 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
         })
       }
     }
-    case NoContext => d
+    case NoContext => (d, Nil)
   }
 
-  def maybeLet(d:L3.D, f: L3.V => L3.E): L3.E =
-    if(d.isInstanceOf[L3.V]) f(d.asInstanceOf[L3.V]) else { val x = newVar(); L3.Let(x, d, f(x)) }
+  def maybeLet(d:L3.D, f: L3.V => (L3.E, List[L3.Func])): (L3.E, List[L3.Func]) =
+    if(d.isInstanceOf[L3.V]) f(d.asInstanceOf[L3.V]) else {
+      val x = newVar()
+      val (letBody, extraFuns) = f(x)
+      (L3.Let(x, d, letBody), extraFuns)
+    }
 
-  private val count = Iterator.from(0)
-  def newVar() = Variable("__x" + count.next())
+  private val varCount = Iterator.from(0)
+  def newVar() = Variable("__x" + varCount.next())
+  private val labelCount = Iterator.from(0)
+  def newLabel() = Label("__f" + labelCount.next())
+
 
   def changeVarNamesInFunc(f:Func): Func = {
     val newArgNames = f.args.map(x => newVar())
@@ -86,6 +124,30 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
     }
     inner(e, context)
   }
+
+  def freeVars(e:L3.E): List[L3.Variable] = {
+    def inner(e:L3.E, bound:List[L3.Variable]): List[L3.Variable] = e match {
+      case v:L3.Variable => bound.find(_==v) match { case None => List(v); case _ => Nil}
+      case L3.Let(x, r, body) => inner(r, bound) ::: inner(body, x :: bound)
+      case L3.IfStatement(e, t, f) => inner(e, bound) ::: inner(t, bound) ::: inner(f, bound)
+      case b:L3.Biop => inner(b.left, bound) ::: inner (b.right, bound)
+      case L3.IsNumber(v) => inner(v, bound)
+      case L3.IsArray(v) => inner(v, bound)
+      case L3.FunCall(v, args) => inner(v, bound) ::: args.flatMap(a => inner(a, bound))
+      case L3.NewArray(size, init) => inner(size, bound) ::: inner(init, bound)
+      case L3.NewTuple(vs) => vs.flatMap(v => inner(v, bound))
+      case L3.ARef(arr, loc) => inner(arr, bound) ::: inner(loc, bound)
+      case L3.ASet(arr, loc, newVal: V) => inner(arr, bound) ::: inner(loc, bound) ::: inner(newVal, bound)
+      case L3.ALen(arr) => inner(arr, bound)
+      case L3.MakeClosure(l, v) => inner(v, bound)
+      case L3.ClosureProc(v) => inner(v, bound)
+      case L3.ClosureVars(v) => inner(v, bound)
+      case L3.Print(v) => inner(v, bound)
+      case L3.Num(n) => Nil
+      case L3.Label(name) => Nil
+    }
+    inner(e, Nil).distinct
+  }
 }
 
 trait L4ToL3VConversions {
@@ -97,4 +159,6 @@ trait L4ToL3VConversions {
   implicit def convertVar(v:Variable): L3.Variable = L3.Variable(v.name)
   implicit def convertNum(n:Num): L3.Num = L3.Num(n.n)
   implicit def convertLabel(l:Label): L3.Label = L3.Label(l.name)
+
+  implicit def l3Var2L4Var(v:L3.Variable) = Variable(v.name)
 }

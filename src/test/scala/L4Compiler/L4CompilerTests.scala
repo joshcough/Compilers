@@ -448,7 +448,8 @@ class L4CompileETests extends TestHelpers{
     val compiler = new L4Compiler{}
     import compiler._
     val ast = parseE(read(code))
-    L3Printer.toCode(if(changeVarNames) find(changeVarNamesInE(ast, allowFrees = true)) else find(ast))
+    val (e, more) = if(changeVarNames) find(changeVarNamesInE(ast, allowFrees = true)) else find(ast)
+    L3Printer.toCode(e)
   }
 }
 

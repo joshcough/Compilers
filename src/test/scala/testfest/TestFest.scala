@@ -79,7 +79,7 @@ abstract class TestFest2010(compile: String => String,
   }
 }
 
-abstract class TestFest2011(compile: String => String,
+abstract class TestFest2011(compile: => (String => String),
                    language:Interpreter,
                    testFiles:Iterable[File],
                    resultFiles:Iterable[File]) extends TestHelpers with util.SlowTest{
