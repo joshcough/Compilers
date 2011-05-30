@@ -46,9 +46,20 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
 
   // fill: L3-d context -> L3-e
   def fill(d:L3.D, k:Context): (L3.E, List[L3.Func]) = k match {
+    case NoContext => (d, Nil)
     case LetContext(v, b, k) => {
       val (letBody, extraFuncs) = find(b, k)
       (L3.Let(v, d, letBody), extraFuncs)
+    }
+    case fcc@FunCallContext(remainingEs, kw, vs, k) => remainingEs match {
+      case (e::es) => maybeLet(d, v => find(e, fcc.copy(remainingEs=es, vs=vs:+v)))
+      case Nil => kw match {
+        case Some(kw) => maybeLet(d, v => fill(kw.toD(vs:+v), k))
+        case None => maybeLet(d, v => {
+          val vvs = vs :+ v
+          fill(L3.FunCall(vvs.head, vvs.tail), k)
+        })
+      }
     }
     /**
      * (+ (if v e_1 e_2) e_big) =>
@@ -73,18 +84,6 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
       val (ee, eef) = find(FunCall(fLabel, List(e, tup)), NoContext)
       (L3.IfStatement(v, tt, ee), func :: (extraFuncsFromFBody ::: tef ::: eef))
     })
-
-    case fcc@FunCallContext(remainingEs, kw, vs, k) => remainingEs match {
-      case (e::es) => maybeLet(d, v => find(e, fcc.copy(remainingEs=es, vs=vs:+v)))
-      case Nil => kw match {
-        case Some(kw) => maybeLet(d, v => fill(kw.toD(vs:+v), k))
-        case None => maybeLet(d, v => {
-          val vvs = vs :+ v
-          fill(L3.FunCall(vvs.head, vvs.tail), k)
-        })
-      }
-    }
-    case NoContext => (d, Nil)
   }
 
   def maybeLet(d:L3.D, f: L3.V => (L3.E, List[L3.Func])): (L3.E, List[L3.Func]) =

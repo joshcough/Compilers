@@ -11,13 +11,11 @@ object L5CompilerMain extends L5Compiler {
   def compileFile(filename:String): String = compileToString(new File(filename).read)
 }
 
-trait L5ToL4Implicits {
+trait L5Compiler extends io.Reader with L5Parser with L5Printer {
+  //  L5 -> L4 Implicit Conversions
   implicit def convertVar(v:Variable) = L4.Variable(v.name)
   implicit def convertVarList(vs:List[Variable]) = vs.map(convertVar)
-}
-
-trait L5Compiler extends io.Reader with L5Parser with L5Printer with L5ToL4Implicits{
-
+  
   def compileToString(code:String) = L4Printer.toCode(compile(code))
   def compile(code:String): L4.L4 = {
     val (e,fs) = compile(parse(read(code)))
