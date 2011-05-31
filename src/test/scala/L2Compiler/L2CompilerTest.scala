@@ -197,12 +197,12 @@ trait L2CompilerTest extends util.TestHelpers with L2Compiler {
       val L1Code = toCode(compile(L2Code.clean))
       val L1InterpResult =  L1Interpreter.run(L1Code.clean)
       val L2InterpResult = L2Interpreter.run(L2Code.clean)
-      verboseAssert(L2Code, L1InterpResult, L2InterpResult)
       // write out the tests files and results.
       // write the test
       new File("./test/2-test/test" + index + ".L2").write(L2Code.clean)
       // write the expected result
       new File("./test/2-test/test" + index + ".L1").write(L1Code.clean)
+      verboseAssert(L2Code, L1InterpResult, L2InterpResult)
     }
   }
 }

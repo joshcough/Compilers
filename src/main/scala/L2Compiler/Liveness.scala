@@ -109,7 +109,7 @@ trait Liveness extends Timer {
 
     // does the next round of moving things up the in/out chains.
     // recurs until the result is the same as what we've got so far.
-    def inout(acc:List[List[InstructionInOutSet]]): List[List[InstructionInOutSet]] = timed("inout", {
+    def inout(acc:List[List[InstructionInOutSet]]): List[List[InstructionInOutSet]] = {
       val current = acc.head
       var changes: Boolean = false
       // build the next result
@@ -124,7 +124,7 @@ trait Liveness extends Timer {
       // if we've reached the fixed point, we can stop. otherwise continue.
       // if(nextStep == current) acc else inout(nextStep :: acc)
       if(!changes) acc else inout(nextStep :: acc)
-    })
+    }
 
     // start out with empty in and out sets for all instructions
     val emptyStartSet = instructionsWithIndex.map {

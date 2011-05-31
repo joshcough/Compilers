@@ -419,14 +419,17 @@ class L4CompileETests extends TestHelpers{
 (+ 1 (aref 1 results)))""",
 """
 (let ([passed (aref 0 results)])
-(if pass?
-(let ([__x0 (+ 1 passed)])
+(if pass? (let ([__x3 (+ 1 passed)])
+(let ([__x4 (new-tuple results)])
+(:__f0 __x3 __x4)))
+(let ([__x5 (new-tuple results)])
+(:__f0 passed __x5))))
+(:__f0 (__x0 frees)
+(let ([results (aref frees 0)])
 (let ([__x1 (aref 1 results)])
 (let ([__x2 (+ 1 __x1)])
-(new-tuple __x0 __x2))))
-(let ([__x3 (aref 1 results)])
-(let ([__x4 (+ 1 __x3)])
-(new-tuple passed __x4)))))""")
+(new-tuple __x0 __x2)))))
+""")
 
   // this demonstrates the let renaming error from
   // http://www.eecs.northwestern.edu/~robby/courses/322-2011-spring/lecture09.pdf (pg 25)
@@ -440,7 +443,7 @@ class L4CompileETests extends TestHelpers{
     test(code.clean){
       val res = compileE(code.clean, changeVarNames = changeVarNames)
       //println("compileETest(\"" + code + "\", " + "\"" + L4Printer.toCode(res) + "\")")
-      verboseAssert(code, res, expected.clean.replace("\n", " "))
+      verboseAssert(code, res.clean.replace("\n", " "), expected.clean.replace("\n", " "))
     }
   }
 
@@ -449,7 +452,7 @@ class L4CompileETests extends TestHelpers{
     import compiler._
     val ast = parseE(read(code))
     val (e, more) = if(changeVarNames) find(changeVarNamesInE(ast, allowFrees = true)) else find(ast)
-    L3Printer.toCode(e)
+    L3Printer.toCode(e) + (if(more.isEmpty) "" else "\n" + more.map(L3Printer.toCode).mkString("\n"))
   }
 }
 

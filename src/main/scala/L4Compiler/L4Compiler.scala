@@ -71,13 +71,11 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
       val fLabel = newLabel()
       val fArg = newVar()
       val (fBody, extraFuncsFromFBody) = fill(fArg, k)
-
       val freeVariables = freeVars(fBody).filterNot(_==convertVar(fArg))
-      val freesTup = L3.Variable("_frees_L3")
+      val freesTup = L3.Variable("frees")
       val fbodyWithFrees = freeVariables.zipWithIndex.foldRight(fBody){
         case ((v,i), b) => L3.Let(v, L3.ARef(freesTup, L3.Num(i)), b)
       }
-
       val func = L3.Func(fLabel, List(fArg, freesTup), fbodyWithFrees)
       val tup = NewTuple(freeVariables.map(l3Var2L4Var))
       val (tt, tef) = find(FunCall(fLabel, List(t, tup)), NoContext)

@@ -15,85 +15,74 @@ trait Allocator extends Spill with Liveness with Interference with Timer {
 
   // allocates all of the functions in the given L2 program
   def allocate(ast: L2): L2 = {
-    val l1Functions = (ast.main :: ast.funs).map(f => timed("allocating function: " + f.name, allocate(f)))
-    L2(l1Functions.head, l1Functions.tail)
+    val newMain = allocate(ast.main, true)
+    val l1Functions = ast.funs.map(f => timed("allocating function: " + f.name, allocate(f, false)))
+    L2(newMain, l1Functions)
   }
 
   // gives back a fully allocated function (if its possible to allocate it)
   // with all of the variables replaced with the assigned registers.
-  def allocate(f: Func): Func = {
-    // first, try to see if we can do allocation without any rewriting
-    val (finalFunction, allocs) = attemptAllocation(inoutFinalResult(f))._1 match {
-      case Some(registerMap) => (f, registerMap)
-      case _ => {
-        // we weren't able to allocate right away. rewrite so that esi and edi can be spilled
-        // and then start allocating using spilling
-        val ((allocatedFunction, allocs), espOffset) = allocateCompletely(initialRewrite(f), -4)
-        // adjust the stack at the start of the function right here.
-        val label = allocatedFunction.body.head
-        val bodyWithoutLabel = allocatedFunction.body.tail
-        val decEsp = List(Decrement(esp, Num(- espOffset)))
-        val incEspMaybe = if(allocatedFunction.isMain) List(Increment(esp, Num(- espOffset))) else List()
-        (Func(label :: decEsp ::: bodyWithoutLabel ::: incEspMaybe), allocs)
-      }
-    }
+  def allocate(f: Func, isMain:Boolean): Func = {
 
-    // the statement above gives as a fully colorable function
-    // along with the registers that each variable maps to.
-    // replacing those variables (right below) results in an L1 program
-    // (an L2 program that uses no variables)
+    val ((allocatedFunction, allocs), espOffset) = allocateCompletely(initialRewrite(f))
+    // adjust the stack at the start of the function right here.
+    val label = allocatedFunction.body.head
+    val bodyWithoutLabel = allocatedFunction.body.tail
+    val decEsp = List(Decrement(esp, Num(- espOffset)))
+    val incEspMaybe = if(isMain) List(Increment(esp, Num(- espOffset))) else List()
+    val finalFunction = Func(label :: decEsp ::: bodyWithoutLabel ::: incEspMaybe)
     new VariableToRegisterReplacer(allocs).replaceVarsWithRegisters(finalFunction)
   }
 
   // allocateCompletely rewrites (spills) until the function is colorable
-  def allocateCompletely(f: Func, offset: Int): ((Func, Map[Variable, Register]), Int) = {
-    timed("allocating completely function: " + f.name,
-      attemptAllocation(inoutFinalResult(f))._1 match {
-        case Some(registerMap) => ((f, registerMap), offset)
-        case None => {
-          // bottle next is inoutFinalResult(f)
-          val io = timed("inoutFinalResult("+f.name+")", inoutFinalResult(f))
-          val lr = timed("liveRanges("+f.name+")", liveRanges(io))
-          val sp = timed("chooseSpillVar("+f.name+")", chooseSpillVar(lr))
-          sp match {
-           case Some(sv) => allocateCompletely(Func(spill(sv, offset, f.body)), offset - 4)
-            case None => error("allocation impossible")
-          }
+  def allocateCompletely(originalF: Func): ((Func, Map[Variable, Register]), Int) =
+    timed("allocating completely function: " + originalF.name, {
+
+      val varsToSpill = originalF.body.flatMap(FindVariables.findVars).distinct
+      val f = Func(varsToSpill match {
+        case Nil => originalF.body
+        case spillVars => spillVars.zipWithIndex.foldLeft(originalF.body) {
+          case (body, (sv, i)) => spill(sv, (-i * 4) - 4, body)
         }
+      })
+
+      val io = timed("inoutFinalResult(" + f.name + ")", inoutFinalResult(f))
+      attemptAllocation(io)._1 match {
+        case Some(registerMap) => ((f, registerMap), (-varsToSpill.size * 4))
+        case None => error("allocation impossible")
       }
-    )
-  }
+    })
 
   // the second thing returned here is the progress we were actually able to make.
   def attemptAllocation(iioss:List[InstructionInOutSet]):
     (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
-
-    def attemptAllocation(graph:InterferenceGraph):
-      (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
-      val variables: List[Variable] =
-        graph.variables.toList.sortWith(_<_).sortWith(graph.neigborsOf(_).size > graph.neigborsOf(_).size)
-      val registers: Set[Register] = Set(eax, ebx, ecx, edx, edi, esi)
-      val defaultPairings: Map[Variable, Option[Register]] = variables.map(v => (v, None)).toMap
-      val finalPairings = variables.foldLeft(defaultPairings){ (pairs, v) =>
-        val neighbors: Set[X] = graph.neigborsOf(v)
-        val neighborRegisters: Set[Register] = neighbors.collect{ case r: Register => r }
-        val neighborVariables: Set[Variable] = neighbors.collect{ case v: Variable => v }
-        val nonNeighborRegisters: Set[Register] = registers -- neighborRegisters
-        val registersNeighborsVariablesLiveIn: Set[Register] = neighborVariables.flatMap(pairs.get(_)).flatten
-        val availableRegisters: List[Register] =
-          (nonNeighborRegisters -- registersNeighborsVariablesLiveIn).toList.sortWith(_<_)
-        val theRegisterMaybe = availableRegisters.headOption
-        pairs + (v -> theRegisterMaybe)
-      }
-      // see if any variables were unpaired with a register
-      val anyVariablesUnpaired = finalPairings.find{ case (v, or) => ! or.isDefined }
-      // if so, the graph was uncolorable. if not, return the pairings (but strip off the Option wrapper)
-      if(anyVariablesUnpaired.isDefined) (None, finalPairings)
-      else (Some(finalPairings.map{ case (v, or) => (v, or.get)}), finalPairings)
-    }
     timed("attemping allocation: ", attemptAllocation(buildInterferenceSet(iioss)))
   }
-  
+
+  def attemptAllocation(graph:InterferenceGraph):
+    (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
+    val variables: List[Variable] =
+      graph.variables.toList.sortWith(_<_).sortWith(graph.neigborsOf(_).size > graph.neigborsOf(_).size)
+    val registers: Set[Register] = Set(eax, ebx, ecx, edx, edi, esi)
+    val defaultPairings: Map[Variable, Option[Register]] = variables.map(v => (v, None)).toMap
+    val finalPairings = variables.foldLeft(defaultPairings){ (pairs, v) =>
+      val neighbors: Set[X] = graph.neigborsOf(v)
+      val neighborRegisters: Set[Register] = neighbors.collect{ case r: Register => r }
+      val neighborVariables: Set[Variable] = neighbors.collect{ case v: Variable => v }
+      val nonNeighborRegisters: Set[Register] = registers -- neighborRegisters
+      val registersNeighborsVariablesLiveIn: Set[Register] = neighborVariables.flatMap(pairs.get(_)).flatten
+      val availableRegisters: List[Register] =
+        (nonNeighborRegisters -- registersNeighborsVariablesLiveIn).toList.sortWith(_<_)
+      val theRegisterMaybe = availableRegisters.headOption
+      pairs + (v -> theRegisterMaybe)
+    }
+    // see if any variables were unpaired with a register
+    val anyVariablesUnpaired = finalPairings.find{ case (v, or) => ! or.isDefined }
+    // if so, the graph was uncolorable. if not, return the pairings (but strip off the Option wrapper)
+    if(anyVariablesUnpaired.isDefined) (None, finalPairings)
+    else (Some(finalPairings.map{ case (v, or) => (v, or.get)}), finalPairings)
+  }
+
   // sets up the function so that edi and esi can be spilled.
   def initialRewrite(f:Func): Func = {
     val z1In = Assignment(Variable("__z1"), edi)
@@ -120,6 +109,56 @@ trait Allocator extends Spill with Liveness with Interference with Timer {
     liveRanges.flatMap(maxRange).sorted.map(_.x)
             .collect{case v:Variable => v}.filterNot(_.name.startsWith("spilled_var")).headOption
   }
+
+  def chooseSpillVars(graph: InterferenceGraph, io: List[InstructionInOutSet]): List[Variable] = {
+    val sixes = graph.variables.
+            filterNot(_.name.startsWith("spilled_var")).
+            filter(v => graph.neigborsOf(v).size >= 6).
+            toList
+    sixes match {
+      case Nil => chooseSpillVar(liveRanges(io)).toList
+      case _ => sixes
+    }
+  }
+}
+
+
+// replaces variables with registers in an L2 function.
+object FindVariables {
+
+  def findVars(i:Instruction): List[Variable] = i match {
+    case Assignment(x1, x2) => findVars(x1) ::: findVars(x2)
+    case Increment(s1, s2) => findVars(s1) ::: findVars(s2)
+    case Decrement(s1, s2) => findVars(s1) ::: findVars(s2)
+    case Multiply(s1, s2) => findVars(s1) ::: findVars(s2)
+    case BitwiseAnd(s1, s2) => findVars(s1) ::: findVars(s2)
+    case LeftShift(s1, s2) => findVars(s1) ::: findVars(s2)
+    case RightShift(s1, s2) => findVars(s1) ::: findVars(s2)
+    case MemWrite(loc, x) => findVars(loc) ::: findVars(x)
+    case CJump(comp, l1, l2) => findVars(comp)
+    case Call(x) => findVars(x)
+    case TailCall(x) => findVars(x)
+    case ld:LabelDeclaration => Nil
+    case Return => Nil
+    case g:Goto => Nil
+  }
+
+  def findVars(s:S): List[Variable] = s match {
+    case v:Variable => List(v)
+    case _ => Nil
+  }
+
+  def findVars(rhs:AssignmentRHS): List[Variable] = rhs match {
+    case MemRead(loc) => findVars(loc)
+    case Print(s) => findVars(s)
+    case Allocate(n, init) => findVars(n) ::: findVars(init)
+    case ArrayError(a, n) => findVars(a) ::: findVars(n)
+    case c:Comp => findVars(c)
+    case s:S => findVars(s)
+  }
+
+  private def findVars(loc:MemLoc): List[Variable] = findVars(loc.basePointer)
+  private def findVars(c:Comp): List[Variable] = findVars(c.s1) ::: findVars(c.s2)
 }
 
 // replaces variables with registers in an L2 function.

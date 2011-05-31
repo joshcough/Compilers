@@ -22,54 +22,54 @@ object InterferenceMain {
   }
 }
 
-trait Interference {
+class InterferenceGraph(private val map:Map[X, Set[X]]){
+  def this() = this(Map())
 
-  class InterferenceGraph(private val map:Map[X, Set[X]]){
-    def this() = this(Map())
+  def addNodes(xs:X*):InterferenceGraph = xs.foldLeft(this){ case (g, x) => g.addNode(x) }
 
-    def addNodes(xs:X*):InterferenceGraph = xs.foldLeft(this){ case (g, x) => g.addNode(x) }
-
-    def addNode(x:X):InterferenceGraph = {
-      if(map.contains(x)) this else new InterferenceGraph(map + (x -> Set()))
-    }
-    def addEdge(x1:X, x2:X): InterferenceGraph = {
-      // dont bother adding ebp or esp
-      if(x1 == ebp || x1 == esp || x2 == ebp || x2 == esp) this
-      // dont bother adding interference edges between a variable or register and itself...duh
-      else if (x1 == x2) this
-      else{
-        val x1Connections = map.getOrElse(x1, Set()) + x2
-        val x2Connections = map.getOrElse(x2, Set()) + x1
-        new InterferenceGraph(map + (x1 -> x1Connections) + (x2 -> x2Connections))
-      }
-    }
-
-    def addEdges(connections:(X,X)*): InterferenceGraph = {
-      connections.foldLeft(this){ case (g, (x1, x2)) => g.addEdge(x1, x2) }
-    }
-
-    def members = map.keySet
-    def variables = members.collect{ case v: Variable => v }.toSet
-    def neigborsOf(x:X): Set[X] = map(x)
-
-    /**
-      Example:
-      ((eax ebx ecx edi edx esi x)
-      (ebx eax ecx edi edx esi)
-      (ecx eax ebx edi edx esi)
-      (edi eax ebx ecx edx esi x)
-      (edx eax ebx ecx edi esi)
-      (esi eax ebx ecx edi edx x)
-      (x eax edi esi))
-     */
-    def hwView = {
-      def sortedMembers = members.toList.sorted
-      def sortedNeighborNames(x:X): List[String] = map(x).toList.sorted.map(L2Printer.toCode)
-      sortedMembers.map{ m =>
-        (L2Printer.toCode(m) :: sortedNeighborNames(m)).mkString("(", " ", ")")
-      }.mkString("(", "\n", ")")
+  def addNode(x:X):InterferenceGraph = {
+    if(map.contains(x)) this else new InterferenceGraph(map + (x -> Set()))
+  }
+  def addEdge(x1:X, x2:X): InterferenceGraph = {
+    // dont bother adding ebp or esp
+    if(x1 == ebp || x1 == esp || x2 == ebp || x2 == esp) this
+    // dont bother adding interference edges between a variable or register and itself...duh
+    else if (x1 == x2) this
+    else{
+      val x1Connections = map.getOrElse(x1, Set()) + x2
+      val x2Connections = map.getOrElse(x2, Set()) + x1
+      new InterferenceGraph(map + (x1 -> x1Connections) + (x2 -> x2Connections))
     }
   }
+
+  def addEdges(connections:(X,X)*): InterferenceGraph = {
+    connections.foldLeft(this){ case (g, (x1, x2)) => g.addEdge(x1, x2) }
+  }
+
+  def members = map.keySet
+  def variables = members.collect{ case v: Variable => v }.toSet
+  def neigborsOf(x:X): Set[X] = map(x)
+
+  /**
+    Example:
+    ((eax ebx ecx edi edx esi x)
+    (ebx eax ecx edi edx esi)
+    (ecx eax ebx edi edx esi)
+    (edi eax ebx ecx edx esi x)
+    (edx eax ebx ecx edi esi)
+    (esi eax ebx ecx edi edx x)
+    (x eax edi esi))
+   */
+  def hwView = {
+    def sortedMembers = members.toList.sorted
+    def sortedNeighborNames(x:X): List[String] = map(x).toList.sorted.map(L2Printer.toCode)
+    sortedMembers.map{ m =>
+      (L2Printer.toCode(m) :: sortedNeighborNames(m)).mkString("(", " ", ")")
+    }.mkString("(", "\n", ")")
+  }
+}
+
+trait Interference {
 
   val registerInterference: InterferenceGraph = {
     new InterferenceGraph().addEdges(

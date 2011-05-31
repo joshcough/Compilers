@@ -45,9 +45,7 @@ object L2AST {
   case class Print(s:S) extends AssignmentRHS
   case class ArrayError(s1:S, s2:S) extends AssignmentRHS
   case class MemRead(loc: MemLoc) extends AssignmentRHS
-  case class Variable(name: String) extends S with X {
-    override def toString = "Variable(\"" + name + "\")"
-  }
+  case class Variable(name: String) extends S with X { override def toString = name }
 
   // comparisons
   case class Comp(s1:S, op: CompOp, s2:S) extends AssignmentRHS
