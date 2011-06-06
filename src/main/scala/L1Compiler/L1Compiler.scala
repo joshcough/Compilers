@@ -6,15 +6,17 @@ import io.{CommandRunner, Reader}
 import io.FileHelper._
 import io.Dir._
 import X86.X86Generator
+import LCompiler.LNCompiler
 
-trait L1Compiler extends Reader with L1Parser with BackEnd {
+trait L1Compiler extends LNCompiler with L1Parser with BackEnd {
   def compile(code:String, unitName:String): String = generateCode(parse(read(code)), unitName)
+  def compileToString(code:String):String = compile(code, "test")
 }
 
 object L1CompilerMain extends L1Compiler with X86Generator {
   import java.io.File
   import io.FileHelper._
-  def main(args:Array[String]) = println(compileFile(args(0)))
+  def main(args:Array[String]) { println(compileFile(args(0))) }
   def compileFile(filename:String): String = compile(new File(filename).read, "test")
 }
 

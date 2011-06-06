@@ -3,6 +3,7 @@ package L4Compiler
 import L4AST._
 import L3Compiler.L3Printer
 import L3Compiler.{L3AST => L3}
+import LCompiler.LNCompiler
 
 object L4CompilerMain extends L4Compiler {
   import java.io.File
@@ -11,7 +12,7 @@ object L4CompilerMain extends L4Compiler {
   def compileFile(filename:String): String = compileToString(new File(filename).read)
 }
 
-trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
+trait L4Compiler extends LNCompiler with L4Parser with L4ToL3VConversions{
 
   def compile(code:String): L3.L3 = compile(parse(read(code)))
   def compile(ast:L4): L3.L3 = {
@@ -67,21 +68,25 @@ trait L4Compiler extends io.Reader with L4Parser with L4ToL3VConversions{
      *     (lambda (ret-val) (+ ret-val e_big))))
      *       (if v (ctxt e_1) (ctxt e_2)))
      **/
-    case IfContext(t, e, k) => maybeLet(d, v => {
-      val fLabel = newLabel()
-      val fArg = newVar()
-      val (fBody, extraFuncsFromFBody) = fill(fArg, k)
-      val freeVariables = freeVars(fBody).filterNot(_==convertVar(fArg))
-      val freesTup = L3.Variable("frees")
-      val fbodyWithFrees = freeVariables.zipWithIndex.foldRight(fBody){
-        case ((v,i), b) => L3.Let(v, L3.ARef(freesTup, L3.Num(i)), b)
-      }
-      val func = L3.Func(fLabel, List(fArg, freesTup), fbodyWithFrees)
-      val tup = NewTuple(freeVariables.map(l3Var2L4Var))
-      val (tt, tef) = find(FunCall(fLabel, List(t, tup)), NoContext)
-      val (ee, eef) = find(FunCall(fLabel, List(e, tup)), NoContext)
-      (L3.IfStatement(v, tt, ee), func :: (extraFuncsFromFBody ::: tef ::: eef))
-    })
+    case IfContext(t, e, k) => {
+      val dup = java.lang.Boolean.getBoolean("L4.useIfDuplication")
+      if(dup) maybeLet(d, v => (L3.IfStatement(v, find(t, k)._1, find(e, k)._1), Nil))
+      else maybeLet(d, v => {
+        val fLabel = newLabel()
+        val fArg = newVar()
+        val (fBody, extraFuncsFromFBody) = fill(fArg, k)
+        val freeVariables = freeVars(fBody).filterNot(_==convertVar(fArg))
+        val freesTup = L3.Variable("frees")
+        val fbodyWithFrees = freeVariables.zipWithIndex.foldRight(fBody){
+          case ((v,i), b) => L3.Let(v, L3.ARef(freesTup, L3.Num(i)), b)
+        }
+        val func = L3.Func(fLabel, List(fArg, freesTup), fbodyWithFrees)
+        val tup = NewTuple(freeVariables.map(l3Var2L4Var))
+        val (tt, tef) = find(FunCall(fLabel, List(t, tup)), NoContext)
+        val (ee, eef) = find(FunCall(fLabel, List(e, tup)), NoContext)
+        (L3.IfStatement(v, tt, ee), func :: (extraFuncsFromFBody ::: tef ::: eef))
+      })
+    }
   }
 
   def maybeLet(d:L3.D, f: L3.V => (L3.E, List[L3.Func])): (L3.E, List[L3.Func]) =

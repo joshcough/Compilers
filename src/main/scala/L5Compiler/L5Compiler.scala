@@ -3,6 +3,7 @@ package L5Compiler
 import L5AST._
 import L4Compiler.{ L4AST => L4 }
 import L4Compiler.L4Printer
+import LCompiler.LNCompiler
 
 object L5CompilerMain extends L5Compiler {
   import java.io.File
@@ -11,7 +12,7 @@ object L5CompilerMain extends L5Compiler {
   def compileFile(filename:String): String = compileToString(new File(filename).read)
 }
 
-trait L5Compiler extends io.Reader with L5Parser with L5Printer {
+trait L5Compiler extends LNCompiler with L5Parser with L5Printer {
   //  L5 -> L4 Implicit Conversions
   implicit def convertVar(v:Variable) = L4.Variable(v.name)
   implicit def convertVarList(vs:List[Variable]) = vs.map(convertVar)

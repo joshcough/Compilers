@@ -14,6 +14,7 @@ import L2Compiler.L2AST.{
   Main => L2Main,
   Instruction => L2Instruction, _}
 import L2Compiler.L2Printer
+import LCompiler.LNCompiler
 
 object L3CompilerMain extends L3Compiler {
   import java.io.File
@@ -22,7 +23,7 @@ object L3CompilerMain extends L3Compiler {
   def compileFile(filename:String): String = L2Printer.toCode(compile(new File(filename).read))
 }
 
-class L3Compiler extends io.Reader with L3Parser with L3ToL2Implicits {
+class L3Compiler extends LNCompiler with L3Parser with L3ToL2Implicits {
 
   def compileToString(code:String): String = L2Printer.toCode(compile(code))
 

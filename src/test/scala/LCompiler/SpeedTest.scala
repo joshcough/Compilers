@@ -1,3 +1,5 @@
+package LCompiler
+
 import util.Timer
 import util.{L2Interpreter, L3Interpreter, L4Interpreter, L1Interpreter, L5Interpreter, TestHelpers}
 
@@ -44,7 +46,7 @@ class SpeedTest extends TestHelpers with Timer {
     val index = testcount.next()
     test(index + "-" + L5E){
       val l5 = wrapLibrary(L5E.clean)
-      val (l4, l3, l2, l1) = alwaysTimed("compiling", TheMainCompiler.compileToStrings(l5))
+      val List(l4, l3, l2, l1) = alwaysTimed("compiling", LCompiler.compileToStrings(l5))
 
       // write the test
       new java.io.File("./test/the-test/test" + index + ".L5").write(l5)

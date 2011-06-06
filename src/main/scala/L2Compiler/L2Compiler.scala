@@ -1,8 +1,8 @@
 package L2Compiler
 
-import io.Reader
 import L2AST._
 import util.Timer
+import LCompiler.LNCompiler
 
 object L2CompilerMain extends L2Compiler {
   import java.io.File
@@ -11,7 +11,7 @@ object L2CompilerMain extends L2Compiler {
   def compileFile(filename:String): String = toCode(compile(new File(filename).read))
 }
 
-trait L2Compiler extends Reader with L2Parser with Allocator with L2Printer with Timer {
+trait L2Compiler extends LNCompiler with L2Parser with Allocator with L2Printer with Timer {
   def parseProgram(s:String): L2 = parse(read(s))
   def compile(code: String): L2 = compile(parseProgram(code))
   def compile(ast:L2): L2 = {

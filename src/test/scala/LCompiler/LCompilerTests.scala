@@ -1,55 +1,62 @@
+package LCompiler
+
 import util.{TestHelpers, Timer}
 import util.{L2Interpreter, L3Interpreter, L4Interpreter, L1Interpreter, L5Interpreter, TestHelpers}
+import collection.mutable.ListBuffer
 
-class TheMainCompilerTests extends TestHelpers with Timer {
+class LCompilerTests extends TestHelpers with Timer {
 
-//  testCompile("(test 5 5)")
-//  testCompile("(test (identity 14) 14)")
-//  testCompile("(test false false)")
-//  testCompile("(test true true)")
-//  testCompile("(test true (not false))")
-//  testCompile("(test false (not true))")
-//  testCompile("(test (and true true) true)")
-//  testCompile("(test (and true false) false)")
-//  testCompile("(test (and false true) false)")
-//  testCompile("(test (and false false) false)")
-//  testCompile("(test (or true true) true)")
-//  testCompile("(test (or true false) true)")
-//  testCompile("(test (or false true) true)")
-//  testCompile("(test (or false false) false)")
-//  testCompile("(test (+ 5 5) 10)")
-//  testCompile("(test (((lambda () +)) 7 7) 14)")
-//  testCompile("(test (empty nil) true)")
-//  testCompile("(test (size nil) 0)")
-//  testCompile("(test (size (cons 1 nil)) 1)")
-//  testCompile("(test (size (cons 7 (cons 1 nil))) 2)")
-//  testCompile("(test (size (cons 5 (cons 9 (cons 14 (cons 1 nil))))) 4)")
-//  testCompile("(test (tolist (new-tuple)) nil)")
-//  testCompile("(test (tolist (new-tuple 1)) (cons 1 nil))")
-//  testCompile("(test (tolist (new-tuple 1 2 3 4)) (cons 1 (cons 2 (cons 3 (cons 4 nil)))))")
-//  testCompile("(test (map identity nil) nil)")
-//  testCompile("(test (map (lambda (x) (+ x 5)) nil) nil)")
-//  testCompile("(test (map identity (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 1 2 3 4)))")
-//  testCompile("(test (map (lambda (x) (+ x 5)) (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 6 7 8 9)))")
-//  testCompile("(test (reduce + 0 (tolist (new-tuple 1 2 3 4))) 10)")
-//  testCompile("(test (reduce * 1 (tolist (new-tuple 1 2 3 4))) 24)")
-//  testCompile("(test (mapreduce (lambda (x) (* x x)) + 0 (tolist (new-tuple 1 2 3 4))) 30)")
-//  testCompile("(test (filter (lambda (x) (< 2 x)) (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 3 4)))")
-//  testCompile("(test (find (lambda (x) (= 4 x)) (tolist (new-tuple 1 2 3 4))) (some 4))")
-//  testCompile("(test (get (find (lambda (x) (= 4 x)) (tolist (new-tuple 1 2 3 4)))) 4)")
-//  testCompile("(test (find (lambda (x) (= 5 x)) (tolist (new-tuple 1 2 3 4))) none)")
+  val compilerTests = new ListBuffer[String]
 
+  registerTest("(test 5 5)")
+//  registerTest("(test (identity 14) 14)")
+//  registerTest("(test false false)")
+//  registerTest("(test true true)")
+//  registerTest("(test true (not false))")
+//  registerTest("(test false (not true))")
+//  registerTest("(test (and true true) true)")
+//  registerTest("(test (and true false) false)")
+//  registerTest("(test (and false true) false)")
+//  registerTest("(test (and false false) false)")
+//  registerTest("(test (or true true) true)")
+//  registerTest("(test (or true false) true)")
+//  registerTest("(test (or false true) true)")
+//  registerTest("(test (or false false) false)")
+//  registerTest("(test (+ 5 5) 10)")
+//  registerTest("(test (((lambda () +)) 7 7) 14)")
+//  registerTest("(test (empty nil) true)")
+//  registerTest("(test (size nil) 0)")
+//  registerTest("(test (size (cons 1 nil)) 1)")
+//  registerTest("(test (size (cons 7 (cons 1 nil))) 2)")
+//  registerTest("(test (size (cons 5 (cons 9 (cons 14 (cons 1 nil))))) 4)")
+//  registerTest("(test (tolist (new-tuple)) nil)")
+//  registerTest("(test (tolist (new-tuple 1)) (cons 1 nil))")
+//  registerTest("(test (tolist (new-tuple 1 2 3 4)) (cons 1 (cons 2 (cons 3 (cons 4 nil)))))")
+//  registerTest("(test (map identity nil) nil)")
+//  registerTest("(test (map (lambda (x) (+ x 5)) nil) nil)")
+//  registerTest("(test (map identity (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 1 2 3 4)))")
+//  registerTest("(test (map (lambda (x) (+ x 5)) (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 6 7 8 9)))")
+//  registerTest("(test (reduce + 0 (tolist (new-tuple 1 2 3 4))) 10)")
+//  registerTest("(test (reduce * 1 (tolist (new-tuple 1 2 3 4))) 24)")
+//  registerTest("(test (mapreduce (lambda (x) (* x x)) + 0 (tolist (new-tuple 1 2 3 4))) 30)")
+//  registerTest("(test (filter (lambda (x) (< 2 x)) (tolist (new-tuple 1 2 3 4))) (tolist (new-tuple 3 4)))")
+//  registerTest("(test (find (lambda (x) (= 4 x)) (tolist (new-tuple 1 2 3 4))) (some 4))")
+//  registerTest("(test (get (find (lambda (x) (= 4 x)) (tolist (new-tuple 1 2 3 4)))) 4)")
+//  registerTest("(test (find (lambda (x) (= 5 x)) (tolist (new-tuple 1 2 3 4))) none)")
+//  registerTest("(test (stake 1 (ones)) (tolist (new-tuple 1)))")
+//  registerTest("(test (stake 5 (ones)) (tolist (new-tuple 1 1 1 1 1)))")
+//  registerTest("(test (stake 5 (nats)) (tolist (new-tuple 1 2 3 4 5)))")
+//  registerTest("(test (stake 5 (smap (lambda (x) (+ 7 x)) (ones))) (tolist (new-tuple 8 8 8 8 8)))")
+//  registerTest("(test (stake 5 (szipwith + (nats) (nats))) (tolist (new-tuple 2 4 6 8 10)))")
+//  registerTest("(test (stake 10 (fibs)) (tolist (new-tuple 0 1 1 2 3 5 8 13 21 34)))")
 
-//  testCompile("(test (stake 1 (ones)) (tolist (new-tuple 1)))")
-//  testCompile("(test (stake 5 (ones)) (tolist (new-tuple 1 1 1 1 1)))")
-//  testCompile("(test (stake 5 (nats)) (tolist (new-tuple 1 2 3 4 5)))")
-//  testCompile("(test (stake 5 (smap (lambda (x) (+ 7 x)) (ones))) (tolist (new-tuple 8 8 8 8 8)))")
-//  testCompile("""(test (stake 5 (szipwith + (nats) (nats))) (tolist (new-tuple 2 4 6 8 10)))""")
+  //for(t<-compilerTests){ testCompile(t) }
+  //for(t<-compilerTests){ testL4Compiler(t) }
+  //for(t<-compilerTests){ testL2Compiler(t) }
+  for(t<-compilerTests){ testL1Compiler(t) }
 
-  testCompile("(test (stake 10 (fibs)) (tolist (new-tuple 0 1 1 2 3 5 8 13 21 34)))")
+  def registerTest(code:String){ compilerTests += code }
 
-//  {s:2, 0, {s:2, 1, {s:2, 1, {s:2, 2, {s:2, 3, {s:2, 5, {s:2, 8, {s:2, 13, {s:2, 21, {s:2, 34, {s:0}}}}}}}}}}}
-//  (print (stake 10 (fibs)))
 
   def wrapLibrary(code:String) = """
   (let ([identity (lambda (x) x)])
@@ -156,14 +163,10 @@ class TheMainCompilerTests extends TestHelpers with Timer {
     test(index + "-" + L5E){
       val l5 = wrapLibrary(L5E.clean)
       //val l5 = L5E.clean
-      val (l4, l3, l2, l1) = alwaysTimed("compiling", TheMainCompiler.compileToStrings(l5))
+      val all@List(_, l4, l3, l2, l1, x86) = alwaysTimed("compiling", LCompiler.compileToStrings(l5))
 
-      // write the test
-      new java.io.File("./test/the-test/test" + index + ".L5").write(l5)
-      new java.io.File("./test/the-test/test" + index + ".L4").write(l4)
-      new java.io.File("./test/the-test/test" + index + ".L3").write(l3)
-      new java.io.File("./test/the-test/test" + index + ".L2").write(l2)
-      new java.io.File("./test/the-test/test" + index + ".L1").write(l1)
+      // write the results
+      write(all)
 
       def die(level:String, otherResult:String, codes:String*){
         println(codes.mkString("\n============\n"))
@@ -189,6 +192,31 @@ class TheMainCompilerTests extends TestHelpers with Timer {
         }
         else die("L5 != L4", L4InterpResult, l5, l4)
       }
+    }
+  }
+
+  def testL4Compiler(L5E:String){
+    test(testcount.next() + "-" + L5E){
+      write(LCompiler.compileToStrings(wrapLibrary(L5E.clean), compileTo = 3))
+    }
+  }
+
+  def testL2Compiler(L5E:String){
+    test(testcount.next() + "-" + L5E){
+      write(LCompiler.compileToStrings(wrapLibrary(L5E.clean), compileTo = 1))
+    }
+  }
+
+  def testL1Compiler(L5E:String){
+    test(testcount.next() + "-" + L5E){
+      write(LCompiler.compileToStrings(wrapLibrary(L5E.clean), compileTo = 0))
+    }
+  }
+
+  def write(strings:List[String], count:Int=0) {
+    for((s, i) <- strings.zipWithIndex){
+      println(s)
+      new java.io.File("./test/the-test/test" + count + (".L" + (5-i))).write(s)
     }
   }
 }
