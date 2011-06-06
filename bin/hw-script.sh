@@ -7,7 +7,7 @@ cd build
 git clone git://github.com/joshcough/Interpreters.git
 cd Interpreters
 
-#build the code
+# build the code
 ./bin/sbt update
 #./bin/sbt test
 ./bin/sbt package
@@ -16,7 +16,7 @@ cd Interpreters
 cp target/scala_2.8.1/compilers_2.8.1-0.1.jar ./lib/compiler.jar
 cp project/boot/scala-2.8.1/lib/scala-library.jar ./lib
 #mv bin/L1 bin/spill bin/liveness bin/graph-color .
-mv ./bin/L5c .
+mv ./bin/Lc .
 
 # get rid of stuff i dont need to hand in
 rm -rf .git project target out lib_managed test 444-code src/main/scheme Test.class Test.j compilers.iml runtime.o test.S test2.S a.out bin Test.o Test.S src/test
@@ -25,8 +25,8 @@ rm -rf .git project target out lib_managed test 444-code src/main/scheme Test.cl
 tar cfvz ../cough-compilers.tar.gz *
 
 # done creating compilers.tar.gz
-echo "done creating cough-compilers.tar.gz. now run:"
-echo "scp ./build/cough-compilers.tar.gz jdc974@tlab-18.cs.northwestern.edu:./"
+echo "done creating cough.Lc.tar.gz. now run:"
+echo "scp ./build/cough.Lc.tar.gz jdc974@tlab-18.cs.northwestern.edu:./"
 
 #tar cfvz ../spill-test.tar.gz spill-test
 #echo "done creating ./build/spill-test.tar.gz."
