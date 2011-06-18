@@ -1,0 +1,10 @@
+#!/bin/sh
+#cd robby/graph-test
+for f in *.L2f
+do	
+	filename=${f%.*}
+	res=$filename.gres
+	echo $filename
+	/Users/sjaconette/Documents/s11/hw/graph-color $f > $res
+done
+#cd ../..

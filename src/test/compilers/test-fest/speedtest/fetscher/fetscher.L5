@@ -1,0 +1,29 @@
+(letrec ((divisibleby (lambda (n d)
+                        (let ((new (- n d)))
+                          (if (= new 0)
+                              1
+                              (if (< new 0)
+                                  0
+                                  (divisibleby new d)))))))
+  (let ((isprime (lambda (n)
+                   (letrec ((test (lambda (x)
+                                    (if (< x 2)
+                                        1
+                                        (if (divisibleby n x)
+                                            0
+                                            (test (- x 1)))))))
+                     (test (- n 1))))))
+    (let ((total (new-tuple 0 70000)))
+      (letrec ((checkprimes (lambda (n)
+                              (if (<= n 2)
+                                  0
+                                  (begin
+                                    (if (isprime n)
+                                        (aset total 0 (+ (aref total 0) 1 ))
+                                        0)
+                                    (checkprimes (- n 1)))))))
+        (begin
+          (checkprimes (aref total 1))
+          (print total))))))
+  
+  

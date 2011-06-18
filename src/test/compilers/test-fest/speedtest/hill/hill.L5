@@ -1,0 +1,25 @@
+(let ([not (lambda (a) (if a 0 1))])
+  (let ([and (lambda (a b) (if a b 0))])
+    (let ([or (lambda (a b) (if a 1 b))])
+      (letrec ([divides (lambda (big small)
+                          (or (= big 0)
+                              (if (< big 0)
+                                  0
+                                  (divides (- big small) small))))])
+        (letrec ([try_prime (lambda (x current)
+                              (or (= x current)
+                                  (if (< x 2)
+                                      0
+                                      (if (divides x current)
+                                          0
+                                          (try_prime x (+ current 1))))))])
+          (let ([prime (lambda (x) (try_prime x 2))])
+            (letrec ([find_prime (lambda (start num)
+                                   (if (= num 0)
+                                       (print (new-tuple))
+                                       (if (prime start)
+                                           (begin
+                                             (print start)
+                                             (find_prime (+ start 1) (- num 1)))
+                                           (find_prime (+ start 1)  num))))])
+              (find_prime 200000 50))))))))

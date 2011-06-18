@@ -1,0 +1,19 @@
+    (begin
+      (letrec ([multifac (lambda (j u s t o m e)
+                           42)])
+        (multifac 2 2 2 3 4 5 0))
+      (letrec ([multifac (lambda (a b acc)
+                           (if (+ a b)
+                               (multifac (if a
+                                             (- a 1)
+                                             a)
+                                         (if b
+                                             (- b 1)
+                                             b)
+                                         (let ([oldacc acc])
+                                           (+ oldacc (+ a b))))
+                               acc))])
+          (letrec ([many (lambda (i) (if (= i 0) (multifac 9999 1 1)
+            (begin (multifac 9999 1 1)
+                   (many (- i 1)))))])
+  (print (many 8000)))))
