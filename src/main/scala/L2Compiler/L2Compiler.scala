@@ -16,7 +16,11 @@ trait L2Compiler extends LNCompiler with L2Parser with Allocator with L2Printer 
   def compile(code: String): L2 = compile(parseProgram(code))
   def compile(ast:L2): L2 = {
     val l1 = timed("allocate", allocate(ast))
-    L2(l1.main,l1.funs)
+    val mainWithoutLabel = l1.main.body.headOption match {
+      case Some(l) if l == mainLabel || l == mainLabelDec => Func(l1.main.body.tail)
+      case _ => l1.main
+    }
+    L2(mainWithoutLabel,l1.funs)
   }
 
   def compileToString(code:String): String = toCode(compile(code))

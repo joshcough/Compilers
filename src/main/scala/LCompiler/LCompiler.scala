@@ -15,7 +15,7 @@ trait LNCompiler extends io.Reader {
 object LCompiler extends LNCompiler with Timer {
   import java.io.File
   import io.FileHelper._
-  def main(args:Array[String]) = {
+  def main(args:Array[String]) {
     L1X86Runner.finishCompilation(compileToStrings(new File(args(0)).read)(0))
   }
 
@@ -33,7 +33,7 @@ object LCompiler extends LNCompiler with Timer {
 
     timed("Complete compilation: ", {
       compilers.foldLeft(List(code)){ case (nextCode :: codes, (comp, level)) =>
-        alwaysTimed("L" + level + " Compiler", comp.compileToString(nextCode) :: codes)
+        timed("L" + level + " Compiler", comp.compileToString(nextCode) :: codes)
       }
     })
   }
