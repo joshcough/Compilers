@@ -1,0 +1,97 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; some functional helper functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+breed [somes some]
+; fields
+somes-own [ovalue]
+; constructors
+to-report new-some [v] report new somes task [set ovalue v] end
+
+to-report o-get [o]
+  report ifelse-value (is-some? o) [[ovalue] of o] [__boom]
+end
+
+to-report o-map [f o]
+  report ifelse-value (is-some? o) [new-some (runresult f [ovalue] of o)] [nobody]
+end
+
+
+to-report new [the-breed constructor]
+  let t nobody
+  crt 1 [ set t self set breed the-breed ht ]
+  ask t [ run constructor ]
+  report t
+end
+
+to-report second [a-list] report first but-first a-list end
+to-report third [a-list] report first but-first but-first a-list end
+
+to-report drop [n l-or-s]
+  report ifelse-value (n = 0) [ l-or-s ] [ 
+    ifelse-value empty? l-or-s [l-or-s] [ drop (n - 1) (but-first l-or-s) ]
+  ]
+end
+
+to-report take-while [pred l-or-s]
+  report reverse (take-while-with-acc pred l-or-s (unit l-or-s))
+end
+
+to-report find [pred a-list]
+  report ifelse-value empty? a-list [nobody] [
+    ifelse-value (runresult pred first a-list) 
+      [ (new-some first a-list) ]
+      [ find pred but-first a-list ]
+  ] 
+end
+
+to-report take-while-with-acc [pred l-or-s acc]
+  if empty? l-or-s [report acc]
+  if (run-result pred (first l-or-s)) [
+    report take-while-with-acc pred (but-first l-or-s) (runresult (combiner l-or-s) (first l-or-s) acc)
+  ]
+  report acc
+end
+
+to-report is-digit? [c]
+  report member? c ["0" "1" "2" "3" "4" "5" "6" "7" "8" "9"]
+end
+
+to-report unit [l-or-s]
+  report ifelse-value (is-string? l-or-s)  [""] [[]]
+end
+
+to-report combiner [l-or-s]
+  report ifelse-value (is-string? l-or-s) [task [(word ?1 ?2)]] [task [(fput ?1 ?2)]]
+end
+
+;;;;;;;;;;;;;;;;;;
+;; tests
+;;;;;;;;;;;;;;;;;;
+
+to helper-tests 
+  test:add "drop 0" [] [ drop 0 "xyz" ] "xyz" 
+  test:add "drop 1" [] [ drop 1 "xyz" ] "yz" 
+  test:add "drop 2" [] [ drop 2 "xyz" ] "z" 
+  test:add "drop 3" [] [ drop 3 "xyz" ] "" 
+  test:add "drop 4" [] [ drop 4 "xyz" ] "" 
+  
+  test:add "take-while" [] [take-while task [? = "x"] "xxxyz"] "xxx"
+  
+  ;test:add "hmm" [ca crt 2] (task [turtle 0]) task [turtle 1]
+  
+  test:add "find 7" [] [find task [? = 7] [1 2 3 4]] nobody
+  test:add "find 7" [] [o-get find task [? = 7] [1 2 3 4 5 6 7]] 7
+end
+
+
+
+;observer> print take-while task [? = "x"] "xxxyz"
+;xxx
+;observer> print take-while task [? = "x"] "xxxyzswsws"
+;xxx
+;observer> print take-while task [? != "r"] "yzswrrxxxrrrrsws"
+;yzsw
+
+;; TODO
+; i did print somes = adds and it said true! ask why.
