@@ -6,7 +6,9 @@
 ;          | <id>
 ;          | {<id> <F1WAE>*}
 ;          | {rec {<id> <F1WAE>}*}
-;          | {get <F1WAE> <id>extensions [test]
+;          | {get <F1WAE> <id>}
+
+extensions [test]
 
 __includes ["read.nls" "helpers.nls"]
 
