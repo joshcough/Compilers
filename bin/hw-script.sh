@@ -1,11 +1,12 @@
 # make temp dir to do work in
-rm -rf build
-mkdir build
-cd build
+rm -rf ../build
+mkdir ../build
+cp -r * ../build
+cd ../build
 
 # clone the project
-git clone git://github.com/joshcough/Interpreters.git
-cd Interpreters
+#git clone git://github.com/joshcough/Interpreters.git
+#cd Interpreters
 
 # build the code
 ./bin/sbt update
@@ -22,7 +23,7 @@ mv ./bin/Lc .
 rm -rf .git project target out lib_managed test 444-code src/main/scheme Test.class Test.j compilers.iml runtime.o test.S test2.S a.out bin Test.o Test.S src/test
 
 # create the tar to hand in
-tar cfvz ../cough-compilers.tar.gz *
+tar cfvz ../cough.Lc.tar.gz *
 
 # done creating compilers.tar.gz
 echo "done creating cough.Lc.tar.gz. now run:"
