@@ -63,7 +63,9 @@ eval2 (Get r x) fs bs = findInRec (eval2 r fs bs) x where
     snd (fromMaybe (error "no such field") (find (\f -> (fst f) == x) fields))
 eval2 (App fname fargs) fs bs =
   let f = fromMaybe (error "no such function") (find (\f -> (name f) == fname) fs) in
-  eval2 (body f) fs (zip (args f) (map (\a -> eval2 a fs bs) fargs))
+  if (length fargs) == (length (args f)) 
+   then eval2 (body f) fs (zip (args f) (map (\a -> eval2 a fs bs) fargs))
+   else (error "wrong arity")
 
 math f (VNum l) (VNum r) = VNum (f l r) 
 math _ _ _ = (error "cant do math on records")
@@ -80,6 +82,7 @@ evalSimpleTest s expected = makeTest s (eval (parse (sread s))) expected
 evalTest e fs expected = 
   makeTest e (eval2 (parse (sread e)) (map (\f -> (parseDef (sread f))) fs) []) expected 
 
+
 results = runTests
  [
    parseTest "(+ 5 6)" (Add (Num 5) (Num 6)),
@@ -93,20 +96,34 @@ results = runTests
    evalSimpleTest "(get (rec (c 5) (x 8) (y (rec (z 9)))) x)" (VNum 8),
    evalSimpleTest "(get (rec (c 5) (x 8) (y (rec (z 9)))) y)" (VRec [("z",VNum 9)]),
    evalSimpleTest "(get (get (rec (c 5) (x 8) (y (rec (z 9)))) y) z)" (VNum 9),
-   evalTest "(f 7)" ["(deffun (f x) (+ x x))"] (VNum 14)
+   evalTest "(f 7)" ["(deffun (f x) (+ x x))"] (VNum 14),
+   evalTest "(f 7 12)" ["(deffun (f x y) (+ x y))"] (VNum 19),
+   evalTest "(+ (f) (f))" ["(deffun (f) 5)"] (VNum 10),
+   evalTest "(g (rec (a 0) (c 12) (b 7)))" ["(deffun (g r) (get r c))"] (VNum 12),
+   evalTest "(with (x 7) (g (rec (a 0) (c 12)) (rec (d x))))" ["(deffun (g r1 r2) (+ (get r1 c) (get r2 d)))"] (VNum 19),
+   evalTest 
+     "(with (x 7) (with (x 8) (g (rec (a 0) (c 12)) (rec (d x)))))" 
+     ["(deffun (g r1 r2) (+ (get r1 c) (get r2 d)))"] 
+     (VNum 20),
+   evalTest 
+     "(with (x 7) (with (x 9)(g (rec (a 0) (x 12)) (rec (x x)))))"
+     ["(deffun (g r1 r2) (+ (get r1 x)(get r2 x)))"]
+     (VNum 21),
+   evalTest "(f 7)" ["(deffun (f x) (+ (+ 3 (g x)) (+ 3 (g x))))", "(deffun (g x) (+ x 11))"] (VNum 42)
  ]
+
+
+--(test (interp-expr 
+--       (parse '{with {x 7} {with {x 9}{g {rec {a 0} {x 12}} {rec {x x}}}}})
+--       (list (parse-defn '{deffun {g r1 r2} {+ {get r1 x}{get r2 x}}}))) 21)
+
+-- TODO:
 
 -- *Main Data.List Data.Maybe> (eval (parse (sread "(rec (c 5) (x 8) (y (rec (x 9))) )")))
 -- *** Exception: bad rec: 
 -- *Main Data.List Data.Maybe> (eval (parse (sread "(rec (c 5) (x 8) (y (rec (x 9))))")))
 -- VRec [("c",VNum 5),("x",VNum 8),("y",VRec [("x",VNum 9)])]
 
--- (test (interp (parse '{f 1 2})
---                (list (parse-defn '{deffun {f x y} {+ x y}})))
---        3)
---  (test (interp (parse '{+ {f} {f}})
---                (list (parse-defn '{deffun {f} 5})))
---        10)
 --  (test/exn (interp (parse '{f 1})
 --                    (list (parse-defn '{deffun {f x y} {+ x y}})))
 --            "wrong arity")
