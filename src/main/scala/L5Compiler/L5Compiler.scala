@@ -138,6 +138,8 @@ trait L5Compiler extends LNCompiler with L5Parser with L5Printer {
         (lets, funcs)
       }
       val label = newLabel()
+      // finally, the closure, and the new function
+      // (and any other functions lifted from compiling the body of the lambda)
       (L4.MakeClosure(label, L4.NewTuple(frees)), L4.Func(label, fArgs, fBody) :: moreFunctions)
     }
 
