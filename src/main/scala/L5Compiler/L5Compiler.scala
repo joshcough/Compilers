@@ -207,6 +207,8 @@ trait L5Compiler extends LNCompiler with L5Parser with L5Printer {
     (l4es, fs.flatten)
   }
 
+  // TODO: In L4, I renamed all the variables in the program to avoid
+  // possible name collisions with f and x. This needs to be done for L5.
   private val labelCount = Iterator.from(0)
   private val varCount = Iterator.from(0)
   private def newLabel() = L4.Label("f" + labelCount.next())
