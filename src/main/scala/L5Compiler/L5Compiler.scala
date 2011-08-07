@@ -6,7 +6,7 @@ import L4Compiler.L4Printer
 import LCompiler.LNCompiler
 
 /**
- * L5Compiler is a lambda lifter (http://en.wikipedia.org/wiki/Lambda_lifting),
+ * L5Compiler is a lambda lifter (http://en.wikipedia.org/wiki/Lambda_lifting).
  *
  * L5 is the language being compiled. It contains one top level expression only.
  * The grammar for L5 can be found in the same directory as this file, L5Grammar.txt.
