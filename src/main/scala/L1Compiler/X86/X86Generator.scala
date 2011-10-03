@@ -1,6 +1,13 @@
 package L1Compiler.X86
 
 import L1Compiler.L1AST.{Instruction => L1Instruction, _}
+import L1Compiler.{L1Compiler, Runner}
+import java.io.File
+import io.FileHelper
+import io.FileHelper._
+import io.CommandRunner._
+
+
 
 object X86Inst {
   type X86Inst = String
@@ -8,6 +15,17 @@ object X86Inst {
   def dump(insts: List[X86Inst]) = insts.map { i =>
     (if (i.endsWith(":") || i.startsWith(".globl")) i else "\t" + i) + "\n"
   }.mkString
+
+  def main(args:Array[String]){
+    println(compileForRun(new File(args(0)).read))
+  }
+
+  def compileForRun(code:String): String = {
+    val compiler = new L1Compiler with X86Generator
+    compiler.compile(code, "test")
+  }
+
+
 }
 
 trait X86Generator extends L1Compiler.BackEnd {
