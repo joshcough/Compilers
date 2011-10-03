@@ -17,7 +17,7 @@ import Data.Maybe
 data F1WAE = 
   Id String | Num Integer | Add F1WAE F1WAE | Sub F1WAE F1WAE | With String F1WAE F1WAE | 
   App String [F1WAE] | Rec [(String, F1WAE)] | Get F1WAE String
-  deriving (Show, Eq)
+  deriving (Show, Eq) 
 
 data FunDef = FunDef { name :: String,  args :: [String], body :: F1WAE } deriving (Show, Eq)
 data Value = VNum Integer | VRec [(String, Value)] deriving (Show, Eq)
@@ -53,20 +53,27 @@ eval2 :: F1WAE -> [FunDef] -> [(String, Value)] -> Value
 eval2 (Num i) _ _ = VNum i
 eval2 (Add e1 e2) fs bs = math (+) (eval2 e1 fs bs) (eval2 e2 fs bs)
 eval2 (Sub e1 e2) fs bs = math (-) (eval2 e1 fs bs) (eval2 e2 fs bs)
-eval2 (With x e body) fs bs = let v = (eval2 e fs bs) in eval2 body fs ((x, v) : bs)
+eval2 (With x e body) fs bs = 
+  let v = eval2 e fs bs in eval2 body fs ((x, v) : bs)
+
 eval2 (Id s) fs bs = lookup s bs where 
   lookup s [] = error ("free variable: " ++ s)
   lookup s ((x, v) : xs) = if s == x then v else lookup s xs
-eval2 (Rec fields) fs bs = VRec (map (\f -> ((fst f), (eval2 (snd f) fs bs))) fields)
+
+eval2 (Rec fields) fs bs = 
+  VRec (map (\f -> ((fst f), (eval2 (snd f) fs bs))) fields)
+
 eval2 (Get r x) fs bs = findInRec (eval2 r fs bs) x where 
   findInRec (VRec fields) x = 
     snd (fromMaybe (error "no such field") (find (\f -> (fst f) == x) fields))
+
 eval2 (App fname fargs) fs bs =
   let f = fromMaybe (error "no such function") (find (\f -> (name f) == fname) fs) in
   if (length fargs) == (length (args f)) 
    then eval2 (body f) fs (zip (args f) (map (\a -> eval2 a fs bs) fargs))
    else (error "wrong arity")
 
+math :: (Integer -> Integer -> Integer) -> Value -> Value -> Value
 math f (VNum l) (VNum r) = VNum (f l r) 
 math _ _ _ = (error "cant do math on records")
 
