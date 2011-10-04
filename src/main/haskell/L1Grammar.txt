@@ -1,0 +1,49 @@
+(define-language L1
+ (p ((i ...) (label i ...) ...))
+ (i (x <- s)
+    (x <- (mem x n4))
+    ((mem x n4) <- s)
+    (x aop= t) ; was: (x aop= s)
+    (x sop= sx) 
+    (x sop= num)
+    (cx <- t cmp t) ; was: (cx <- s cmp s)
+
+    label
+    (goto label)
+    (cjump t cmp t label label) ; was: (cjump s cmp s label label)
+
+    (call u) ; was: (call s)
+    (tail-call u) ; was (tail-call s)
+    (return)
+
+    (eax <- (print t)) ; was: (eax <- (print s))
+    (eax <- (allocate t t)) ; was: (eax <- (allocate s s))  
+    (eax <- (array-error t t))) ; was: (eax <- (array-error s s)))
+
+ (aop= += -= *= &=)
+ (sop= <<= >>=)
+ (cmp < <= =)
+
+ (u x label) ; introduced for call, tail-call
+ (t x num)
+ (s t label)
+ ((x y) cx esi edi ebp esp)
+ (cx eax ecx edx ebx)
+ (sx ecx)
+
+ (label (side-condition (name x (variable-prefix :))
+                        (regexp-match label-regexp (symbol->string (term x)))))
+ (n4 (side-condition num_1
+                     (and (zero? (modulo (term num_1) 4)))))
+ (num (side-condition number_1 (32-bit-int? (term number_1)))))
+
+(define-extended-language L2 L1
+ ((x y) non-register-var
+        real-register)
+
+ (real-register eax ecx edx ebx esi edi)
+ (non-register-var (side-condition (name x variable-not-otherwise-mentioned)
+                                   (not (regexp-match
+                                         label-regexp
+                                         (symbol->string (term x))))))
+ (cx x)

@@ -47,5 +47,9 @@ results = runTests
   [
     makeTest "7" (sread "7") (AtomNum 7),
     makeTest "x" (sread "x") (AtomSym "x"),
-    makeTest "(7)" (sread ("(7)")) (List [AtomNum 7])
+    makeTest "(7)" (sread ("(7)")) (List [AtomNum 7]),
+    makeTest "(+ 5 6)" (sread "(+ 5 6)") (List [AtomSym "+", AtomNum 5, AtomNum 6]),
+    makeTest "(+ 5 6)" (sread "(+ (+ 5 6) 6)") (List [AtomSym "+", (List [AtomSym "+", AtomNum 5, AtomNum 6]), AtomNum 6]),
+    makeTest "(+ 5 6)" (sread "(+ (+ 5 6) (+ 5 6))") (List [AtomSym "+", (List [AtomSym "+", AtomNum 5, AtomNum 6]), (List [AtomSym "+", AtomNum 5, AtomNum 6])]),
+    makeTest "(f x)" (sread "(f x)") (List [AtomSym "f", AtomSym "x"])
   ]
