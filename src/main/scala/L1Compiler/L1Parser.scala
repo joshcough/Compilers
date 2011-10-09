@@ -63,9 +63,8 @@ trait L1Parser {
     case _ => error("expected number or ecx but got: " + exp)
   }
 
-  def parseLabelOrRegister(s: Symbol): S = {
+  def parseLabelOrRegister(s: Symbol): S =
     if (s.toString.startsWith("':")) parseLabel(s.toString) else parseRegister(s)
-  }
 
   // label ::= sequence of alpha-numeric characters or underscore,
   // but starting with a colon, ie matching this regexp:
@@ -76,17 +75,14 @@ trait L1Parser {
     Label(s.drop(2)) // remove the ' and : from ':label.
   }
 
-  def parseRegister(s: Symbol): Register = {
+  def parseRegister(s: Symbol): Register =
     XRegister(s).getOrElse(CXRegister(s).getOrElse(error(s.toString.drop(1) + " is an invalid register")))
-  }
 
-  def parseCxRegister(s: Symbol): CXRegister = {
+  def parseCxRegister(s: Symbol): CXRegister =
     CXRegister(s).getOrElse(error(s.toString.drop(1) + " is an invalid cx register"))
-  }
 
-  def parseComp(s1: Any, cmp: Symbol, s2: Any): Comp = {
+  def parseComp(s1: Any, cmp: Symbol, s2: Any): Comp =
     Comp(parseNumOrRegister(s1), parseCompOp(cmp),parseNumOrRegister(s2))
-  }
 
   def parseCompOp(s:Symbol): CompOp = s match {
     case '< => LessThan
