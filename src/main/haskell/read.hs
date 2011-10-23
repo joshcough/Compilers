@@ -1,9 +1,9 @@
-module Read (SExpr(AtomSym, AtomNum, List), sread) where
+module Read where
 
 import TestHelpers
 import Test.HUnit
 
-data SExpr = AtomSym String | AtomNum Integer | List [SExpr]
+data SExpr = AtomSym String | AtomNum Int | List [SExpr]
   deriving (Show, Eq)
 
 sread :: String -> SExpr
@@ -22,7 +22,7 @@ readChars (c : tail) acc
 readChars [] acc = (symOrNum acc, [])
 
 symOrNum :: String -> SExpr
-symOrNum s = if isInteger s then AtomNum (read s :: Integer) else AtomSym s
+symOrNum s = if isInt s then AtomNum (read s :: Int) else AtomSym s
 
 readWithRest :: String -> (SExpr,String)
 readWithRest (' ' : tail) = readWithRest tail
@@ -34,10 +34,15 @@ readWithRest (c : tail) = readChars (c : tail) []
 --readStringLit ('"' : tail) acc = (StringLit (acc ++ ['"']), tail)
 --readStringLit (c : tail) acc = readStringLit tail (acc ++ [c])
 
-isInteger :: String -> Bool
-isInteger s = case reads s :: [(Integer, String)] of
+isInt :: String -> Bool
+isInt s = case reads s :: [(Int, String)] of
   [(_, "")] -> True
   _         -> False
+
+flatten :: SExpr -> [String]
+flatten (AtomSym s) = [s]
+flatten (AtomNum n) = [show n]
+flatten (List ss) = ss >>= flatten
 
 --------------------
 ------ tests -------
