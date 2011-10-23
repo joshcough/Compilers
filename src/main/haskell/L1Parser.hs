@@ -1,4 +1,4 @@
-module L1Parser2 where
+module L1Parser where
 
 import Read
 import TestHelpers
@@ -39,8 +39,8 @@ parseI l@(List ss) = case (flatten l) of
   ["tail-call", u] -> TailCall (parseU u)
   ["return"] -> Return
   ["eax", "<-", "print", t] -> Assignment (CXR Eax) (Print (parseT t))
-  ["eax", "<-", "allocate", t1, t2] -> Assignment (CXR Eax) (Allocate (parseT t1) (parseT t2))
-  ["eax", "<-", "array-error", t1, t2] -> Assignment (CXR Eax) (ArrayError (parseT t1) (parseT t2))
+  --["eax", "<-", "allocate", t1, t2] -> Assignment (CXR Eax) (Allocate (parseT t1) (parseT t2))
+  --["eax", "<-", "array-error", t1, t2] -> Assignment (CXR Eax) (ArrayError (parseT t1) (parseT t2))
 {-
 parseB :: [String] -> String
 parseB ["eax", "<-", "allocate", t1, t2] = "allocate"
