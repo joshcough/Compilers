@@ -23,8 +23,8 @@ parseI (AtomSym s) = case (parseLabelOrRegister s) of
   Right reg -> error "not an instruction"
 parseI (AtomNum n) = error "bad instruction"
 parseI l@(List ss) = case (flatten l) of
-  [x, "<-", s] -> Assignment (parseX x) (SRHS (parseS s))
-  [x1, "<-", "mem", x2, n4] -> Assignment (parseX x1) (MemRead (MemLoc (parseX x2) (parseN4 n4)))
+  [x, "<-", s] -> Assign (parseX x) (SRHS (parseS s))
+  [x1, "<-", "mem", x2, n4] -> Assign (parseX x1) (MemRead (MemLoc (parseX x2) (parseN4 n4)))
   ["mem", x, n4, "<-", s] -> MemWrite (MemLoc (parseX x) (parseN4 n4)) (parseS s)
   [x, "+=", t]  -> Increment (parseX x) (parseT t)
   [x, "-=", t]  -> Decrement (parseX x) (parseT t)
@@ -32,15 +32,15 @@ parseI l@(List ss) = case (flatten l) of
   [x, "&=", t]  -> BitwiseAnd (parseX x) (parseT t)
   [x, ">>=", t] -> RightShift (parseX x) (parseT t)
   [x, "<<=", t] -> LeftShift (parseX x) (parseT t)
-  [cx, "<-", t1, cmp, t2] -> Assignment (parseCXRegister cx) (CompRHS (parseComp t1 cmp t2))
+  [cx, "<-", t1, cmp, t2] -> Assign (parseCXRegister cx) (CompRHS (parseComp t1 cmp t2))
   ["goto", l] -> Goto (parseLabel l)
   ["cjump", t1, cmp, t2, l1, l2] -> CJump (parseComp t1 cmp t2) (parseLabel l1) (parseLabel l2)
   ["call", u] -> Call (parseU u)
   ["tail-call", u] -> TailCall (parseU u)
   ["return"] -> Return
-  ["eax", "<-", "print", t] -> Assignment (CXR Eax) (Print (parseT t))
-  --["eax", "<-", "allocate", t1, t2] -> Assignment (CXR Eax) (Allocate (parseT t1) (parseT t2))
-  --["eax", "<-", "array-error", t1, t2] -> Assignment (CXR Eax) (ArrayError (parseT t1) (parseT t2))
+  ["eax", "<-", "print", t] -> Assign (CXR Eax) (Print (parseT t))
+  ["eax", "<-", "allocate", t1, t2] -> Assign (CXR Eax) (Allocate (parseT t1) (parseT t2))
+  ["eax", "<-", "array-error", t1, t2] -> Assign (CXR Eax) (ArrayError (parseT t1) (parseT t2))
 {-
 parseB :: [String] -> String
 parseB ["eax", "<-", "allocate", t1, t2] = "allocate"

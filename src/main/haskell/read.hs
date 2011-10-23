@@ -11,6 +11,7 @@ sread s = let (sexpr, _) = readWithRest s in sexpr
 
 readL :: String -> SExpr -> (SExpr,String)
 readL (')' : tail) (List acc) = (List acc, tail)
+readL (' ' : tail) acc = readL tail acc
 readL (x : xs) (List acc) = let (next, rest) = readWithRest(x : xs) in readL rest (List (acc ++ [next]))
 readL _ _ = error "unterminated list"
 
