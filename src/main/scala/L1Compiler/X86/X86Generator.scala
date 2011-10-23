@@ -7,8 +7,6 @@ import io.FileHelper
 import io.FileHelper._
 import io.CommandRunner._
 
-
-
 object X86Inst {
   type X86Inst = String
   def apply(is: X86Inst*) = List(is: _*)
@@ -24,8 +22,6 @@ object X86Inst {
     val compiler = new L1Compiler with X86Generator
     compiler.compile(code, "test")
   }
-
-
 }
 
 trait X86Generator extends L1Compiler.BackEnd {
