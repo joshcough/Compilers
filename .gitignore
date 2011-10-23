@@ -17,3 +17,7 @@ Test.*
 test2.*
 tmp
 build
+*.o
+*.hi
+*.swp
+*~
