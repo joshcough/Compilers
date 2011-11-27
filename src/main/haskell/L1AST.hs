@@ -91,9 +91,10 @@ instance (Show x, Show s) => Show (AssignRHS x s) where
   show (Print s) = "(print " ++ (show s) ++ ")"
   show (ArrayError s1 s2) = "(array-error " ++ (show s1) ++ " " ++ (show s2) ++ ")"
   show (SRHS s) = show s
+  show (MemRead loc) = show loc
 
 instance (Show x) => Show (MemLoc x) where
-  show (MemLoc x n) = "(" ++ (show x) ++ " " ++ (show n) ++ ")"
+  show (MemLoc x n) = "(mem " ++ (show x) ++ " " ++ (show n) ++ ")"
 
 instance (Show s) => Show (Comp s) where
   show (Comp s1 op s2) = (show s1) ++ " " ++ (show op) ++ " " ++ (show s2)
