@@ -12,7 +12,7 @@ main = do
    -- i suppose later on we could compile many files...
    contents <- readFile $ fileNames !! 0
    putStrLn contents
-   --putStrLn $ show $ sread contents
-   --putStrLn $ show $ parse $ sread contents
+   putStrLn $ show $ sread contents
+   putStrLn $ show $ parse $ sread contents
    putStrLn $ generateCode $ parse $ sread contents
 

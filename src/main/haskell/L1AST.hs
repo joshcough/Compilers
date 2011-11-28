@@ -40,7 +40,7 @@ data Instruction x s =
 type L1X = Register
 data L1S = NumberL1S Int | LabelL1S Label | RegL1S Register
 type L1Instruction = Instruction L1X L1S
-data L1Func = L1Func [L1Instruction]
+data L1Func = L1Func {body :: [L1Instruction]}
 data L1 = L1 L1Func [L1Func]
 
 instance Show L1 where

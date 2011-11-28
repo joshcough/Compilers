@@ -18,11 +18,14 @@ parseFunction (List ((AtomSym name) : exps)) =
   L1Func $ (LabelDeclaration (parseLabel name)) : (map parseI exps)
 
 parseI :: SExpr -> L1Instruction
-parseI (AtomSym s) = case (parseLabelOrRegister s) of
+parseI a@(AtomSym s) = case (parseLabelOrRegister s) of
   Left label -> LabelDeclaration label
-  Right reg -> error "not an instruction"
+  Right reg -> error ("not an instruction " ++ show a)
 parseI (AtomNum n) = error "bad instruction"
 parseI l@(List ss) = case (flatten l) of
+  ["eax", "<-", "print", t] -> Assign (CXR Eax) (Print (parseT t))
+  ["eax", "<-", "allocate", t1, t2] -> Assign (CXR Eax) (Allocate (parseT t1) (parseT t2))
+  ["eax", "<-", "array-error", t1, t2] -> Assign (CXR Eax) (ArrayError (parseT t1) (parseT t2))
   [x, "<-", s] -> Assign (parseX x) (SRHS (parseS s))
   [x1, "<-", "mem", x2, n4] -> Assign (parseX x1) (MemRead (MemLoc (parseX x2) (parseN4 n4)))
   ["mem", x, n4, "<-", s] -> MemWrite (MemLoc (parseX x) (parseN4 n4)) (parseS s)
@@ -38,9 +41,6 @@ parseI l@(List ss) = case (flatten l) of
   ["call", u] -> Call (parseU u)
   ["tail-call", u] -> TailCall (parseU u)
   ["return"] -> Return
-  ["eax", "<-", "print", t] -> Assign (CXR Eax) (Print (parseT t))
-  ["eax", "<-", "allocate", t1, t2] -> Assign (CXR Eax) (Allocate (parseT t1) (parseT t2))
-  ["eax", "<-", "array-error", t1, t2] -> Assign (CXR Eax) (ArrayError (parseT t1) (parseT t2))
 {-
 parseB :: [String] -> String
 parseB ["eax", "<-", "allocate", t1, t2] = "allocate"
@@ -64,7 +64,7 @@ parseU = parseS
 parseX x = parseRegister x
 
 parseRegister :: String -> Register
-parseRegister r = fromMaybe (error "not a register") (registerFromName r)
+parseRegister r = fromMaybe (error ("not a register " ++ (show r))) (registerFromName r)
 parseN4 n = case (sread n) of
   AtomNum n -> n
   AtomSym s -> error "not a number"

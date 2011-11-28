@@ -16,7 +16,7 @@ sread :: String -> SExpr
 sread s = let (sexpr, _) = readWithRest (preprocess s) in sexpr
 
 preprocess :: String -> String
-preprocess s = concat $ map (trim . removeComments) (lines s)
+preprocess s = concat $ map ((++ " ") . trim . removeComments) (lines s)
 removeComments :: String -> String
 removeComments s = takeWhile (not . (==';')) s
 
