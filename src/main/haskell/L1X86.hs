@@ -43,10 +43,9 @@ generateCode l1 = fst (runState (genCodeS l1) 0)
 
 genCodeS :: L1 -> State Int String
 genCodeS (L1 main funcs) =
-  do
-    x86Main  <- generateMain main -- todo: drop first from main here?
-    x86Funcs <- generateFunc $ concat $ map body funcs
-    return $ dump $ join [header, x86Main, x86Funcs, footer]
+  do x86Main  <- generateMain main -- todo: drop first from main here?
+     x86Funcs <- generateFunc $ concat $ map body funcs
+     return $ dump $ join [header, x86Main, x86Funcs, footer]
 
 generateMain :: L1Func -> State Int [X86Inst]
 generateMain (L1Func insts) = 
@@ -72,16 +71,15 @@ jump l               = "jmp *" ++ (genS l)
 
 genInstS :: L1Instruction -> State Int [X86Inst]
 genInstS (Call s) =
-  do
-    i <- get
-    _ <- put (i+1)
-    let label = "Generated_Label_" ++ (show i)
-    return [
-      "pushl " ++ (genS (LabelL1S label)),
-      "pushl %ebp",
-      "movl %esp, %ebp",
-      jump s,
-      declare label ]
+  do i <- get
+     _ <- put (i+1)
+     let label = "Generated_Label_" ++ (show i)
+     return [
+       "pushl " ++ (genS (LabelL1S label)),
+       "pushl %ebp",
+       "movl %esp, %ebp",
+       jump s,
+       declare label ]
 genInstS i = return $ genInst i
 
 genInst :: L1Instruction -> [X86Inst]
