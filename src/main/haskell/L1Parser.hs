@@ -4,7 +4,7 @@ import Read
 import TestHelpers
 import Test.HUnit
 import L1AST
-import Maybe
+import Data.Maybe
 
 parse :: SExpr -> L1
 parse (List ((List main) : funcs)) = L1 (parseMain main) (map parseFunction funcs)

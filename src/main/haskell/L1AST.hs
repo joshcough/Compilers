@@ -2,7 +2,7 @@ module L1AST where
 
 import TestHelpers
 import Test.HUnit
-import Maybe
+--import Maybe
 
 data XRegister = Esi | Edi | Ebp | Esp
 data CXRegister = Eax | Ebx | Ecx | Edx

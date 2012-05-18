@@ -2,6 +2,8 @@ module L1X86 where
 
 import L1AST
 import Data.List
+import Data.Traversable
+import Control.Monad.State
 
 type X86Inst = String
 
@@ -37,22 +39,21 @@ dump insts = concat $ intersperse "\n" $ (map adjust insts) where
   adjust i = if (last i == ':' || take 6 i == ".globl") then i else '\t' : i 
 
 generateCode :: L1 -> String
-generateCode (L1 main funcs) =
-  let (x86Main, labelCount) = generateMain main in
-  let (x86Funcs, _) = generateFunc ((concat (map body funcs)), labelCount) in
-  dump (header ++ x86Main ++ x86Funcs ++ footer)
+generateCode l1 = fst (runState (genCodeS l1) 0)
 
-generateMain :: L1Func -> ([X86Inst], Int)
+genCodeS :: L1 -> State Int String
+genCodeS (L1 main funcs) =
+  do
+    x86Main  <- generateMain main -- todo: drop first from main here?
+    x86Funcs <- generateFunc $ concat $ map body funcs
+    return $ dump $ join [header, x86Main, x86Funcs, footer]
+
+generateMain :: L1Func -> State Int [X86Inst]
 generateMain (L1Func insts) = 
-  let (mainBody, lc) = generateFunc ((tail insts), 0) in
-  (mainBody ++ mainFooter, lc)
+  (flip fmap) (generateFunc (tail insts)) (++ mainFooter)
 
---foldl :: (a -> b -> a) -> a -> [b] -> a
-generateFunc :: ([L1Instruction], Int) -> ([X86Inst], Int)
-generateFunc (insts, i) = foldl genHelper ([],i) insts where
-  genHelper :: ([X86Inst], Int) -> L1Instruction -> ([X86Inst], Int)
-  genHelper (acc, lc) inst = let (nextInsts, nextLabel) = genInst (inst, lc) in (acc ++ nextInsts, nextLabel)
-
+generateFunc :: [L1Instruction] -> State Int [X86Inst] 
+generateFunc insts = (traverse genInstS insts) >>= return . join
 
 declare label = "L1_" ++ label ++ ":"
 triple op s1 s2 = op ++ " " ++ s1 ++ ", " ++ s2
@@ -63,11 +64,28 @@ genS :: L1S -> String
 genS (NumberL1S i) = "$" ++ (show i)
 genS (LabelL1S  l) = "$L1_" ++ l
 genS (RegL1S    r) = genReg r
+--genS (RegL1S    r) = "%" ++ (show r)
 
-genInst :: (L1Instruction, Int) -> ([X86Inst], Int) 
-genInst (LabelDeclaration label, i) = ([declare label], i)
-genInst (Assign r@(CXR cx) (SRHS s), i) = ([triple "movl" (genS s) (genReg r)], i)
-genInst (Assign r@(XR   x) (SRHS s), i) = ([triple "movl" (genS s) (genReg r)], i)
-genInst (inst, i) = ([], i)
+jump :: L1S -> String
+jump (LabelL1S name) = "jmp L1_" ++ name
+jump l               = "jmp *" ++ (genS l)
 
+genInstS :: L1Instruction -> State Int [X86Inst]
+genInstS (Call s) =
+  do
+    i <- get
+    _ <- put (i+1)
+    let label = "Generated_Label_" ++ (show i)
+    return [
+      "pushl " ++ (genS (LabelL1S label)),
+      "pushl %ebp",
+      "movl %esp, %ebp",
+      jump s,
+      declare label ]
+genInstS i = return $ genInst i
 
+genInst :: L1Instruction -> [X86Inst]
+genInst (LabelDeclaration label)     = [declare label]
+genInst (Assign r@(CXR cx) (SRHS s)) = [triple "movl" (genS s) (genReg r)]
+genInst (Assign r@(XR   x) (SRHS s)) = [triple "movl" (genS s) (genReg r)]
+genInst inst = return []

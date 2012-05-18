@@ -22,7 +22,7 @@ instance Show L2S where
   show (VariableL2S v) = v
 
 instance Show L2 where
-  show (L2 main fs) = "(\n" ++ (show main) ++ "\n" ++ (fs >>= show) ++ "\n)"
+  show (L2 main fs) = unlines ["(", show main, fs >>= show, ")"]
 
 instance Show L2Func where
   show (L2Func is) = "(" ++ (is >>= (\i -> ((show i) ++ "\n\t"))) ++ ")"
