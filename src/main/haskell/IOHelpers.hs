@@ -5,6 +5,7 @@ import System.IO
 import System.Directory
 import TestHelpers
 
+import Data.List
 import Data.Traversable
 import Data.Foldable
 import Control.Applicative
@@ -43,3 +44,18 @@ namesAndContents fileNames = zip fileNames <$> contents fileNames
 putFileNames :: FilePath -> IO ()
 putFileNames dir = filesWithFullPaths dir >>= putList 
 
+-- checks to see if the contents of the given files are equal
+filesEqual :: FilePath -> FilePath -> IO Bool
+filesEqual f1 f2 = (==) <$> (readFile f1) <*> (readFile f2)
+
+-- checks to see if the two given directories
+--   1) contain all the same files
+--   2) the contents of the files are equal
+dirsEqual :: FilePath -> FilePath -> IO Bool
+dirsEqual d1 d2 = 
+  do d1Filenames <- fmap sort $ filesWithFullPaths d1
+     d2Filenames <- fmap sort $ filesWithFullPaths d2
+     d1Contents  <- contents d1Filenames
+     d2Contents  <- contents d2Filenames
+     return $ d1Filenames == d2Filenames && d1Contents == d2Contents
+     
