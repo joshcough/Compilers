@@ -72,9 +72,6 @@ low8 cx = "%" ++ [((show cx) !! 1)] ++ "l"
 setInstruction L1AST.LT   = "setl"
 setInstruction L1AST.LTEQ = "setle"
 setInstruction L1AST.EQ   = "sete"
-reverseCmpInstruction L1AST.LT   = "setg"
-reverseCmpInstruction L1AST.LTEQ = "setge"
-reverseCmpInstruction L1AST.EQ   = "sete"
 
 jumpIfLess            l = "jl L1_"  ++ (show l)
 jumpIfLessThanOrEqual l = "jle L1_" ++ (show l) 
@@ -150,7 +147,11 @@ a separate instruction:
 genAssignInst cx@(CXR c) (CompRHS (Comp l@(RegL1S _) op r@(RegL1S _))) = 
   genCompInst cx r op l setInstruction
 genAssignInst cx@(CXR c) (CompRHS (Comp l@(NumberL1S _) op r@(RegL1S _))) =  
-  genCompInst cx l op r reverseCmpInstruction -- magic reverse happens here!
+  -- magic reverse happens here!
+  genCompInst cx l op r reverseCmpInstruction where
+  reverseCmpInstruction L1AST.LT   = "setg"
+  reverseCmpInstruction L1AST.LTEQ = "setge"
+  reverseCmpInstruction L1AST.EQ   = "sete"
 genAssignInst cx@(CXR c) (CompRHS (Comp l@(RegL1S _) op r@(NumberL1S _))) =
   genCompInst cx r op l setInstruction
 genAssignInst cx@(CXR _) (CompRHS (Comp l@(NumberL1S n1) op r@(NumberL1S n2))) = 
@@ -169,6 +170,7 @@ genAssignInst (CXR Eax) (ArrayError s n) = [
   "pushl " ++ (genS s),
   "call print_error",
   "addl $8, %esp" ]
+-- todo: should i bother changing the return type to Either[String, [X86Inst]]?
 genAssignInst l r = error ("bad assignment statement: " ++ (show (Assign l r)))
 
 genCompInst cx@(CXR c) l op r f = [

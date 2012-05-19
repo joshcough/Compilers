@@ -2,11 +2,11 @@ module L1AST where
 
 import TestHelpers
 import Test.HUnit
---import Maybe
+import Control.Monad
 
-data XRegister = Esi | Edi | Ebp | Esp
+data XRegister  = Esi | Edi | Ebp | Esp
 data CXRegister = Eax | Ebx | Ecx | Edx
-data Register = CXR CXRegister | XR XRegister
+data Register   = CXR CXRegister | XR XRegister
 
 type Label = String
 data MemLoc x = MemLoc x Int
@@ -14,27 +14,27 @@ data CompOp = LT | LTEQ | EQ
 data Comp s = Comp s CompOp s
 
 data AssignRHS x s = 
-  CompRHS (Comp s) | 
-  Allocate s s |
-  Print s |
-  ArrayError s s |
+  CompRHS (Comp s)   | 
+  Allocate s s       |
+  Print s            |
+  ArrayError s s     |
   MemRead (MemLoc x) |
   SRHS s
 
 data Instruction x s = 
-  Assign x (AssignRHS x s) |
-  Increment x s |
-  Decrement x s |
-  Multiply x s |
-  LeftShift x s |
-  RightShift x s |
-  BitwiseAnd x s |
-  MemWrite (MemLoc x) s |
-  Goto Label |
+  Assign x (AssignRHS x s)   |
+  Increment x s              |
+  Decrement x s              |
+  Multiply x s               |
+  LeftShift x s              |
+  RightShift x s             |
+  BitwiseAnd x s             |
+  MemWrite (MemLoc x) s      |
+  Goto Label                 |
   CJump (Comp s) Label Label |
-  LabelDeclaration Label |
-  Call s |
-  TailCall s |
+  LabelDeclaration Label     |
+  Call s                     |
+  TailCall s                 |
   Return 
 
 type L1X = Register
@@ -50,20 +50,20 @@ instance Show L1Func where
   show (L1Func is) = "(" ++ (is >>= (\i -> ((show i) ++ "\n\t"))) ++ ")"
 
 instance (Show x, Show s) => Show (Instruction x s) where
-  show (Assign x rhs) = "(" ++ (show x) ++ " <- " ++ (show rhs) ++ ")"
-  show (Increment x s) = "(" ++ (show x) ++ " += " ++ (show s) ++ ")"
-  show (Decrement x s) = "(" ++ (show x) ++ " -= " ++ (show s) ++ ")"
-  show (Multiply x s) = "(" ++ (show x) ++ " *= " ++ (show s) ++ ")"
-  show (LeftShift x s) = "(" ++ (show x) ++ " <<= " ++ (show s) ++ ")"
-  show (RightShift x s) = "(" ++ (show x) ++ " >>= " ++ (show s) ++ ")"
-  show (BitwiseAnd x s) = "(" ++ (show x) ++ " &= " ++ (show s) ++ ")"
-  show (MemWrite loc s) = "(" ++ (show loc) ++ " <- " ++ (show s) ++ ")"
-  show (Goto l) = "(goto" ++ (show l) ++ ")"
-  show (CJump cmp l1 l2) = "(" ++ (show cmp) ++ " " ++ (show l1) ++ " " ++ (show l2) ++ ")"
-  show (LabelDeclaration l) = (show l)
-  show (Call s) = "(call" ++ (show s) ++ ")"
-  show (TailCall s) = "(tail-call" ++ (show s) ++ ")"
-  show Return = "(return)"
+  show (Assign x rhs)       = "(" ++ (show x) ++ " <- "   ++ (show rhs) ++ ")"
+  show (Increment x s)      = "(" ++ (show x) ++ " += "   ++ (show s) ++ ")"
+  show (Decrement x s)      = "(" ++ (show x) ++ " -= "   ++ (show s) ++ ")"
+  show (Multiply x s)       = "(" ++ (show x) ++ " *= "   ++ (show s) ++ ")"
+  show (LeftShift x s)      = "(" ++ (show x) ++ " <<= "  ++ (show s) ++ ")"
+  show (RightShift x s)     = "(" ++ (show x) ++ " >>= "  ++ (show s) ++ ")"
+  show (BitwiseAnd x s)     = "(" ++ (show x) ++ " &= "   ++ (show s) ++ ")"
+  show (MemWrite loc s)     = "(" ++ (show loc) ++ " <- " ++ (show s) ++ ")"
+  show (Goto l)             = "(goto" ++ (show l) ++ ")"
+  show (CJump cmp l1 l2)    = join ["(", (show cmp), " ", (show l1), " ", (show l2), ")"]
+  show (LabelDeclaration l) = show l
+  show (Call s)             = "(call" ++ (show s) ++ ")"
+  show (TailCall s)         = "(tail-call" ++ (show s) ++ ")"
+  show Return               = "(return)"
 
 instance Show L1S where
   show (NumberL1S n) = show n
@@ -86,12 +86,12 @@ instance Show Register where
   show (XR xr) = show xr
 
 instance (Show x, Show s) => Show (AssignRHS x s) where
-  show (CompRHS c) = show c
-  show (Allocate s1 s2) = "(allocate " ++ (show s1) ++ " " ++ (show s2) ++ ")"
-  show (Print s) = "(print " ++ (show s) ++ ")"
+  show (CompRHS c)        = show c
+  show (Allocate s1 s2)   = "(allocate " ++ (show s1) ++ " " ++ (show s2) ++ ")"
+  show (Print s)          = "(print " ++ (show s) ++ ")"
   show (ArrayError s1 s2) = "(array-error " ++ (show s1) ++ " " ++ (show s2) ++ ")"
-  show (SRHS s) = show s
-  show (MemRead loc) = show loc
+  show (SRHS s)           = show s
+  show (MemRead loc)      = show loc
 
 instance (Show x) => Show (MemLoc x) where
   show (MemLoc x n) = "(mem " ++ (show x) ++ " " ++ (show n) ++ ")"
@@ -99,9 +99,9 @@ instance (Show x) => Show (MemLoc x) where
 instance (Show s) => Show (Comp s) where
   show (Comp s1 op s2) = (show s1) ++ " " ++ (show op) ++ " " ++ (show s2)
 
-xRegisters = [Esi, Edi, Ebp, Esp]
-cxRegisters = [Eax, Ebx, Ecx, Edx]
-xRegisterNames = map show xRegisters
+xRegisters      = [Esi, Edi, Ebp, Esp]
+cxRegisters     = [Eax, Ebx, Ecx, Edx]
+xRegisterNames  = map show xRegisters
 cxRegisterNames = map show cxRegisters
 
 xRegisterFromName :: String -> Maybe XRegister
@@ -125,7 +125,7 @@ registerFromName name = case (xRegisterFromName name) of
 
 instance Show CompOp where
   show L1AST.LT = "<"
-  show LTEQ = "<="
+  show LTEQ     = "<="
   show L1AST.EQ = "="
 
 compOpFromSym :: String -> CompOp
