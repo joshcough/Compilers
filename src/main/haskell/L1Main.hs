@@ -14,5 +14,5 @@ main = do
    putStrLn contents
    putStrLn $ show $ sread contents
    putStrLn $ show $ parse $ sread contents
-   putStrLn $ generateCode $ parse $ sread contents
+   putStrLn $ genCode $ parse $ sread contents
 

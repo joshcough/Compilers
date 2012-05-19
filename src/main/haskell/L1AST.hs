@@ -134,3 +134,6 @@ compOpFromSym "<=" = LTEQ
 compOpFromSym "="  = L1AST.EQ
 compOrFromSym _ = error "not a comparison operator"
 
+runOp L1AST.LT   n1 n2 = n1 <  n2
+runOp L1AST.LTEQ n1 n2 = n1 <= n2
+runOp L1AST.EQ   n1 n2 = n1 == n2
