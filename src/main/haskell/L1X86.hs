@@ -7,40 +7,37 @@ import Control.Monad.State
 
 type X86Inst = String
 
-header = [
-  ".file\t\"prog.c\"",
-  ".text",
-  ".globl go",
-  ".type\tgo, @function",
-  "go:",
-  "pushl %ebp",
-  "movl %esp, %ebp",
-  "pushl %ebx",
-  "pushl %esi",
-  "pushl %edi",
-  "pushl %ebp",
-  "movl\t%esp, %ebp" ]
-
-footer = [
-  ".size   go, .-go",
-  ".ident  \"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
-  ".section\t.note.GNU-stack,\"\",@progbits" ]
-
 genCode :: L1 -> String
 genCode l1 = fst (runState (genCodeS l1) 0)
 
 genCodeS :: L1 -> State Int String
 genCodeS (L1 main funcs) =
-  do x86Main  <- genMain main -- todo: drop first from main here?
+  do x86Main  <- genMain main
      x86Funcs <- genFunc $ concat $ map body funcs
      return $ dump $ join [header, x86Main, x86Funcs, footer] where
   dump :: [X86Inst] -> String
-  dump insts = concat $ intersperse "\n" $ (map adjust insts) where
+  dump insts = concat $ intersperse "\n" $ map adjust insts where
     adjust i = if (last i == ':' || take 6 i == ".globl") then i else '\t' : i
+  header = [
+    ".file\t\"prog.c\"",
+    ".text",
+    ".globl go",
+    ".type\tgo, @function",
+    "go:",
+    "pushl %ebp",
+    "movl %esp, %ebp",
+    "pushl %ebx",
+    "pushl %esi",
+    "pushl %edi",
+    "pushl %ebp",
+    "movl\t%esp, %ebp" ]
+  footer = [
+    ".size   go, .-go",
+    ".ident  \"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
+    ".section\t.note.GNU-stack,\"\",@progbits" ]
 
 genMain :: L1Func -> State Int [X86Inst]
-genMain (L1Func insts) = 
-  (flip fmap) (genFunc (tail insts)) (++ mainFooter) where
+genMain (L1Func insts) =  (flip fmap) (genFunc (tail insts)) (++ mainFooter) where
   mainFooter = [
     "popl %ebp",
     "popl %edi",
@@ -52,45 +49,17 @@ genMain (L1Func insts) =
 genFunc :: [L1Instruction] -> State Int [X86Inst] 
 genFunc insts = (traverse genInstS insts) >>= return . join
 
-declare label = "L1_" ++ label ++ ":"
-triple op s1 s2 = op ++ " " ++ s1 ++ ", " ++ s2
-genReg :: Register -> String 
-genReg (CXR cx) = "%" ++ (show cx)
-genReg (XR x)   = "%" ++ (show x)
-genS :: L1S -> String
-genS (NumberL1S i) = "$" ++ (show i)
-genS (LabelL1S  l) = "$L1_" ++ l
-genS (RegL1S    r) = genReg r
---genS (RegL1S    r) = "%" ++ (show r)
-genLoc (MemLoc r i) = join [(show i), "(", genReg r, ")"] 
-
-jump :: L1S -> String
-jump (LabelL1S name) = "jmp L1_" ++ name
-jump l               = "jmp *" ++ (genS l)
-
-low8 cx = "%" ++ [((show cx) !! 1)] ++ "l"
-setInstruction L1AST.LT   = "setl"
-setInstruction L1AST.LTEQ = "setle"
-setInstruction L1AST.EQ   = "sete"
-
-jumpIfLess            l = "jl L1_"  ++ (show l)
-jumpIfLessThanOrEqual l = "jle L1_" ++ (show l) 
-jumpIfGreater         l = "jg L1_"  ++ (show l) 
-jumpIfGreaterOrEqual  l = "jge L1_" ++ (show l) 
-jumpIfEqual           l = "je L1_"  ++ (show l) 
-
-postIncrement = do { x <- get; put (x+1); return x }
-
 genInstS :: L1Instruction -> State Int [X86Inst]
 genInstS (Call s) =
   do i <- postIncrement
-     let label = "Generated_Label_" ++ (show i)
+     let label = "Generated_Label_" ++ show i
      return [
        "pushl " ++ (genS (LabelL1S label)),
        "pushl %ebp",
        "movl %esp, %ebp",
        jump s,
-       declare label ]
+       declare label ] where
+  postIncrement = do { x <- get; put (x+1); return x }
 genInstS i = return $ genInst i
 
 genInst :: L1Instruction -> [X86Inst]
@@ -144,9 +113,9 @@ a separate instruction:
   setl %al
   movzbl %al, %eax
 -}
-genAssignInst cx@(CXR c) (CompRHS (Comp l@(RegL1S _) op r@(RegL1S _))) = 
+genAssignInst cx@(CXR c) (CompRHS (Comp l@(RegL1S _) op r@(RegL1S _))) =
   genCompInst cx r op l setInstruction
-genAssignInst cx@(CXR c) (CompRHS (Comp l@(NumberL1S _) op r@(RegL1S _))) =  
+genAssignInst cx@(CXR c) (CompRHS (Comp l@(NumberL1S _) op r@(RegL1S _))) =
   -- magic reverse happens here!
   genCompInst cx l op r reverseCmpInstruction where
   reverseCmpInstruction L1AST.LT   = "setg"
@@ -157,24 +126,50 @@ genAssignInst cx@(CXR c) (CompRHS (Comp l@(RegL1S _) op r@(NumberL1S _))) =
 genAssignInst cx@(CXR _) (CompRHS (Comp l@(NumberL1S n1) op r@(NumberL1S n2))) = 
   [triple "movl" ("$" ++ (if (runOp op n1 n2) then "1" else "0")) (genReg cx)]
 genAssignInst (CXR Eax) (Print s) = [
-  "pushl " ++ (genS s),
+  "pushl " ++ genS s,
   "call print",
   "addl $4, %esp" ]
 genAssignInst (CXR Eax) (Allocate s n) = [
-  "pushl " ++ (genS n),
-  "pushl " ++ (genS s),
+  "pushl " ++ genS n,
+  "pushl " ++ genS s,
   "call allocate",
   "addl $8, %esp" ]
 genAssignInst (CXR Eax) (ArrayError s n) = [
-  "pushl " ++ (genS n),
-  "pushl " ++ (genS s),
+  "pushl " ++ genS n,
+  "pushl " ++ genS s,
   "call print_error",
   "addl $8, %esp" ]
 -- todo: should i bother changing the return type to Either[String, [X86Inst]]?
-genAssignInst l r = error ("bad assignment statement: " ++ (show (Assign l r)))
+genAssignInst l r = error $ "bad assignment statement: " ++ show (Assign l r)
 
 genCompInst cx@(CXR c) l op r f = [
   triple "cmp" (genS l) (genS r),
   (f op) ++ " " ++ (low8 c),
   triple "movzbl" (low8 c) (genReg cx) ]
 
+declare label = "L1_" ++ label ++ ":"
+triple op s1 s2 = op ++ " " ++ s1 ++ ", " ++ s2
+genReg :: Register -> String
+genReg (CXR cx) = "%" ++ show cx
+genReg (XR x)   = "%" ++ show x
+genS :: L1S -> String
+genS (NumberL1S i) = "$" ++ show i
+genS (LabelL1S  l) = "$L1_" ++ l
+genS (RegL1S    r) = genReg r
+--genS (RegL1S    r) = "%" ++ (show r)
+genLoc (MemLoc r i) = join [show i, "(", genReg r, ")"]
+
+jump :: L1S -> String
+jump (LabelL1S name) = "jmp L1_" ++ name
+jump l               = "jmp *" ++ (genS l)
+
+low8 cx = "%" ++ [show cx !! 1] ++ "l"
+setInstruction L1AST.LT   = "setl"
+setInstruction L1AST.LTEQ = "setle"
+setInstruction L1AST.EQ   = "sete"
+
+jumpIfLess            l = "jl L1_"  ++ show l
+jumpIfLessThanOrEqual l = "jle L1_" ++ show l
+jumpIfGreater         l = "jg L1_"  ++ show l
+jumpIfGreaterOrEqual  l = "jge L1_" ++ show l
+jumpIfEqual           l = "je L1_"  ++ show l

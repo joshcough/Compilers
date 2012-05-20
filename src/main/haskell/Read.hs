@@ -1,16 +1,14 @@
 module Read where
 
 import Data.List
-
 import TestHelpers
 import Test.HUnit
-
 import Data.Char (isSpace)
+
 trim :: String -> String
 trim = f . f where f = reverse . dropWhile isSpace
 
-data SExpr = AtomSym String | AtomNum Int | List [SExpr]
-  deriving (Show, Eq)
+data SExpr = AtomSym String | AtomNum Int | List [SExpr] deriving (Show, Eq)
 
 sread :: String -> SExpr
 sread s = let (sexpr, _) = readWithRest (preprocess s) in sexpr

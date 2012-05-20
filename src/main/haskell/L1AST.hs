@@ -8,10 +8,10 @@ data XRegister  = Esi | Edi | Ebp | Esp
 data CXRegister = Eax | Ebx | Ecx | Edx
 data Register   = CXR CXRegister | XR XRegister
 
-type Label = String
+type Label    = String
 data MemLoc x = MemLoc x Int
-data CompOp = LT | LTEQ | EQ
-data Comp s = Comp s CompOp s
+data CompOp   = LT | LTEQ | EQ
+data Comp s   = Comp s CompOp s
 
 data AssignRHS x s = 
   CompRHS (Comp s)   | 
@@ -67,8 +67,8 @@ instance (Show x, Show s) => Show (Instruction x s) where
 
 instance Show L1S where
   show (NumberL1S n) = show n
-  show (LabelL1S l) = show l
-  show (RegL1S r) = show r
+  show (LabelL1S l)  = show l
+  show (RegL1S r)    = show r
 
 instance Show XRegister where
   show Esi = "esi"
@@ -83,7 +83,7 @@ instance Show CXRegister where
 
 instance Show Register where
   show (CXR cxr) = show cxr
-  show (XR xr) = show xr
+  show (XR xr)   = show xr
 
 instance (Show x, Show s) => Show (AssignRHS x s) where
   show (CompRHS c)        = show c
@@ -109,19 +109,17 @@ xRegisterFromName "esi" = Just Esi
 xRegisterFromName "edi" = Just Edi
 xRegisterFromName "ebp" = Just Ebp
 xRegisterFromName "esp" = Just Esp
-xRegisterFromName _ = Nothing
+xRegisterFromName _     = Nothing
 
 cxRegisterFromName :: String -> Maybe CXRegister
 cxRegisterFromName "eax" = Just Eax
 cxRegisterFromName "ebx" = Just Ebx
 cxRegisterFromName "ecx" = Just Ecx
 cxRegisterFromName "edx" = Just Edx
-cxRegisterFromName _ = Nothing
+cxRegisterFromName _     = Nothing
 
 registerFromName :: String -> Maybe Register
-registerFromName name = case (xRegisterFromName name) of
-  Just xr -> Just (XR xr)
-  Nothing -> fmap CXR (cxRegisterFromName name)
+registerFromName s = maybe (fmap CXR (cxRegisterFromName s)) (Just . XR) (xRegisterFromName s)
 
 instance Show CompOp where
   show L1AST.LT = "<"
@@ -132,7 +130,7 @@ compOpFromSym :: String -> CompOp
 compOpFromSym "<"  = L1AST.LT
 compOpFromSym "<=" = LTEQ
 compOpFromSym "="  = L1AST.EQ
-compOrFromSym _ = error "not a comparison operator"
+compOrFromSym _    = error "not a comparison operator"
 
 runOp L1AST.LT   n1 n2 = n1 <  n2
 runOp L1AST.LTEQ n1 n2 = n1 <= n2
