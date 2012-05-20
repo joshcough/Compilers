@@ -1,9 +1,14 @@
 import IOHelpers
 import Data.List
 
-testDir = "../../test/compilers/test-fest/1-test/cough/1-test"
+testDir = "./L1TestFiles"
+scalaResultsDir   = testDir ++ "/scala-results"
+haskellResultsDir = testDir
 l1File = isSuffixOf ".L1"
-testFiles = fmap (filter l1File) (filesWithFullPaths testDir)
+sFile  = isSuffixOf ".S"
+testFiles      = fmap (take 250 . filter l1File) (filesWithFullPaths testDir)
+--scalaResults   = fmap (filter sFile)  (filesWithFullPaths scalaResultsDir)
+--haskellResults = fmap (filter sFile)  (filesWithFullPaths haskellResultsDir)
 
 main = do (testFiles >>= namesAndContents >>= putList)
 

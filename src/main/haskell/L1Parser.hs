@@ -48,7 +48,7 @@ parseB ["eax", "<-", "array-error", t1, t2] = "array-error"
 -}
 
 parseLabel :: String -> Label
-parseLabel s = drop 2 s
+parseLabel s = drop 1 s
 
 parseS :: String -> L1S
 parseS s = case (sread s) of

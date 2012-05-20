@@ -9,12 +9,19 @@ import io.CommandRunner._
 object L1X86Runner extends Runner {
 
   def main(args:Array[String]){
-    compileForRun(new File(args(0)).read, args(0))
+    if(args(0) == "-t") compileForTest(new File(args(1)).read, args(1))
+    else compileForRun(new File(args(0)).read, args(0))
   }
 
   def compileForRun(code:String, originalFileName:String): String = {
     val compiler = new L1Compiler with X86Generator
     finishCompilation(compiler.compile(code, originalFileName), originalFileName)
+  }
+
+  def compileForTest(code:String, originalFileName:String): Unit = {
+    val compiler = new L1Compiler with X86Generator
+    val outputAssemblyFile = originalFileName.dropRight(3) + ".S"
+    new File(outputAssemblyFile).write(compiler.compile(code, originalFileName))
   }
 
   def finishCompilation(x86Code:String, originalFileName:String="test") = {
@@ -25,7 +32,6 @@ object L1X86Runner extends Runner {
     runAndDieOneErrors("as -o " + outputOFile + " " + outputAssemblyFile)
     runAndDieOneErrors("gcc -o ./a.out "+outputOFile+" runtime.o")
   }
-
 
   def run(code:String, originalFileName:String): String = {
     compileForRun(code, originalFileName)

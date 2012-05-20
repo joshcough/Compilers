@@ -17,7 +17,7 @@ putStringsAndNLs :: [String] -> IO ()
 putStringsAndNLs xs = sequenceA_ (fmap putStringAndNL xs)
 
 putList :: Show a => [a] -> IO ()
-putList xs = sequenceA_ (fmap (\a -> putStrLn (show a)) xs)
+putList xs = sequenceA_ (fmap (putStrLn . show) xs)
 
 -- full pathnames for every file in the given directory
 filesWithFullPaths :: FilePath -> IO [FilePath]
@@ -48,14 +48,18 @@ putFileNames dir = filesWithFullPaths dir >>= putList
 filesEqual :: FilePath -> FilePath -> IO Bool
 filesEqual f1 f2 = (==) <$> (readFile f1) <*> (readFile f2)
 
+fileListEqual :: [FilePath] -> [FilePath] -> IO Bool
+fileListEqual fs1 fs2 =
+  do d1Contents <- contents fs1
+     d2Contents <- contents fs2
+     return $ ((sort fs1) == (sort fs2)) && d1Contents == d2Contents
+
 -- checks to see if the two given directories
 --   1) contain all the same files
 --   2) the contents of the files are equal
 dirsEqual :: FilePath -> FilePath -> IO Bool
-dirsEqual d1 d2 = 
-  do d1Filenames <- fmap sort $ filesWithFullPaths d1
-     d2Filenames <- fmap sort $ filesWithFullPaths d2
-     d1Contents  <- contents d1Filenames
-     d2Contents  <- contents d2Filenames
-     return $ d1Filenames == d2Filenames && d1Contents == d2Contents
+dirsEqual d1 d2 =
+  do d1Filenames <- filesWithFullPaths d1
+     d2Filenames <- filesWithFullPaths d2
+     fileListEqual d1Filenames d2Filenames
      

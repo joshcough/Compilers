@@ -8,23 +8,23 @@ import Control.Monad.State
 type X86Inst = String
 
 header = [
-  ".file \"prog.c\"",
+  ".file\t\"prog.c\"",
   ".text",
   ".globl go",
-  ".type  go, @function",
+  ".type\tgo, @function",
   "go:",
   "pushl %ebp",
-  "movl  %esp, %ebp",
+  "movl %esp, %ebp",
   "pushl %ebx",
   "pushl %esi",
   "pushl %edi",
   "pushl %ebp",
-  "movl  %esp, %ebp" ]
+  "movl\t%esp, %ebp" ]
 
 footer = [
   ".size   go, .-go",
   ".ident  \"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
-  ".section .note.GNU-stack,\"\",@progbits" ]
+  ".section\t.note.GNU-stack,\"\",@progbits" ]
 
 genCode :: L1 -> String
 genCode l1 = fst (runState (genCodeS l1) 0)
