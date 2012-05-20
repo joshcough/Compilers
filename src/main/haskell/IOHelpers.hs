@@ -10,23 +10,26 @@ import Data.Traversable
 import Data.Foldable
 import Control.Applicative
 
+(|>) = flip (.)
+($$>) = flip fmap
+
 putStringAndNL :: String -> IO ()
 putStringAndNL s = putStrLn s >> putStrLn "\n"
 
 putStringsAndNLs :: [String] -> IO ()
-putStringsAndNLs xs = sequenceA_ (fmap putStringAndNL xs)
+putStringsAndNLs xs = sequenceA_ (map putStringAndNL xs)
 
 putList :: Show a => [a] -> IO ()
-putList xs = sequenceA_ (fmap (putStrLn . show) xs)
+putList xs = sequenceA_ (map (putStrLn . show) xs)
 
 -- full pathnames for every file in the given directory
 filesWithFullPaths :: FilePath -> IO [FilePath]
 filesWithFullPaths dir = 
-  fmap (fmap (\f -> dir ++ "/" ++ f)) (fmap (drop 2) $ getDirectoryContents dir)
+  drop 2 <$> getDirectoryContents dir $$> (map (\f -> dir ++ "/" ++ f))
 
 -- contents for a list of files
 contents :: [FilePath] -> IO [String]
-contents = (Data.Traversable.sequence . fmap readFile)
+contents = fmap readFile |> Data.Traversable.sequence
 
 -- contents for every file in a directory
 dirContents :: FilePath -> IO [String]
@@ -52,7 +55,7 @@ fileListEqual :: [FilePath] -> [FilePath] -> IO Bool
 fileListEqual fs1 fs2 =
   do d1Contents <- contents fs1
      d2Contents <- contents fs2
-     return $ ((sort fs1) == (sort fs2)) && d1Contents == d2Contents
+     return $ sort fs1 == sort fs2 && d1Contents == d2Contents
 
 -- checks to see if the two given directories
 --   1) contain all the same files
@@ -62,4 +65,6 @@ dirsEqual d1 d2 =
   do d1Filenames <- filesWithFullPaths d1
      d2Filenames <- filesWithFullPaths d2
      fileListEqual d1Filenames d2Filenames
-     
+
+readDoWrite :: FilePath -> (String -> String) -> FilePath -> IO ()
+readDoWrite inFile f outFile = f <$> (readFile inFile) >>= (writeFile outFile)
