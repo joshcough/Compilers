@@ -1,4 +1,4 @@
-module L1X86 where
+module L1X86Demo where
 
 import L1AST
 import Data.List
@@ -14,51 +14,16 @@ genCodeS :: L1 -> State Int String
 genCodeS (L1 main funcs) =
   do x86Main  <- genMain main
      x86Funcs <- genFunc $ concat $ map body funcs
-     return $ dump $ concat [header, x86Main, x86Funcs, footer] where
-  dump :: [X86Inst] -> String
-  dump insts = concat $ intersperse "\n" $ map adjust insts where
-    adjust i = if (last i == ':' || take 6 i == ".globl") then i else '\t' : i
-  header = [
-    ".file\t\"prog.c\"",
-    ".text",
-    ".globl go",
-    ".type\tgo, @function",
-    "go:",
-    "pushl %ebp",
-    "movl %esp, %ebp",
-    "pushl %ebx",
-    "pushl %esi",
-    "pushl %edi",
-    "pushl %ebp",
-    "movl\t%esp, %ebp" ]
-  footer = [
-    ".size   go, .-go",
-    ".ident  \"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
-    ".section\t.note.GNU-stack,\"\",@progbits" ]
+     return $ dump $ concat [header, x86Main, x86Funcs, footer]
 
 genMain :: L1Func -> State Int [X86Inst]
-genMain (L1Func insts) =  (flip fmap) (genFunc (tail insts)) (++ mainFooter) where
-  mainFooter = [
-    "popl %ebp",
-    "popl %edi",
-    "popl %esi",
-    "popl %ebx",
-    "leave",
-    "ret" ] 
+genMain (L1Func insts) =  (flip fmap) (genFunc (tail insts)) (++ mainFooter)
 
 genFunc :: [L1Instruction] -> State Int [X86Inst] 
 genFunc insts = (traverse genInstS insts) >>= return . concat
 
 genInstS :: L1Instruction -> State Int [X86Inst]
-genInstS (Call s) = do fmap (\i -> call $ "Generated_Label_" ++ show i) postIncrement
-  where
-  postIncrement = do { x <- get; put (x+1); return x }
-  call label = [
-    "pushl " ++ (genS (LabelL1S label)),
-    "pushl %ebp",
-    "movl %esp, %ebp",
-    jump s,
-    declare label ]
+genInstS (Call s) = do fmap (\i -> genCall s $ "Generated_Label_" ++ show i) postIncrement
 genInstS i = return $ genInst i
 
 genInst :: L1Instruction -> [X86Inst]
@@ -172,3 +137,41 @@ jumpIfLessThanOrEqual l = "jle L1_" ++ show l
 jumpIfGreater         l = "jg L1_"  ++ show l
 jumpIfGreaterOrEqual  l = "jge L1_" ++ show l
 jumpIfEqual           l = "je L1_"  ++ show l
+
+dump :: [X86Inst] -> String
+dump insts = concat $ intersperse "\n" $ map adjust insts where
+  adjust i = if (last i == ':' || take 6 i == ".globl") then i else '\t' : i
+header = [
+  ".file\t\"prog.c\"",
+  ".text",
+  ".globl go",
+  ".type\tgo, @function",
+  "go:",
+  "pushl %ebp",
+  "movl %esp, %ebp",
+  "pushl %ebx",
+  "pushl %esi",
+  "pushl %edi",
+  "pushl %ebp",
+  "movl\t%esp, %ebp" ]
+footer = [
+  ".size   go, .-go",
+  ".ident  \"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
+  ".section\t.note.GNU-stack,\"\",@progbits" ]
+
+mainFooter = [
+  "popl %ebp",
+  "popl %edi",
+  "popl %esi",
+  "popl %ebx",
+  "leave",
+  "ret" ]
+
+postIncrement = do { x <- get; put (x+1); return x }
+
+genCall fun returnLabel = [
+  "pushl " ++ (genS (LabelL1S returnLabel)),
+  "pushl %ebp",
+  "movl %esp, %ebp",
+  jump fun,
+  declare returnLabel ]
