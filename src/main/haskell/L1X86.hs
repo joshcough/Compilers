@@ -32,9 +32,9 @@ genCodeS (L1 main funcs) =
     "pushl %ebp",
     "movl\t%esp, %ebp" ]
   footer = [
-    ".size   go, .-go",
-    ".ident  \"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
-    ".section\t.note.GNU-stack,\"\",@progbits" ]
+    ".size\tgo, .-go",
+    ".ident\t\"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
+    ".section\t.note.GNU-stack,\"\",@progbits\n" ]
 
 genMain :: L1Func -> State Int [X86Inst]
 genMain (L1Func insts) =  (flip fmap) (genFunc (tail insts)) (++ mainFooter) where
@@ -167,8 +167,8 @@ setInstruction L1AST.LT   = "setl"
 setInstruction L1AST.LTEQ = "setle"
 setInstruction L1AST.EQ   = "sete"
 
-jumpIfLess            l = "jl L1_"  ++ show l
-jumpIfLessThanOrEqual l = "jle L1_" ++ show l
-jumpIfGreater         l = "jg L1_"  ++ show l
-jumpIfGreaterOrEqual  l = "jge L1_" ++ show l
-jumpIfEqual           l = "je L1_"  ++ show l
+jumpIfLess            l = "jl L1_"  ++ l
+jumpIfLessThanOrEqual l = "jle L1_" ++ l
+jumpIfGreater         l = "jg L1_"  ++ l
+jumpIfGreaterOrEqual  l = "jge L1_" ++ l
+jumpIfEqual           l = "je L1_"  ++ l

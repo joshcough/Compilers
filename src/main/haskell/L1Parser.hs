@@ -69,4 +69,4 @@ parseN4 n = case (sread n) of
   AtomSym s -> error $ "not a number" ++ n
 parseCXRegister cx = CXR (fromMaybe (error "not a register") (cxRegisterFromName cx))
 
-parseComp t1 cmp t2 = Comp (parseT t1) (compOrFromSym cmp) (parseT t2)
+parseComp t1 cmp t2 = Comp (parseT t1) (compOpFromSym cmp) (parseT t2)

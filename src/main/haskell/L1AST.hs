@@ -130,7 +130,7 @@ compOpFromSym :: String -> CompOp
 compOpFromSym "<"  = L1AST.LT
 compOpFromSym "<=" = LTEQ
 compOpFromSym "="  = L1AST.EQ
-compOrFromSym _    = error "not a comparison operator"
+compOpFromSym s    = error $ "not a comparison operator" ++ s
 
 runOp L1AST.LT   n1 n2 = n1 <  n2
 runOp L1AST.LTEQ n1 n2 = n1 <= n2
