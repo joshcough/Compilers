@@ -1,6 +1,13 @@
 all: compile
 
 compile:
-	rm -f *.o
-	rm -f *.hi
-	ghc *.hs
+	make clean
+	ghc L1L2AST.hs L1L2Parser.hs L1.hs Read.hs Testhelpers.hs
+
+clean:
+	rm -f *.o *.hi *.exe rm L1 L1Tests
+
+test:
+	make
+	./run-haskell-L1.sh
+	diff L1TestFiles/haskell-results L1TestFiles/scala-results

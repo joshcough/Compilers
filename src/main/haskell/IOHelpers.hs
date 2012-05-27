@@ -85,3 +85,6 @@ dirFileNamesAndContents dir = zip <$> (filesWithFullPaths dir) <*> (dirContents 
 -- filenames and contents of every file in the given list
 namesAndContents :: [FilePath] -> IO [(String, String)]
 namesAndContents fileNames = zip fileNames <$> contents fileNames
+
+dropRightWhile f = reverse . dropWhile f . reverse
+changeExtension file newExt = (dropRightWhile (\c -> not (c == '.')) file) ++ newExt

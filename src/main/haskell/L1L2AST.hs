@@ -1,8 +1,7 @@
-module L1AST where
+module L1L2AST where
 
 import TestHelpers
 import Test.HUnit
-import Control.Monad
 
 data XRegister  = Esi | Edi | Ebp | Esp
 data CXRegister = Eax | Ebx | Ecx | Edx
@@ -37,17 +36,14 @@ data Instruction x s =
   TailCall s                 |
   Return 
 
-type L1X = Register
-data L1S = NumberL1S Int | LabelL1S Label | RegL1S Register
-type L1Instruction = Instruction L1X L1S
-data L1Func = L1Func {body :: [L1Instruction]}
-data L1 = L1 L1Func [L1Func]
+data Func x s = Func { body :: [Instruction x s]}
+data Program x s = Program (Func x s) [Func x s]
 
-instance Show L1 where
-  show (L1 main fs) = "(\n" ++ (show main) ++ "\n" ++ (fs >>= show) ++ "\n)"
+instance (Show x, Show s) => Show (Program x s) where
+  show (Program main fs) = unlines ["(", show main, fs >>= show, ")"]
 
-instance Show L1Func where
-  show (L1Func is) = "(" ++ (is >>= (\i -> ((show i) ++ "\n\t"))) ++ ")"
+instance (Show x, Show s) => Show (Func x s) where
+  show (Func is) = "(" ++ (is >>= (\i -> ((show i) ++ "\n\t"))) ++ ")"
 
 instance (Show x, Show s) => Show (Instruction x s) where
   show (Assign x rhs)       = "(" ++ (show x) ++ " <- "   ++ (show rhs) ++ ")"
@@ -59,16 +55,11 @@ instance (Show x, Show s) => Show (Instruction x s) where
   show (BitwiseAnd x s)     = "(" ++ (show x) ++ " &= "   ++ (show s) ++ ")"
   show (MemWrite loc s)     = "(" ++ (show loc) ++ " <- " ++ (show s) ++ ")"
   show (Goto l)             = "(goto" ++ (show l) ++ ")"
-  show (CJump cmp l1 l2)    = join ["(", (show cmp), " ", (show l1), " ", (show l2), ")"]
+  show (CJump cmp l1 l2)    = concat ["(", (show cmp), " ", (show l1), " ", (show l2), ")"]
   show (LabelDeclaration l) = show l
   show (Call s)             = "(call" ++ (show s) ++ ")"
   show (TailCall s)         = "(tail-call" ++ (show s) ++ ")"
   show Return               = "(return)"
-
-instance Show L1S where
-  show (NumberL1S n) = show n
-  show (LabelL1S l)  = show l
-  show (RegL1S r)    = show r
 
 instance Show XRegister where
   show Esi = "esi"
@@ -122,16 +113,21 @@ registerFromName :: String -> Maybe Register
 registerFromName s = maybe (fmap CXR (cxRegisterFromName s)) (Just . XR) (xRegisterFromName s)
 
 instance Show CompOp where
-  show L1AST.LT = "<"
-  show LTEQ     = "<="
-  show L1AST.EQ = "="
+  show L1L2AST.LT   = "<"
+  show L1L2AST.LTEQ = "<="
+  show L1L2AST.EQ   = "="
 
 compOpFromSym :: String -> CompOp
-compOpFromSym "<"  = L1AST.LT
-compOpFromSym "<=" = LTEQ
-compOpFromSym "="  = L1AST.EQ
+compOpFromSym "<"  = L1L2AST.LT
+compOpFromSym "<=" = L1L2AST.LTEQ
+compOpFromSym "="  = L1L2AST.EQ
 compOpFromSym s    = error $ "not a comparison operator" ++ s
 
-runOp L1AST.LT   n1 n2 = n1 <  n2
-runOp L1AST.LTEQ n1 n2 = n1 <= n2
-runOp L1AST.EQ   n1 n2 = n1 == n2
+runOp L1L2AST.LT   n1 n2 = n1 <  n2
+runOp L1L2AST.LTEQ n1 n2 = n1 <= n2
+runOp L1L2AST.EQ   n1 n2 = n1 == n2
+
+foldOp :: a -> a -> a -> CompOp -> a
+foldOp a _ _ L1L2AST.LT   = a
+foldOp _ a _ L1L2AST.LTEQ = a
+foldOp _ _ a L1L2AST.EQ   = a
