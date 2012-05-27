@@ -21,18 +21,17 @@ instance Show L1S where
   show (RegL1S r)    = show r
 
 -- L1 Parser (uses shared L1/L2 Parser)
-parseL1Inst = parseI parseRegister parseL1S where
-   parseL1S :: String -> L1S
-   parseL1S s = case (sread s) of
-     AtomNum n -> NumberL1S n
-     AtomSym s -> either LabelL1S RegL1S (parseLabelOrRegister s)
+parseL1 = parse parseL1Inst where
+  parseL1Inst = parseI parseRegister parseL1S
+  parseL1S s = case (sread s) of
+    AtomNum n -> NumberL1S n
+    AtomSym s -> either LabelL1S RegL1S (parseLabelOrRegister s)
 
 -- X86 Generation code
 type X86Inst = String
 
-genCode :: L1 -> String
-genCode l1 = fst $ runState (genCodeS l1) 0
-  where
+genX86Code :: L1 -> String
+genX86Code l1 = fst $ runState (genCodeS l1) 0 where
   genCodeS :: L1 -> State Int String
   genCodeS (Program main funcs) = do
     x86Main  <- genMain main
@@ -184,7 +183,7 @@ genCode l1 = fst $ runState (genCodeS l1) 0
   jumpIfGreaterOrEqual  l = "jge L1_" ++ l
   jumpIfEqual           l = "je L1_"  ++ l
   
-compileL1 = genCode . (parse parseL1Inst) . sread
+compileL1 = genX86Code . parseL1 . sread
 
 main = do  
    fileNames <- getArgs
