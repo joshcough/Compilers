@@ -20,7 +20,9 @@ parseFunction parseInst (List ((AtomSym name) : exps)) =
 
 parseI :: (String -> x) -> (String -> s) -> SExpr -> Instruction x s
 parseI _ _ a@(AtomSym s) =
-  either LabelDeclaration (const $ error $ "not an instruction " ++ show a) (parseLabelOrRegister s)
+  maybe (error $ "not an instruction " ++ show a) getLabel (parseLabelOrRegister s) where
+  getLabel (LL l) = LabelDeclaration l
+  getLabel (LR r) =  error $ "expected a label " ++ show a
 parseI _ _ a@(AtomNum n) = error $ "bad instruction" ++ show a
 parseI parseX parseS l@(List ss) = case (flatten l) of
   [x, "<-", "print", t] -> Assign (parseX x) (Print (parseT t))
@@ -57,13 +59,15 @@ parseI parseX parseS l@(List ss) = case (flatten l) of
 parseLabel :: String -> Label
 parseLabel s = drop 1 s
 
-parseLabelOrRegister :: String -> Either Label Register
-parseLabelOrRegister l@(':' : _) = Left  (parseLabel l)
-parseLabelOrRegister r           = Right (parseRegister r)
+data LabelOrReg = LL Label | LR Register
 
-parseRegister :: String -> Register
-parseRegister r = fromMaybe (error ("not a register " ++ (show r))) (registerFromName r)
+parseLabelOrRegister :: String -> Maybe LabelOrReg
+parseLabelOrRegister l@(':' : _) = Just $ LL $ parseLabel l
+parseLabelOrRegister r           = fmap LR $ parseRegister r
+
+parseRegister :: String -> Maybe Register
+parseRegister r = registerFromName r
 parseN4 n = case (sread n) of
   AtomNum n -> n
   AtomSym s -> error $ "not a number" ++ n
-parseCXRegister cx = CXR (fromMaybe (error "not a register") (cxRegisterFromName cx))
+parseCXRegister cx = fmap CXR (cxRegisterFromName cx)
