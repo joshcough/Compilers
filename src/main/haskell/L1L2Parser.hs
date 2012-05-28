@@ -16,13 +16,11 @@ parseMain parseInst exps = Func $ (LabelDeclaration "main") : (map parseInst exp
 
 parseFunction :: (SExpr -> Instruction x s) -> SExpr -> Func x s
 parseFunction parseInst (List ((AtomSym name) : exps)) =
-  Func $ (LabelDeclaration (parseLabel name)) : (map parseInst exps)
+  Func $ LabelDeclaration (parseLabel name) : (map parseInst exps)
 
 parseI :: (String -> x) -> (String -> s) -> SExpr -> Instruction x s
-parseI _ _ a@(AtomSym s) =
-  maybe (error $ "not an instruction " ++ show a) getLabel (parseLabelOrRegister s) where
-  getLabel (LL l) = LabelDeclaration l
-  getLabel (LR r) =  error $ "expected a label " ++ show a
+parseI _ _ a@(AtomSym s) = maybe (error $ "not an instruction " ++ show a) id
+    (parseLabelOrRegister LabelDeclaration (const $ error $ "expected a label " ++ show a) s)
 parseI _ _ a@(AtomNum n) = error $ "bad instruction" ++ show a
 parseI parseX parseS l@(List ss) = case (flatten l) of
   [x, "<-", "print", t] -> Assign (parseX x) (Print (parseT t))
@@ -53,17 +51,14 @@ parseI parseX parseS l@(List ss) = case (flatten l) of
   where
     parseT   = parseS
     parseU   = parseS
-
     parseComp t1 cmp t2 = Comp (parseT t1) (compOpFromSym cmp) (parseT t2)
 
 parseLabel :: String -> Label
 parseLabel s = drop 1 s
 
-data LabelOrReg = LL Label | LR Register
-
-parseLabelOrRegister :: String -> Maybe LabelOrReg
-parseLabelOrRegister l@(':' : _) = Just $ LL $ parseLabel l
-parseLabelOrRegister r           = fmap LR $ parseRegister r
+parseLabelOrRegister :: (Label -> a) -> (Register -> a) -> String -> Maybe a
+parseLabelOrRegister f _ l@(':' : _) = Just $ f $ parseLabel l
+parseLabelOrRegister _ f r           = fmap f $ parseRegister r
 
 parseRegister :: String -> Maybe Register
 parseRegister r = registerFromName r

@@ -25,9 +25,7 @@ parseL1 = parse (parseI parseL1Reg parseL1S) where
   parseL1Reg s = maybe (error $ "invalid register: " ++ s) id (parseRegister s)
   parseL1S s = case (sread s) of
     AtomNum n -> NumberL1S n
-    AtomSym s -> maybe (error $ "invalid s: " ++ s) toL1S (parseLabelOrRegister s)
-  toL1S (LL l) = LabelL1S l
-  toL1S (LR r) = RegL1S   r
+    AtomSym s -> maybe (error $ "invalid s: " ++ s) id $ parseLabelOrRegister LabelL1S RegL1S s
 
 -- X86 Generation code
 type X86Inst = String

@@ -7,12 +7,13 @@ import L1L2Parser
 import Read
 
 -- L2 AST (uses shared L1/L2 AST)
+-- L2 adds variables to X and S. that's the only difference between L2 and L1.
 type Variable = String
-data L2X = RegL2X Register | VariableL2X Variable -- type L1X = Register
-data L2S = NumberL2S Int | LabelL2S Label | RegL2S Register | VariableL2S Variable -- data L1S = NumberL1S Int | LabelL1S Label | RegL1S Register
+data L2X = RegL2X Register | VariableL2X Variable
+data L2S = NumberL2S Int | LabelL2S Label | RegL2S Register | VariableL2S Variable
 type L2Instruction = Instruction L2X L2S
-data L2Func = Func L2X L2S
-data L2 = Program L2X L2S
+type L2Func = Func L1X L1S
+type L2 = Program L2X L2S
 
 instance Show L2X where
   show (RegL2X r) = show r
@@ -29,6 +30,4 @@ parseL2 s = parse (parseI (parseX VariableL2X RegL2X) parseL2S) s where
   parseX v r  s = maybe (v $ drop 1 s) r (parseRegister s)
   parseL2S    s = case (sread s) of
     AtomNum n -> NumberL2S n
-    AtomSym s -> maybe ((parseX VariableL2S RegL2S) s) toL2S (parseLabelOrRegister s)
-  toL2S (LL l) = LabelL2S l
-  toL2S (LR r) = RegL2S   r
+    AtomSym s -> maybe (parseX VariableL2S RegL2S s) id $ parseLabelOrRegister LabelL2S RegL2S s
