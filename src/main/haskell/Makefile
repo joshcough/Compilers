@@ -10,4 +10,5 @@ clean:
 test:
 	make
 	./run-haskell-L1.sh
+	mv L1TestFiles/*.S L1TestFiles/haskell-results
 	diff L1TestFiles/haskell-results L1TestFiles/scala-results

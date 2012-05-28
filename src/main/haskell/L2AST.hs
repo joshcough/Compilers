@@ -12,7 +12,7 @@ type Variable = String
 data L2X = RegL2X Register | VariableL2X Variable
 data L2S = NumberL2S Int | LabelL2S Label | RegL2S Register | VariableL2S Variable
 type L2Instruction = Instruction L2X L2S
-type L2Func = Func L1X L1S
+type L2Func = Func L2X L2S
 type L2 = Program L2X L2S
 
 instance Show L2X where
@@ -27,7 +27,7 @@ instance Show L2S where
 
 -- L2 Parser (uses shared L1/L2 Parser)
 parseL2 s = parse (parseI (parseX VariableL2X RegL2X) parseL2S) s where
-  parseX v r  s = maybe (v $ drop 1 s) r (parseRegister s)
+  parseX v r  s = maybe (Right $ v $ drop 1 s) (Right . r) (parseRegister s)
   parseL2S    s = case (sread s) of
-    AtomNum n -> NumberL2S n
-    AtomSym s -> maybe (parseX VariableL2S RegL2S s) id $ parseLabelOrRegister LabelL2S RegL2S s
+    AtomNum n -> Right $ NumberL2S n
+    AtomSym s -> maybe (parseX VariableL2S RegL2S s) Right $ parseLabelOrRegister LabelL2S RegL2S s

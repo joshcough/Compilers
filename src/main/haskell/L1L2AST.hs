@@ -117,11 +117,11 @@ instance Show CompOp where
   show L1L2AST.LTEQ = "<="
   show L1L2AST.EQ   = "="
 
-compOpFromSym :: String -> CompOp
-compOpFromSym "<"  = L1L2AST.LT
-compOpFromSym "<=" = L1L2AST.LTEQ
-compOpFromSym "="  = L1L2AST.EQ
-compOpFromSym s    = error $ "not a comparison operator" ++ s
+compOpFromSym :: String -> Either String CompOp
+compOpFromSym "<"  = Right L1L2AST.LT
+compOpFromSym "<=" = Right L1L2AST.LTEQ
+compOpFromSym "="  = Right L1L2AST.EQ
+compOpFromSym s    = Left $ "not a comparison operator" ++ s
 
 runOp L1L2AST.LT   n1 n2 = n1 <  n2
 runOp L1L2AST.LTEQ n1 n2 = n1 <= n2

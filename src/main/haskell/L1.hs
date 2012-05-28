@@ -22,10 +22,10 @@ instance Show L1S where
 
 -- L1 Parser (uses shared L1/L2 Parser)
 parseL1 = parse (parseI parseL1Reg parseL1S) where
-  parseL1Reg s = maybe (error $ "invalid register: " ++ s) id (parseRegister s)
+  parseL1Reg s = maybe (Left $ "invalid register: " ++ s) Right (parseRegister s)
   parseL1S s = case (sread s) of
-    AtomNum n -> NumberL1S n
-    AtomSym s -> maybe (error $ "invalid s: " ++ s) id $ parseLabelOrRegister LabelL1S RegL1S s
+    AtomNum n -> Right $ NumberL1S n
+    AtomSym s -> maybe (Left $ "invalid s: " ++ s) Right $ parseLabelOrRegister LabelL1S RegL1S s
 
 -- X86 Generation code
 type X86Inst = String
@@ -36,7 +36,7 @@ genX86Code l1 = fst $ runState (genCodeS l1) 0 where
   genCodeS (Program main funcs) = do
     x86Main  <- genMain main
     x86Funcs <- genFunc $ concat $ map body funcs
-    return $ dump $ concat [header, x86Main, x86Funcs, footer, ["\n"]] where
+    return $ dump $ concat [header, x86Main, x86Funcs, footer] where
     dump :: [X86Inst] -> String
     dump insts = concat $ intersperse "\n" $ map adjust insts
     adjust i = if (last i == ':' || take 6 i == ".globl") then i else '\t' : i
@@ -56,7 +56,7 @@ genX86Code l1 = fst $ runState (genCodeS l1) 0 where
     footer = [
       ".size\tgo, .-go",
       ".ident\t\"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
-      ".section\t.note.GNU-stack,\"\",@progbits" ]
+      ".section\t.note.GNU-stack,\"\",@progbits\n" ]
   
   genMain :: L1Func -> State Int [X86Inst]
   genMain (Func insts) =  (flip fmap) (genFunc (tail insts)) (++ mainFooter) where
@@ -182,8 +182,9 @@ genX86Code l1 = fst $ runState (genCodeS l1) 0 where
   jumpIfGreater         l = "jg L1_"  ++ l
   jumpIfGreaterOrEqual  l = "jge L1_" ++ l
   jumpIfEqual           l = "je L1_"  ++ l
-  
-compileL1 = genX86Code . parseL1 . sread
+
+compileL1 :: String -> Either String String
+compileL1 code = do { l1 <- parseL1 (sread code); return $ genX86Code l1 }
 
 main = do  
    fileNames <- getArgs
@@ -191,5 +192,5 @@ main = do
    -- i suppose later on we could compile many files...
    let inputFile = fileNames !! 0
    let outputFile = changeExtension inputFile "S"
-   results <- fmap compileL1 (readFile inputFile)
+   results <- fmap ((either error id) . compileL1) (readFile inputFile)
    writeFile outputFile results
