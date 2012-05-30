@@ -56,12 +56,7 @@ parseI parseX parseS l@(List ss) = case (flatten l) of
     n4' <- parseN4 n4
     s'  <- parseS s
     return $ MemWrite (MemLoc x' n4') s'
-  [x, "+=", s]  -> do { x' <- parseX x; s' <- parseS s; return $ Increment  x' s' }
-  [x, "-=", s]  -> do { x' <- parseX x; s' <- parseS s; return $ Decrement  x' s' }
-  [x, "*=", s]  -> do { x' <- parseX x; s' <- parseS s; return $ Multiply   x' s' }
-  [x, "&=", s]  -> do { x' <- parseX x; s' <- parseS s; return $ BitwiseAnd x' s' }
-  [x, ">>=", s] -> do { x' <- parseX x; s' <- parseS s; return $ RightShift x' s' }
-  [x, "<<=", s] -> do { x' <- parseX x; s' <- parseS s; return $ LeftShift  x' s' }
+  [x, op, s] -> do { x' <- parseX x; s' <- parseS s; op' <- parseX86Operator op; return $ MathInst x' op' s' }
   [cx, "<-", s1, cmp, s2] -> do
     cx'  <- parseX cx
     cmp' <- parseComp s1 cmp s2
@@ -87,6 +82,14 @@ parseI parseX parseS l@(List ss) = case (flatten l) of
       cmp' <- compOpFromSym cmp
       s2'  <- parseS s2
       return $ Comp s1' cmp' s2'
+
+parseX86Operator "+="  = Right increment
+parseX86Operator "-="  = Right decrement
+parseX86Operator "*="  = Right multiply
+parseX86Operator "<<=" = Right leftShift
+parseX86Operator ">>=" = Right rightShift
+parseX86Operator "&="  = Right bitwiseAnd
+parseX86Operator _     = Left "bad operator"
 
 parseLabel :: String -> Label
 parseLabel s = drop 1 s

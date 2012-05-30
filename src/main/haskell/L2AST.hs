@@ -16,18 +16,18 @@ type L2Func = Func L2X L2S
 type L2 = Program L2X L2S
 
 instance Show L2X where
-  show (RegL2X r) = show r
+  show (RegL2X r)      = show r
   show (VariableL2X v) = v
 
 instance Show L2S where
-  show (NumberL2S n) = show n
-  show (LabelL2S l) = show l
-  show (RegL2S r) = show r
+  show (NumberL2S n)   = show n
+  show (LabelL2S l)    = show l
+  show (RegL2S r)      = show r
   show (VariableL2S v) = v
 
 -- L2 Parser (uses shared L1/L2 Parser)
-parseL2 s = parse (parseI (parseX VariableL2X RegL2X) parseL2S) s where
-  parseX v r  s = maybe (Right $ v $ drop 1 s) (Right . r) (parseRegister s)
+parseL2 = parse (parseI (parseX VariableL2X RegL2X) parseL2S) where
+  parseX v r  s = Right $ maybe (v $ drop 1 s) r (parseRegister s)
   parseL2S    s = case (sread s) of
     AtomNum n -> Right $ NumberL2S n
     AtomSym s -> maybe (parseX VariableL2S RegL2S s) Right $ parseLabelOrRegister LabelL2S RegL2S s

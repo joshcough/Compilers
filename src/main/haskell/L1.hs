@@ -86,13 +86,8 @@ genX86Code l1 = fst $ runState (runErrorT $ genCodeS l1) 0 where
   genInst :: L1Instruction -> Either String [X86Inst]
   genInst (LabelDeclaration label)     = Right [declare label]
   genInst (Assign l r)       = genAssignInst l r
-  genInst (MemWrite   loc s) = Right [triple "movl"  (genS s) (genLoc loc)]
-  genInst (Increment  r s)   = Right [triple "addl"  (genS s) (genReg r)]
-  genInst (Decrement  r s)   = Right [triple "subl"  (genS s) (genReg r)]
-  genInst (Multiply   r s)   = Right [triple "imull" (genS s) (genReg r)]
-  genInst (RightShift r s)   = Right [triple "sarl"  (genS s) (genReg r)]
-  genInst (LeftShift  r s)   = Right [triple "sall"  (genS s) (genReg r)]
-  genInst (BitwiseAnd r s)   = Right [triple "andl"  (genS s) (genReg r)]
+  genInst (MemWrite loc  s)  = Right [triple "movl"  (genS s) (genLoc loc)]
+  genInst (MathInst r op s)  = Right [triple (x86OpName op) (genS s) (genReg r)]
   genInst (Goto s)           = Right [jump (LabelL1S s)]
   genInst (TailCall s)       = Right ["movl %ebp, %esp", jump s]
   -- special case for two numbers
