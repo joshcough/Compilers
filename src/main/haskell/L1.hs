@@ -7,6 +7,7 @@ import L1L2Parser
 import IOHelpers
 import Data.Traversable
 import Control.Monad.State
+import Control.Monad.Error
 
 -- L1 AST (uses shared L1/L2 AST)
 type L1X = Register
@@ -30,9 +31,9 @@ parseL1 = parse (parseI parseL1Reg parseL1S) where
 -- X86 Generation code
 type X86Inst = String
 
-genX86Code :: L1 -> String
-genX86Code l1 = fst $ runState (genCodeS l1) 0 where
-  genCodeS :: L1 -> State Int String
+genX86Code :: L1 -> Either String String
+genX86Code l1 = fst $ runState (runErrorT $ genCodeS l1) 0 where
+  genCodeS :: L1 -> ErrorT String (State Int) String
   genCodeS (Program main funcs) = do
     x86Main  <- genMain main
     x86Funcs <- genFunc $ concat $ map body funcs
@@ -57,8 +58,8 @@ genX86Code l1 = fst $ runState (genCodeS l1) 0 where
       ".size\tgo, .-go",
       ".ident\t\"GCC: (Ubuntu 4.3.2-1ubuntu12) 4.3.2\"",
       ".section\t.note.GNU-stack,\"\",@progbits\n" ]
-  
-  genMain :: L1Func -> State Int [X86Inst]
+
+  genMain :: L1Func -> ErrorT String (State Int) [X86Inst]
   genMain (Func insts) =  (flip fmap) (genFunc (tail insts)) (++ mainFooter) where
     mainFooter = [
       "popl %ebp",
@@ -68,53 +69,53 @@ genX86Code l1 = fst $ runState (genCodeS l1) 0 where
       "leave",
       "ret" ]
   
-  genFunc :: [L1Instruction] -> State Int [X86Inst]
+  genFunc :: [L1Instruction] -> ErrorT String (State Int) [X86Inst]
   genFunc insts = (traverse genInstS insts) >>= return . concat
   
-  genInstS :: L1Instruction -> State Int [X86Inst]
+  genInstS :: L1Instruction -> ErrorT String (State Int) [X86Inst]
   genInstS (Call s) = fmap (\i -> call $ "Generated_Label_" ++ show i) postIncrement where
     postIncrement = do { x <- get; put (x+1); return x }
     call label = [
-      "pushl " ++ (genS (LabelL1S label)),
+      "pushl " ++ (genS $ LabelL1S label),
       "pushl %ebp",
       "movl %esp, %ebp",
       jump s,
       declare label ]
-  genInstS i = return $ genInst i
-  
-  genInst :: L1Instruction -> [X86Inst]
-  genInst (LabelDeclaration label)     = [declare label]
+  genInstS i = either throwError return $ genInst i
+
+  genInst :: L1Instruction -> Either String [X86Inst]
+  genInst (LabelDeclaration label)     = Right [declare label]
   genInst (Assign l r)       = genAssignInst l r
-  genInst (MemWrite   loc s) = [triple "movl"  (genS s) (genLoc loc)]
-  genInst (Increment  r s)   = [triple "addl"  (genS s) (genReg r)]
-  genInst (Decrement  r s)   = [triple "subl"  (genS s) (genReg r)]
-  genInst (Multiply   r s)   = [triple "imull" (genS s) (genReg r)]
-  genInst (RightShift r s)   = [triple "sarl"  (genS s) (genReg r)]
-  genInst (LeftShift  r s)   = [triple "sall"  (genS s) (genReg r)]
-  genInst (BitwiseAnd r s)   = [triple "andl"  (genS s) (genReg r)]
-  genInst (Goto s)           = [jump (LabelL1S s)]
-  genInst (TailCall s)       = ["movl %ebp, %esp", jump s]
+  genInst (MemWrite   loc s) = Right [triple "movl"  (genS s) (genLoc loc)]
+  genInst (Increment  r s)   = Right [triple "addl"  (genS s) (genReg r)]
+  genInst (Decrement  r s)   = Right [triple "subl"  (genS s) (genReg r)]
+  genInst (Multiply   r s)   = Right [triple "imull" (genS s) (genReg r)]
+  genInst (RightShift r s)   = Right [triple "sarl"  (genS s) (genReg r)]
+  genInst (LeftShift  r s)   = Right [triple "sall"  (genS s) (genReg r)]
+  genInst (BitwiseAnd r s)   = Right [triple "andl"  (genS s) (genReg r)]
+  genInst (Goto s)           = Right [jump (LabelL1S s)]
+  genInst (TailCall s)       = Right ["movl %ebp, %esp", jump s]
   -- special case for two numbers
   genInst (CJump (Comp l@(NumberL1S n1) op r@(NumberL1S n2)) l1 l2) =
-    if (runOp op n1 n2) then [jump $ LabelL1S l1] else [jump $ LabelL1S l2]
+    Right $ if (runOp op n1 n2) then [jump $ LabelL1S l1] else [jump $ LabelL1S l2]
   -- (cjump 11 < ebx :true :false) special case. destination must be a register.
-  genInst (CJump (Comp l@(NumberL1S n) op r@(RegL1S _)) l1 l2) = [
+  genInst (CJump (Comp l@(NumberL1S n) op r@(RegL1S _)) l1 l2) = Right [
     triple "cmpl" (genS l) (genS r),
     foldOp (jumpIfGreater l1) (jumpIfGreaterOrEqual l1) (jumpIfEqual l1) op,
     jump (LabelL1S l2) ]
-  genInst (CJump (Comp s1 op s2) l1 l2) = [
+  genInst (CJump (Comp s1 op s2) l1 l2) = Right [
     triple "cmpl" (genS s2) (genS s1),
     foldOp (jumpIfLess l1) (jumpIfLessThanOrEqual l1) (jumpIfEqual l1) op,
     jump (LabelL1S l2) ]
-  genInst Return = [
+  genInst Return = Right [
     "movl %ebp, %esp",
     "popl %ebp",
     "ret" ]
-  genInst i = error $ "bad instruction: " ++ show i
+  genInst i = Left $ "bad instruction: " ++ show i
   
   -- several assignment cases
-  genAssignInst r (SRHS s)      = [triple "movl" (genS s) (genReg r)]
-  genAssignInst r (MemRead loc) = [triple "movl" (genLoc loc) (genReg r)]
+  genAssignInst r (SRHS s)      = Right [triple "movl" (genS s) (genReg r)]
+  genAssignInst r (MemRead loc) = Right [triple "movl" (genLoc loc) (genReg r)]
   {-
   cmp assignments have to be with CXRegisters on LHS
   (eax <- ebx < ecx)
@@ -128,30 +129,30 @@ genX86Code l1 = fst $ runState (genCodeS l1) 0 where
     movzbl %al, %eax
   -}
   genAssignInst cx@(CXR c) (CompRHS (Comp l@(RegL1S _)    op r@(RegL1S _))) =
-    genCompInst cx r l (setInstruction op)
+    Right $ genCompInst cx r l (setInstruction op)
   genAssignInst cx@(CXR c) (CompRHS (Comp l@(NumberL1S _) op r@(RegL1S _))) =
     -- magic reverse happens here!
-    genCompInst cx l r (foldOp "setg" "setge" "sete" op)
+    Right $ genCompInst cx l r (foldOp "setg" "setge" "sete" op)
   genAssignInst cx@(CXR c) (CompRHS (Comp l@(RegL1S _)    op r@(NumberL1S _))) =
-    genCompInst cx r l (setInstruction op)
+    Right $ genCompInst cx r l (setInstruction op)
   genAssignInst cx@(CXR _) (CompRHS (Comp l@(NumberL1S n1) op r@(NumberL1S n2))) =
-    [triple "movl" ("$" ++ (if (runOp op n1 n2) then "1" else "0")) (genReg cx)]
-  genAssignInst (CXR Eax) (Print s) = [
+    Right [triple "movl" ("$" ++ (if (runOp op n1 n2) then "1" else "0")) (genReg cx)]
+  genAssignInst (CXR Eax) (Print s) = Right [
     "pushl " ++ genS s,
     "call print",
     "addl $4, %esp" ]
-  genAssignInst (CXR Eax) (Allocate s n) = [
+  genAssignInst (CXR Eax) (Allocate s n) = Right [
     "pushl " ++ genS n,
     "pushl " ++ genS s,
     "call allocate",
     "addl $8, %esp" ]
-  genAssignInst (CXR Eax) (ArrayError s n) = [
+  genAssignInst (CXR Eax) (ArrayError s n) = Right [
     "pushl " ++ genS n,
     "pushl " ++ genS s,
     "call print_error",
     "addl $8, %esp" ]
   -- todo: should i bother changing the return type to Either[String, [X86Inst]]?
-  genAssignInst l r = error $ "bad assignment statement: " ++ show (Assign l r)
+  genAssignInst l r = Left $ "bad assignment statement: " ++ show (Assign l r)
   
   genCompInst cx@(CXR c) l r x = [
     triple "cmp" (genS l) (genS r),
@@ -184,9 +185,9 @@ genX86Code l1 = fst $ runState (genCodeS l1) 0 where
   jumpIfEqual           l = "je L1_"  ++ l
 
 compileL1 :: String -> Either String String
-compileL1 code = do { l1 <- parseL1 (sread code); return $ genX86Code l1 }
+compileL1 code = parseL1 (sread code) >>= genX86Code
 
-main = do  
+main = do
    fileNames <- getArgs
    -- just read the first file here.
    -- i suppose later on we could compile many files...
