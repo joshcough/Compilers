@@ -186,11 +186,8 @@ genX86Code l1 = fst $ runState (runErrorT $ genCodeS l1) 0 where
 compileL1 :: String -> Either String String
 compileL1 code = parseL1 (sread code) >>= genX86Code
 
-main = do
-   fileNames <- getArgs
-   -- just read the first file here.
-   -- i suppose later on we could compile many files...
-   let inputFile = fileNames !! 0
-   let outputFile = changeExtension inputFile "S"
-   results <- fmap ((either error id) . compileL1) (readFile inputFile)
-   writeFile outputFile results
+-- just read the first file here. i suppose later on i could compile many files...
+main = fmap (!! 0) getArgs >>= compileToFile where
+  compileToFile inputFile =
+    let outputFile = changeExtension inputFile "S" in
+    fmap ((either error id) . compileL1) (readFile inputFile) >>= writeFile outputFile
