@@ -151,7 +151,6 @@ genX86Code l1 = fst $ runState (runErrorT $ genCodeS l1) 0 where
     "pushl " ++ genS s,
     "call print_error",
     "addl $8, %esp" ]
-  -- todo: should i bother changing the return type to Either[String, [X86Inst]]?
   genAssignInst l r = Left $ "bad assignment statement: " ++ show (Assign l r)
   
   genCompInst cx@(CXR c) l r x = [
