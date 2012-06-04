@@ -62,7 +62,7 @@ trait Allocator extends Spill with Liveness with Interference with Timer {
   def attemptAllocation(graph:InterferenceGraph):
     (Option[Map[Variable, Register]], Map[Variable, Option[Register]]) = {
     val variables: List[Variable] =
-      graph.variables.toList.sortWith(_<_).sortWith(graph.neigborsOf(_).size > graph.neigborsOf(_).size)
+      graph.variables.toList.sortWith(_ < _).sortWith(graph.neigborsOf(_).size > graph.neigborsOf(_).size)
     val registers: Set[Register] = Set(eax, ebx, ecx, edx, edi, esi)
     val defaultPairings: Map[Variable, Option[Register]] = variables.map(v => (v, None)).toMap
     val finalPairings = variables.foldLeft(defaultPairings){ (pairs, v) =>
@@ -72,7 +72,7 @@ trait Allocator extends Spill with Liveness with Interference with Timer {
       val nonNeighborRegisters: Set[Register] = registers -- neighborRegisters
       val registersNeighborsVariablesLiveIn: Set[Register] = neighborVariables.flatMap(pairs.get(_)).flatten
       val availableRegisters: List[Register] =
-        (nonNeighborRegisters -- registersNeighborsVariablesLiveIn).toList.sortWith(_<_)
+        (nonNeighborRegisters -- registersNeighborsVariablesLiveIn).toList.sortWith(_ < _)
       val theRegisterMaybe = availableRegisters.headOption
       pairs + (v -> theRegisterMaybe)
     }

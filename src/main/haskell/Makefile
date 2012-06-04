@@ -1,11 +1,16 @@
-all: compile
-
-compile:
+all: 
 	make clean
-	ghc L1L2AST.hs L1L2Parser.hs L1.hs L2AST.hs Read.hs Testhelpers.hs
+	make L1
+	make L2
+
+L1: 
+	ghc L1L2AST.hs L1L2Parser.hs Read.hs Testhelpers.hs L1.hs
+
+L2: 
+	ghc L1L2AST.hs L1L2Parser.hs Read.hs Testhelpers.hs L2.hs
 
 clean:
-	rm -f *.o *.hi *.exe rm L1 L1Tests
+	rm -f *.o *.hi *.exe rm L1 L2 L1Tests
 
 test:
 	make

@@ -9,18 +9,6 @@ import Data.Traversable
 import Control.Monad.State
 import Control.Monad.Error
 
--- L1 AST (uses shared L1/L2 AST)
-type L1X = Register
-data L1S = NumberL1S Int | LabelL1S Label | RegL1S Register
-type L1Instruction = Instruction L1X L1S
-type L1Func = Func L1X L1S
-type L1 = Program L1X L1S
-
-instance Show L1S where
-  show (NumberL1S n) = show n
-  show (LabelL1S l)  = show l
-  show (RegL1S r)    = show r
-
 -- L1 Parser (uses shared L1/L2 Parser)
 parseL1 = parse (parseI parseL1Reg parseL1S) where
   parseL1Reg s = maybe (Left $ "invalid register: " ++ s) Right (parseRegister s)

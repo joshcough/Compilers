@@ -4,9 +4,18 @@ import TestHelpers
 import Test.HUnit
 
 type Label      = String
+
 data XRegister  = Esi | Edi | Ebp | Esp
 data CXRegister = Eax | Ebx | Ecx | Edx
 data Register   = CXR CXRegister | XR XRegister
+esi = XR Esi
+edi = XR Edi
+ebp = XR Ebp
+esp = XR Esp
+eax = CXR Eax
+ebx = CXR Ebx
+ecx = CXR Ecx
+edx = CXR Edx
 data MemLoc x   = MemLoc x Int
 data CompOp     = LT | LTEQ | EQ
 data Comp s     = Comp s CompOp s
@@ -23,7 +32,7 @@ bitwiseAnd = X86Op "&="  "andl"
 x86OpSymbol (X86Op op _)   = op
 x86OpName   (X86Op _ name) = name
 
-data Instruction x s = 
+data Instruction x s =
   Assign x (AssignRHS x s)   |
   MathInst x X86Op s         |
   MemWrite (MemLoc x) s      |
@@ -32,7 +41,7 @@ data Instruction x s =
   LabelDeclaration Label     |
   Call s                     |
   TailCall s                 |
-  Return 
+  Return
 
 data Func x s = Func { body :: [Instruction x s]}
 data Program x s = Program (Func x s) [Func x s]
@@ -124,3 +133,34 @@ foldOp :: a -> a -> a -> CompOp -> a
 foldOp a _ _ L1L2AST.LT   = a
 foldOp _ a _ L1L2AST.LTEQ = a
 foldOp _ _ a L1L2AST.EQ   = a
+
+-- L1 AST (uses shared L1/L2 AST)
+type L1X = Register
+data L1S = NumberL1S Int | LabelL1S Label | RegL1S Register
+type L1Instruction = Instruction L1X L1S
+type L1Func = Func L1X L1S
+type L1 = Program L1X L1S
+
+instance Show L1S where
+  show (NumberL1S n) = show n
+  show (LabelL1S l)  = show l
+  show (RegL1S r)    = show r
+
+-- L2 AST (uses shared L1/L2 AST)
+-- L2 adds variables to X and S. that's the only difference between L2 and L1.
+type Variable = String
+data L2X = RegL2X Register | VarL2X Variable
+data L2S = NumberL2S Int | LabelL2S Label | RegL2S Register | VarL2S Variable
+type L2Instruction = Instruction L2X L2S
+type L2Func = Func L2X L2S
+type L2 = Program L2X L2S
+
+instance Show L2X where
+  show (RegL2X r)      = show r
+  show (VarL2X v) = v
+
+instance Show L2S where
+  show (NumberL2S n)   = show n
+  show (LabelL2S l)    = show l
+  show (RegL2S r)      = show r
+  show (VarL2S v) = v
