@@ -31,8 +31,11 @@ library
     L.IOHelpers
     L.L1L2AST
     L.L1L2Parser
-    L.L1.L1
     L.Read
+    -- L1
+    L.L1.L1
+    -- L2
+    L.L2.L2
 
   build-depends:
     ansi-terminal             >= 0.6     && < 0.7,
@@ -77,7 +80,7 @@ library
     vector                    >= 0.10    && < 0.11,
     void                      >= 0.6     && < 1
 
-executable L1
+executable L1Main
   hs-source-dirs: mains/l1
   main-is: Main.hs
   build-depends:
