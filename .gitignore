@@ -9,6 +9,7 @@ scala/.idea/copyright/profiles_settings.xml
 scala/src/main/compilers/L1/1-test/*.S
 scala/src/main/compilers/L1/1-test/*.res
 scala/src/main/compilers/interpreters/1-test/
+scala/.lib/
 .idea/workspace.xml
 a.out
 runtime.o
@@ -16,6 +17,7 @@ Test.*
 test2.*
 tmp
 build
+*.S
 *.o
 *.hi
 *.swp
