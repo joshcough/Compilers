@@ -1,12 +1,13 @@
-module L.L2
+module L.L2.L2 where
 
 import System.Environment
 import System.IO
 import Data.List
-import Read
+import L.Read
 import L.L1L2AST
 import L.L1L2Parser
 import L.IOHelpers
+import L.L2.Interference
 import Data.Traversable
 import Data.Map
 import Control.Monad.State

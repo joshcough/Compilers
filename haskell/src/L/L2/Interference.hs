@@ -2,91 +2,127 @@ module L.L2.Interference where
 
 import L.L1L2AST
 
+import Control.Monad
+import Data.Maybe
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-data InterferenceGraph = InterferenceGraph (Map.Map L2X (Set.Set L2X))
+type InterferenceGraph = Map.Map L2X (Set.Set L2X)
+data InstructionInOutSet = InstructionInOutSet {
+  index  :: Int, 
+  inst   :: L2Instruction, 
+  gen    :: Set.Set L2X, 
+  kill   :: Set.Set L2X, 
+  inSet  :: Set.Set L2X, 
+  outSet :: Set.Set L2X 
+}
+type IIOS = InstructionInOutSet
 
-member a (InterferenceGraph m) = Map.member a m
+emptyGraph :: InterferenceGraph
+emptyGraph = Map.empty
 
-addNodes xs g = foldl (flip addNode) g xs
-addNode  x  g@(InterferenceGraph m) =
-  if (Interference.member x g) then g
-  else InterferenceGraph (Map.insert x Set.empty m)
+connections :: AsL2X x => x -> InterferenceGraph -> Set.Set L2X
+connections x g = fromMaybe Set.empty (Map.lookup (asL2X x) g)
 
--- dont bother adding ebp or esp
-addEdge (RegL2X (XRegister Ebp)) _ g = g
-addEdge (RegL2X (XRegister Esp)) _ g = g
-addEdge _ (RegL2X (XRegister Ebp)) g = g
-addEdge _ (RegL2X (XRegister Esp)) g = g
-addEdge x1 x2 (InterferenceGraph m) =
-  -- dont bother adding interference edges between a variable or register and itself...duh
-  if x1 == x2 then g
-  else InterferenceGraph (Map.insert x Set.empty m)
+insertOrAdd :: AsL2X x => x -> InterferenceGraph -> InterferenceGraph
+insertOrAdd x g = Map.singleton (asL2X x) $ connections x g
+
+graphMember :: AsL2X x => x -> InterferenceGraph -> Bool
+graphMember = Map.member . asL2X
+
+graphMembers :: InterferenceGraph -> Set.Set L2X
+graphMembers = Map.keysSet
+
+-- adds a node to the graph, with nothing interfering with it
+addNode  g x  = if (graphMember x g) then g else (Map.insert x Set.empty g)
+addNodes g xs = foldl addNode g xs
+
+unionAll :: Ord k => [Map.Map k a] -> Map.Map k a
+unionAll ms = foldl Map.union Map.empty ms
+
+addEdge :: AsL2X x => (x, x) -> InterferenceGraph -> InterferenceGraph
+addEdge (x1, x2) g
+  -- dont bother adding ebp or esp
+  | (asL2X x1) == (RegL2X ebp) = g
+  | (asL2X x1) == (RegL2X esp) = g
+  | (asL2X x2) == (RegL2X ebp) = g
+  | (asL2X x2) == (RegL2X esp) = g
+  | x1 == x2  = g -- dont add edge between a variable or register and itself...duh
+  | otherwise = unionAll [g, (insertOrAdd x1 g), (insertOrAdd x2 g)]
+
+addEdges :: AsL2X x => [(x, x)] -> InterferenceGraph -> InterferenceGraph
+addEdges edges g = foldl (flip addEdge) g edges
+
+isVariable :: L2X -> Bool
+isVariable (VarL2X _) = True
+isVariable _ = False
+
+variables :: InterferenceGraph -> Set.Set L2X
+variables = Set.filter isVariable . graphMembers
+
+neigborsOf :: L2X -> InterferenceGraph -> Set.Set L2X
+neigborsOf x g = fromMaybe (Set.empty) (Map.lookup x g)
+
+registerInterference :: InterferenceGraph
+registerInterference = 
+  addEdges [
+    (eax, ebx), (eax, ecx), (eax, edi), (eax, edx), (eax, esi),
+    (ebx, ecx), (ebx, edi), (ebx, edx), (ebx, esi),
+    (ecx, edi), (ecx, edx), (ecx, esi),
+    (edi, edx), (edi, esi),
+    (edx, esi)
+  ] emptyGraph
+
+zipFilter :: (a -> b -> Bool) -> [a] -> [b] -> [(a, b)]
+zipFilter f as bs = filter (uncurry f) (zip as bs)
+
+zipFilterSets :: (Ord a, Ord b) => (a -> b -> Bool) -> Set.Set a -> Set.Set b -> Set.Set (a, b)
+zipFilterSets f xs ys = Set.fromList (zipFilter f (Set.elems xs) (Set.elems ys))
+
+interference :: (Ord a, Ord b) =>
+                (a -> b -> Bool) -> (c -> Set.Set a) -> (c -> Set.Set b) -> c  -> Set.Set (a, b)
+interference f s1 s2 iios = zipFilterSets f (s1 iios) (s2 iios)
+
+{-
+  Build interference graph from the liveness information
+    Two variables live at the same time interfere with each other
+    Killed variables interfere with variables in the out set
+    Except that the variables x and y do not interfere if the instruction was (x <- y)
+    All real registers interfere with each other
+-}
+buildInterferenceSet :: [IIOS] -> InterferenceGraph
+buildInterferenceSet iioss = 
+  let 
+    -- if there is a first instruction (i certainly imagine there should be)
+    -- then we have to take the interference from its in set.
+    firstInstructionInSetInterference :: Set.Set (L2X, L2X)
+    firstInstructionInSetInterference = 
+      maybe (Set.empty) (interference (/=) inSet outSet) (listToMaybe iioss)
+
+    -- we always take the interference from the out sets.
+    outAndSpecialInterference :: [(L2X, L2X)]
+    outAndSpecialInterference =
+      let outAndSpecialInterference1 :: IIOS -> [(L2X, L2X)]
+          outAndSpecialInterference1 iios = 
+            -- add in the kill
+            let outsPlusKill = Set.union (outSet iios) (kill iios)
+                initial = zipFilterSets (<) outsPlusKill outsPlusKill
+                --assignmentRemovals (Assign (VarL2X v1) (SRHS (RegL2S r))) = 
+                --  Just $ if (v < x) then (v, x) else (x, v)
+                --assignmentRemovals (Assign (VarL2X v1) (SRHS (VarL2S r))) = 
+                --  Just $ if (v < x) then (v, x) else (x, v)
+            in error "todo"
+      in iioss >>= outAndSpecialInterference1
+  in
+  error "todo"
+
 
 {--
-    else{
-      val x1Connections = map.getOrElse(x1, Set()) + x2
-      val x2Connections = map.getOrElse(x2, Set()) + x1
-      new InterferenceGraph(map + (x1 -> x1Connections) + (x2 -> x2Connections))
-    }
 
-  def addEdges(connections:(X,X)*): InterferenceGraph = {
-    connections.foldLeft(this){ case (g, (x1, x2)) => g.addEdge(x1, x2) }
-  }
-
-  def members = map.keySet
-  def variables = members.collect{ case v: Variable => v }.toSet
-  def neigborsOf(x:X): Set[X] = map(x)
-
-  /**
-    Example:
-    ((eax ebx ecx edi edx esi x)
-    (ebx eax ecx edi edx esi)
-    (ecx eax ebx edi edx esi)
-    (edi eax ebx ecx edx esi x)
-    (edx eax ebx ecx edi esi)
-    (esi eax ebx ecx edi edx x)
-    (x eax edi esi))
-   */
-  def hwView = {
-    def sortedMembers = members.toList.sorted
-    def sortedNeighborNames(x:X): List[String] = map(x).toList.sorted.map(L2Printer.toCode)
-    sortedMembers.map{ m =>
-      (L2Printer.toCode(m) :: sortedNeighborNames(m)).mkString("(", " ", ")")
-    }.mkString("(", "\n", ")")
-  }
-}
-
-trait Interference {
-
-  val registerInterference: InterferenceGraph = {
-    new InterferenceGraph().addEdges(
-      eax -> ebx, eax -> ecx, eax -> edi, eax -> edx, eax -> esi,
-      ebx -> ecx, ebx -> edi, ebx -> edx, ebx -> esi,
-      ecx -> edi, ecx -> edx, ecx -> esi,
-      edi -> edx, edi -> esi,
-      edx -> esi)
-  }
-
-  /**
-    Build interference graph from the liveness information
-      Two variables live at the same time interfere with each other
-      Killed variables interfere with variables in the out set
-      Except that the variables x and y do not interfere if the instruction was (x <- y)
-      All real registers interfere with each other
-   */
-  def buildInterferenceSet(iioss: List[InstructionInOutSet]): InterferenceGraph = {
-
-    // if there is a first instruction (i certainly imagine there should be)
-    // then we have to take the interference from its in set.
-    val firstInstructionInSetInterference: Set[(X,X)] = iioss.headOption match {
-      case Some(iios) => for(x <- iios.in; y <- iios.in; if(x!=y)) yield (x,y)
-      case _ => Set()
-    }
+  def buildInterferenceSet(iioss: List[IIOS]): InterferenceGraph = {
 
     // we always take the interference from the out sets.
-    val outAndSpecialInterference: List[(X,X)] = iioss.flatMap { iios: InstructionInOutSet =>
+    val outAndSpecialInterference: List[(X,X)] = iioss.flatMap { iios: IIOS =>
       val out_interference: Set[(X,X)] = {
         // add in the kill
         val outsPlusKill = (iios.out ++ iios.kill)
@@ -155,5 +191,23 @@ trait Interference {
     }
   }
 }
+
+  /**
+    Example:
+    ((eax ebx ecx edi edx esi x)
+    (ebx eax ecx edi edx esi)
+    (ecx eax ebx edi edx esi)
+    (edi eax ebx ecx edx esi x)
+    (edx eax ebx ecx edi esi)
+    (esi eax ebx ecx edi edx x)
+    (x eax edi esi))
+   */
+  def hwView = {
+    def sortedMembers = members.toList.sorted
+    def sortedNeighborNames(x:X): List[String] = map(x).toList.sorted.map(L2Printer.toCode)
+    sortedMembers.map{ m =>
+      (L2Printer.toCode(m) :: sortedNeighborNames(m)).mkString("(", " ", ")")
+    }.mkString("(", "\n", ")")
+  }
 
 - -}

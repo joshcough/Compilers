@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 module L.L1L2AST where
 
 type Label      = String
@@ -164,3 +166,14 @@ instance Show L2S where
 
 instance Eq  L2X where (==) x1 x2 = (show x1) == (show x1)
 instance Ord L2X where compare x1 x2 = compare (show x1) (show x1)
+
+class (Eq a) => AsL2X a where 
+  asL2X :: a -> L2X
+
+instance AsL2X Register where 
+  asL2X = RegL2X
+instance AsL2X Variable where 
+  asL2X = VarL2X
+instance AsL2X L2X where
+  asL2X = id
+
