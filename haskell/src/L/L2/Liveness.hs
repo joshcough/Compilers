@@ -4,57 +4,58 @@ module L.L2.Liveness where
 
 import Control.Monad
 import Data.Maybe
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import qualified Data.Map as M
+import qualified Data.Set as S
 import L.L1L2AST
 
 data InstructionInOutSet = InstructionInOutSet {
-  index  :: Int,         inst   :: L2Instruction,
-  gen    :: Set.Set L2X, kill   :: Set.Set L2X,
-  inSet  :: Set.Set L2X, outSet :: Set.Set L2X
+  index  :: Int,       inst   :: L2Instruction,
+  genSet :: S.Set L2X, kill   :: S.Set L2X,
+  inSet  :: S.Set L2X, outSet :: S.Set L2X
 }
 
+set :: AsL2X x => [x] -> S.Set L2X
+set = S.fromList . fmap asL2X
+
+callerSave    = set [eax, ebx, ecx, edx]
+x86CallerSave = set [eax, ecx, edx]
+calleeSave    = set [edi, esi]
+arguments     = set [eax, ecx, edx]
+result        = set [eax]
+
+class HasGen a where
+  gen :: a -> S.Set L2X
+
+instance HasGen L2X where
+  gen (RegL2X r) = set [r]
+  gen (VarL2X v) = set [v]
+
+instance HasGen L2S where
+  gen (XL2S x)        = gen x
+  gen (NumberL2S n)   = S.empty
+  gen (LabelL2S l)    = S.empty
+
+instance HasGen (AssignRHS L2X L2S) where
+  gen (CompRHS (Comp s1 _ s2)) = S.unions [gen s1, gen s2]
+  gen (Allocate n init)        = S.unions [gen n,  gen init]
+  gen (Print s)                = gen s
+  gen (ArrayError a n)         = S.unions [gen a,  gen n]
+  gen (MemRead (MemLoc bp _))  = gen bp
+  gen (SRHS s)                 = gen s
+
+instance HasGen L2Instruction where
+  gen (Assign x rhs)             = gen rhs
+  gen (MathInst x _ s)           = S.unions [gen x,  gen s]
+  gen (MemWrite (MemLoc bp _) s) = S.unions [gen bp, gen s]
+  gen (Goto s)                   = S.empty
+  gen (CJump (Comp s1 _ s2) _ _) = S.unions [gen s1, gen s2]
+  gen (LabelDeclaration _)       = S.empty
+  gen (Call s)                   = S.unions [gen s,  arguments]
+  gen (TailCall s)               = S.unions [gen s,  arguments, calleeSave]
+  gen Return                     = S.unions [result, calleeSave]
+
+
 {--
-case class InstructionInOutSet(index: Int, inst:Instruction, gen:Set[X], kill:Set[X], in:Set[X], out:Set[X])
-
-trait Liveness extends Timer {
-
-  val callerSave = Set[X](eax, ebx, ecx, edx)
-  val x86CallerSave = Set[X](eax, ecx, edx)
-  val calleeSave = Set[X](edi, esi)
-  val arguments = Set[X](eax, ecx, edx)
-  val result = Set[X](eax)
-
-  def gen(i:Instruction): Set[X] = {
-    def gen(rhs:AssignmentRHS): Set[X] = rhs match {
-      case r:Register => Set(r)
-      case Print(s) => gen(s)
-      case Allocate(n, init) => gen(n)  union gen(init)
-      case ArrayError(a, n)  => gen(a)  union gen(n)
-      case Comp(s1, op, s2)  => gen(s1) union gen(s2)
-      case MemRead(MemLoc(bp, _)) => Set(bp)
-      case n:Num => Set()
-      case l:Label => Set()
-      case v:Variable => Set(v)
-    }
-    i match {
-      case Assignment(x, i) => gen(i)
-      case Increment(x, s)  => gen(x) union gen(s)
-      case Decrement(x, s)  => gen(x) union gen(s)
-      case Multiply(x, s)   => gen(x) union gen(s)
-      case LeftShift(x, s)  => gen(x) union gen(s)
-      case RightShift(x, s) => gen(x) union gen(s)
-      case BitwiseAnd(x, s) => gen(x) union gen(s)
-      case CJump(comp, l1, l2) => gen(comp)
-      case MemWrite(MemLoc(bp, _), s) => Set(bp) union gen(s)
-      case Goto(s) => gen(s)
-      case Call(s) => gen(s) union arguments
-      case TailCall(s) => gen(s) union arguments union calleeSave
-      case Return => result union calleeSave
-      case LabelDeclaration(_) => Set()
-    }
-  }
-
   def kill(i:Instruction): Set[X] = i match {
     case Assignment(x:X, Print(s)) => Set(x) union x86CallerSave
     case Assignment(x:X, Allocate(n, init)) => Set(x) union x86CallerSave

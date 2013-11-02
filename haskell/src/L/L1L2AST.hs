@@ -168,7 +168,7 @@ type L2Func = Func L2X L2S
 type L2 = Program L2X L2S
 
 instance Show L2X where
-  show (RegL2X r)      = show r
+  show (RegL2X r) = show r
   show (VarL2X v) = v
 
 instance Show L2S where
@@ -178,8 +178,9 @@ instance Show L2S where
 
 instance Eq  L2X where (==) x1 x2 = (show x1) == (show x1)
 instance Ord L2X where compare x1 x2 = compare (show x1) (show x1)
+instance Ord Register where compare x1 x2 = compare (show x1) (show x1)
 
-class (Eq a) => AsL2X a where 
+class (Eq a, Ord a) => AsL2X a where 
   asL2X :: a -> L2X
 instance AsL2X Register where 
   asL2X = RegL2X

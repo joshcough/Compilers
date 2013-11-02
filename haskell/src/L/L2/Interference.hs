@@ -4,34 +4,34 @@ module L.L2.Interference where
 
 import Control.Monad
 import Data.Maybe
-import qualified Data.Map as Map
-import qualified Data.Set as Set
+import qualified Data.Map as M
+import qualified Data.Set as S
 import L.L1L2AST
 import L.L2.Liveness
-
-type InterferenceGraph = Map.Map L2X (Set.Set L2X)
+ 
+type InterferenceGraph = M.Map L2X (S.Set L2X)
 type IIOS = InstructionInOutSet
 
 empty :: InterferenceGraph
-empty = Map.empty
+empty = M.empty
 
 union :: InterferenceGraph -> InterferenceGraph -> InterferenceGraph
-union = Map.unionWith Set.union
+union = M.unionWith S.union
 
-connections :: AsL2X x => x -> InterferenceGraph -> Set.Set L2X
-connections x g = fromMaybe Set.empty (Map.lookup (asL2X x) g)
+connections :: AsL2X x => x -> InterferenceGraph -> S.Set L2X
+connections x g = fromMaybe S.empty (M.lookup (asL2X x) g)
 
 singleton :: AsL2X x => x -> InterferenceGraph
-singleton x = Map.singleton (asL2X x) Set.empty
+singleton x = M.singleton (asL2X x) S.empty
 
 graphMember :: AsL2X x => x -> InterferenceGraph -> Bool
-graphMember = Map.member . asL2X
+graphMember = M.member . asL2X
 
-graphMembers :: InterferenceGraph -> Set.Set L2X
-graphMembers = Map.keysSet
+graphMembers :: InterferenceGraph -> S.Set L2X
+graphMembers = M.keysSet
 
 -- adds a node to the graph, with nothing interfering with it
-addNode  x  g = if (graphMember x g) then g else (Map.insert x Set.empty g)
+addNode  x  g = if (graphMember x g) then g else (M.insert x S.empty g)
 addNodes xs g = foldl (flip addNode) g xs
 
 unions ::[InterferenceGraph] -> InterferenceGraph
@@ -50,8 +50,8 @@ addEdge (x1, x2) g
   singletonEdge x1 x2
     | (asL2X x1) == (asL2X x2) = singleton x1
     | otherwise = union
-       (Map.singleton (asL2X x1) (Set.singleton (asL2X x2)))
-       (Map.singleton (asL2X x2) (Set.singleton (asL2X x1)))
+       (M.singleton (asL2X x1) (S.singleton (asL2X x2)))
+       (M.singleton (asL2X x2) (S.singleton (asL2X x1)))
 
 addEdges :: (AsL2X x, AsL2X y) => [(x, y)] -> InterferenceGraph -> InterferenceGraph
 addEdges edges g = foldl (flip addEdge) g edges
@@ -59,15 +59,15 @@ addEdges edges g = foldl (flip addEdge) g edges
 mkGraph :: (AsL2X x, AsL2X y) => [(x, y)] -> InterferenceGraph
 mkGraph edges = addEdges edges empty
 
-edgeSetToGraph :: AsL2X x => Set.Set (x, x) -> InterferenceGraph
-edgeSetToGraph edges = addEdges (Set.toList edges) empty
+edgeSetToGraph :: AsL2X x => S.Set (x, x) -> InterferenceGraph
+edgeSetToGraph edges = addEdges (S.toList edges) empty
 
 isVariable :: L2X -> Bool
 isVariable (VarL2X _) = True
 isVariable _ = False
 
-variables :: InterferenceGraph -> Set.Set L2X
-variables = Set.filter isVariable . graphMembers
+variables :: InterferenceGraph -> S.Set L2X
+variables = S.filter isVariable . graphMembers
 
 registerInterference :: InterferenceGraph
 registerInterference = mkGraph [
@@ -77,11 +77,11 @@ registerInterference = mkGraph [
   (edi, edx), (edi, esi),
   (edx, esi) ]
 
-zipFilterSets :: (Ord a, Ord b) => (a -> b -> Bool) -> Set.Set a -> Set.Set b -> Set.Set (a, b)
-zipFilterSets f xs ys = Set.fromList (filter (uncurry f) $ zip (Set.elems xs) (Set.elems ys))
+zipFilterSets :: (Ord a, Ord b) => (a -> b -> Bool) -> S.Set a -> S.Set b -> S.Set (a, b)
+zipFilterSets f xs ys = S.fromList (filter (uncurry f) $ zip (S.elems xs) (S.elems ys))
 
 interference :: (Ord a, Ord b) =>
-                (a -> b -> Bool) -> (c -> Set.Set a) -> (c -> Set.Set b) -> c -> Set.Set (a, b)
+                (a -> b -> Bool) -> (c -> S.Set a) -> (c -> S.Set b) -> c -> S.Set (a, b)
 interference f s1 s2 iios = zipFilterSets f (s1 iios) (s2 iios)
 
 {-
@@ -103,7 +103,7 @@ buildInterferenceSet iioss =
     outAndSpecialInterference :: InterferenceGraph
     outAndSpecialInterference = unions (fmap outAndSpecialInterference1 iioss)
    
-    variables = iioss >>= ((fmap VarL2X) . Set.toList . vars . inst)
+    variables = iioss >>= ((fmap VarL2X) . S.toList . vars . inst)
 
   in unions [
     addNodes variables registerInterference, 
@@ -116,14 +116,14 @@ outAndSpecialInterference1 iios =
   let outInterference :: InterferenceGraph
       outInterference = 
         -- add in the kill
-        let outsPlusKill = Set.union (outSet iios) (kill iios)
+        let outsPlusKill = S.union (outSet iios) (kill iios)
             initial = zipFilterSets (<) outsPlusKill outsPlusKill
             jop x1 x2 = Just $ orderedPair x1 x2
             assignmentRemovals (Assign v@(VarL2X _) (SRHS (XL2S x)))            = jop v x
             assignmentRemovals (Assign r@(RegL2X _) (SRHS (XL2S v@(VarL2X _)))) = jop r v
             assignmentRemovals _ = Nothing
         in edgeSetToGraph $ 
-             maybe initial (Set.difference initial . Set.singleton) (assignmentRemovals (inst iios))
+             maybe initial (S.difference initial . S.singleton) (assignmentRemovals (inst iios))
 
       -- Constrained arithmetic operators
       -- Add interference edges to disallow the illegal registers
@@ -141,35 +141,35 @@ outAndSpecialInterference1 iios =
   in union outInterference specialInterference
 
 class HasVars a where
-  vars :: a -> Set.Set Variable
+  vars :: a -> S.Set Variable
 
 instance HasVars L2X where
-  vars (RegL2X _) = Set.empty
-  vars (VarL2X v) = Set.singleton v
+  vars (RegL2X _) = S.empty
+  vars (VarL2X v) = S.singleton v
 
 instance HasVars L2S where
   vars (XL2S x)        = vars x
-  vars (NumberL2S n)   = Set.empty
-  vars (LabelL2S l)    = Set.empty
+  vars (NumberL2S n)   = S.empty
+  vars (LabelL2S l)    = S.empty
 
 instance HasVars (AssignRHS L2X L2S) where
-  vars (CompRHS (Comp s1 _ s2)) = Set.unions [vars s1, vars s2] 
-  vars (Allocate s1 s2)         = Set.unions [vars s1, vars s2] 
+  vars (CompRHS (Comp s1 _ s2)) = S.unions [vars s1, vars s2] 
+  vars (Allocate s1 s2)         = S.unions [vars s1, vars s2] 
   vars (Print s)                = vars s
-  vars (ArrayError a n)         = Set.unions [vars a,  vars n]
+  vars (ArrayError a n)         = S.unions [vars a,  vars n]
   vars (MemRead (MemLoc bp _))  = vars bp
   vars (SRHS s)                 = vars s
 
 instance HasVars L2Instruction where
-  vars (Assign x rhs)             = Set.unions [vars x,  vars rhs]
-  vars (MathInst x _ s)           = Set.unions [vars x,  vars s]
-  vars (MemWrite (MemLoc bp _) s) = Set.unions [vars bp, vars s]
-  vars (Goto _)                   = Set.empty
-  vars (CJump (Comp s1 _ s2) _ _) = Set.unions [vars s1, vars s2]
-  vars (LabelDeclaration _)       = Set.empty
+  vars (Assign x rhs)             = S.unions [vars x,  vars rhs]
+  vars (MathInst x _ s)           = S.unions [vars x,  vars s]
+  vars (MemWrite (MemLoc bp _) s) = S.unions [vars bp, vars s]
+  vars (Goto _)                   = S.empty
+  vars (CJump (Comp s1 _ s2) _ _) = S.unions [vars s1, vars s2]
+  vars (LabelDeclaration _)       = S.empty
   vars (Call s)                   = vars s
   vars (TailCall s)               = vars s
-  vars Return                     = Set.empty
+  vars Return                     = S.empty
 
 {-
   /**
