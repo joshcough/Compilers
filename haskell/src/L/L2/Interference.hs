@@ -7,13 +7,9 @@ import Data.Maybe
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import L.L1L2AST
+import L.L2.Liveness
 
 type InterferenceGraph = Map.Map L2X (Set.Set L2X)
-data InstructionInOutSet = InstructionInOutSet {
-  index  :: Int, inst :: L2Instruction, 
-  gen    :: Set.Set L2X, kill   :: Set.Set L2X, 
-  inSet  :: Set.Set L2X, outSet :: Set.Set L2X 
-}
 type IIOS = InstructionInOutSet
 
 empty :: InterferenceGraph
@@ -27,16 +23,6 @@ connections x g = fromMaybe Set.empty (Map.lookup (asL2X x) g)
 
 singleton :: AsL2X x => x -> InterferenceGraph
 singleton x = Map.singleton (asL2X x) Set.empty
-
-singletonEdge :: (AsL2X x, AsL2X y) => x -> y -> InterferenceGraph
-singletonEdge x1 x2
-  | (asL2X x1) == (asL2X x2) = singleton x1
-  | otherwise = union 
-     (Map.singleton (asL2X x1) (Set.singleton (asL2X x2)))
-     (Map.singleton (asL2X x2) (Set.singleton (asL2X x1)))
-
-insertOrAdd :: AsL2X x => x -> InterferenceGraph -> InterferenceGraph
-insertOrAdd x g = Map.singleton (asL2X x) $ connections x g
 
 graphMember :: AsL2X x => x -> InterferenceGraph -> Bool
 graphMember = Map.member . asL2X
@@ -59,10 +45,13 @@ addEdge (x1, x2) g
   | (asL2X x2) == (RegL2X ebp) = g
   | (asL2X x2) == (RegL2X esp) = g
   | (asL2X x1) == (asL2X x2)   = g -- dont add edge between a variable or register and itself...duh
-  | otherwise = unions [g, singletonEdge x1 x2]
-
-removeEdge :: (L2X, L2X) -> InterferenceGraph -> InterferenceGraph
-removeEdge (x, y) g = error "TODO"
+  | otherwise = unions [g, singletonEdge x1 x2] where
+  singletonEdge :: (AsL2X x, AsL2X y) => x -> y -> InterferenceGraph
+  singletonEdge x1 x2
+    | (asL2X x1) == (asL2X x2) = singleton x1
+    | otherwise = union
+       (Map.singleton (asL2X x1) (Set.singleton (asL2X x2)))
+       (Map.singleton (asL2X x2) (Set.singleton (asL2X x1)))
 
 addEdges :: (AsL2X x, AsL2X y) => [(x, y)] -> InterferenceGraph -> InterferenceGraph
 addEdges edges g = foldl (flip addEdge) g edges
@@ -70,11 +59,8 @@ addEdges edges g = foldl (flip addEdge) g edges
 mkGraph :: (AsL2X x, AsL2X y) => [(x, y)] -> InterferenceGraph
 mkGraph edges = addEdges edges empty
 
-addEdgesFromSet :: AsL2X x => Set.Set (x, x) -> InterferenceGraph -> InterferenceGraph
-addEdgesFromSet edges = addEdges (Set.toList edges)
-
 edgeSetToGraph :: AsL2X x => Set.Set (x, x) -> InterferenceGraph
-edgeSetToGraph edges = addEdgesFromSet edges empty
+edgeSetToGraph edges = addEdges (Set.toList edges) empty
 
 isVariable :: L2X -> Bool
 isVariable (VarL2X _) = True
@@ -83,24 +69,16 @@ isVariable _ = False
 variables :: InterferenceGraph -> Set.Set L2X
 variables = Set.filter isVariable . graphMembers
 
-neigborsOf :: L2X -> InterferenceGraph -> Set.Set L2X
-neigborsOf x g = fromMaybe (Set.empty) (Map.lookup x g)
-
 registerInterference :: InterferenceGraph
-registerInterference = 
-  mkGraph [
-    (eax, ebx), (eax, ecx), (eax, edi), (eax, edx), (eax, esi),
-    (ebx, ecx), (ebx, edi), (ebx, edx), (ebx, esi),
-    (ecx, edi), (ecx, edx), (ecx, esi),
-    (edi, edx), (edi, esi),
-    (edx, esi)
-  ]
-
-zipFilter :: (a -> b -> Bool) -> [a] -> [b] -> [(a, b)]
-zipFilter f as bs = filter (uncurry f) (zip as bs)
+registerInterference = mkGraph [
+  (eax, ebx), (eax, ecx), (eax, edi), (eax, edx), (eax, esi),
+  (ebx, ecx), (ebx, edi), (ebx, edx), (ebx, esi),
+  (ecx, edi), (ecx, edx), (ecx, esi),
+  (edi, edx), (edi, esi),
+  (edx, esi) ]
 
 zipFilterSets :: (Ord a, Ord b) => (a -> b -> Bool) -> Set.Set a -> Set.Set b -> Set.Set (a, b)
-zipFilterSets f xs ys = Set.fromList (zipFilter f (Set.elems xs) (Set.elems ys))
+zipFilterSets f xs ys = Set.fromList (filter (uncurry f) $ zip (Set.elems xs) (Set.elems ys))
 
 interference :: (Ord a, Ord b) =>
                 (a -> b -> Bool) -> (c -> Set.Set a) -> (c -> Set.Set b) -> c -> Set.Set (a, b)
@@ -116,13 +94,12 @@ interference f s1 s2 iios = zipFilterSets f (s1 iios) (s2 iios)
 buildInterferenceSet :: [IIOS] -> InterferenceGraph
 buildInterferenceSet iioss = 
   let 
-    -- if there is a first instruction (i certainly imagine there should be)
-    -- then we have to take the interference from its in set.
+    -- take the interference from the first instruction's in set.
     firstInstructionInSetInterference :: InterferenceGraph
     firstInstructionInSetInterference = 
       maybe empty (edgeSetToGraph . interference (/=) inSet outSet) (listToMaybe iioss)
 
-    -- we always take the interference from the out sets.
+    -- take the interference from all the out sets.
     outAndSpecialInterference :: InterferenceGraph
     outAndSpecialInterference = unions (fmap outAndSpecialInterference1 iioss)
    
@@ -161,7 +138,6 @@ outAndSpecialInterference1 iios =
         f (MathInst _ LeftShift  (XL2S x))  = [(x, eax), (x, ebx), (x, edi), (x, edx), (x, esi)]
         f (MathInst _ RightShift (XL2S x))  = [(x, eax), (x, ebx), (x, edi), (x, edx), (x, esi)]
         f _ = []
-
   in union outInterference specialInterference
 
 class HasVars a where
