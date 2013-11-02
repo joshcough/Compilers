@@ -16,12 +16,16 @@ import Control.Monad.Error
 zipWithIndex xs = zip xs [1..]
 
 -- L2 Parser (uses shared L1/L2 Parser)
+
+--parseI :: (String -> Either String x) -> (String -> Either String s) -> SExpr -> Either String (Instruction x s)
+
 parseL2 :: SExpr -> Either String L2
 parseL2 = parse (parseI (parseX VarL2X RegL2X) parseL2S) where
   parseX v r  s = Right $ maybe (v $ drop 1 s) r (parseRegister s)
   parseL2S    s = case (sread s) of
     AtomNum n -> Right $ NumberL2S n
-    AtomSym s -> maybe (parseX VarL2S RegL2S s) Right $ parseLabelOrRegister LabelL2S RegL2S s
+    AtomSym s -> maybe (parseX (XL2S . VarL2X) (XL2S . RegL2X) s) Right $ 
+                   parseLabelOrRegister LabelL2S (XL2S . RegL2X) s
 
 -- replaces variables with registers in an L2 function.
 -- todo: comment me
@@ -44,10 +48,10 @@ replaceVarsWithRegisters replacements func = Func $ Data.List.map replaceInInst 
   replaceInInst Return                = Return
 
   replaceInS :: L2S -> L1S
-  replaceInS (VarL2S v) = maybe (error "bad register") RegL1S $ Data.Map.lookup v replacements
-  replaceInS (NumberL2S n)   = NumberL1S n
-  replaceInS (LabelL2S n)    = LabelL1S n
-  replaceInS (RegL2S r)      = RegL1S r
+  replaceInS (XL2S (VarL2X v)) = maybe (error "bad register") RegL1S $ Data.Map.lookup v replacements
+  replaceInS (XL2S (RegL2X r)) = RegL1S r
+  replaceInS (NumberL2S n)     = NumberL1S n
+  replaceInS (LabelL2S n)      = LabelL1S n
 
   replaceInRHS :: AssignRHS L2X L2S -> AssignRHS L1X L1S
   replaceInRHS (Allocate s1 s2)       = Allocate (replaceInS s1) (replaceInS s2)
@@ -108,7 +112,7 @@ allocateCompletely originalF = let
     findVarsInInst Return                = []
 
     findVarsInS :: L2S -> [Variable]
-    findVarsInS (VarL2S v) = [v]
+    findVarsInS (XL2S (VarL2X v)) = [v]
     findVarsInS _ = []
 
     findVarsInX :: L2X -> [Variable]
@@ -147,10 +151,10 @@ attemptAllocation = error "todo"
 -- sets up the function so that edi and esi can be spilled.
 initialRewrite :: L2Func -> L2Func
 initialRewrite f = let
-  z1In  = Assign (VarL2X "__z1") $ SRHS $ RegL2S edi
-  z2In  = Assign (VarL2X "__z2") $ SRHS $ RegL2S esi
-  z1Out = Assign (RegL2X edi)    $ SRHS $ VarL2S "__z1"
-  z2Out = Assign (RegL2X esi)    $ SRHS $ VarL2S "__z2"
+  z1In  = Assign (VarL2X "__z1") $ SRHS $ (XL2S . RegL2X) edi
+  z2In  = Assign (VarL2X "__z2") $ SRHS $ (XL2S . RegL2X) esi
+  z1Out = Assign (RegL2X edi)    $ SRHS $ (XL2S . VarL2X) "__z1"
+  z2Out = Assign (RegL2X esi)    $ SRHS $ (XL2S . VarL2X) "__z2"
   -- this business arranges to make sure that edi and esi
   -- get put back properly before a return or a tail-call.
   returnAdjustment :: L2Instruction -> [L2Instruction]

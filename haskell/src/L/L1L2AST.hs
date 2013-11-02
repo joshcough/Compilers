@@ -21,15 +21,28 @@ data Comp s     = Comp s CompOp s
 data AssignRHS x s =
   CompRHS (Comp s) | Allocate s s | Print s | ArrayError s s | MemRead (MemLoc x) | SRHS s
 
-data X86Op = X86Op String String
-increment  = X86Op "+="  "addl"
-decrement  = X86Op "-="  "subl"
-multiply   = X86Op "*="  "imull"
-leftShift  = X86Op "<<=" "sall"
-rightShift = X86Op ">>=" "sarl"
-bitwiseAnd = X86Op "&="  "andl"
-x86OpSymbol (X86Op op _)   = op
-x86OpName   (X86Op _ name) = name
+data X86Op = Increment | Decrement | Multiply | LeftShift | RightShift | BitwiseAnd
+  deriving (Eq)
+increment  = Increment
+decrement  = Decrement
+multiply   = Multiply
+leftShift  = LeftShift
+rightShift = RightShift
+bitwiseAnd = BitwiseAnd
+
+x86OpSymbol Increment  = "+="
+x86OpSymbol Decrement  = "-="
+x86OpSymbol Multiply   = "*="
+x86OpSymbol LeftShift  = "<<="
+x86OpSymbol RightShift = ">>="
+x86OpSymbol BitwiseAnd = "&="
+
+x86OpName Increment  = "addl"
+x86OpName Decrement  = "subl"
+x86OpName Multiply   = "imull"
+x86OpName LeftShift  = "sall"
+x86OpName RightShift = "sarl"
+x86OpName BitwiseAnd = "andl"
 
 data Instruction x s =
   Assign x (AssignRHS x s)   |
@@ -149,7 +162,7 @@ instance Show L1S where
 -- L2 adds variables to X and S. that's the only difference between L2 and L1.
 type Variable = String
 data L2X = RegL2X Register | VarL2X Variable
-data L2S = NumberL2S Int | LabelL2S Label | RegL2S Register | VarL2S Variable
+data L2S = XL2S L2X | NumberL2S Int | LabelL2S Label
 type L2Instruction = Instruction L2X L2S
 type L2Func = Func L2X L2S
 type L2 = Program L2X L2S
@@ -161,15 +174,13 @@ instance Show L2X where
 instance Show L2S where
   show (NumberL2S n)   = show n
   show (LabelL2S l)    = show l
-  show (RegL2S r)      = show r
-  show (VarL2S v) = v
+  show (XL2S x)        = show x
 
 instance Eq  L2X where (==) x1 x2 = (show x1) == (show x1)
 instance Ord L2X where compare x1 x2 = compare (show x1) (show x1)
 
 class (Eq a) => AsL2X a where 
   asL2X :: a -> L2X
-
 instance AsL2X Register where 
   asL2X = RegL2X
 instance AsL2X Variable where 
@@ -177,3 +188,5 @@ instance AsL2X Variable where
 instance AsL2X L2X where
   asL2X = id
 
+orderedPair :: Ord a => a -> a -> (a, a)
+orderedPair a1 a2 = if (a1 < a2) then (a1, a2) else (a2, a1)
